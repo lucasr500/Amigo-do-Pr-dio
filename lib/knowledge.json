@@ -1,0 +1,337 @@
+{
+  "base": [
+  {
+    "id": "multa-sem-assembleia",
+    "categoria": "multas",
+    "pergunta": "Posso aplicar multa sem assembleia?",
+    "resposta": "Sim. O síndico pode aplicar multa sem convocar assembleia, desde que a infração e a sanção estejam previstas na convenção ou no regimento interno. O procedimento correto é: notificar formalmente o infrator, conceder prazo para defesa (em geral 10 a 15 dias) e, se confirmada a infração, aplicar a multa.",
+    "contexto": "O Código Civil (art. 1.336 e 1.337) autoriza a aplicação de multas pelo síndico para infrações previstas na convenção. A assembleia só é necessária quando a própria convenção exigir.",
+    "dica": "Guarde sempre o comprovante de entrega da notificação. Prefira carta com AR ou aplicativo do condomínio.",
+    "keywords": ["multa", "advertencia", "sancao", "penalidade", "aplicar", "sindico", "infrator", "notificacao"]
+  },
+  {
+    "id": "limite-multa-atraso",
+    "categoria": "multas",
+    "pergunta": "Qual o limite de multa por atraso no condomínio?",
+    "resposta": "A multa por atraso no pagamento da taxa condominial é limitada a 2% sobre o valor do débito, mais juros de mora de até 1% ao mês e correção monetária pelo índice previsto na convenção (geralmente IGPM ou IPCA).",
+    "contexto": "O art. 1.336, §1º do Código Civil fixou esse limite de 2%. Convenções antigas que previam multa maior foram tacitamente revogadas nessa parte.",
+    "dica": "Verifique se a convenção especifica o índice de correção monetária. Se não especificar, use o INPC.",
+    "keywords": ["multa", "atraso", "limite", "porcentagem", "juros", "mora", "correcao", "taxa", "condominio", "pagamento"]
+  },
+  {
+    "id": "multa-barulho",
+    "categoria": "multas",
+    "pergunta": "Como multar morador por barulho?",
+    "resposta": "Para multar por barulho siga os passos: 1) Verifique se o barulho viola o horário de silêncio do regimento interno; 2) Registre o ocorrido com horário e testemunhas; 3) Notifique o morador por escrito sobre a infração; 4) Conceda prazo para defesa; 5) Aplique a multa prevista na convenção após o prazo.",
+    "contexto": "O direito ao sossego é garantido pelo art. 1.336, IV do CC. A multa por perturbação depende de previsão expressa no regimento e de seguir o rito da convenção.",
+    "dica": "Registros com horário preciso e pelo menos uma testemunha fortalecem muito o processo punitivo.",
+    "keywords": ["barulho", "ruido", "sossego", "silencio", "perturbacao", "multa", "horario", "vizinho", "reclamacao"]
+  },
+  {
+    "id": "autorizacao-obras",
+    "categoria": "obras",
+    "pergunta": "Morador precisa avisar antes de fazer obra?",
+    "resposta": "Sim. O morador deve comunicar a administração antes de iniciar qualquer obra, especialmente se envolver estrutura, instalações hidráulicas ou elétricas, geração de ruído ou movimentação de materiais pelas áreas comuns. O síndico pode exigir ART do responsável técnico, autorização da prefeitura e cronograma da obra.",
+    "contexto": "O art. 1.336, II do CC proíbe alterações que prejudiquem a estrutura do edifício. A convenção pode definir quais obras exigem autorização prévia e quais documentos são necessários.",
+    "dica": "Coloque por escrito todas as exigências e prazos antes de autorizar. Isso protege o condomínio e o próprio morador.",
+    "keywords": ["obra", "reforma", "construcao", "aviso", "autorizacao", "art", "cronograma", "prefeitura", "estrutura", "sindico", "comunicar"]
+  },
+  {
+    "id": "horario-obras",
+    "categoria": "obras",
+    "pergunta": "Qual o horário permitido para obras no condomínio?",
+    "resposta": "O horário de obras é definido pelo regimento interno do condomínio. O mais comum é permitir obras de segunda a sexta das 8h às 17h e sábado das 8h às 13h, vedando obras em domingos e feriados. Na ausência de previsão, aplicam-se as posturas municipais.",
+    "contexto": "A lei municipal de silêncio é o piso mínimo. O regimento pode ser mais restritivo, mas nunca mais permissivo que a lei municipal.",
+    "dica": "Afixe no quadro de avisos os horários permitidos e o contato para denúncias, evitando conflitos entre moradores.",
+    "keywords": ["horario", "obra", "reforma", "ruido", "barulho", "segunda", "sabado", "domingo", "feriado", "permitido"]
+  },
+  {
+    "id": "obras-estrutura",
+    "categoria": "obras",
+    "pergunta": "Morador pode fazer obra na estrutura do prédio?",
+    "resposta": "Não, sem autorização expressa da assembleia. Obras que afetam a estrutura do edifício (pilares, vigas, lajes, paredes de alvenaria estrutural) só podem ser realizadas com aprovação da assembleia, ART de engenheiro e, dependendo do caso, aprovação da prefeitura. O síndico isoladamente não pode autorizar esse tipo de obra.",
+    "contexto": "O art. 1.336, II do CC proíbe expressamente alterar a fachada e prejudicar a solidez e a segurança do edifício. Violações podem gerar responsabilidade civil e criminal.",
+    "dica": "Exija laudo de engenheiro estrutural antes de qualquer deliberação em assembleia sobre obras desta natureza.",
+    "keywords": ["estrutura", "pilar", "viga", "laje", "parede", "obra", "reforma", "assembleia", "engenheiro", "art", "aprovacao"]
+  },
+  {
+    "id": "cobranca-inadimplente",
+    "categoria": "inadimplencia",
+    "pergunta": "Como cobrar moradores inadimplentes?",
+    "resposta": "O caminho correto é: 1) Enviar boleto com aviso de vencimento; 2) Após o vencimento, enviar notificação extrajudicial (carta com AR); 3) Inscrever em cadastro de inadimplentes (SPC/Serasa), se a convenção permitir; 4) Ajuizar ação de cobrança ou execução por título executivo extrajudicial. Evite expor publicamente o inadimplente, pois isso pode gerar processo por dano moral.",
+    "contexto": "A taxa condominial é título executivo extrajudicial (art. 784, X do CPC), permitindo execução direta sem ação de conhecimento prévia, o que agiliza muito a cobrança judicial.",
+    "dica": "Mantenha todas as notificações documentadas. A ação de execução pode incluir multa, juros e honorários advocatícios.",
+    "keywords": ["inadimplente", "inadimplencia", "cobranca", "divida", "taxa", "condominio", "boleto", "notificacao", "judicial", "spc", "serasa"]
+  },
+  {
+    "id": "corte-agua-inadimplente",
+    "categoria": "inadimplencia",
+    "pergunta": "Posso cortar água de inadimplente?",
+    "resposta": "Não. O corte de fornecimento de água como forma de pressionar o pagamento de débitos condominiais é ilegal. A água é serviço essencial e seu corte viola o Código de Defesa do Consumidor e princípios constitucionais de dignidade. O STJ tem jurisprudência pacífica nesse sentido. O caminho correto para cobrar é a via judicial.",
+    "contexto": "O STJ (ex: REsp 1.513.937) vedou o corte de fornecimento de água por inadimplência condominial. Mesmo sendo o condomínio titular do contrato com a concessionária, o corte individualizado ao inadimplente é proibido. A restrição ao uso de áreas comuns também é controvertida e deve constar expressamente na convenção.",
+    "dica": "Utilize a ação de cobrança ou execução de título extrajudicial. É o único meio legal e eficaz para recuperar o crédito condominial.",
+    "keywords": ["corte", "agua", "inadimplente", "inadimplencia", "fornecimento", "essencial", "ilegal", "stj", "proibido", "pressao", "cobranca", "suspender"]
+  },
+  {
+    "id": "juros-atraso",
+    "categoria": "inadimplencia",
+    "pergunta": "Qual a multa por atraso no pagamento do condomínio?",
+    "resposta": "A multa por atraso é de no máximo 2% sobre o valor do débito (art. 1.336, §1º do CC), mais juros de mora de até 1% ao mês e correção monetária pelo índice da convenção. Esses encargos incidem automaticamente a partir do primeiro dia de atraso.",
+    "contexto": "O Código Civil de 2002 fixou o teto de 2% para multa moratória condominial. Convenções antigas que previam multa maior foram tacitamente revogadas nessa parte.",
+    "dica": "Emita boletos com os encargos já calculados para evitar discussões no momento da cobrança.",
+    "keywords": ["multa", "atraso", "juros", "mora", "porcentagem", "pagamento", "taxa", "condominio", "encargo", "cobranca"]
+  },
+  {
+    "id": "negativacao-inadimplente",
+    "categoria": "inadimplencia",
+    "pergunta": "Posso negativar morador inadimplente no SPC ou Serasa?",
+    "resposta": "Sim, desde que a convenção preveja expressamente essa possibilidade e sejam cumpridos os requisitos do CDC: notificação prévia ao devedor com prazo para regularização antes da inclusão no cadastro. A negativação deve ser do CPF do responsável pela unidade, não do locatário.",
+    "contexto": "O art. 43 do CDC exige que o devedor seja comunicado previamente sobre a inclusão no cadastro restritivo. O descumprimento gera responsabilidade civil por dano moral.",
+    "dica": "Consulte a convenção antes de negativar. Se ela não prevê essa possibilidade, aprove a cláusula em assembleia com quórum qualificado antes de agir.",
+    "keywords": ["negativacao", "spc", "serasa", "inadimplente", "cadastro", "restricao", "cpf", "devedor", "notificacao", "cdc"]
+  },
+  {
+    "id": "inadimplente-assembleia",
+    "categoria": "inadimplencia",
+    "pergunta": "Inadimplente pode votar em assembleia?",
+    "resposta": "Não. O art. 1.335, III do Código Civil veda expressamente o exercício do direito de voto ao condômino em atraso com suas obrigações financeiras. O inadimplente pode participar e se manifestar, mas não pode votar.",
+    "contexto": "Essa restrição se aplica enquanto durar a inadimplência. Ao quitar o débito, o direito de voto é imediatamente restabelecido. A restrição alcança apenas o voto, não a presença ou o direito de fala.",
+    "dica": "Na abertura da assembleia, verifique a situação financeira de todos os presentes antes de registrar a lista de votantes.",
+    "keywords": ["inadimplente", "votar", "voto", "assembleia", "direito", "participar", "debito", "restricao"]
+  },
+  {
+    "id": "convocacao-extraordinaria",
+    "categoria": "assembleias",
+    "pergunta": "Como convocar assembleia extraordinária?",
+    "resposta": "A convocação deve respeitar o prazo previsto na convenção (em geral mínimo de 8 dias de antecedência), conter pauta clara e objetiva, local, data e horário. Deve ser feita por meio que comprove o recebimento: aviso afixado no quadro, e-mail com confirmação, aplicativo do condomínio ou carta com AR.",
+    "contexto": "Qualquer condômino pode convocar assembleia extraordinária se o síndico não o fizer em até 60 dias após solicitação de ¼ dos condôminos (art. 1.355 do CC). O síndico pode convocar a qualquer tempo.",
+    "dica": "Pauta vaga como 'assuntos gerais' não permite deliberações vinculantes. Seja específico nos itens da pauta.",
+    "keywords": ["assembleia", "extraordinaria", "convocar", "convocacao", "pauta", "prazo", "edital", "aviso", "sindico", "morador"]
+  },
+  {
+    "id": "quorum-assembleia",
+    "categoria": "assembleias",
+    "pergunta": "Quantos votos preciso para aprovar algo em assembleia?",
+    "resposta": "Depende do assunto: obras voluptuárias (luxo) e alteração de convenção exigem 2/3 dos condôminos; obras úteis exigem maioria absoluta (metade + 1 de todos); despesas ordinárias e decisões gerais exigem maioria simples dos presentes; destituição do síndico exige maioria absoluta.",
+    "contexto": "O Código Civil (arts. 1.341, 1.342, 1.343 e 1.352) define os diferentes quóruns conforme a natureza da deliberação. A convenção pode exigir quórum maior, mas nunca menor que o legal.",
+    "dica": "Registre sempre na ata o quórum presente, os votos a favor, contra e abstenções para cada item deliberado.",
+    "keywords": ["quorum", "votos", "maioria", "aprovacao", "assembleia", "deliberacao", "convencao", "dois", "tercos", "porcentagem"]
+  },
+  {
+    "id": "procuracao-assembleia",
+    "categoria": "assembleias",
+    "pergunta": "Morador pode mandar procurador para a assembleia?",
+    "resposta": "Sim. O condômino pode se fazer representar em assembleia por procurador, desde que seja condômino do mesmo condomínio ou que a convenção permita terceiros. A procuração deve ser por escrito. Cada procurador normalmente pode representar apenas um condômino, salvo previsão diferente na convenção.",
+    "contexto": "O art. 1.354 do CC permite a representação por procuração. A convenção pode restringir ou ampliar essa possibilidade.",
+    "dica": "Exija a procuração original ou autenticada na entrada da assembleia. Não aceite representação verbal.",
+    "keywords": ["procurador", "procuracao", "representar", "assembleia", "condomino", "ausente", "voto", "delegacao"]
+  },
+  {
+    "id": "ata-assembleia",
+    "categoria": "assembleias",
+    "pergunta": "Como formalizar as decisões da assembleia?",
+    "resposta": "As decisões devem ser formalizadas em ata, assinada pelo presidente da mesa e pelo secretário eleitos na abertura da assembleia. A ata deve conter: data, local, quórum, pauta, deliberações com resultado de cada votação e eventuais manifestações relevantes. Decisões que afetam terceiros (como alteração de convenção) precisam ser registradas em cartório.",
+    "contexto": "A ata é o documento que confere validade jurídica às deliberações. Deve ser enviada a todos os condôminos em até 8 dias após a assembleia.",
+    "dica": "Guarde todas as atas em pasta física e digital. Elas são prova essencial em caso de conflitos judiciais.",
+    "keywords": ["ata", "assembleia", "formalizacao", "deliberacao", "decisao", "registro", "cartorio", "presidente", "secretario", "validade"]
+  },
+  {
+    "id": "contratar-zelador-pj",
+    "categoria": "funcionarios",
+    "pergunta": "Posso contratar zelador como PJ?",
+    "resposta": "Em geral, não. Quando há subordinação, habitualidade e horário fixo, a relação é de emprego (CLT), independente da forma de contratação. Contratar como PJ nessas condições configura 'pejotização' e gera passivo trabalhista para o condomínio. Para serviços eventuais e sem subordinação, a terceirização é mais segura.",
+    "contexto": "A Reforma Trabalhista (Lei 13.467/2017) ampliou a terceirização, mas não eliminou o risco de vínculo quando presentes os requisitos do art. 3º da CLT: pessoalidade, não-eventualidade, onerosidade e subordinação.",
+    "dica": "Consulte um advogado trabalhista antes de definir o modelo de contratação. O risco de passivo trabalhista pode superar qualquer economia.",
+    "keywords": ["zelador", "pj", "pessoa", "juridica", "clt", "empregado", "contratacao", "terceirizacao", "vinculo", "trabalhista", "funcionario"]
+  },
+  {
+    "id": "ferias-funcionario",
+    "categoria": "funcionarios",
+    "pergunta": "Como funcionam as férias dos funcionários do condomínio?",
+    "resposta": "Os funcionários do condomínio têm direito a 30 dias de férias após cada período aquisitivo de 12 meses. O síndico deve notificar o funcionário com pelo menos 30 dias de antecedência. O pagamento das férias (salário + 1/3 constitucional) deve ser feito até 2 dias antes do início do período.",
+    "contexto": "As regras são as da CLT (arts. 129 a 153). A Convenção Coletiva da categoria (porteiros, zeladores) pode prever benefícios adicionais.",
+    "dica": "Planeje as férias com antecedência para não deixar o condomínio sem cobertura de funções essenciais como portaria e zeladoria.",
+    "keywords": ["ferias", "funcionario", "descanso", "periodo", "pagamento", "clt", "zelador", "porteiro", "empregado", "salario"]
+  },
+  {
+    "id": "mudanca-convencao",
+    "categoria": "convencao",
+    "pergunta": "Como mudar uma regra da convenção?",
+    "resposta": "Alterações na convenção exigem aprovação de no mínimo 2/3 dos condôminos em assembleia especialmente convocada para esse fim. A aprovação deve ser registrada em cartório de registro de imóveis para ter validade perante terceiros.",
+    "contexto": "O art. 1.333 do CC exige quórum de 2/3 para aprovação e registro da convenção. Após o registro, a convenção vincula não apenas os proprietários atuais, mas também futuros adquirentes e locatários.",
+    "dica": "Leve o texto da alteração pronto para a assembleia para evitar imprecisões. Consulte um advogado para redigir a cláusula corretamente.",
+    "keywords": ["convencao", "alterar", "mudar", "regra", "aprovacao", "dois", "tercos", "assembleia", "registro", "cartorio", "quorum"]
+  },
+  {
+    "id": "mudanca-regimento",
+    "categoria": "convencao",
+    "pergunta": "Como mudar o regimento interno?",
+    "resposta": "O regimento interno pode ser alterado por maioria simples dos condôminos presentes em assembleia, salvo se a convenção exigir quórum maior. Diferentemente da convenção, o regimento não precisa ser registrado em cartório, tendo validade interna imediata após aprovação.",
+    "contexto": "O regimento interno é um documento complementar à convenção que disciplina o uso das áreas comuns e a convivência. Por ser mais simples de alterar, é o instrumento ideal para regras do dia a dia.",
+    "dica": "Mantenha o regimento atualizado e distribua cópias a todos os moradores, inclusive aos locatários.",
+    "keywords": ["regimento", "interno", "alterar", "mudar", "maioria", "aprovacao", "assembleia", "regra", "norma", "convivencia"]
+  },
+  {
+    "id": "animais-estimacao",
+    "categoria": "convencao",
+    "pergunta": "Condomínio pode proibir animais de estimação?",
+    "resposta": "Não completamente. O STJ firmou entendimento (Tema 1.079) de que a proibição genérica de animais em condomínio é ilegal. O condomínio pode regulamentar o uso das áreas comuns por animais (coleira, focinheira, horários) e proibir animais que causem risco ou perturbação comprovados, mas não pode proibir a criação em unidade privativa de forma absoluta.",
+    "contexto": "O direito à moradia e ao bem-estar dos moradores prevalece sobre restrições convencionais genéricas. A regulamentação razoável é permitida; a proibição total não.",
+    "dica": "Atualize a convenção para incluir regras claras sobre animais (porte, vacinação, circulação) em vez de proibições absolutas. Isso é mais eficaz juridicamente.",
+    "keywords": ["animal", "pet", "cao", "cachorro", "gato", "estimacao", "proibir", "permitir", "condominio", "convencao", "stj", "regra"]
+  },
+  {
+    "id": "garagem-visitante",
+    "categoria": "areas-comuns",
+    "pergunta": "Visitante pode usar a garagem do condomínio?",
+    "resposta": "Depende do que a convenção e o regimento interno estabelecerem. Muitos condomínios reservam vagas específicas para visitantes. O uso de vagas de proprietários por visitantes sem autorização do titular é proibido e sujeita ao pagamento de multa.",
+    "contexto": "As vagas de garagem podem ser de propriedade exclusiva (escrituradas), de uso comum ou de uso exclusivo por convenção. Cada tipo tem regras diferentes sobre cessão e uso por terceiros.",
+    "dica": "Regulamente no regimento o prazo máximo de permanência de visitantes na garagem e as consequências do descumprimento.",
+    "keywords": ["garagem", "vaga", "visitante", "estacionar", "carro", "automovel", "propriedade", "uso", "condominio", "permitir"]
+  },
+  {
+    "id": "fundo-reserva",
+    "categoria": "financeiro",
+    "pergunta": "Para que serve o fundo de reserva do condomínio?",
+    "resposta": "O fundo de reserva é uma poupança do condomínio destinada a cobrir despesas extraordinárias e emergências, como reparos urgentes, substituição de equipamentos ou ações judiciais. Em geral corresponde a 5% a 10% das receitas ordinárias e é aprovado em assembleia.",
+    "contexto": "O Código Civil não fixa um percentual obrigatório para o fundo de reserva; esse valor é definido pela convenção ou aprovado em assembleia. O fundo não pode ser usado para despesas ordinárias sem aprovação da assembleia.",
+    "dica": "Mantenha o fundo em conta separada da conta corrente do condomínio, de preferência em aplicação de baixo risco e alta liquidez.",
+    "keywords": ["fundo", "reserva", "poupanca", "emergencia", "despesa", "extraordinaria", "condominio", "porcentagem", "assembleia"]
+  },
+  {
+    "id": "rateio-despesas",
+    "categoria": "financeiro",
+    "pergunta": "Como funciona o rateio de despesas no condomínio?",
+    "resposta": "O rateio é calculado conforme a fração ideal de cada unidade (percentual da área total), salvo se a convenção estabelecer critério diferente, como valor fixo por unidade. Despesas ordinárias (manutenção) são responsabilidade do locatário; despesas extraordinárias (obras, fundo de reserva) são do proprietário.",
+    "contexto": "O art. 1.336, I do CC prevê a contribuição proporcional à fração ideal. A distinção entre despesas ordinárias e extraordinárias está na Lei 8.245/91 (Lei do Inquilinato).",
+    "dica": "Emita demonstrativos mensais claros, separando despesas ordinárias e extraordinárias. Isso evita conflitos com locatários e seus proprietários.",
+    "keywords": ["rateio", "despesa", "fracao", "ideal", "taxa", "condominio", "ordinaria", "extraordinaria", "locatario", "proprietario", "calcular"]
+  },
+  {
+    "id": "seguro-condominio",
+    "categoria": "financeiro",
+    "pergunta": "Condomínio é obrigado a ter seguro?",
+    "resposta": "Sim. O art. 1.346 do Código Civil obriga o condomínio a contratar seguro de toda a edificação contra risco de incêndio ou destruição total ou parcial. A obrigação é do síndico e seu descumprimento pode gerar responsabilidade civil pessoal.",
+    "contexto": "O seguro obrigatório cobre a estrutura do edifício. O condomínio pode contratar coberturas adicionais (responsabilidade civil, equipamentos, etc.) por aprovação em assembleia. O seguro das unidades privativas é responsabilidade de cada proprietário.",
+    "dica": "Renove o seguro anualmente e guarde a apólice em local seguro e de fácil acesso para o síndico e subsíndico.",
+    "keywords": ["seguro", "incendio", "obrigatorio", "condominio", "edificacao", "sinistro", "apolice", "sindico", "responsabilidade"]
+  },
+  {
+    "id": "destituicao-sindico",
+    "categoria": "gestao",
+    "pergunta": "Como destituir o síndico?",
+    "resposta": "O síndico pode ser destituído em assembleia especialmente convocada para esse fim, por voto da maioria absoluta dos condôminos (metade + 1 de todos, não apenas dos presentes), por justo motivo ou mesmo sem justa causa, a critério da assembleia.",
+    "contexto": "O art. 1.349 do CC permite a destituição a qualquer tempo. O síndico destituído tem direito de defesa na assembleia antes da votação. Após a destituição, deve-se eleger um novo síndico na mesma reunião.",
+    "dica": "Documente as irregularidades antes de convocar a assembleia de destituição. Um relatório detalhado facilita a deliberação e minimiza riscos de questionamento judicial.",
+    "keywords": ["destituicao", "sindico", "remover", "demitir", "assembleia", "maioria", "absoluta", "cargo", "mandato", "irregularidade"]
+  },
+  {
+    "id": "tempo-disposicao-empregador",
+    "categoria": "trabalhista",
+    "pergunta": "Funcionário fica no prédio depois do expediente. Isso conta como hora extra?",
+    "resposta": "Não, se ele fica por escolha própria (descanso, lazer, estudo, alimentação, higiene, oração, troca de roupa não obrigatória). Só conta como hora extra se ele estiver à disposição do condomínio aguardando ou executando ordens.",
+    "contexto": "A Reforma Trabalhista (Lei 13.467/2017) deixou claro que permanência por vontade própria não gera hora extra.",
+    "dica": "Inclua no regulamento interno quais atividades não contam como tempo de trabalho e controle bem os horários efetivos de entrada e saída.",
+    "keywords": ["tempo", "disposicao", "hora", "extra", "permanencia", "jornada", "descanso", "expediente", "funcionario"]
+  },
+  {
+    "id": "troca-uniforme-obrigatoria",
+    "categoria": "trabalhista",
+    "pergunta": "A troca de uniforme do porteiro conta como tempo de trabalho?",
+    "resposta": "Só conta se a troca for obrigatória dentro das dependências do condomínio. Se o funcionário pode trocar em casa, não conta como jornada.",
+    "contexto": "É exceção à regra geral sobre tempo à disposição prevista no Art. 4º da CLT.",
+    "dica": "Se for obrigatório trocar no prédio, registre essa exigência por escrito e inclua o tempo na jornada de trabalho.",
+    "keywords": ["uniforme", "troca", "jornada", "tempo", "trabalho", "dependencias", "porteiro", "obrigatorio"]
+  },
+  {
+    "id": "tempo-parcial",
+    "categoria": "trabalhista",
+    "pergunta": "Posso contratar funcionário em meio período?",
+    "resposta": "Sim. Existem duas opções: até 30h semanais sem hora extra, ou até 26h semanais com até 6h extras por semana. O salário é proporcional à jornada.",
+    "contexto": "É o regime de tempo parcial previsto no Art. 58-A da CLT, útil para condomínios pequenos ou funções específicas.",
+    "dica": "Formalize no contrato de trabalho a jornada exata e controle as horas para não passar do limite.",
+    "keywords": ["tempo", "parcial", "meio", "periodo", "jornada", "reduzida", "30", "horas", "salario", "proporcional"]
+  },
+  {
+    "id": "tempo-parcial-ferias-abono",
+    "categoria": "trabalhista",
+    "pergunta": "Funcionário em tempo parcial pode vender 1/3 das férias?",
+    "resposta": "Sim. Quem trabalha em regime de tempo parcial pode converter 1/3 das férias em abono pecuniário, igual ao funcionário de jornada integral.",
+    "contexto": "É um direito mantido mesmo no regime parcial de jornada.",
+    "dica": "Inclua essa possibilidade no contrato e oriente o funcionário sobre o prazo para pedir a conversão (até 15 dias antes do período aquisitivo terminar).",
+    "keywords": ["tempo", "parcial", "ferias", "abono", "venda", "um", "terco", "pecuniario"]
+  },
+  {
+    "id": "tempo-parcial-horas-extras",
+    "categoria": "trabalhista",
+    "pergunta": "Hora extra do funcionário em tempo parcial vale quanto?",
+    "resposta": "50% a mais sobre a hora normal, igual à regra geral. Mas só pode haver hora extra se o regime for o de até 26h semanais.",
+    "contexto": "No regime de até 30h semanais, não pode haver hora extra. No de até 26h, é permitido até 6h extras por semana.",
+    "dica": "Defina no contrato qual modalidade de tempo parcial será usada. Misturar as regras gera passivo trabalhista.",
+    "keywords": ["tempo", "parcial", "hora", "extra", "50", "porcentagem", "26", "horas", "limite"]
+  },
+  {
+    "id": "controle-ponto-gerente",
+    "categoria": "trabalhista",
+    "pergunta": "Síndico e gerente do condomínio precisam bater ponto?",
+    "resposta": "Gerentes com poderes reais de gestão e que ganham pelo menos 40% a mais que os outros funcionários ficam dispensados de controle de ponto. Trabalhadores externos sem como controlar horário e teletrabalhadores por produção também.",
+    "contexto": "É a regra do Art. 62 da CLT. Evita pagamento de horas extras a quem tem cargo de confiança e ganho diferenciado.",
+    "dica": "Anote na CTPS e no registro do funcionário a condição de cargo de confiança ou trabalho externo. Sem essa formalização, podem cobrar horas extras retroativas.",
+    "keywords": ["gerente", "controle", "jornada", "ponto", "trabalho", "externo", "cargo", "confianca", "sindico", "bater"]
+  },
+  {
+    "id": "gerente-sem-gratificacao",
+    "categoria": "trabalhista",
+    "pergunta": "Gerente que não ganha 40% a mais é dispensado de bater ponto?",
+    "resposta": "Não. Sem a gratificação mínima de 40% sobre o salário do efetivo, o gerente não fica dispensado do controle de jornada e tem direito a horas extras se ultrapassar a jornada normal.",
+    "contexto": "Os 40% são requisito legal para enquadrar como cargo de gestão para fins de jornada.",
+    "dica": "Faça as contas comparativas com o cargo abaixo e ajuste se necessário, ou implemente controle de ponto.",
+    "keywords": ["gerente", "40", "porcentagem", "gratificacao", "ponto", "horas", "extras", "jornada"]
+  },
+  {
+    "id": "teletrabalho-condominio",
+    "categoria": "trabalhista",
+    "pergunta": "Funcionário administrativo pode trabalhar de casa?",
+    "resposta": "Sim. O teletrabalho é permitido, mas precisa estar no contrato de trabalho. Pode ser por jornada (com horário) ou por produção/tarefa. Comparecer ao prédio de vez em quando não desfaz o regime.",
+    "contexto": "Regulado pelos Arts. 75-B a 75-F da CLT. Pessoas com deficiência e funcionários com filhos até 4 anos têm prioridade nas vagas.",
+    "dica": "Faça aditivo contratual definindo quem paga equipamentos, internet e como será a comunicação. Oriente sobre prevenção de acidentes em casa.",
+    "keywords": ["teletrabalho", "home", "office", "remoto", "contrato", "administrativo", "casa", "trabalhar"]
+  },
+  {
+    "id": "teletrabalho-despesas-retorno",
+    "categoria": "trabalhista",
+    "pergunta": "Funcionário em teletrabalho mudou de cidade. Tenho que pagar o retorno?",
+    "resposta": "Não, se ele mudou por escolha própria para fora da localidade prevista no contrato. O condomínio não responde por despesas de retorno nesse caso.",
+    "contexto": "Regra do Art. 75-F da CLT, para evitar abuso quando o funcionário muda voluntariamente.",
+    "dica": "Deixe claro no contrato a localidade-base do trabalho remoto. Sem isso, pode haver discussão sobre quem paga o retorno.",
+    "keywords": ["teletrabalho", "mudanca", "retorno", "despesas", "localidade", "cidade", "remoto"]
+  },
+  {
+    "id": "adicional-noturno-clt",
+    "categoria": "trabalhista",
+    "pergunta": "Como pagar o adicional noturno do porteiro?",
+    "resposta": "O trabalho entre 22h e 5h tem adicional mínimo de 20% sobre a hora normal. A hora noturna é reduzida (52 minutos e 30 segundos contam como 1 hora). No Rio, a CCT confirma os 20%.",
+    "contexto": "Art. 73 da CLT. É um direito de quem trabalha de madrugada. Vale também para horas que prorroguem a jornada noturna.",
+    "dica": "Configure o sistema de folha para já calcular hora noturna reduzida e o adicional. Erro nesse cálculo é uma das maiores causas de ação trabalhista.",
+    "keywords": ["adicional", "noturno", "20", "porcentagem", "22h", "porteiro", "vigia", "madrugada", "noite"]
+  },
+  {
+    "id": "adicional-noturno-prorrogacao",
+    "categoria": "trabalhista",
+    "pergunta": "Funcionário noturno prorrogou a jornada para o dia. Continua com adicional?",
+    "resposta": "Sim. Pela Súmula 60 do TST, se o funcionário cumpre toda a jornada noturna e prorroga para o dia, o adicional noturno continua durante a prorrogação.",
+    "contexto": "É o entendimento consagrado na CCT do RJ e na jurisprudência.",
+    "dica": "No cálculo da folha, mantenha o adicional sobre as horas prorrogadas após a jornada noturna integral.",
+    "keywords": ["adicional", "noturno", "prorrogacao", "sumula", "60", "tst", "jornada", "dia", "continuidade"]
+  },
+  {
+    "id": "transferencia-turno-diurno",
+    "categoria": "trabalhista",
+    "pergunta": "Posso passar o porteiro do turno noturno para o dia? Ele perde o adicional?",
+    "resposta": "Sim, pode transferir. E pela Súmula 265 do TST, ao mudar para jornada diurna, o adicional noturno deixa de ser pago.",
+    "contexto": "A mudança de turno extingue o direito ao adicional noturno, conforme jurisprudência.",
+    "dica": "Formalize a transferência de turno por escrito para evitar discussões e cobranças retroativas.",
+    "keywords": ["transferencia", "turno", "diurno", "sumula", "265", "adicional", "noturno", "porteiro", "dia"]
+  }
+  ]
+}
