@@ -45,9 +45,10 @@ const config: Config = {
         sans: ["var(--font-inter-tight)", "system-ui", "sans-serif"],
       },
       animation: {
-        "fade-in": "fadeIn 0.6s ease-out forwards",
-        "fade-in-up": "fadeInUp 0.7s ease-out forwards",
+        "fade-in": "fadeIn 0.5s ease-out forwards",
+        "fade-in-up": "fadeInUp 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards",
         "slide-up": "slideUp 0.5s ease-out forwards",
+        "slide-up-toast": "slideUpToast 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards",
         "pulse-soft": "pulseSoft 2s ease-in-out infinite",
         "blink": "blink 1.2s ease-in-out infinite",
       },
@@ -57,11 +58,15 @@ const config: Config = {
           "100%": { opacity: "1" },
         },
         fadeInUp: {
-          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         slideUp: {
           "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        slideUpToast: {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         pulseSoft: {

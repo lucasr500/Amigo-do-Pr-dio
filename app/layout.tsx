@@ -1,25 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter_Tight } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const fraunces = localFont({
+  src: "./fonts/fraunces.woff2",
+  weight: "400 700",
   variable: "--font-fraunces",
   display: "swap",
 });
 
-const interTight = Inter_Tight({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const interTight = localFont({
+  src: "./fonts/inter-tight.woff2",
+  weight: "400 700",
   variable: "--font-inter-tight",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Amigo do Prédio — Assistente para gestão condominial",
+  title: "Amigo do Prédio — Orientações para gestão condominial",
   description:
-    "Respostas rápidas e claras para a rotina do seu condomínio. Sem linguagem complicada, sem espera, sem dor de cabeça.",
+    "Orientações práticas e claras para a rotina do seu condomínio. Sem linguagem complicada, sem espera, sem dor de cabeça.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Amigo do Prédio",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

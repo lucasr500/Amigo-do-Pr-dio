@@ -39,7 +39,7 @@ body {
 
 /* Scrollbar refinada */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -63,7 +63,29 @@ body {
 }
 
 /* Animação de delay escalonado para reveals */
-.stagger-1 { animation-delay: 0.05s; opacity: 0; }
-.stagger-2 { animation-delay: 0.15s; opacity: 0; }
-.stagger-3 { animation-delay: 0.25s; opacity: 0; }
-.stagger-4 { animation-delay: 0.35s; opacity: 0; }
+.stagger-1 { animation-delay: 0.06s; opacity: 0; }
+.stagger-2 { animation-delay: 0.18s; opacity: 0; }
+.stagger-3 { animation-delay: 0.30s; opacity: 0; }
+.stagger-4 { animation-delay: 0.42s; opacity: 0; }
+
+/* Transições padrão para botões interativos */
+button { -webkit-tap-highlight-color: transparent; }
+
+/* Input date: aparência nativa refinada */
+input[type="date"] { color-scheme: light; }
+
+/* Transição de aba — snappy, Apple-like */
+.tab-enter {
+  animation: tabEnter 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes tabEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
