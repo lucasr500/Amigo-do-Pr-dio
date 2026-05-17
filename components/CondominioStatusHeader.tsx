@@ -141,9 +141,9 @@ function buildRows(m: MemoriaOperacional, profile: CondominioProfile | null): St
 
 const BADGE: Record<CondominioHealthStatus, { ring: string; bg: string; text: string; dot: string }> = {
   "em-dia":  { ring: "ring-navy-100",  bg: "bg-navy-50/80",   text: "text-navy-600",   dot: "bg-navy-400"  },
-  "atencao": { ring: "ring-amber-100", bg: "bg-amber-50/80",  text: "text-amber-700",  dot: "bg-amber-400" },
-  "pendente":{ ring: "ring-amber-200", bg: "bg-amber-50",     text: "text-amber-800",  dot: "bg-amber-500" },
-  "critico": { ring: "ring-amber-300", bg: "bg-amber-100/80", text: "text-amber-900",  dot: "bg-amber-600" },
+  "atencao": { ring: "ring-amber-100", bg: "bg-amber-50/70",  text: "text-amber-700",  dot: "bg-amber-300" },
+  "pendente":{ ring: "ring-amber-300", bg: "bg-amber-100",    text: "text-amber-800",  dot: "bg-amber-500" },
+  "critico": { ring: "ring-terracotta-300", bg: "bg-terracotta-50", text: "text-terracotta-800", dot: "bg-terracotta-500" },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
 
     return (
       <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
-        <div className="overflow-hidden rounded-2xl border border-navy-100/60 bg-white/80 shadow-[0_1px_3px_rgba(31,49,71,0.04)]">
+        <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/86 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
           <div className="px-5 py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -236,7 +236,7 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
-      <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_4px_rgba(31,49,71,0.04),0_8px_24px_-8px_rgba(31,49,71,0.09)]">
+      <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/90 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_16px_34px_-26px_rgba(31,49,71,0.32)]">
 
         {/* Header: nome + badge de saúde */}
         <div className="px-5 pt-5 pb-4">
@@ -281,13 +281,13 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
                 }
               }}
               disabled={!row.onAskQ || !onAsk}
-              className="flex w-full items-center gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-amber-50/60 active:bg-amber-50 disabled:cursor-default"
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-terracotta-50/70 active:bg-terracotta-50 disabled:cursor-default"
             >
               <span className="flex-shrink-0 text-[14px] leading-none" aria-hidden="true">{row.icon}</span>
               <span className="flex-1 text-[12.5px] font-medium text-navy-800">{row.label}</span>
-              <span className="text-[11px] text-amber-600">{row.detalhe}</span>
+              <span className="text-[11px] font-medium text-terracotta-700">{row.detalhe}</span>
               {row.onAskQ && onAsk && (
-                <svg className="h-3 w-3 flex-shrink-0 text-amber-500" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <svg className="h-3 w-3 flex-shrink-0 text-terracotta-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               )}
@@ -306,7 +306,7 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
                 }
               }}
               disabled={!row.onAskQ || !onAsk}
-              className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-navy-50/60 active:bg-navy-50 disabled:cursor-default"
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-amber-50/50 active:bg-amber-50 disabled:cursor-default"
             >
               <span className="flex-shrink-0 text-[14px] leading-none" aria-hidden="true">{row.icon}</span>
               <span className="flex-1 text-[12.5px] font-medium text-navy-700">{row.label}</span>

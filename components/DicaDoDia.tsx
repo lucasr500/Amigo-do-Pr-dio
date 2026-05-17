@@ -73,10 +73,12 @@ const DICAS: Dica[] = [
 
 type DicaDoDiaProps = {
   onAsk: (q: string) => void;
+  compact?: boolean;
 };
 
-export default function DicaDoDia({ onAsk }: DicaDoDiaProps) {
+export default function DicaDoDia({ onAsk, compact = false }: DicaDoDiaProps) {
   const [dica, setDica] = useState<Dica | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const now = new Date();
@@ -88,6 +90,34 @@ export default function DicaDoDia({ onAsk }: DicaDoDiaProps) {
   }, []);
 
   if (!dica) return null;
+
+  if (compact && !expanded) {
+    return (
+      <section className="px-5 pb-3 sm:px-6 animate-fade-in-up stagger-2">
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="flex min-h-11 w-full items-center gap-2 rounded-2xl border border-cream-200 bg-cream-100/55 px-4 py-2.5 text-left transition-colors hover:bg-cream-100 active:bg-cream-200"
+          aria-expanded={false}
+        >
+          <svg
+            className="h-3.5 w-3.5 flex-shrink-0 text-navy-400"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="8" cy="6.5" r="3.5" stroke="currentColor" strokeWidth="1.4" />
+            <path d="M6 9.5c0 1 .9 2 2 2s2-1 2-2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            <path d="M8 12.5v1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-navy-700">
+            Dica operacional: {dica.tema}
+          </span>
+          <span className="text-[11.5px] font-medium text-navy-500">Abrir</span>
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up stagger-2">
@@ -111,12 +141,22 @@ export default function DicaDoDia({ onAsk }: DicaDoDiaProps) {
           <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
             Dica operacional · {dica.tema}
           </p>
+          {compact && (
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="ml-auto min-h-8 rounded-full px-2 text-[11.5px] text-navy-500"
+              aria-label="Recolher dica operacional"
+            >
+              Recolher
+            </button>
+          )}
         </div>
-        <p className="text-[13px] leading-[1.65] text-navy-700">{dica.texto}</p>
+        <p className="text-[14px] leading-[1.65] text-navy-700">{dica.texto}</p>
         <button
           type="button"
           onClick={() => onAsk(dica.prompt)}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11.5px] font-medium text-navy-600 ring-1 ring-navy-200 transition-all duration-150 hover:bg-navy-50 active:scale-95"
+          className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-[12px] font-medium text-navy-600 ring-1 ring-navy-200 transition-all duration-150 hover:bg-navy-50 active:scale-95"
         >
           Saber mais
           <svg

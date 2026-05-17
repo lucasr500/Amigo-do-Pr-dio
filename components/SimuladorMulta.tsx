@@ -16,7 +16,12 @@ function fmt(n: number): string {
   return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-export default function SimuladorMulta() {
+type Props = {
+  anchorId?: string;
+  highlighted?: boolean;
+};
+
+export default function SimuladorMulta({ anchorId = "simulador-multa", highlighted = false }: Props) {
   const [cota, setCota] = useState("");
   const [meses, setMeses] = useState("1");
   const [taxaJuros, setTaxaJuros] = useState("1");
@@ -53,7 +58,10 @@ export default function SimuladorMulta() {
   const ultimo = resultado ? resultado[resultado.length - 1] : null;
 
   return (
-    <section className="px-5 pb-6 pt-2 sm:px-6">
+    <section
+      id={anchorId}
+      className={`scroll-mt-5 px-5 pb-6 pt-2 sm:px-6 ${highlighted ? "tool-anchor-highlight" : ""}`}
+    >
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
           Simulador de multa e juros
@@ -77,7 +85,7 @@ export default function SimuladorMulta() {
               value={cota}
               onChange={(e) => { setCota(e.target.value); resetResultado(); }}
               placeholder="Ex: 850,00"
-              className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+              className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
             />
           </div>
 
@@ -124,7 +132,7 @@ export default function SimuladorMulta() {
                 inputMode="decimal"
                 value={taxaJuros}
                 onChange={(e) => { setTaxaJuros(e.target.value); resetResultado(); }}
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
               <p className="mt-1 text-[10.5px] text-navy-400">Padrão: 1% a.m.</p>
             </div>
@@ -141,7 +149,7 @@ export default function SimuladorMulta() {
                 inputMode="decimal"
                 value={taxaMulta}
                 onChange={(e) => { setTaxaMulta(e.target.value); resetResultado(); }}
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
               <p className="mt-1 text-[10.5px] text-navy-400">Máx. legal: 2%</p>
             </div>

@@ -6,6 +6,17 @@ import { TOPICS, getConfidenceLabel, getRelatedEntries } from "@/lib/data";
 import { saveFavorite, isFavorited, logShare, logInteraction } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { APP_URL } from "@/lib/config";
+import BrandMark from "@/components/BrandMark";
+
+type ToolAnchor =
+  | "comunicado"
+  | "comunicado-infracao"
+  | "comunicado-obra"
+  | "comunicado-convocacao"
+  | "comunicado-cobranca"
+  | "simulador-multa"
+  | "simulador-reajuste"
+  | "checklists";
 
 // Mapa categoria → checklist operacional relacionado
 const CAT_TO_CHECKLIST: Partial<Record<string, { id: string; title: string; icon: string }>> = {
@@ -16,16 +27,16 @@ const CAT_TO_CHECKLIST: Partial<Record<string, { id: string; title: string; icon
 };
 
 // Mapa categoria → comunicado sugerido
-const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; icon: string; hint: string }>> = {
-  multas:           { label: "Gerar notificação de infração",  icon: "⚠️", hint: "Documente antes de aplicar sanção" },
-  obras:            { label: "Gerar comunicado de obra",       icon: "🔨", hint: "Informe os moradores com antecedência" },
-  assembleias:      { label: "Preparar convocação",            icon: "👥", hint: "Gere o texto da convocação" },
-  inadimplencia:    { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
-  cobranca:         { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
-  responsabilidade: { label: "Registrar ocorrência formal",    icon: "📝", hint: "Documente o dano antes de acionar responsáveis" },
-  gestao:           { label: "Gerar comunicado interno",       icon: "📢", hint: "Formalize a decisão por escrito" },
-  manutencao:       { label: "Gerar comunicado de serviço",    icon: "🔧", hint: "Informe os moradores sobre a manutenção" },
-  financeiro:       { label: "Simular reajuste de cota",       icon: "💼", hint: "Calcule o reajuste antes de propor em assembleia" },
+const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; icon: string; hint: string; anchor: ToolAnchor }>> = {
+  multas:           { label: "Gerar notificação de infração", icon: "!", hint: "Documente antes de aplicar sanção", anchor: "comunicado-infracao" },
+  obras:            { label: "Gerar comunicado de obra", icon: "Obra", hint: "Informe os moradores com antecedência", anchor: "comunicado-obra" },
+  assembleias:      { label: "Preparar convocação", icon: "Ata", hint: "Gere o texto da convocação", anchor: "comunicado-convocacao" },
+  inadimplencia:    { label: "Gerar notificação de cobrança", icon: "R$", hint: "Formalize a comunicação ao condômino", anchor: "comunicado-cobranca" },
+  cobranca:         { label: "Gerar notificação de cobrança", icon: "R$", hint: "Formalize a comunicação ao condômino", anchor: "comunicado-cobranca" },
+  responsabilidade: { label: "Registrar ocorrência formal", icon: "Doc", hint: "Documente o dano antes de acionar responsáveis", anchor: "comunicado" },
+  gestao:           { label: "Gerar comunicado interno", icon: "Doc", hint: "Formalize a decisão por escrito", anchor: "comunicado" },
+  manutencao:       { label: "Gerar comunicado de serviço", icon: "Serv", hint: "Informe os moradores sobre a manutenção", anchor: "comunicado" },
+  financeiro:       { label: "Simular reajuste de cota", icon: "R$", hint: "Calcule o reajuste antes de propor em assembleia", anchor: "simulador-reajuste" },
 };
 
 // Próximo passo por categoria — mostrado quando a entrada KB não tem dica específica
@@ -86,12 +97,40 @@ const CATEGORIA_ICONS: Record<string, string> = {
   cobranca: "💳",
 };
 
-// Mensagens rotativas exibidas durante o carregamento
+// Mensagens fixas exibidas em sequência durante o carregamento
 const LOADING_MESSAGES = [
-  "Verificando a legislação...",
-  "Consultando o condomínio...",
-  "Preparando sua resposta...",
+  "Consultando a base...",
+  "Preparando a orientação...",
 ];
+
+function openWhatsAppShare(url: string, isStandalone: boolean) {
+  if (isStandalone) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+
+  const opened = window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer,width=480,height=720"
+  );
+
+  if (!opened) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+}
 
 type ResponseProps = {
   question: string;
@@ -102,7 +141,7 @@ type ResponseProps = {
   onFavorite?: () => void;
   onNewQuestion?: () => void;
   onNavigateToChecklist?: (checklistId: string) => void;
-  onNavigateToFerramentas?: () => void;
+  onNavigateToFerramentas?: (anchor?: ToolAnchor) => void;
 };
 
 export default function Response({
@@ -189,11 +228,29 @@ export default function Response({
     onFavorite?.();
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!answer) return;
-    const linkLine = APP_URL ? `\n🔗 ${APP_URL}` : "";
-    const text = `*Amigo do Prédio*\nOrientação condominial\n\n📌 *${question}*\n\n${answer}\n\n─────────────────────\n_Orientação informativa — não substitui assessoria jurídica especializada._${linkLine}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+    const linkLine = APP_URL ? `\n${APP_URL}` : "";
+    const text = `Amigo do Prédio\nOrientação condominial\n\nPergunta: ${question}\n\n${answer}\n\nOrientação informativa. Não substitui análise da administradora ou assessoria especializada.${linkLine}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: "Amigo do Prédio",
+          text,
+        });
+      } else {
+        openWhatsAppShare(whatsappUrl, isStandalone);
+      }
+    } catch (err) {
+      if ((err as DOMException)?.name === "AbortError") return;
+      openWhatsAppShare(whatsappUrl, isStandalone);
+    }
+
     logShare({ q: question, matchedId: entry?.id ?? null, categoria: entry?.categoria ?? null });
     void trackEvent("whatsapp_shared", { matched_id: entry?.id ?? null });
   };
@@ -201,6 +258,47 @@ export default function Response({
   if (!isLoading && !answerResult) return null;
 
   const confidence = getConfidenceLabel(score, isDefault);
+
+  const renderRelated = (className = "") => {
+    if (related.length === 0) return null;
+
+    return (
+      <div className={className}>
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">
+          Veja também
+        </p>
+        <div className="space-y-1.5">
+          {related.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => {
+                logInteraction("veja-tambem", r.id);
+                onSuggestionSelect?.(r.pergunta);
+              }}
+              className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/40 px-3 py-2.5 text-left text-[12.5px] leading-snug text-navy-700 transition-all duration-150 hover:border-navy-200 hover:bg-navy-50 active:scale-[0.99]"
+            >
+              <span className="min-w-0 flex-1">{r.pergunta}</span>
+              <svg
+                className="h-3.5 w-3.5 flex-shrink-0 text-navy-300"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 4l4 4-4 4"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -212,7 +310,7 @@ export default function Response({
         {/* Pergunta do usuário */}
         {question && (
           <div className="mb-3 flex justify-end">
-            <div className="max-w-[88%] rounded-2xl rounded-tr-sm bg-navy-800 px-4 py-2.5 text-[14px] text-cream-50 shadow-sm sm:text-[14.5px]">
+            <div className="max-w-[88%] rounded-2xl rounded-tr-md bg-navy-800 px-4 py-2.5 text-[14px] text-cream-50 shadow-sm sm:text-[14.5px]">
               {question}
             </div>
           </div>
@@ -221,18 +319,7 @@ export default function Response({
         {/* Resposta do assistente */}
         <div className="flex gap-2.5">
           {/* Avatar */}
-          <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-navy-700 to-navy-900 shadow-sm">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-cream-50"
-              fill="none"
-              aria-hidden="true"
-            >
-              <rect x="5" y="7" width="6" height="13" rx="0.5" fill="currentColor" opacity="0.95" />
-              <rect x="13" y="4" width="6" height="16" rx="0.5" fill="currentColor" />
-              <circle cx="19.5" cy="5" r="1.6" fill="#C97852" />
-            </svg>
-          </div>
+          <BrandMark className="mt-0.5 h-8 w-8 flex-shrink-0 shadow-sm" rounded="rounded-[10px]" />
 
           <div className="flex-1">
             {/* Cabeçalho: nome + badge de confiança */}
@@ -249,7 +336,7 @@ export default function Response({
             </div>
 
             {/* Card principal */}
-            <div className="rounded-2xl rounded-tl-sm border border-navy-100 bg-white px-4 py-3.5 shadow-[0_2px_8px_-4px_rgba(31,49,71,0.10)]">
+            <div className="rounded-[20px] rounded-tl-md border border-cream-200/90 bg-white/94 px-4 py-3.5 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_28px_-24px_rgba(31,49,71,0.28)]">
               {isLoading ? (
                 <TypingIndicator />
               ) : (
@@ -280,7 +367,7 @@ export default function Response({
                             Base legal
                           </p>
                         </div>
-                        <p className="text-[12px] leading-relaxed text-navy-600">
+                        <p className="text-[14px] leading-relaxed text-navy-600">
                           {entry.contexto}
                         </p>
                       </div>
@@ -294,11 +381,13 @@ export default function Response({
                               Dica prática
                             </p>
                           </div>
-                          <p className="text-[12px] leading-relaxed text-navy-700">
+                          <p className="text-[14px] leading-relaxed text-navy-700">
                             {entry.dica}
                           </p>
                         </div>
                       )}
+
+                      {entry.dica && renderRelated("sm:hidden")}
 
                       {/* Próximo passo — categoria-wide, só quando não há dica específica */}
                       {!entry.dica && CAT_TO_NEXTACTION[entry.categoria] && (
@@ -309,49 +398,14 @@ export default function Response({
                               Próximo passo
                             </p>
                           </div>
-                          <p className="text-[12px] leading-relaxed text-navy-700">
+                          <p className="text-[14px] leading-relaxed text-navy-700">
                             {CAT_TO_NEXTACTION[entry.categoria]}
                           </p>
                         </div>
                       )}
 
                       {/* Veja também — entradas relacionadas da mesma categoria */}
-                      {related.length > 0 && (
-                        <div>
-                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">
-                            Veja também
-                          </p>
-                          <div className="space-y-1.5">
-                            {related.map((r) => (
-                              <button
-                                key={r.id}
-                                type="button"
-                                onClick={() => {
-                                  logInteraction("veja-tambem", r.id);
-                                  onSuggestionSelect?.(r.pergunta);
-                                }}
-                                className="flex w-full items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/40 px-3 py-2.5 text-left text-[12px] leading-snug text-navy-700 transition-all duration-150 hover:border-navy-200 hover:bg-navy-50 active:scale-[0.99]"
-                              >
-                                <span className="flex-1">{r.pergunta}</span>
-                                <svg
-                                  className="h-3.5 w-3.5 flex-shrink-0 text-navy-300"
-                                  viewBox="0 0 16 16"
-                                  fill="none"
-                                  aria-hidden="true"
-                                >
-                                  <path
-                                    d="M6 4l4 4-4 4"
-                                    stroke="currentColor"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      {renderRelated(entry.dica ? "hidden sm:block" : "")}
 
                       {/* Checklist operacional recomendado — ponte entre Q&A e ferramentas */}
                       {(() => {
@@ -389,7 +443,7 @@ export default function Response({
                             type="button"
                             onClick={() => {
                               logInteraction("comunicado-cta", entry.categoria);
-                              onNavigateToFerramentas();
+                              onNavigateToFerramentas(cm.anchor);
                             }}
                             className="flex w-full items-center gap-3 rounded-xl border border-navy-100 bg-navy-50/40 px-3 py-2.5 text-left transition-colors hover:bg-navy-50 active:bg-navy-100"
                           >
@@ -416,7 +470,7 @@ export default function Response({
                               Aviso regional
                             </p>
                           </div>
-                          <p className="text-[12px] leading-relaxed text-amber-700">
+                          <p className="text-[14px] leading-relaxed text-amber-700">
                             Os valores trabalhistas citados seguem a CCT SECOVI-Rio (Rio de Janeiro). Se o seu condomínio está em outro estado, consulte a CCT local — salários e benefícios variam por região.
                           </p>
                         </div>
@@ -425,7 +479,7 @@ export default function Response({
                       {/* Aviso jurídico */}
                       <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
                         <InfoIcon className="text-navy-400" />
-                        <p className="text-[11px] leading-relaxed text-navy-400">
+                        <p className="text-[13px] leading-relaxed text-navy-400">
                           Esta orientação tem caráter informativo e ajuda na organização da gestão condominial. Situações específicas podem exigir análise da administradora, assessoria jurídica ou profissional responsável.
                         </p>
                       </div>
@@ -450,6 +504,9 @@ export default function Response({
 
                       {/* Chips de categoria */}
                       <div>
+                        <p className="mb-2 text-[12.5px] leading-relaxed text-navy-500">
+                          Tente reformular com outras palavras, ou escolha um tema abaixo:
+                        </p>
                         <p className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-navy-400">
                           Pergunte sobre
                         </p>
@@ -459,7 +516,7 @@ export default function Response({
                               key={topic.id}
                               type="button"
                               onClick={() => onSuggestionSelect?.(topic.examplePrompt)}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-navy-100 bg-white px-3 py-1.5 text-[11.5px] font-medium text-navy-700 shadow-sm transition-all duration-150 hover:border-navy-300 hover:bg-navy-50 hover:shadow-md active:scale-95"
+                              className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-navy-100 bg-white px-3 py-2 text-[12px] font-medium text-navy-700 shadow-sm transition-all duration-150 hover:border-navy-300 hover:bg-navy-50 hover:shadow-md active:scale-95"
                             >
                               <span aria-hidden="true" className="text-[13px]">
                                 {topic.icon}
@@ -520,7 +577,7 @@ export default function Response({
 
                       <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
                         <InfoIcon className="text-navy-300" />
-                        <p className="text-[11px] leading-relaxed text-navy-400">
+                        <p className="text-[13px] leading-relaxed text-navy-400">
                           Mais temas sendo adicionados regularmente. As orientações têm caráter informativo — situações específicas podem exigir análise da administradora ou assessoria especializada.
                         </p>
                       </div>
@@ -536,19 +593,19 @@ export default function Response({
                 {!isDefault && (
                   <>
                     <ActionPill
-                      icon={liked ? "✓" : "★"}
+                      icon={liked ? "✓" : "+"}
                       label={liked ? "Salvo!" : "Salvar"}
                       onClick={handleLike}
                       active={liked}
                     />
                     <ActionPill
-                      icon={copied ? "✓" : "📋"}
+                      icon={copied ? "✓" : "□"}
                       label={copied ? "Copiado!" : "Copiar"}
                       onClick={handleCopy}
                       active={copied}
                     />
                     <ActionPill
-                      icon="💬"
+                      icon="WA"
                       label="WhatsApp"
                       onClick={handleShare}
                     />
@@ -557,7 +614,7 @@ export default function Response({
                 <ActionPill icon="↻" label="Refazer" onClick={onRetry} />
                 {onNewQuestion && (
                   <div className="ml-auto">
-                    <ActionPill icon="↩" label="Nova pergunta" onClick={onNewQuestion} />
+                    <ActionPill icon="+" label="Nova pergunta" onClick={onNewQuestion} />
                   </div>
                 )}
               </div>
@@ -602,10 +659,9 @@ function TypingIndicator() {
   const [msgIdx, setMsgIdx] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setMsgIdx((i) => (i + 1) % LOADING_MESSAGES.length);
-    }, 1600);
-    return () => clearInterval(id);
+    setMsgIdx(0);
+    const id = setTimeout(() => setMsgIdx(1), 1200);
+    return () => clearTimeout(id);
   }, []);
 
   return (
@@ -690,17 +746,12 @@ type ConfidenceBadgeProps = {
   label: string;
 };
 
-function ConfidenceBadge({ level, label }: ConfidenceBadgeProps) {
+function ConfidenceBadge({ level }: ConfidenceBadgeProps) {
   if (level === "none") return null;
 
-  const styles =
-    level === "high"
-      ? "border-terracotta-200 bg-terracotta-50 text-terracotta-600"
-      : "border-navy-100 bg-navy-50 text-navy-500";
-
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${styles}`}>
-      {label}
+    <span className="rounded-full border border-navy-100 bg-navy-50 px-2 py-0.5 text-[10px] font-medium text-navy-500">
+      Resposta direta da base
     </span>
   );
 }
@@ -717,7 +768,7 @@ function ActionPill({ icon, label, onClick, active }: ActionPillProps) {
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-150 active:scale-95 ${
+      className={`inline-flex min-h-11 items-center gap-1 rounded-full border px-3 py-2 text-[12px] transition-all duration-150 active:scale-95 ${
         active
           ? "border-terracotta-200 bg-terracotta-50 text-terracotta-700"
           : "border-navy-100 bg-white text-navy-500 hover:border-navy-200 hover:bg-navy-50"

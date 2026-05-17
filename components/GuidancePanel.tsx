@@ -69,8 +69,15 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
     ? "O que requer ação agora"
     : "O que merece atenção";
 
-  const visibleItems = showAll ? items : items.slice(0, INITIAL_LIMIT);
+  const criticalItems = items.filter((i) => i.priority === "critico");
+  const hasCriticalOverflow = criticalItems.length > INITIAL_LIMIT;
+  const visibleItems = showAll
+    ? items
+    : hasCriticalOverflow
+      ? criticalItems.slice(0, INITIAL_LIMIT)
+      : items.slice(0, INITIAL_LIMIT);
   const hiddenCount = items.length - INITIAL_LIMIT;
+  const hiddenCriticalCount = Math.max(0, criticalItems.length - INITIAL_LIMIT);
 
   const handleToggle = (id: string) => {
     const next = expandedId === id ? null : id;
@@ -141,7 +148,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
-      <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04),0_4px_16px_-6px_rgba(31,49,71,0.08)]">
+      <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/90 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_16px_34px_-26px_rgba(31,49,71,0.32)]">
 
         {/* Cabeçalho */}
         <div className="px-5 pt-5 pb-4">
@@ -164,6 +171,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
             const isSuccess = successId === item.id;
             const isFirstAtencao = hasMixedPriorities && !isCritico && idx > 0 && visibleItems[idx - 1].priority === "critico";
             const isMuted = hasMixedPriorities && !isCritico;
+            const isFirstCriticalResolution = idx === 0 && isCritico;
 
             return (
               <div key={item.id}>
@@ -174,7 +182,11 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                 <button
                   type="button"
                   onClick={() => handleToggle(item.id)}
-                  className={`flex w-full items-start gap-3 rounded-xl px-2 ${isMuted ? "py-3" : "py-3.5"} text-left transition-colors hover:bg-navy-50/60 active:bg-navy-50`}
+                  className={`flex min-h-11 w-full items-start gap-3 rounded-xl px-2 ${isMuted ? "py-3" : "py-3.5"} text-left transition-colors active:bg-navy-50 ${
+                    isFirstCriticalResolution
+                      ? "bg-terracotta-50/80 ring-1 ring-terracotta-200/70 hover:bg-terracotta-50"
+                      : "hover:bg-navy-50/60"
+                  }`}
                   aria-expanded={isExpanded}
                 >
                   <span
@@ -187,9 +199,14 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                     <p className={`text-[12.5px] leading-tight ${isMuted ? "font-medium text-navy-600" : "font-semibold text-navy-800"}`}>
                       {item.label}
                     </p>
+                    {isFirstCriticalResolution && (
+                      <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.11em] text-terracotta-700">
+                        Resolva isto primeiro
+                      </p>
+                    )}
                     <p
                       className={`mt-0.5 text-[11.5px] leading-snug ${
-                        isCritico ? "text-amber-700" : isMuted ? "text-navy-400" : "text-navy-500"
+                        isCritico ? "text-terracotta-700" : isMuted ? "text-navy-400" : "text-navy-500"
                       }`}
                     >
                       {item.urgencyLabel}
@@ -228,7 +245,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                     ) : (
                       <>
                         {/* Contexto */}
-                        <p className="text-[12px] leading-relaxed text-navy-700">
+                        <p className="text-[14px] leading-relaxed text-navy-700">
                           {item.context}
                         </p>
                         {item.howLong && (
@@ -245,7 +262,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                             <button
                               type="button"
                               onClick={() => handleStartResolve(item)}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
+                              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
                             >
                               <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                 <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -258,7 +275,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                               <button
                                 type="button"
                                 onClick={() => handleAsk(item)}
-                                className="inline-flex items-center gap-1.5 rounded-full border border-navy-200 bg-white px-3.5 py-1.5 text-[11.5px] font-medium text-navy-700 transition-all hover:bg-navy-50 active:scale-[0.97]"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-navy-200 bg-white px-3.5 py-2 text-[12px] font-medium text-navy-700 transition-all hover:bg-navy-50 active:scale-[0.97]"
                               >
                                 Ver orientação
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -280,7 +297,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                               <button
                                 type="button"
                                 onClick={() => handleConfirmDone(item)}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -290,7 +307,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                               <button
                                 type="button"
                                 onClick={handleCancelResolve}
-                                className="rounded-full px-3 py-1.5 text-[11.5px] text-navy-400 transition-colors hover:text-navy-600"
+                                className="min-h-10 rounded-full px-3 py-2 text-[12px] text-navy-400 transition-colors hover:text-navy-600"
                               >
                                 Cancelar
                               </button>
@@ -315,7 +332,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                                 type="button"
                                 onClick={() => handleConfirmExpiry(item)}
                                 disabled={!expiryDate}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97] disabled:opacity-40"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97] disabled:opacity-40"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -325,7 +342,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                               <button
                                 type="button"
                                 onClick={handleCancelResolve}
-                                className="rounded-full px-3 py-1.5 text-[11.5px] text-navy-400 transition-colors hover:text-navy-600"
+                                className="min-h-10 rounded-full px-3 py-2 text-[12px] text-navy-400 transition-colors hover:text-navy-600"
                               >
                                 Cancelar
                               </button>
@@ -342,7 +359,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
         </div>
 
         {/* Botão "Ver todos" — quando há mais itens do que o limite inicial */}
-        {!showAll && hiddenCount > 0 && expandedId === null && (
+        {!showAll && (hasCriticalOverflow ? hiddenCriticalCount > 0 : hiddenCount > 0) && expandedId === null && (
           <div className="px-3 pb-2">
             <button
               type="button"
@@ -350,9 +367,15 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                 setShowAll(true);
                 void trackEvent("guidance_panel_see_all", { total: items.length });
               }}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-navy-100 bg-navy-50/40 py-2.5 text-[12px] font-medium text-navy-600 transition-colors hover:bg-navy-50 active:bg-navy-100"
+              className={`flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[12px] font-medium transition-colors active:bg-navy-100 ${
+                hasCriticalOverflow
+                  ? "border-terracotta-200 bg-terracotta-50/70 text-terracotta-700 hover:bg-terracotta-50"
+                  : "border-navy-100 bg-navy-50/40 text-navy-600 hover:bg-navy-50"
+              }`}
             >
-              Ver {hiddenCount} item{hiddenCount !== 1 ? "s" : ""} restante{hiddenCount !== 1 ? "s" : ""}
+              {hasCriticalOverflow
+                ? `+${hiddenCriticalCount} urgente${hiddenCriticalCount !== 1 ? "s" : ""}`
+                : `Ver ${hiddenCount} item${hiddenCount !== 1 ? "s" : ""} restante${hiddenCount !== 1 ? "s" : ""}`}
               <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

@@ -3,8 +3,18 @@
 @tailwind utilities;
 
 :root {
-  --background: #FAF7F2;
-  --foreground: #234B63;
+  --brand-navy: #234B63;
+  --brand-cream: #F7F1E8;
+  --brand-terracotta: #C97852;
+  --background: #FBF8F2;
+  --foreground: #173647;
+  --surface: #FFFDF8;
+  --surface-warm: #F7F1E8;
+  --border-soft: #E7DED0;
+  --text-muted: #668095;
+  --success-soft: #E8EFE8;
+  --warning-soft: #F5E9D6;
+  --danger-soft: #F3DFD8;
 }
 
 * {
@@ -14,12 +24,18 @@
 
 html {
   scroll-behavior: smooth;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-feature-settings: "ss01", "cv11";
+  min-height: 100dvh;
+  max-width: 100%;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
 }
 
 /* Sutil grão de fundo para dar textura premium */
@@ -57,9 +73,9 @@ body {
 
 /* Foco acessível */
 :focus-visible {
-  outline: 2px solid #234B63;
+  outline: 2px solid var(--brand-terracotta);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 /* Animação de delay escalonado para reveals */
@@ -70,6 +86,18 @@ body {
 
 /* Transições padrão para botões interativos */
 button { -webkit-tap-highlight-color: transparent; }
+button, input, textarea, select { font: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* Input date: aparência nativa refinada */
 input[type="date"] { color-scheme: light; }
@@ -77,6 +105,11 @@ input[type="date"] { color-scheme: light; }
 /* Transição de aba — snappy, Apple-like */
 .tab-enter {
   animation: tabEnter 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.tool-anchor-highlight {
+  animation: toolAnchorHighlight 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  border-radius: 22px;
 }
 
 @keyframes tabEnter {
@@ -87,5 +120,17 @@ input[type="date"] { color-scheme: light; }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes toolAnchorHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(201, 120, 82, 0);
+  }
+  22% {
+    box-shadow: 0 0 0 3px rgba(201, 120, 82, 0.38);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(201, 120, 82, 0);
   }
 }

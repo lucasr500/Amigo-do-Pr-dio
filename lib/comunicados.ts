@@ -3,7 +3,7 @@
 // Tipos de campo disponíveis: text | date | time | textarea | select.
 // A função generate() recebe os valores preenchidos e o nome do condomínio (do perfil).
 
-export type ComunicadoId = "assembleia" | "obra" | "notificacao" | "geral";
+export type ComunicadoId = "assembleia" | "obra" | "notificacao" | "cobranca" | "geral";
 
 export type FieldDef = {
   id: string;
@@ -196,6 +196,57 @@ Comunicamos que foi relatada/constatada situação de ${infracao}, em desacordo 
 Solicitamos a regularização da situação no prazo de ${prazo} a contar do recebimento desta notificação.
 
 Caso a situação não seja regularizada no prazo indicado, o condomínio adotará as medidas cabíveis previstas na convenção e no regulamento interno, podendo incluir aplicação de advertência formal e/ou multa.
+
+Atenciosamente,
+A Administração`;
+    },
+  },
+  {
+    id: "cobranca",
+    icon: "R$",
+    title: "Notificação de Cobrança",
+    description: "Aviso formal para unidade inadimplente",
+    disclaimer: "Evite exposição pública do condômino. A cobrança deve seguir a convenção e os canais formais do condomínio.",
+    fields: [
+      {
+        id: "unidade",
+        label: "Unidade",
+        type: "text",
+        placeholder: "Ex: Apto 504",
+      },
+      {
+        id: "competencias",
+        label: "Competências em aberto",
+        type: "text",
+        placeholder: "Ex: março e abril de 2026",
+      },
+      {
+        id: "prazo",
+        label: "Prazo para regularização",
+        type: "text",
+        placeholder: "Ex: 5 dias úteis",
+      },
+      {
+        id: "canal",
+        label: "Canal de contato",
+        type: "text",
+        placeholder: "Ex: administradora / e-mail financeiro",
+      },
+    ],
+    generate: (v, condo) => {
+      const unidade = v.unidade || "_____";
+      const competencias = v.competencias || "_____";
+      const prazo = v.prazo || "_____";
+      const canal = v.canal || "_____";
+      return `NOTIFICAÇÃO DE COBRANÇA${condo ? `\n${condo}` : ""}
+
+Prezado(a) condômino(a) — Unidade ${unidade},
+
+Consta em nossos registros pendência referente a: ${competencias}.
+
+Solicitamos a regularização no prazo de ${prazo}, ou contato pelo canal ${canal} para conferência das informações e orientação sobre pagamento.
+
+Esta comunicação é individual e preserva a privacidade do condômino, conforme as boas práticas de gestão condominial.
 
 Atenciosamente,
 A Administração`;

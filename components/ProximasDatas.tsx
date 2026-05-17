@@ -40,9 +40,9 @@ function formatLabel(daysRem: number): string {
 
 function urgencyTextColor(u: UrgencyLevel): string {
   switch (u) {
-    case "vencido":            return "text-red-500";
+    case "vencido":            return "text-terracotta-700";
     case "hoje":
-    case "urgente":            return "text-amber-600";
+    case "urgente":            return "text-terracotta-600";
     case "breve":              return "text-amber-500";
     case "planejamento":
     case "acompanhar":         return "text-navy-500";
@@ -106,7 +106,7 @@ export default function ProximasDatas({ onAsk, onNavigateToCondominio, refreshKe
 
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-2xl border border-navy-100 bg-white/80 px-4 py-4">
+      <div className="rounded-2xl border border-cream-200/90 bg-white/82 px-4 py-4">
 
         <div className="mb-3 flex items-center justify-between">
           <div>
@@ -122,7 +122,7 @@ export default function ProximasDatas({ onAsk, onNavigateToCondominio, refreshKe
               <button
                 type="button"
                 onClick={() => setShowAll((v) => !v)}
-                className="text-[11px] text-navy-400 hover:text-navy-600"
+                className="min-h-10 rounded-full px-2 text-[11.5px] text-navy-400 hover:text-navy-600"
               >
                 {showAll ? "Menos ↑" : `Ver todos (${rows.length}) ↓`}
               </button>
@@ -131,7 +131,7 @@ export default function ProximasDatas({ onAsk, onNavigateToCondominio, refreshKe
               <button
                 type="button"
                 onClick={onNavigateToCondominio}
-                className="text-[11px] text-navy-400 hover:text-navy-600"
+                className="min-h-10 rounded-full px-2 text-[11.5px] text-navy-400 hover:text-navy-600"
               >
                 Editar →
               </button>
@@ -145,7 +145,7 @@ export default function ProximasDatas({ onAsk, onNavigateToCondominio, refreshKe
               key={row.label}
               type="button"
               onClick={() => onAsk?.(row.askQ)}
-              className="flex w-full items-center gap-2.5 py-2.5 text-left transition-opacity first:pt-0 last:pb-0 hover:opacity-75 active:opacity-50"
+              className="flex min-h-11 w-full items-center gap-2.5 py-2.5 text-left transition-opacity first:pt-2 last:pb-2 hover:opacity-75 active:opacity-50"
             >
               <span
                 className="w-5 flex-shrink-0 text-center text-[14px] leading-none"
@@ -153,10 +153,10 @@ export default function ProximasDatas({ onAsk, onNavigateToCondominio, refreshKe
               >
                 {row.icon}
               </span>
-              <p className="min-w-0 flex-1 text-[12px] font-medium text-navy-800">
+              <p className="min-w-0 flex-1 text-[13px] font-medium text-navy-800">
                 {row.label}
               </p>
-              <p className={`flex-shrink-0 text-[11px] font-medium ${urgencyTextColor(row.urgency)}`}>
+              <p className={`flex-shrink-0 text-[11.5px] font-medium ${urgencyTextColor(row.urgency)}`}>
                 {formatLabel(row.daysRem)}
               </p>
             </button>

@@ -5,8 +5,36 @@ import { getProfile } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { COMUNICADO_TEMPLATES, ComunicadoId } from "@/lib/comunicados";
 
-export default function ComunicadoPanel() {
+type ComunicadoAnchor =
+  | "comunicado"
+  | "comunicado-infracao"
+  | "comunicado-obra"
+  | "comunicado-convocacao"
+  | "comunicado-cobranca";
+
+type Props = {
+  targetAnchor?: string | null;
+  highlightAnchor?: string | null;
+};
+
+const ANCHOR_TO_TEMPLATE: Partial<Record<ComunicadoAnchor, ComunicadoId>> = {
+  "comunicado-infracao": "notificacao",
+  "comunicado-obra": "obra",
+  "comunicado-convocacao": "assembleia",
+  "comunicado-cobranca": "cobranca",
+};
+
+const TEMPLATE_TO_ANCHOR: Record<ComunicadoId, ComunicadoAnchor> = {
+  assembleia: "comunicado-convocacao",
+  obra: "comunicado-obra",
+  notificacao: "comunicado-infracao",
+  cobranca: "comunicado-cobranca",
+  geral: "comunicado",
+};
+
+export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props) {
   const [selectedId, setSelectedId] = useState<ComunicadoId | null>(null);
+  const [activeAnchor, setActiveAnchor] = useState<ComunicadoAnchor>("comunicado");
   const [values, setValues] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -17,6 +45,17 @@ export default function ComunicadoPanel() {
     setCondoName(profile?.nomeCondominio ?? "");
   }, []);
 
+  useEffect(() => {
+    if (!targetAnchor) return;
+    const id = ANCHOR_TO_TEMPLATE[targetAnchor as ComunicadoAnchor];
+    if (!id) return;
+    setSelectedId(id);
+    setActiveAnchor(targetAnchor as ComunicadoAnchor);
+    setValues({});
+    setCopied(false);
+    setCopyError(false);
+  }, [targetAnchor]);
+
   const template = COMUNICADO_TEMPLATES.find((t) => t.id === selectedId) ?? null;
   const preview = template ? template.generate(values, condoName) : "";
 
@@ -25,6 +64,7 @@ export default function ComunicadoPanel() {
 
   const handleSelect = (id: ComunicadoId) => {
     setSelectedId(id);
+    setActiveAnchor(TEMPLATE_TO_ANCHOR[id]);
     setValues({});
     setCopied(false);
     setCopyError(false);
@@ -36,6 +76,7 @@ export default function ComunicadoPanel() {
 
   const handleReset = () => {
     setSelectedId(null);
+    setActiveAnchor("comunicado");
     setValues({});
     setCopied(false);
     setCopyError(false);
@@ -65,7 +106,10 @@ export default function ComunicadoPanel() {
   // ── Seletor de modelo ───────────────────────────────────────────────────────
   if (!selectedId) {
     return (
-      <section className="px-5 pb-6 sm:px-6">
+      <section
+        id="comunicado"
+        className={`scroll-mt-5 px-5 pb-6 sm:px-6 ${highlightAnchor === "comunicado" ? "tool-anchor-highlight" : ""}`}
+      >
         <div className="mb-3 flex items-baseline justify-between">
           <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
             Comunicados
@@ -78,7 +122,7 @@ export default function ComunicadoPanel() {
               key={t.id}
               type="button"
               onClick={() => handleSelect(t.id)}
-              className="flex flex-col items-start gap-1.5 rounded-xl border border-navy-100 bg-white px-3.5 py-3.5 text-left shadow-sm transition-all hover:border-navy-200 hover:shadow active:scale-[0.98]"
+              className="flex min-h-[132px] flex-col items-start gap-1.5 rounded-xl border border-navy-100 bg-white px-3.5 py-3.5 text-left shadow-sm transition-all hover:border-navy-200 hover:shadow active:scale-[0.98]"
             >
               <span className="text-[20px] leading-none" aria-hidden="true">
                 {t.icon}
@@ -100,7 +144,10 @@ export default function ComunicadoPanel() {
 
   // ── Formulário + prévia ─────────────────────────────────────────────────────
   return (
-    <section className="px-5 pb-6 sm:px-6">
+    <section
+      id={activeAnchor}
+      className={`scroll-mt-5 px-5 pb-6 sm:px-6 ${highlightAnchor === activeAnchor ? "tool-anchor-highlight" : ""}`}
+    >
       {/* Breadcrumb */}
       <div className="mb-3 flex items-center gap-1.5">
         <button
@@ -142,14 +189,14 @@ export default function ComunicadoPanel() {
                   onChange={(e) => setField(field.id, e.target.value)}
                   placeholder={field.placeholder}
                   rows={3}
-                  className="w-full resize-none rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] leading-relaxed text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                  className="min-h-24 w-full resize-none rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] leading-relaxed text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
                 />
               ) : field.type === "select" ? (
                 <select
                   id={`field-${field.id}`}
                   value={values[field.id] ?? ""}
                   onChange={(e) => setField(field.id, e.target.value)}
-                  className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                  className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
                 >
                   <option value="">Selecionar...</option>
                   {field.options?.map((opt) => (
@@ -165,7 +212,7 @@ export default function ComunicadoPanel() {
                   value={values[field.id] ?? ""}
                   onChange={(e) => setField(field.id, e.target.value)}
                   placeholder={field.placeholder}
-                  className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                  className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
                 />
               )}
             </div>
@@ -188,11 +235,11 @@ export default function ComunicadoPanel() {
           </p>
           <div className="max-h-64 overflow-y-auto rounded-lg bg-navy-50/50 p-3.5">
             {filledCount > 0 ? (
-              <pre className="whitespace-pre-wrap font-sans text-[12px] leading-[1.7] text-navy-700">
+              <pre className="whitespace-pre-wrap font-sans text-[14px] leading-[1.7] text-navy-700">
                 {preview}
               </pre>
             ) : (
-              <p className="text-[12px] italic text-navy-300">
+              <p className="text-[14px] italic text-navy-300">
                 Preencha os campos acima para visualizar o comunicado.
               </p>
             )}

@@ -79,7 +79,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
   if (view === "bridge") {
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-        <div className="rounded-2xl border border-cream-200 bg-cream-100/60 p-4">
+        <div className="rounded-[22px] border border-cream-200 bg-cream-100/75 p-4 shadow-[0_12px_28px_-24px_rgba(31,49,71,0.30)]">
           <div className="mb-3 flex items-center gap-2.5">
             <span
               className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] text-navy-600"
@@ -92,7 +92,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
             </p>
           </div>
 
-          <p className="text-[12.5px] leading-relaxed text-navy-700">
+          <p className="text-[13px] leading-relaxed text-navy-700">
             Registre as principais datas do seu prédio — vencimento do AVCB, seguro, mandato do síndico e manutenções — para ativar alertas de antecipação.
           </p>
 
@@ -104,7 +104,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
             <button
               type="button"
               onClick={handleSetupMemoria}
-              className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-4 py-1.5 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-navy-700 px-4 py-1.5 text-[12.5px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
             >
               Ativar monitoramento
               <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -146,7 +146,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
         <button
           type="button"
           onClick={() => setView("expanded")}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-navy-100 bg-white/70 px-4 py-2.5 text-left transition-colors hover:bg-white active:bg-navy-50"
+          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
           <span
             className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] text-navy-600"
@@ -177,7 +177,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
         <button
           type="button"
           onClick={() => { setView("expanded"); void trackEvent("onboarding_started"); }}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-cream-200 bg-cream-100/60 px-4 py-2.5 text-left transition-colors hover:bg-cream-100 active:bg-cream-200"
+          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200 bg-cream-100/70 px-4 py-3 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-cream-100 active:bg-cream-200"
         >
           <span
             className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-cream-200 text-[13px]"
@@ -237,7 +237,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
 
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-2xl border border-cream-200 bg-cream-50/60 p-4">
+      <div className="rounded-[22px] border border-cream-200 bg-white/82 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.03),0_14px_30px_-24px_rgba(31,49,71,0.28)]">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-navy-800">
             {isEditRef.current ? "Editar perfil" : "Meu condomínio"}
@@ -259,7 +259,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
               }))
             }
             placeholder="Ex: Residencial das Flores"
-            className="w-full rounded-xl border border-navy-200 bg-white px-3 py-1.5 text-[12.5px] text-navy-800 placeholder-navy-300 focus:border-navy-400 focus:outline-none focus:ring-1 focus:ring-navy-200"
+            className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13.5px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
           />
         </div>
 
@@ -303,7 +303,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
           <button
             type="button"
             onClick={save}
-            className="rounded-xl bg-navy-700 px-5 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-navy-800 active:bg-navy-900"
+            className="min-h-10 rounded-xl bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-800 active:bg-navy-900"
           >
             Salvar
           </button>

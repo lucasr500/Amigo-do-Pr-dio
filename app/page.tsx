@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
@@ -30,6 +30,16 @@ import ContextualInsight from "@/components/ContextualInsight";
 import ProximasDatas from "@/components/ProximasDatas";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
+type ToolAnchor =
+  | "comunicado"
+  | "comunicado-infracao"
+  | "comunicado-obra"
+  | "comunicado-convocacao"
+  | "comunicado-cobranca"
+  | "simulador-multa"
+  | "simulador-reajuste"
+  | "checklists";
+
 // Carregamento sob demanda — só necessários quando a aba é ativada
 const ComunicadoPanel = dynamic(() => import("@/components/ComunicadoPanel"), { ssr: false });
 const SimuladorMulta = dynamic(() => import("@/components/SimuladorMulta"), { ssr: false });
@@ -50,6 +60,10 @@ export default function HomePage() {
   const [healthStatus, setHealthStatus] = useState<CondominioHealthStatus | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("inicio");
   const [shouldExpandMemoria, setShouldExpandMemoria] = useState(false);
+  const [pendingToolAnchor, setPendingToolAnchor] = useState<ToolAnchor | null>(null);
+  const [highlightToolAnchor, setHighlightToolAnchor] = useState<ToolAnchor | null>(null);
+  const [pendingChecklistId, setPendingChecklistId] = useState<string | null>(null);
+  const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   useEffect(() => {
     (window as unknown as Record<string, unknown>).__amigoDoPredioExport = exportTelemetry;
@@ -66,6 +80,37 @@ export default function HomePage() {
     setHasCondominioData(hasData);
     if (hasData) setHealthStatus(computeCondominioHealth().status);
   }, [refreshKey]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const y = scrollByTab.current[activeTab] ?? 0;
+    window.requestAnimationFrame(() => window.scrollTo({ top: y, behavior: "auto" }));
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "ferramentas" || !pendingToolAnchor) return;
+
+    const anchor = pendingToolAnchor;
+    const scrollToAnchor = () => {
+      const el = document.getElementById(anchor);
+      if (!el) return false;
+      setHighlightToolAnchor(anchor);
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.setTimeout(() => setHighlightToolAnchor(null), 1250);
+      return true;
+    };
+
+    const first = window.setTimeout(scrollToAnchor, 80);
+    const second = window.setTimeout(() => {
+      scrollToAnchor();
+      setPendingToolAnchor(null);
+    }, 260);
+
+    return () => {
+      window.clearTimeout(first);
+      window.clearTimeout(second);
+    };
+  }, [activeTab, pendingToolAnchor]);
 
   const executeAsk = async (q: string) => {
     if (!q || isLoading) return;
@@ -99,8 +144,15 @@ export default function HomePage() {
   const handleAsk = () => executeAsk(question.trim());
   const handleRetry = () => executeAsk(submittedQuestion);
 
+  const navigateTab = (tab: AppTab) => {
+    if (typeof window !== "undefined") {
+      scrollByTab.current[activeTab] = window.scrollY;
+    }
+    setActiveTab(tab);
+  };
+
   const handleSuggestionSelect = (q: string) => {
-    setActiveTab("assistente");
+    navigateTab("assistente");
     setQuestion(q);
     executeAsk(q);
   };
@@ -121,12 +173,22 @@ export default function HomePage() {
   };
 
   const handleScrollToMemoria = () => {
-    setActiveTab("condominio");
+    navigateTab("condominio");
   };
 
-  const handleNavigateToChecklist = (_checklistId: string) => {
-    setActiveTab("ferramentas");
+  const handleNavigateToChecklist = (checklistId: string) => {
+    setPendingChecklistId(checklistId);
+    setPendingToolAnchor("checklists");
+    navigateTab("ferramentas");
   };
+
+  const handleNavigateToFerramentas = (anchor: ToolAnchor = "comunicado") => {
+    setPendingToolAnchor(anchor);
+    navigateTab("ferramentas");
+  };
+
+  const toolHighlight = (anchor: ToolAnchor) =>
+    highlightToolAnchor === anchor ? "tool-anchor-highlight" : "";
 
   // Chamado pela bridge do OnboardingProfile: expande MemoriaPanel automaticamente
   const handleSetupMemoria = () => {
@@ -134,14 +196,14 @@ export default function HomePage() {
   };
 
   return (
-    <div className="grain-bg flex min-h-dvh flex-col bg-gradient-to-b from-cream-50 via-cream-50 to-cream-100/60">
-      <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col pb-28">
+    <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
+      <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
         <Header refreshKey={refreshKey} />
 
         {/* ── 1. INÍCIO — painel operacional silencioso ──────────────── */}
         {activeTab === "inicio" && (
-          <div key="inicio" className="tab-enter flex flex-1 flex-col">
+          <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
             {hasCondominioData ? (
               <CondominioStatusHeader
@@ -178,15 +240,22 @@ export default function HomePage() {
                 <ContextualInsight refreshKey={refreshKey} />
               )}
 
-            <HomeContextual refreshKey={refreshKey} />
-            <DicaDoDia onAsk={handleSuggestionSelect} />
+            {healthStatus !== "critico" && healthStatus !== "pendente" && (
+              <HomeContextual refreshKey={refreshKey} />
+            )}
+            {healthStatus !== "critico" && (
+              <DicaDoDia
+                onAsk={handleSuggestionSelect}
+                compact={healthStatus === "pendente"}
+              />
+            )}
 
           </div>
         )}
 
         {/* ── 2. ASSISTENTE — ferramenta premium de consulta ─────────── */}
         {activeTab === "assistente" && (
-          <div key="assistente" className="tab-enter flex flex-1 flex-col">
+          <div key="assistente" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
             {!submittedQuestion && !isLoading && (
               <div className="px-5 pb-2 pt-1 sm:px-6">
@@ -194,10 +263,10 @@ export default function HomePage() {
                   Assistente
                 </p>
                 <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                  Qual é a situação?
+                  Orientações práticas
                 </p>
                 <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
-                  Descreva o problema — o app orienta o próximo passo.
+                  Descreva a situação. O app organiza o próximo passo com clareza.
                 </p>
               </div>
             )}
@@ -226,7 +295,7 @@ export default function HomePage() {
               onFavorite={() => setRefreshKey((k) => k + 1)}
               onNewQuestion={handleNewQuestion}
               onNavigateToChecklist={handleNavigateToChecklist}
-              onNavigateToFerramentas={() => setActiveTab("ferramentas")}
+              onNavigateToFerramentas={handleNavigateToFerramentas}
             />
 
           </div>
@@ -234,32 +303,46 @@ export default function HomePage() {
 
         {/* ── 3. FERRAMENTAS — utilities operacionais ────────────────── */}
         {activeTab === "ferramentas" && (
-          <div key="ferramentas" className="tab-enter flex flex-1 flex-col">
+          <div key="ferramentas" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
             <div className="px-5 pb-3 pt-1 sm:px-6">
               <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
                 Ferramentas
               </p>
-              <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                Ação prática
+                <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
+                Ações práticas
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                Transforme orientações em documentos: comunicados, cálculos e checklists para o dia a dia do síndico.
+                Transforme orientações em comunicados, cálculos e checklists para a rotina do síndico.
               </p>
             </div>
 
-            <ComunicadoPanel />
-            <SimuladorMulta />
-            <SimuladorReajusteCota />
+            <ComunicadoPanel
+              targetAnchor={pendingToolAnchor}
+              highlightAnchor={highlightToolAnchor}
+            />
+            <SimuladorMulta
+              anchorId="simulador-multa"
+              highlighted={highlightToolAnchor === "simulador-multa"}
+            />
+            <SimuladorReajusteCota
+              anchorId="simulador-reajuste"
+              highlighted={highlightToolAnchor === "simulador-reajuste"}
+            />
             <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
-            <ChecklistPanel />
+            <ChecklistPanel
+              anchorId="checklists"
+              highlighted={highlightToolAnchor === "checklists"}
+              initialOpenId={pendingChecklistId}
+              onInitialOpenConsumed={() => setPendingChecklistId(null)}
+            />
 
           </div>
         )}
 
         {/* ── 4. CONDOMÍNIO — memória e dados do prédio ─────────────── */}
         {activeTab === "condominio" && (
-          <div key="condominio" className="tab-enter flex flex-1 flex-col">
+          <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
             <div className="px-5 pb-2 pt-1 sm:px-6">
               <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
@@ -270,7 +353,7 @@ export default function HomePage() {
               </p>
               {!hasCondominioData && (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                  Registre os dados do seu prédio para ativar alertas de vencimento — AVCB, seguro, mandato do síndico e manutenções. Cada data registrada é um alerta antecipado.
+                  Registre os dados do seu prédio para ativar vencimentos, rotinas e alertas de acompanhamento.
                 </p>
               )}
             </div>
@@ -303,7 +386,7 @@ export default function HomePage() {
 
       </div>
 
-      <BottomNav active={activeTab} onChange={setActiveTab} />
+      <BottomNav active={activeTab} onChange={navigateTab} />
     </div>
   );
 }

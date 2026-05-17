@@ -4,11 +4,12 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Amigo do Prédio",
     short_name: "Amigo do Prédio",
-    description: "Orientações práticas para o seu condomínio",
+    description: "Orientações práticas para a rotina do síndico.",
     start_url: "/",
+    scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#F7F1E8",
+    background_color: "#234B63",
     theme_color: "#234B63",
     categories: ["business", "utilities"],
     icons: [
@@ -23,6 +24,12 @@ export default function manifest(): MetadataRoute.Manifest {
       sizes: "192x192",
       type: "image/png",
       purpose: "maskable",
+    },
+    {
+      src: "/icons/apple-touch-icon.png",
+      sizes: "180x180",
+      type: "image/png",
+      purpose: "any",
     },
     {
       src: "/icons/icon-512.png",

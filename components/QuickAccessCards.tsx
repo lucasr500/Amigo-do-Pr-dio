@@ -32,7 +32,7 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center justify-between rounded-xl border border-navy-100/70 bg-white/80 px-4 py-2.5 text-left transition-all duration-200 hover:bg-white active:scale-[0.99]"
+        className="flex min-h-11 w-full items-center justify-between rounded-xl border border-navy-100/70 bg-white/80 px-4 py-2.5 text-left transition-all duration-200 hover:bg-white active:scale-[0.99]"
         aria-expanded={expanded}
       >
         <span className="text-[11.5px] font-medium text-navy-600">
@@ -65,9 +65,9 @@ function TopicGrid({ onSelect }: { onSelect: (topic: Topic) => void }) {
           key={topic.id}
           onClick={() => onSelect(topic)}
           style={{ animationDelay: `${0.05 + idx * 0.04}s` }}
-          className="group relative flex flex-col items-start gap-2 rounded-xl border border-navy-100 bg-white p-3.5 text-left opacity-0 shadow-[0_1px_2px_rgba(31,49,71,0.03)] animate-fade-in-up transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-[0_4px_16px_-6px_rgba(31,49,71,0.15)] active:scale-[0.98] sm:p-4"
+          className="group relative flex min-h-[148px] flex-col items-start gap-2 rounded-[18px] border border-cream-200/90 bg-white/92 p-3.5 text-left opacity-0 shadow-[0_1px_2px_rgba(31,49,71,0.03),0_12px_26px_-24px_rgba(31,49,71,0.28)] animate-fade-in-up transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-100 hover:bg-white hover:shadow-[0_10px_28px_-22px_rgba(31,49,71,0.34)] active:scale-[0.98] sm:p-4"
         >
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50 text-[15px] transition-colors duration-200 group-hover:bg-cream-100">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-cream-100 text-[15px] transition-colors duration-200 group-hover:bg-navy-50">
             <span aria-hidden="true">{topic.icon}</span>
           </div>
           <span className="text-[12.5px] font-medium leading-snug text-navy-800 sm:text-[13px]">

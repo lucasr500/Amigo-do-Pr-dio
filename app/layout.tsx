@@ -17,17 +17,32 @@ const interTight = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Amigo do Prédio — Orientações para gestão condominial",
+  metadataBase: new URL("https://amigodopredio.vercel.app"),
+  title: "Amigo do Prédio — Assistente condominial",
   description:
-    "Orientações práticas e claras para a rotina do seu condomínio. Sem linguagem complicada, sem espera, sem dor de cabeça.",
+    "Orientações práticas para a rotina do síndico. Acompanhe vencimentos, obrigações e decisões importantes do condomínio.",
+  applicationName: "Amigo do Prédio",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Amigo do Prédio",
   },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
-    apple: "/icons/apple-touch-icon.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  other: {
+    "apple-mobile-web-app-title": "Amigo do Prédio",
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#234B63",
   },
 };
 
@@ -46,7 +61,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`${fraunces.variable} ${interTight.variable}`}>
-      <body className="font-sans bg-cream-50 text-navy-700 antialiased">
+      <body className="bg-cream-50 font-sans text-navy-700 antialiased">
         {children}
       </body>
     </html>

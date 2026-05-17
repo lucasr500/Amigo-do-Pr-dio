@@ -84,10 +84,10 @@ export default function BottomNav({ active, onChange }: Props) {
     >
       <div className="mx-auto max-w-[440px]">
         <div
-          className="border-t border-navy-100/60 bg-cream-50/[0.97] backdrop-blur-xl"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6px)" }}
+          className="border-t border-cream-200/80 bg-[#fffaf1]/[0.96] shadow-[0_-10px_30px_-26px_rgba(31,49,71,0.45)] backdrop-blur-xl"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 7px)" }}
         >
-          <div className="flex items-center">
+          <div className="flex items-center px-1">
             {TABS.map((tab) => {
               const isActive = active === tab.id;
               const Icon = ICONS[tab.id];
@@ -98,13 +98,15 @@ export default function BottomNav({ active, onChange }: Props) {
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => onChange(tab.id)}
-                  className={`flex flex-1 flex-col items-center gap-1 pb-1.5 pt-3 transition-all duration-150 active:scale-95 ${
+                  className={`flex min-h-[64px] flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl px-1 transition-all duration-150 active:scale-[0.97] ${
                     isActive ? "text-navy-800" : "text-navy-400 hover:text-navy-600"
                   }`}
                 >
-                  <Icon active={isActive} />
+                  <span className={isActive ? "rounded-full bg-navy-50 px-3 py-1 text-navy-800" : "px-3 py-1"}>
+                    <Icon active={isActive} />
+                  </span>
                   <span
-                    className={`text-[9.5px] font-medium leading-none ${
+                    className={`text-[10.5px] font-semibold leading-none ${
                       isActive ? "text-navy-800" : "text-navy-400"
                     }`}
                   >

@@ -31,7 +31,7 @@ export default function AskInput({
     <section className="px-5 pb-5 sm:px-6 sm:pb-6 animate-fade-in-up stagger-2">
       <form
         onSubmit={handleSubmit}
-        className="group relative rounded-2xl bg-white shadow-[0_1px_2px_rgba(31,49,71,0.04),0_8px_24px_-12px_rgba(31,49,71,0.12)] ring-1 ring-navy-100 transition-all duration-300 focus-within:ring-2 focus-within:ring-navy-800/20 focus-within:shadow-[0_1px_2px_rgba(31,49,71,0.04),0_12px_32px_-12px_rgba(31,49,71,0.18)]"
+        className="group relative rounded-[22px] border border-cream-200/80 bg-white/92 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_16px_34px_-26px_rgba(31,49,71,0.30)] transition-all duration-200 focus-within:border-navy-200 focus-within:bg-white focus-within:shadow-[0_1px_2px_rgba(31,49,71,0.04),0_18px_38px_-24px_rgba(31,49,71,0.36)]"
       >
         <label htmlFor="ask-question" className="sr-only">
           Faça sua pergunta
@@ -45,7 +45,7 @@ export default function AskInput({
           placeholder="Ex: Morador fez obra sem avisar. O que faço?"
           rows={2}
           disabled={isLoading}
-          className="w-full resize-none rounded-2xl bg-transparent px-4 pt-4 pb-2 text-[15px] leading-relaxed text-navy-800 placeholder:text-navy-300 focus:outline-none disabled:opacity-60 sm:text-base"
+          className="min-h-[96px] w-full resize-none rounded-[22px] bg-transparent px-4 pb-2 pt-4 text-[15.5px] leading-relaxed text-navy-800 placeholder:text-navy-300 focus:outline-none disabled:opacity-60 sm:text-base"
         />
 
         <div className="flex items-center justify-between gap-2 px-2 pb-2 sm:px-3 sm:pb-3">
@@ -57,7 +57,7 @@ export default function AskInput({
           <button
             type="submit"
             disabled={!value.trim() || isLoading}
-            className="group/btn inline-flex items-center gap-2 rounded-xl bg-navy-800 px-5 py-2.5 text-[14px] font-medium text-cream-50 shadow-sm transition-all duration-200 hover:bg-navy-900 hover:shadow-md active:scale-[0.97] disabled:cursor-not-allowed disabled:bg-navy-200 disabled:hover:shadow-sm sm:text-[14.5px]"
+            className="group/btn inline-flex min-h-11 items-center gap-2 rounded-2xl bg-navy-800 px-5 py-2.5 text-[14px] font-semibold text-cream-50 shadow-sm transition-all duration-200 hover:bg-navy-900 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-navy-200 disabled:hover:shadow-sm sm:text-[14.5px]"
           >
             {isLoading ? (
               <>
@@ -82,7 +82,7 @@ export default function AskInput({
                     strokeLinecap="round"
                   />
                 </svg>
-                Pensando…
+                Organizando…
               </>
             ) : (
               <>

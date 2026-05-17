@@ -22,7 +22,19 @@ function formatLastUsed(isoTs: string): string {
   return "há mais de um mês";
 }
 
-export default function ChecklistPanel() {
+type Props = {
+  anchorId?: string;
+  highlighted?: boolean;
+  initialOpenId?: string | null;
+  onInitialOpenConsumed?: () => void;
+};
+
+export default function ChecklistPanel({
+  anchorId = "checklists",
+  highlighted = false,
+  initialOpenId,
+  onInitialOpenConsumed,
+}: Props) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [lastUsed, setLastUsed] = useState<Record<string, string>>({});
@@ -43,6 +55,16 @@ export default function ChecklistPanel() {
     setLastUsed(timestamps);
     setHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || !initialOpenId) return;
+    const exists = CHECKLISTS.some((c) => c.id === initialOpenId);
+    if (!exists) return;
+    setOpenId(initialOpenId);
+    logChecklistOpen(initialOpenId);
+    void trackEvent("checklist_open", { checklist_id: initialOpenId, source: "deep_link" });
+    onInitialOpenConsumed?.();
+  }, [hydrated, initialOpenId, onInitialOpenConsumed]);
 
   const toggleChecklist = (id: string) => {
     const willOpen = openId !== id;
@@ -99,7 +121,10 @@ export default function ChecklistPanel() {
   };
 
   return (
-    <section id="checklist-panel" className="px-5 pb-7 sm:px-6 sm:pb-8">
+    <section
+      id={anchorId}
+      className={`scroll-mt-5 px-5 pb-7 sm:px-6 sm:pb-8 ${highlighted ? "tool-anchor-highlight" : ""}`}
+    >
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
           Checklists operacionais
@@ -127,7 +152,7 @@ export default function ChecklistPanel() {
               <button
                 type="button"
                 onClick={() => toggleChecklist(checklist.id)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-navy-50/50 active:bg-navy-50"
+                className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left transition-colors duration-150 hover:bg-navy-50/50 active:bg-navy-50"
                 aria-expanded={isOpen}
               >
                 <span className="text-[18px]" aria-hidden="true">
@@ -196,7 +221,7 @@ export default function ChecklistPanel() {
                         <button
                           type="button"
                           onClick={() => toggleItem(checklist.id, item.id)}
-                          className="flex w-full items-start gap-3 rounded-lg px-1 py-1.5 text-left transition-colors duration-100 hover:bg-navy-50/50 active:bg-navy-50"
+                          className="flex min-h-11 w-full items-start gap-3 rounded-lg px-1 py-2 text-left transition-colors duration-100 hover:bg-navy-50/50 active:bg-navy-50"
                         >
                           <span
                             className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[4px] border-[1.5px] transition-all duration-150 ${

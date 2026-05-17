@@ -24,7 +24,12 @@ function parseNum(s: string): number {
   return Math.max(0, parseFloat(s.replace(",", ".")) || 0);
 }
 
-export default function SimuladorReajusteCota() {
+type Props = {
+  anchorId?: string;
+  highlighted?: boolean;
+};
+
+export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste", highlighted = false }: Props) {
   const [arrecadacao, setArrecadacao] = useState("");
   const [despesa, setDespesa] = useState("");
   const [unidades, setUnidades] = useState("");
@@ -74,7 +79,10 @@ export default function SimuladorReajusteCota() {
   const resetResultado = () => setResultado(null);
 
   return (
-    <section className="px-5 pb-6 pt-2 sm:px-6">
+    <section
+      id={anchorId}
+      className={`scroll-mt-5 px-5 pb-6 pt-2 sm:px-6 ${highlighted ? "tool-anchor-highlight" : ""}`}
+    >
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
           Simulador de reajuste de cota
@@ -86,7 +94,7 @@ export default function SimuladorReajusteCota() {
 
           {/* Arrecadação e Despesa */}
           <div className="flex gap-3">
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label htmlFor="sr-arrecadacao" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
                 Arrecadação mensal (R$)
               </label>
@@ -97,10 +105,10 @@ export default function SimuladorReajusteCota() {
                 value={arrecadacao}
                 onChange={(e) => { setArrecadacao(e.target.value); resetResultado(); }}
                 placeholder="Ex: 12.000,00"
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label htmlFor="sr-despesa" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
                 Despesa mensal média (R$)
               </label>
@@ -111,14 +119,14 @@ export default function SimuladorReajusteCota() {
                 value={despesa}
                 onChange={(e) => { setDespesa(e.target.value); resetResultado(); }}
                 placeholder="Ex: 11.000,00"
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
             </div>
           </div>
 
           {/* Unidades e Cota atual */}
           <div className="flex gap-3">
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label htmlFor="sr-unidades" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
                 Nº de unidades
               </label>
@@ -129,10 +137,10 @@ export default function SimuladorReajusteCota() {
                 value={unidades}
                 onChange={(e) => { setUnidades(e.target.value); resetResultado(); }}
                 placeholder="Ex: 30"
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label htmlFor="sr-cota" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
                 Cota atual (R$) <span className="text-navy-400">opcional</span>
               </label>
@@ -143,14 +151,14 @@ export default function SimuladorReajusteCota() {
                 value={cotaAtual}
                 onChange={(e) => { setCotaAtual(e.target.value); resetResultado(); }}
                 placeholder="Ex: 400,00"
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
             </div>
           </div>
 
           {/* Inadimplência e Aumento de despesas */}
           <div className="flex gap-3">
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label htmlFor="sr-inadimplencia" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
                 Inadimplência (%)
               </label>
@@ -160,11 +168,11 @@ export default function SimuladorReajusteCota() {
                 inputMode="decimal"
                 value={inadimplencia}
                 onChange={(e) => { setInadimplencia(e.target.value); resetResultado(); }}
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
               <p className="mt-1 text-[10.5px] text-navy-400">Padrão: 5%</p>
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <label htmlFor="sr-aumento" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
                 Aumento de despesas (%)
               </label>
@@ -174,7 +182,7 @@ export default function SimuladorReajusteCota() {
                 inputMode="decimal"
                 value={aumentoDespesas}
                 onChange={(e) => { setAumentoDespesas(e.target.value); resetResultado(); }}
-                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
               <p className="mt-1 text-[10.5px] text-navy-400">Estimativa anual</p>
             </div>
@@ -192,7 +200,7 @@ export default function SimuladorReajusteCota() {
               value={reforcoReserva}
               onChange={(e) => { setReforcoReserva(e.target.value); resetResultado(); }}
               placeholder="Ex: 500,00"
-              className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
+              className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
             />
           </div>
 

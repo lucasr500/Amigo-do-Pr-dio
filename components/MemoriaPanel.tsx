@@ -228,7 +228,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
             setShowManutencoes(true);
             logInteraction("memoria-panel-aberto", "");
           }}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-navy-100 bg-white/70 px-4 py-3 text-left transition-colors hover:bg-white active:bg-navy-50"
+          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
           <span
             className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]"
@@ -257,7 +257,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-2xl border border-navy-100 bg-white/90 p-4 shadow-sm">
+      <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-navy-800">
             Datas e manutenções
@@ -275,7 +275,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
         {filledCount === 0 && (
           <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Preencha o que souber — cada data registrada ativa um alerta na aba Início. Preencher tudo leva menos de 2 minutos e você pode completar o restante depois.
+              Preencha o que souber. Cada data registrada ativa acompanhamento na aba Início, e você pode completar o restante depois.
             </p>
           </div>
         )}
@@ -330,7 +330,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                             type="date"
                             value={draft[key] as string ?? ""}
                             onChange={(e) => set(key, e.target.value || undefined)}
-                            className="w-full rounded-lg border border-navy-100 bg-navy-50/30 px-2.5 py-1.5 text-[12.5px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-200"
+                            className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
                           />
                         ) : (
                           <input
@@ -338,7 +338,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                             value={draft[key] as string ?? ""}
                             onChange={(e) => set(key, e.target.value || undefined)}
                             placeholder={placeholder}
-                            className="w-full rounded-lg border border-navy-100 bg-navy-50/30 px-2.5 py-1.5 text-[12.5px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-200"
+                            className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
                           />
                         )}
                       </div>
@@ -367,7 +367,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
               <button
                 type="button"
                 onClick={salvar}
-                className="rounded-xl bg-navy-700 px-5 py-1.5 text-[12.5px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-95"
+                className="min-h-10 rounded-xl bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
               >
                 Salvar
               </button>
