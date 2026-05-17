@@ -84,6 +84,7 @@
 - [x] PainelOperacional: "Explorar mais" renomeado para "Perguntar sobre" (Fase 41) — elimina confusão entre ferramenta e atalho de Assistente
 - [x] Insight de mandato adicionado (Fase 41): `lib/insights.ts` — cobre janela 90–180 dias (pré-GuidancePanel)
 - [x] Visão futura financeiro documentada (Fase 41): `docs/visao-futura-financeiro-demonstrativos.md` — demonstrativo da administradora, previsão orçamentária, reajuste de cota
+- [x] **Fase 43 — Tempo até o alívio:** Hero reposicionado para "problema-primeiro" com chips situacionais; QuickAccessCards mostram perguntas situacionais; AskInput com placeholder situacional; "Próximo passo" explícito nas respostas do Assistente (10 categorias); CAT_TO_COMUNICADO expandido (responsabilidade, gestão); TOPICS examplePrompts atualizados para situações reais; Laboratório de 50+ cenários criado; Matriz de maturidade de 11 fluxos; Tese do tempo até o alívio documentada
 
 ---
 

@@ -1,6 +1,6 @@
 # Visão Futura — Módulo Financeiro e Demonstrativos
 
-> **Documento estratégico interno — Fase 41**
+> **Documento estratégico interno — Fase 42**
 > Registra o raciocínio por trás da ausência intencional de funcionalidades financeiras no produto atual
 > e define critérios para avaliação futura — quando e como entrar nesse território.
 
@@ -108,10 +108,25 @@ Antes de implementar qualquer funcionalidade financeira:
 
 ## O que está disponível hoje
 
-O **Simulador de Multa/Juros** já cobre o território financeiro mais simples:
+### Simulador de Multa/Juros (Fase 5)
+Cobre o território financeiro mais simples:
 - Cálculo de multa (porcentagem sobre a cota)
 - Cálculo de juros (juros simples mensais)
 - Estimativa de correção por meses de atraso
+
+### Simulador de Reajuste de Cota (Fase 42)
+Concretiza o item 3 acima. Campos: arrecadação mensal, despesa média, nº de unidades,
+inadimplência (%), aumento previsto de despesas (%), reforço de reserva, cota atual (opcional).
+
+Outputs:
+- Arrecadação líquida estimada (desconta inadimplência)
+- Despesa projetada (aplica crescimento + reforço)
+- Balanço projetado (déficit ou superávit)
+- % mínimo de reajuste necessário
+- Nova cota estimada (quando cota atual informada)
+
+Disclaimers explícitos: não substitui previsão orçamentária oficial, administradora, contador,
+extratos reais ou aprovação em assembleia.
 
 Essa é a base. Qualquer expansão financeira deve agregar valor distinto ao que já existe,
 não duplicar nem complicar o que funciona.
@@ -131,4 +146,4 @@ Financeiro só entra se resolver esse gap — não se criar um novo sistema.
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-17 (Fase 41)*
+*Versão: 2026-05-17 (Fase 42)*

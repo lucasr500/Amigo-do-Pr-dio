@@ -391,7 +391,7 @@ export const TOPICS: Topic[] = [
     id: "multas",
     title: "Multas e advertências",
     icon: "⚖️",
-    examplePrompt: "Posso aplicar multa sem assembleia?",
+    examplePrompt: "Morador faz barulho toda noite. Posso multar?",
   },
   {
     id: "obras",
@@ -403,37 +403,37 @@ export const TOPICS: Topic[] = [
     id: "assembleias",
     title: "Assembleias",
     icon: "👥",
-    examplePrompt: "Como convocar assembleia extraordinária?",
+    examplePrompt: "Preciso de assembleia urgente. Como convocar?",
   },
   {
     id: "inadimplencia",
     title: "Inadimplência",
     icon: "💰",
-    examplePrompt: "Como cobrar moradores inadimplentes?",
+    examplePrompt: "Vizinho deve 3 meses. Quais são os passos?",
   },
   {
     id: "funcionarios",
     title: "Funcionários",
     icon: "🧹",
-    examplePrompt: "Posso contratar zelador como PJ?",
+    examplePrompt: "Porteiro faltou sem avisar. O que posso fazer?",
   },
   {
     id: "convencao",
     title: "Convenção e regras",
     icon: "📜",
-    examplePrompt: "Como mudar uma regra da convenção?",
+    examplePrompt: "Posso proibir pets pela convenção do condomínio?",
   },
   {
     id: "locacao",
     title: "Locação e inquilinos",
     icon: "🏠",
-    examplePrompt: "Inquilino pode votar em assembleia?",
+    examplePrompt: "Inquilino ignora as regras. Quem é responsável?",
   },
   {
     id: "lgpd",
     title: "Proteção de dados",
     icon: "🔒",
-    examplePrompt: "O condomínio pode publicar lista de devedores?",
+    examplePrompt: "Posso divulgar inadimplentes no grupo do WhatsApp?",
   },
   {
     id: "responsabilidade",
@@ -451,13 +451,13 @@ export const TOPICS: Topic[] = [
     id: "gestao",
     title: "Gestão do condomínio",
     icon: "🏛️",
-    examplePrompt: "Quais são os deveres do síndico?",
+    examplePrompt: "Síndico pode decidir sozinho sem assembleia?",
   },
   {
     id: "financeiro",
     title: "Finanças e rateio",
     icon: "💼",
-    examplePrompt: "Como calcular o rateio das despesas?",
+    examplePrompt: "A cota está cobrindo as despesas do prédio?",
   },
 ];
 

@@ -219,9 +219,22 @@ A Fase 41 completou o painel operacional da aba Início com:
 
 ---
 
-## Próxima fase recomendada (Fase 42)
+## O que a Fase 43 entregou — Tempo até o alívio
 
-Com o painel operacional completo, o próximo passo natural é **validação com síndicos reais** em modo beta fechado.
+A Fase 43 reposicionou a primeira experiência e melhorou o fluxo de resolução de problemas:
+
+- **Hero problema-primeiro**: "Recebeu um problema no condomínio?" com chips situacionais (5 situações reais, clicáveis → Assistente + auto-submit). "Ativar monitoramento" rebaixado para link secundário. O produto agora acolhe o síndico em crise antes de pedir configuração.
+- **AskInput situacional**: placeholder "Morador fez obra sem avisar. O que faço?" — ativa o modo mental correto.
+- **QuickAccessCards situacionais**: cards exibem a pergunta real como texto principal, não a categoria abstrata.
+- **"Próximo passo" explícito**: `CAT_TO_NEXTACTION` em `Response.tsx` — quando uma entrada KB não tem dica específica, o Assistente exibe uma ação concreta para o síndico tomar imediatamente (10 categorias cobertas).
+- **CAT_TO_COMUNICADO expandido**: responsabilidade civil e gestão condominial agora têm CTA de comunicado direto na resposta.
+- **Documentação estratégica**: `tese-tempo-ate-alivio.md` (define a métrica central do produto), `laboratorio-cenarios-sindico.md` (50+ cenários para calibração e priorização), `matriz-maturidade-fluxos.md` (11 fluxos × 7 critérios, score 0–5).
+
+---
+
+## Próxima fase recomendada
+
+Com o produto orientado ao alívio, o próximo passo é **validação com síndicos reais** em modo beta fechado.
 
 Antes de convidar os primeiros testadores:
 1. Confirmar recall ≥ 75% no painel /admin
@@ -233,4 +246,4 @@ Antes de convidar os primeiros testadores:
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-17 (Fase 41)*
+*Versão: 2026-05-17 (Fase 43)*

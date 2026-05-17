@@ -67,10 +67,13 @@ function TopicGrid({ onSelect }: { onSelect: (topic: Topic) => void }) {
           style={{ animationDelay: `${0.05 + idx * 0.04}s` }}
           className="group relative flex flex-col items-start gap-2 rounded-xl border border-navy-100 bg-white p-3.5 text-left opacity-0 shadow-[0_1px_2px_rgba(31,49,71,0.03)] animate-fade-in-up transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-[0_4px_16px_-6px_rgba(31,49,71,0.15)] active:scale-[0.98] sm:p-4"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy-50 text-base transition-colors duration-200 group-hover:bg-sage-50">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50 text-[15px] transition-colors duration-200 group-hover:bg-sage-50">
             <span aria-hidden="true">{topic.icon}</span>
           </div>
-          <span className="text-[13.5px] font-medium leading-tight text-navy-800 sm:text-[14px]">
+          <span className="text-[12.5px] font-medium leading-snug text-navy-800 sm:text-[13px]">
+            {topic.examplePrompt}
+          </span>
+          <span className="text-[10.5px] text-navy-400">
             {topic.title}
           </span>
           <svg

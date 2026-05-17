@@ -38,6 +38,7 @@ const PainelOperacional = dynamic(() => import("@/components/PainelOperacional")
 const TimelineOperacional = dynamic(() => import("@/components/TimelineOperacional"), { ssr: false });
 const RevisaoMensal = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
 const BackupPanel = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
+const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
 
 export default function HomePage() {
   const [question, setQuestion] = useState("");
@@ -151,6 +152,7 @@ export default function HomePage() {
               <Hero
                 onSetup={handleScrollToMemoria}
                 onAssistente={() => setActiveTab("assistente")}
+                onSuggestionSelect={handleSuggestionSelect}
               />
             )}
 
@@ -248,6 +250,7 @@ export default function HomePage() {
 
             <ComunicadoPanel />
             <SimuladorMulta />
+            <SimuladorReajusteCota />
             <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
             <ChecklistPanel />
 

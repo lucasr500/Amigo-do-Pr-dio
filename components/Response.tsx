@@ -17,11 +17,27 @@ const CAT_TO_CHECKLIST: Partial<Record<string, { id: string; title: string; icon
 
 // Mapa categoria → comunicado sugerido
 const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; icon: string; hint: string }>> = {
-  multas:        { label: "Gerar notificação de infração",  icon: "⚠️", hint: "Documente antes de aplicar sanção" },
-  obras:         { label: "Gerar comunicado de obra",       icon: "🔨", hint: "Informe os moradores com antecedência" },
-  assembleias:   { label: "Preparar convocação",            icon: "👥", hint: "Gere o texto da convocação" },
-  inadimplencia: { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
-  cobranca:      { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
+  multas:           { label: "Gerar notificação de infração",  icon: "⚠️", hint: "Documente antes de aplicar sanção" },
+  obras:            { label: "Gerar comunicado de obra",       icon: "🔨", hint: "Informe os moradores com antecedência" },
+  assembleias:      { label: "Preparar convocação",            icon: "👥", hint: "Gere o texto da convocação" },
+  inadimplencia:    { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
+  cobranca:         { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
+  responsabilidade: { label: "Registrar ocorrência formal",    icon: "📝", hint: "Documente o dano antes de acionar responsáveis" },
+  gestao:           { label: "Gerar comunicado interno",       icon: "📢", hint: "Formalize a decisão por escrito" },
+};
+
+// Próximo passo por categoria — mostrado quando a entrada KB não tem dica específica
+const CAT_TO_NEXTACTION: Partial<Record<string, string>> = {
+  multas:           "Documente a ocorrência por escrito com data, hora e testemunhas antes de notificar.",
+  obras:            "Solicite ao condômino o tipo de obra, cronograma e, se necessário, documentação técnica antes de qualquer decisão.",
+  assembleias:      "Verifique na convenção o prazo mínimo de antecedência para convocação e o quórum exigido para o tema da pauta.",
+  inadimplencia:    "Acione a administradora para formalizar a cobrança pelos canais adequados. Evite abordagem direta sem respaldo formal.",
+  responsabilidade: "Solicite vistoria imediata do local do dano e documente com fotos antes de acionar qualquer seguro ou responsável.",
+  funcionarios:     "Verifique o contrato, a CCT da sua região e as obrigações legais antes de tomar qualquer decisão sobre o funcionário.",
+  lgpd:             "Não publique dados pessoais sem verificar os limites da LGPD e da convenção. Prefira comunicação interna por canais adequados.",
+  locacao:          "Verifique a convenção para identificar o que compete ao condomínio versus o que é responsabilidade do locador ou locatário.",
+  gestao:           "Documente a decisão em ata ou comunicado antes de comunicar aos condôminos.",
+  convencao:        "Alterações de convenção geralmente exigem quórum qualificado (2/3 dos condôminos). Consulte os requisitos antes de convocar.",
 };
 
 // Rótulos em português para o chip "Tema identificado"
@@ -273,6 +289,21 @@ export default function Response({
                           </div>
                           <p className="text-[12px] leading-relaxed text-navy-700">
                             {entry.dica}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Próximo passo — categoria-wide, só quando não há dica específica */}
+                      {!entry.dica && CAT_TO_NEXTACTION[entry.categoria] && (
+                        <div className="rounded-r-lg border-l-[2.5px] border-navy-300 bg-navy-50/50 py-2.5 pl-3 pr-3">
+                          <div className="mb-1.5 flex items-center gap-1.5">
+                            <NextStepIcon />
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
+                              Próximo passo
+                            </p>
+                          </div>
+                          <p className="text-[12px] leading-relaxed text-navy-700">
+                            {CAT_TO_NEXTACTION[entry.categoria]}
                           </p>
                         </div>
                       )}
@@ -612,6 +643,19 @@ function BookIcon() {
     >
       <rect x="1.5" y="1" width="7.5" height="10" rx="0.8" stroke="currentColor" strokeWidth="1.1" />
       <path d="M3.5 4h4M3.5 6h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function NextStepIcon() {
+  return (
+    <svg
+      className="h-3 w-3 flex-shrink-0 text-navy-500"
+      viewBox="0 0 12 12"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path d="M2 6h8M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

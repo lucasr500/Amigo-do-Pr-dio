@@ -42,7 +42,7 @@ export default function AskInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ex: Posso aplicar multa sem assembleia?"
+          placeholder="Ex: Morador fez obra sem avisar. O que faço?"
           rows={2}
           disabled={isLoading}
           className="w-full resize-none rounded-2xl bg-transparent px-4 pt-4 pb-2 text-[15px] leading-relaxed text-navy-800 placeholder:text-navy-300 focus:outline-none disabled:opacity-60 sm:text-base"

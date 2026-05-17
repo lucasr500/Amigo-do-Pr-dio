@@ -56,7 +56,8 @@ export type TelemetryEvent =
   | "assistant_suggestion_clicked"
   | "comunicado_gerado"
   | "comunicado_copiado"
-  | "simulador_calculado";
+  | "simulador_calculado"
+  | "simulador_reajuste_calculado";
 
 type QueuedEvent = {
   event: string;

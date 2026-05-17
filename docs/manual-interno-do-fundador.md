@@ -6,13 +6,28 @@
 
 ---
 
-## Estado atual do produto (2026-05-17 — Fase 41)
+## Estado atual do produto (2026-05-17 — Fase 43)
 
 ### Bundle
 - Rota principal (`/`): 220 kB First Load JS (margem de ~10 kB para o limite 230 kB — confirmado Fase 41)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 43
+- **Hero reposicionado:** "Recebeu um problema no condomínio?" — chips situacionais (5 situações clicáveis → Assistente + auto-submit). "Ativar monitoramento" passou para link secundário. `onSuggestionSelect` prop adicionado.
+- **AskInput situacional:** placeholder mudou para "Morador fez obra sem avisar. O que faço?" — ativa modo mental correto.
+- **QuickAccessCards situacionais:** cards agora mostram `examplePrompt` (pergunta real) como texto principal e `title` como label secundário.
+- **"Próximo passo" nas respostas:** `CAT_TO_NEXTACTION` em `Response.tsx` — 10 categorias cobertas, renderizado quando `!entry.dica`.
+- **CAT_TO_COMUNICADO expandido:** adicionadas categorias `responsabilidade` (registrar ocorrência) e `gestao` (comunicado interno).
+- **TOPICS atualizados:** 9 examplePrompts reescritos para linguagem situacional real de síndico.
+- **Docs criados:** `laboratorio-cenarios-sindico.md` (50+ cenários), `matriz-maturidade-fluxos.md` (11 fluxos × 7 critérios), `tese-tempo-ate-alivio.md`.
+
+### Entregues na Fase 42
+- **SimuladorReajusteCota:** `components/SimuladorReajusteCota.tsx` — calculadora de reajuste de cota condominial. 7 campos, cálculo de arrecadação líquida, despesa projetada, balanço e % mínimo de reajuste. `ssr: false`, disclaimers, telemetria `simulador_reajuste_calculado`.
+- **ProximasDatas:** subtitle adicionado — "Vencimentos e manutenções antes que virem urgência."
+- **Telemetria:** `simulador_reajuste_calculado` adicionado ao `TelemetryEvent`.
+- **Docs:** `visao-futura-financeiro-demonstrativos.md` atualizado (seção SimuladorReajusteCota); RC checklist com grupo 9b.
 
 ### Entregues na Fase 41
 - **"Próximas datas":** `components/ProximasDatas.tsx` — lista de vencimentos e rotinas calculadas, ordenada por urgência, integrada na aba Início (apenas quando hasCondominioData). Toque em item → Assistente com pergunta contextual.

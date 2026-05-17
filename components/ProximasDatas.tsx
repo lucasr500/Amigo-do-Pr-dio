@@ -109,9 +109,14 @@ export default function ProximasDatas({ onAsk, onNavigateToCondominio, refreshKe
       <div className="rounded-2xl border border-navy-100 bg-white/80 px-4 py-4">
 
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-400">
-            Próximas datas
-          </p>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-400">
+              Próximas datas
+            </p>
+            <p className="mt-0.5 text-[11px] leading-snug text-navy-400">
+              Vencimentos e manutenções antes que virem urgência.
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             {hasMore && (
               <button

@@ -126,6 +126,18 @@ Testar em janela privada ou localStorage limpo:
 
 ---
 
+## 9b. Ferramentas: SimuladorReajusteCota
+
+- [ ] Campos arrecadação e despesa obrigatórios — botão desabilitado sem eles
+- [ ] Inadimplência padrão 5%, aumento despesas padrão 8%
+- [ ] Cota atual opcional — "Nova cota estimada" só aparece quando informada
+- [ ] Balanço positivo → card verde (sage); balanço negativo → card escuro (navy)
+- [ ] Reajuste mínimo "Sem necessidade" quando não há déficit
+- [ ] Disclaimer estimativo visível abaixo do resultado
+- [ ] Alterar qualquer campo limpa o resultado anterior
+
+---
+
 ## 10. Ferramentas: ChecklistPanel
 
 - [ ] 4 checklists aparecem
@@ -179,6 +191,7 @@ Testar em janela privada ou localStorage limpo:
 
 - [ ] Toda resposta do Assistente tem texto de disclaimer jurídico visível
 - [ ] SimuladorMulta tem disclaimer "estimativa" visível
+- [ ] SimuladorReajusteCota tem disclaimer "estimativa / não substitui administradora" visível
 - [ ] ComunicadoPanel tem disclaimer por modelo visível após copiar
 - [ ] Nenhuma resposta afirma certeza legal absoluta sem ressalva
 
@@ -261,6 +274,7 @@ Beta com síndicos reais exige **todos** os seguintes:
 
 | Data | Versão | Verificador | Resultado | Pendências |
 |------|--------|-------------|-----------|------------|
+| 2026-05-17 | Fase 43 | Fundador (análise de código) | UX problema-primeiro; Hero, QuickAccessCards, Response, lib/data atualizados | Teste físico PWA pendente; auditoria /admin ao vivo pendente |
 | 2026-05-16 | Fase 38 | Fundador (análise de código) | Build limpo, TS zero erros | Teste físico PWA pendente; auditoria /admin ao vivo pendente |
 | — | Fase 36 | — | Em preparação | Ver seções acima |
 
