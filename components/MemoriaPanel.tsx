@@ -43,6 +43,14 @@ const CAMPOS: Campo[] = [
     grupo: "vencimentos",
   },
   {
+    key: "fimMandatoSindico",
+    label: "Fim do mandato do síndico",
+    sublabel: "Registre para lembrar de convocar a assembleia de eleição ou recondução com antecedência",
+    tipo: "data",
+    icon: "🗳️",
+    grupo: "vencimentos",
+  },
+  {
     key: "ultimaAGO",
     label: "Última AGO realizada",
     sublabel: "Assembleia Geral Ordinária",
@@ -176,6 +184,13 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
         lines.push(d > 0 ? `Seguro · válido por ${d} dias` : "Seguro · vencido");
       }
     }
+    if (draft.fimMandatoSindico) {
+      const dt = new Date(draft.fimMandatoSindico);
+      if (!isNaN(dt.getTime())) {
+        const d = Math.floor((dt.getTime() - Date.now()) / 86400000);
+        lines.push(d > 0 ? `Mandato · ${d} dias restantes` : "Mandato · vencido");
+      }
+    }
     const manutencaoCount = [
       draft.ultimaAGO, draft.ultimaDedetizacao, draft.ultimaLimpezaCaixaDAgua,
       draft.ultimaManutencaoElevador, draft.ultimaInspecaoExtintores,
@@ -223,12 +238,12 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-navy-800">
-              Datas e manutenções do prédio
+              Vencimentos e manutenções
             </p>
             <p className="text-[11.5px] text-navy-400">
               {filledCount > 0
-                ? `${filledCount} item${filledCount > 1 ? "s" : ""} registrado${filledCount > 1 ? "s" : ""} · manter atualizado`
-                : "Ativa o monitoramento inteligente do condomínio"}
+                ? `${filledCount} item${filledCount > 1 ? "s" : ""} monitorado${filledCount > 1 ? "s" : ""} · toque para atualizar`
+                : "AVCB, seguro, mandato e manutenções — tudo em um lugar"}
             </p>
           </div>
           <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-500">
@@ -260,8 +275,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
         {filledCount === 0 && (
           <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Preencha o que souber. Cada data registrada ativa um item de
-              monitoramento na aba Início. Você pode completar o restante depois.
+              Preencha o que souber — cada data registrada ativa um alerta na aba Início. Preencher tudo leva menos de 2 minutos e você pode completar o restante depois.
             </p>
           </div>
         )}

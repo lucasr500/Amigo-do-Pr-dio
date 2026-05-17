@@ -75,6 +75,16 @@
 - Foco inicial: síndicos voluntários (não administradoras)
 - Canal: comunidades de síndicos no WhatsApp, grupos no Facebook, LinkedIn
 
+- [x] Tese de copiloto operacional documentada (Fase 40): `docs/tese-produto-copiloto-operacional.md`
+- [x] Reposicionamento de copy principal: Hero, Ferramentas, Assistente, Condomínio (Fase 40)
+- [x] Campo de vencimento do mandato do síndico implementado (Fase 40): MemoriaPanel, GuidancePanel, StatusHeader, guidance.ts
+- [x] Integração Assistente → Ferramentas aprimorada: CTAs de comunicado por categoria (Fase 40)
+- [x] Onboarding reposicionado como "ativar monitoramento", não "preencher formulário" (Fase 40)
+- [x] Seção "Próximas datas" na aba Início (Fase 41): `components/ProximasDatas.tsx` — vencimentos + rotinas calculadas, ordenados por urgência
+- [x] PainelOperacional: "Explorar mais" renomeado para "Perguntar sobre" (Fase 41) — elimina confusão entre ferramenta e atalho de Assistente
+- [x] Insight de mandato adicionado (Fase 41): `lib/insights.ts` — cobre janela 90–180 dias (pré-GuidancePanel)
+- [x] Visão futura financeiro documentada (Fase 41): `docs/visao-futura-financeiro-demonstrativos.md` — demonstrativo da administradora, previsão orçamentária, reajuste de cota
+
 ---
 
 ## O que NÃO fazer antes do beta
@@ -122,5 +132,5 @@
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-16 (Fase 36)*
+*Versão: 2026-05-17 (Fase 40)*
 *Atualizar conforme marcos forem atingidos.*

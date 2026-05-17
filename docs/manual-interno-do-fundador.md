@@ -6,13 +6,27 @@
 
 ---
 
-## Estado atual do produto (2026-05-16 — Fase 38)
+## Estado atual do produto (2026-05-17 — Fase 41)
 
 ### Bundle
-- Rota principal (`/`): 218 kB First Load JS (margem de 12 kB para o limite 230 kB)
-- Admin (`/admin`): 202 kB First Load JS
+- Rota principal (`/`): 220 kB First Load JS (margem de ~10 kB para o limite 230 kB — confirmado Fase 41)
+- Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 41
+- **"Próximas datas":** `components/ProximasDatas.tsx` — lista de vencimentos e rotinas calculadas, ordenada por urgência, integrada na aba Início (apenas quando hasCondominioData). Toque em item → Assistente com pergunta contextual.
+- **Insight de mandato:** `lib/insights.ts` — cobre janela 90–180 dias de antecipação do fim de mandato (GuidancePanel já cobre ≤ 90 dias)
+- **"Perguntar sobre":** `components/PainelOperacional.tsx` — label "Explorar mais" renomeado para eliminar confusão entre ferramenta e atalho de Assistente
+- **Visão futura financeiro:** `docs/visao-futura-financeiro-demonstrativos.md` — raciocínio documentado sobre demonstrativo da administradora, previsão orçamentária, reajuste de cota
+
+### Entregues na Fase 40
+- **Tese de produto:** `docs/tese-produto-copiloto-operacional.md` — posicionamento, 5 dores campeões, sequência problema→ação, limites jurídicos
+- **Campo de mandato do síndico:** `lib/session.ts` (`fimMandatoSindico`), `lib/guidance.ts` (5 níveis de alerta), `components/MemoriaPanel.tsx`, `components/CondominioStatusHeader.tsx`
+- **Reposicionamento de copy:** Hero ("Entenda, responda e organize"), Ferramentas ("Ação prática"), Assistente ("Qual é a situação?"), aba Condomínio ("Ativar monitoramento")
+- **Integração Assistente → Ferramentas:** `CAT_TO_COMUNICADO` em `components/Response.tsx` — CTAs de comunicado para multas, obras, assembleias, inadimplência/cobrança
+- **Onboarding aprimorado:** bridge menciona mandato do síndico; collapsed state orientado a ativação
+- **Compatibilidade retroativa:** `fimMandatoSindico` é opcional — backups antigos sem o campo continuam funcionando
 
 ### Entregues na Fase 38
 - **Admin hardening:** `app/admin/page.tsx` — produção sem `NEXT_PUBLIC_ADMIN_KEY` → bloqueio automático (antes: auto-login)
@@ -296,19 +310,18 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 
 ---
 
-## Próximas tarefas prioritárias (Fase 39)
+## Próximas tarefas prioritárias (Fase 42)
 
-1. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — ver `docs/teste-pwa-dispositivo-real.md`
+1. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari)
 2. **Configurar Supabase** — 15 min — ver `docs/setup-supabase-telemetria.md`
-3. **Definir `NEXT_PUBLIC_ADMIN_KEY`** no Vercel e testar painel em produção
-4. **Rodar auditoria em /admin** — clicar "Rodar auditoria" e registrar recall real (meta: ≥ 75%)
-5. **Executar checklist RC grupos 4–16** — `docs/checklist-release-candidate-interno.md`
-6. **Revisão jurídica** — contratar advogado para revisar rascunhos de ToU e política de privacidade
-7. **Definir canal de feedback** e preparar convite para primeiros 5 síndicos
-8. **Beta com síndicos reais** — apenas após itens 1–7 concluídos
+3. **Rodar auditoria em /admin** — meta recall ≥ 75%
+4. **Testar "Próximas datas" manualmente** — registrar vencimentos futuros e passados, verificar ordenação e cores
+5. **Revisão jurídica** dos rascunhos legais
+6. **Canal de feedback** e convite para primeiros 5 síndicos beta
+7. **Beta com síndicos reais** — apenas após itens 1–6 concluídos
 
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-16 (Fase 38 concluída)*
+*Versão: 2026-05-17 (Fase 41 concluída)*
 *Atualizar a seção "Estado atual" a cada sprint.*

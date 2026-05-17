@@ -9,6 +9,7 @@ const MONITORED_ITEMS = [
   { icon: "📋", label: "AVCB" },
   { icon: "🛡️", label: "Seguro" },
   { icon: "👥", label: "AGO" },
+  { icon: "🗳️", label: "Mandato" },
   { icon: "💧", label: "Caixa d'água" },
   { icon: "🧯", label: "Extintores" },
   { icon: "🛗", label: "Elevador" },
@@ -22,18 +23,18 @@ export default function Hero({ onSetup, onAssistente }: Props) {
           Amigo do Prédio
         </p>
         <h2 className="mt-1.5 font-display text-[26px] font-medium leading-[1.15] tracking-tight text-navy-800 sm:text-[32px]">
-          Acompanhe seu{" "}
+          Entenda, responda e{" "}
           <span className="relative inline-block">
-            <span className="relative z-10 italic text-navy-900">condomínio</span>
+            <span className="relative z-10 italic text-navy-900">organize</span>
             <span
               aria-hidden="true"
               className="absolute bottom-0.5 left-0 right-0 z-0 h-2.5 bg-sage-200/70"
             />
           </span>{" "}
-          em dia
+          seu condomínio
         </h2>
         <p className="mt-2.5 text-[14px] leading-relaxed text-navy-500">
-          Vencimentos, manutenções, documentos e obrigações legais — tudo monitorado em um lugar.
+          Do problema ao comunicado: orientações práticas, checklists, cálculos e monitoramento de vencimentos críticos.
         </p>
 
         {/* Preview do que é monitorado */}
@@ -65,11 +66,11 @@ export default function Hero({ onSetup, onAssistente }: Props) {
                 strokeLinecap="round"
               />
             </svg>
-            Registrar dados do prédio
+            Ativar monitoramento do prédio
           </button>
         )}
         <p className="mt-2 text-[11px] text-navy-400">
-          Leva menos de 2 minutos. O sistema passa a monitorar automaticamente.
+          Leva menos de 2 minutos. Alertas de vencimento ativados automaticamente.
         </p>
         {onAssistente && (
           <button
@@ -77,7 +78,7 @@ export default function Hero({ onSetup, onAssistente }: Props) {
             onClick={onAssistente}
             className="mt-2.5 text-[11.5px] text-navy-500 underline underline-offset-2 transition-colors hover:text-navy-700"
           >
-            Ou faça uma pergunta ao Assistente agora →
+            Ou pergunte algo ao Assistente agora →
           </button>
         )}
       </div>

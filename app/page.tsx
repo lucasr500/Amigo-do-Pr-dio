@@ -27,6 +27,7 @@ import HomeContextual from "@/components/HomeContextual";
 import CondominioStatusHeader from "@/components/CondominioStatusHeader";
 import GuidancePanel from "@/components/GuidancePanel";
 import ContextualInsight from "@/components/ContextualInsight";
+import ProximasDatas from "@/components/ProximasDatas";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 // Carregamento sob demanda — só necessários quando a aba é ativada
@@ -133,7 +134,7 @@ export default function HomePage() {
 
   return (
     <div className="grain-bg flex min-h-dvh flex-col bg-gradient-to-b from-cream-50 via-cream-50 to-cream-100/60">
-      <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col pb-24">
+      <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col pb-28">
 
         <Header refreshKey={refreshKey} />
 
@@ -161,6 +162,14 @@ export default function HomePage() {
               />
             )}
 
+            {hasCondominioData && (
+              <ProximasDatas
+                onAsk={handleSuggestionSelect}
+                onNavigateToCondominio={() => setActiveTab("condominio")}
+                refreshKey={refreshKey}
+              />
+            )}
+
             {hasCondominioData &&
               healthStatus !== "critico" &&
               healthStatus !== "pendente" && (
@@ -183,7 +192,10 @@ export default function HomePage() {
                   Assistente
                 </p>
                 <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                  Como posso ajudar?
+                  Qual é a situação?
+                </p>
+                <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
+                  Descreva o problema — o app orienta o próximo passo.
                 </p>
               </div>
             )}
@@ -212,6 +224,7 @@ export default function HomePage() {
               onFavorite={() => setRefreshKey((k) => k + 1)}
               onNewQuestion={handleNewQuestion}
               onNavigateToChecklist={handleNavigateToChecklist}
+              onNavigateToFerramentas={() => setActiveTab("ferramentas")}
             />
 
           </div>
@@ -226,10 +239,10 @@ export default function HomePage() {
                 Ferramentas
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                Caixa de ferramentas
+                Ação prática
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                Comunicados prontos, cálculos e checklists para o dia a dia do síndico.
+                Transforme orientações em documentos: comunicados, cálculos e checklists para o dia a dia do síndico.
               </p>
             </div>
 
@@ -250,13 +263,11 @@ export default function HomePage() {
                 Condomínio
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                {hasCondominioData ? "Dados e memória" : "Seu condomínio"}
+                {hasCondominioData ? "Memória do prédio" : "Ativar monitoramento"}
               </p>
               {!hasCondominioData && (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                  Quanto mais o Amigo do Prédio conhece seu prédio, melhor consegue
-                  te orientar. Cadastre o básico agora — você completa o restante
-                  depois.
+                  Registre os dados do seu prédio para ativar alertas de vencimento — AVCB, seguro, mandato do síndico e manutenções. Cada data registrada é um alerta antecipado.
                 </p>
               )}
             </div>

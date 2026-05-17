@@ -85,7 +85,7 @@ export default function BottomNav({ active, onChange }: Props) {
       <div className="mx-auto max-w-[440px]">
         <div
           className="border-t border-navy-100/60 bg-cream-50/[0.97] backdrop-blur-xl"
-          style={{ paddingBottom: "env(safe-area-inset-bottom, 8px)" }}
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6px)" }}
         >
           <div className="flex items-center">
             {TABS.map((tab) => {
@@ -98,7 +98,7 @@ export default function BottomNav({ active, onChange }: Props) {
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => onChange(tab.id)}
-                  className={`flex flex-1 flex-col items-center gap-[3px] pb-2 pt-2.5 transition-all duration-150 active:scale-95 ${
+                  className={`flex flex-1 flex-col items-center gap-1 pb-1.5 pt-3 transition-all duration-150 active:scale-95 ${
                     isActive ? "text-navy-800" : "text-navy-400 hover:text-navy-600"
                   }`}
                 >

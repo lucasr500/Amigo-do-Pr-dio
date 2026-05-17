@@ -280,7 +280,7 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
 
         {recentCats.length > 0 && (
           <div className="mb-3">
-            <p className="mb-1.5 text-[10.5px] text-navy-400">Explorar mais</p>
+            <p className="mb-1.5 text-[10.5px] text-navy-400">Perguntar sobre</p>
             <div className="flex flex-wrap gap-1.5">
               {recentCats.map((cat) => {
                 const prompt = CAT_PROMPT[cat];

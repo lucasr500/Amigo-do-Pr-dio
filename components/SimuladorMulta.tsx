@@ -53,7 +53,7 @@ export default function SimuladorMulta() {
   const ultimo = resultado ? resultado[resultado.length - 1] : null;
 
   return (
-    <section className="px-5 pb-6 sm:px-6">
+    <section className="px-5 pb-6 pt-2 sm:px-6">
       <div className="mb-3 flex items-baseline justify-between">
         <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
           Simulador de multa e juros

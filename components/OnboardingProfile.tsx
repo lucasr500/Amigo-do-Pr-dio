@@ -93,13 +93,11 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
           </div>
 
           <p className="text-[12.5px] leading-relaxed text-navy-700">
-            Agora registre as principais datas do seu prédio — como vencimento do
-            seguro e última manutenção — para ativar o monitoramento inteligente.
+            Registre as principais datas do seu prédio — vencimento do AVCB, seguro, mandato do síndico e manutenções — para ativar alertas de antecipação.
           </p>
 
           <p className="mt-1.5 text-[11px] text-navy-500">
-            Quanto mais o Amigo do Prédio conhece o seu prédio, melhor consegue
-            te orientar.
+            Cada data registrada é um alerta antes de virar urgência.
           </p>
 
           <div className="mt-3.5 flex items-center gap-3">
@@ -108,7 +106,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
               onClick={handleSetupMemoria}
               className="inline-flex items-center gap-1.5 rounded-full bg-sage-600 px-4 py-1.5 text-[12px] font-medium text-white transition-all hover:bg-sage-700 active:scale-[0.97]"
             >
-              Registrar datas do prédio
+              Ativar monitoramento
               <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -189,10 +187,10 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
           </span>
           <div className="flex-1">
             <p className="text-[12.5px] font-medium text-sage-800">
-              Personalizar para o meu condomínio
+              Identificar meu condomínio
             </p>
             <p className="text-[11.5px] text-sage-600">
-              Configure em segundos · guidance mais relevante
+              Ativa alertas e orientações específicas para o seu prédio
             </p>
           </div>
           <span className="flex-shrink-0 text-[11px] font-semibold text-sage-600">

@@ -346,6 +346,74 @@ export function buildGuidanceItems(
     }
   }
 
+  // Vencimento do mandato do síndico
+  if (m.fimMandatoSindico) {
+    const d = ate(m.fimMandatoSindico);
+    if (d < 0) {
+      items.push({
+        id: "mandato-vencido",
+        icon: "🗳️",
+        label: "Mandato do síndico",
+        urgencyLabel: "Consta como vencido — regularize a assembleia",
+        context:
+          "O mandato do síndico consta como vencido. Verifique a convenção, organize a assembleia de eleição ou recondução e formalize o resultado em ata. Mandato não renovado pode gerar questionamentos sobre a representação do condomínio em contratos e decisões formais.",
+        howLong: "A convocação deve respeitar os prazos da convenção — geralmente 10 a 15 dias de antecedência.",
+        askQ: "O que acontece quando o mandato do síndico vence?",
+        priority: "critico",
+        resolveAction: { field: "fimMandatoSindico", type: "expiry", buttonLabel: "Registrar novo mandato", successMessage: "Mandato atualizado" },
+      });
+    } else if (d === 0) {
+      items.push({
+        id: "mandato-hoje",
+        icon: "🗳️",
+        label: "Mandato do síndico",
+        urgencyLabel: "Vence hoje — organize a assembleia",
+        context:
+          "O mandato do síndico vence hoje. Organize a convocação da assembleia de eleição ou recondução o quanto antes, observando os prazos e procedimentos previstos na convenção do condomínio.",
+        askQ: "Como convocar uma assembleia para eleição de síndico?",
+        priority: "critico",
+        resolveAction: { field: "fimMandatoSindico", type: "expiry", buttonLabel: "Registrar novo mandato", successMessage: "Mandato atualizado" },
+      });
+    } else if (d <= 30) {
+      items.push({
+        id: "mandato-urgente",
+        icon: "🗳️",
+        label: "Mandato do síndico",
+        urgencyLabel: `Vence em ${d} dia${d !== 1 ? "s" : ""} — inicie a convocação`,
+        context:
+          "Com menos de 30 dias até o fim do mandato, é hora de convocar a assembleia de eleição ou recondução. Observe o prazo mínimo de convocação previsto na convenção e prepare a pauta adequada.",
+        howLong: "A convocação deve ser enviada com antecedência mínima prevista na convenção — geralmente 10 a 15 dias.",
+        askQ: "Como convocar uma assembleia para eleição de síndico?",
+        priority: "critico",
+        resolveAction: { field: "fimMandatoSindico", type: "expiry", buttonLabel: "Registrar novo mandato", successMessage: "Mandato atualizado" },
+      });
+    } else if (d <= 60) {
+      items.push({
+        id: "mandato-breve",
+        icon: "🗳️",
+        label: "Mandato do síndico",
+        urgencyLabel: `Vence em ${d} dias — planeje a convocação`,
+        context:
+          "O mandato do síndico se aproxima do fim. Este é o momento ideal para planejar a assembleia de eleição ou recondução com tranquilidade, verificar a convenção e preparar a documentação necessária.",
+        askQ: "Como convocar uma assembleia para eleição de síndico?",
+        priority: "atencao",
+        resolveAction: { field: "fimMandatoSindico", type: "expiry", buttonLabel: "Registrar novo mandato", successMessage: "Mandato atualizado" },
+      });
+    } else if (d <= 90) {
+      items.push({
+        id: "mandato-atencao",
+        icon: "🗳️",
+        label: "Mandato do síndico",
+        urgencyLabel: `Vence em ${d} dias — acompanhe o prazo`,
+        context:
+          "O mandato do síndico está dentro do prazo, mas vale começar a planejar a assembleia de eleição ou recondução para não deixar para a última hora. Verifique a convenção quanto ao período e procedimento.",
+        askQ: "Com que antecedência devo convocar a assembleia de eleição do síndico?",
+        priority: "atencao",
+        resolveAction: { field: "fimMandatoSindico", type: "expiry", buttonLabel: "Registrar novo mandato", successMessage: "Mandato atualizado" },
+      });
+    }
+  }
+
   // Ordena: crítico primeiro; dentro do mesmo nível mantém ordem de inserção
   return items.sort((a, b) => {
     if (a.priority === b.priority) return 0;

@@ -85,6 +85,7 @@ export type MemoriaOperacional = {
   // Vencimentos (formato "YYYY-MM-DD")
   vencimentoAVCB?: string;
   vencimentoSeguro?: string;
+  fimMandatoSindico?: string;
 };
 
 // Chaves do localStorage — centralizadas para facilitar migração futura para backend
@@ -558,6 +559,22 @@ export function computeCondominioHealth(): CondominioHealth {
     } else if (ds > 150) {
       atencaoCount++;
       atencoes.push({ label: "Extintores", note: "prazo de inspeção anual se aproximando" });
+    } else {
+      okCount++;
+    }
+  }
+
+  if (m.fimMandatoSindico) {
+    const d = ate(m.fimMandatoSindico);
+    if (d < 0) {
+      alertCount++;
+      alerts.push({ label: "Mandato", note: "consta como vencido — regularize a eleição" });
+    } else if (d <= 30) {
+      alertCount++;
+      alerts.push({ label: "Mandato", note: d === 0 ? "vence hoje — organize a assembleia" : `vence em ${d} dia${d !== 1 ? "s" : ""} — organize a assembleia` });
+    } else if (d <= 90) {
+      atencaoCount++;
+      atencoes.push({ label: "Mandato", note: `vence em ${d} dias — planeje a convocação` });
     } else {
       okCount++;
     }

@@ -157,7 +157,23 @@ export function buildInsight(
     }
   }
 
-  // ─── 9. Ausência — elevador sem registro (perfil com elevador) ─────────────
+  // ─── 9. Antecipação — fim do mandato do síndico (3–6 meses) ──────────────────
+  // GuidancePanel já cobre d <= 90; insights cobre o intervalo de planejamento preventivo
+  if (m.fimMandatoSindico) {
+    const d = Math.floor((new Date(m.fimMandatoSindico).getTime() - Date.now()) / 86400000);
+    if (d > 90 && d <= 180) {
+      const mo = Math.floor(d / 30);
+      return {
+        id: "mandato-planejamento",
+        icon: "🗳️",
+        text: `O mandato do síndico vence em ${mo === 1 ? "1 mês" : `${mo} meses`}. Bom momento para planejar a convocação da assembleia.`,
+        subtext: "Respeite o prazo de convocação previsto na convenção",
+        tone: "upcoming",
+      };
+    }
+  }
+
+  // ─── 10. Ausência — elevador sem registro (perfil com elevador) ─────────────
   if (profile?.hasElevador && !m.ultimaManutencaoElevador) {
     return {
       id: "elevator-no-record",
@@ -166,7 +182,7 @@ export function buildInsight(
     };
   }
 
-  // ─── 10. Ausência — AGO sem registro ───────────────────────────────────────
+  // ─── 11. Ausência — AGO sem registro ──────────────────────────────────────────
   if (health.totalMonitored >= 2 && !m.ultimaAGO) {
     return {
       id: "no-ago",

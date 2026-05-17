@@ -121,6 +121,19 @@ function buildRows(m: MemoriaOperacional, profile: CondominioProfile | null): St
     }
   }
 
+  if (m.fimMandatoSindico) {
+    const d = ate(m.fimMandatoSindico);
+    if (d < 0) {
+      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "revisar", detalhe: `Vencido há ${formatDias(Math.abs(d))}`, onAskQ: "O que acontece quando o mandato do síndico vence?" });
+    } else if (d <= 30) {
+      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "revisar", detalhe: d === 0 ? "Vence hoje" : `Vence em ${formatDias(d)}`, onAskQ: "Como convocar uma assembleia para eleição de síndico?" });
+    } else if (d <= 90) {
+      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "atencao", detalhe: `Vence em ${formatDias(d)}`, onAskQ: "Com que antecedência devo convocar a assembleia de eleição do síndico?" });
+    } else {
+      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "ok", detalhe: `Válido por ${formatDias(d)}` });
+    }
+  }
+
   return rows;
 }
 

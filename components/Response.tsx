@@ -15,6 +15,15 @@ const CAT_TO_CHECKLIST: Partial<Record<string, { id: string; title: string; icon
   manutencao:   { id: "manutencao",  title: "Manutenção preventiva",  icon: "🔨" },
 };
 
+// Mapa categoria → comunicado sugerido
+const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; icon: string; hint: string }>> = {
+  multas:        { label: "Gerar notificação de infração",  icon: "⚠️", hint: "Documente antes de aplicar sanção" },
+  obras:         { label: "Gerar comunicado de obra",       icon: "🔨", hint: "Informe os moradores com antecedência" },
+  assembleias:   { label: "Preparar convocação",            icon: "👥", hint: "Gere o texto da convocação" },
+  inadimplencia: { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
+  cobranca:      { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
+};
+
 // Rótulos em português para o chip "Tema identificado"
 const CATEGORY_LABELS_PT: Record<string, string> = {
   multas: "Multas e advertências",
@@ -70,6 +79,7 @@ type ResponseProps = {
   onFavorite?: () => void;
   onNewQuestion?: () => void;
   onNavigateToChecklist?: (checklistId: string) => void;
+  onNavigateToFerramentas?: () => void;
 };
 
 export default function Response({
@@ -81,6 +91,7 @@ export default function Response({
   onFavorite,
   onNewQuestion,
   onNavigateToChecklist,
+  onNavigateToFerramentas,
 }: ResponseProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -325,6 +336,33 @@ export default function Response({
                               <p className="text-[12.5px] font-medium text-navy-800">{cl.title}</p>
                             </div>
                             <span className="flex-shrink-0 text-[11.5px] font-semibold text-sage-600">
+                              Abrir →
+                            </span>
+                          </button>
+                        );
+                      })()}
+
+                      {/* CTA de comunicado — ponte entre orientação e documento */}
+                      {(() => {
+                        const cm = CAT_TO_COMUNICADO[entry.categoria];
+                        if (!cm || !onNavigateToFerramentas) return null;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              logInteraction("comunicado-cta", entry.categoria);
+                              onNavigateToFerramentas();
+                            }}
+                            className="flex w-full items-center gap-3 rounded-xl border border-navy-100 bg-navy-50/40 px-3 py-2.5 text-left transition-colors hover:bg-navy-50 active:bg-navy-100"
+                          >
+                            <span className="text-[17px] leading-none" aria-hidden="true">{cm.icon}</span>
+                            <div className="flex-1">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">
+                                {cm.hint}
+                              </p>
+                              <p className="text-[12.5px] font-medium text-navy-800">{cm.label}</p>
+                            </div>
+                            <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-500">
                               Abrir →
                             </span>
                           </button>
