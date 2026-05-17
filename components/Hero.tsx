@@ -7,11 +7,11 @@ type Props = {
 };
 
 const SITUATIONS = [
-  { icon: "🔊", label: "Barulho após as 22h",  q: "Morador está fazendo barulho depois das 22h. Como devo agir?" },
-  { icon: "🔨", label: "Obra sem aviso",        q: "Morador começou obra sem comunicar ao condomínio. O que fazer?" },
-  { icon: "💰", label: "Nome no grupo",          q: "Querem divulgar nome de inadimplente no grupo do WhatsApp. É permitido?" },
-  { icon: "🗳️", label: "Mandato vencendo",      q: "O mandato do síndico está perto do fim. Quais os próximos passos?" },
-  { icon: "📋", label: "Convocar assembleia",   q: "Preciso convocar assembleia extraordinária. Como fazer corretamente?" },
+  { icon: "🔊", label: "Barulho após as 22h",        q: "Morador está fazendo barulho depois das 22h. Como devo agir?" },
+  { icon: "🔨", label: "Obra sem aviso",              q: "Morador começou obra sem comunicar ao condomínio. O que fazer?" },
+  { icon: "💰", label: "Querem expor inadimplente",   q: "Querem divulgar nome de inadimplente no grupo do WhatsApp. É permitido?" },
+  { icon: "🗳️", label: "Mandato vencendo",            q: "O mandato do síndico está perto do fim. Quais os próximos passos?" },
+  { icon: "💧", label: "Vazamento entre apts.",       q: "Morador reclama de infiltração vinda do apartamento de cima. Quem é responsável e como devo proceder?" },
 ];
 
 export default function Hero({ onSetup, onAssistente, onSuggestionSelect }: Props) {
@@ -27,7 +27,7 @@ export default function Hero({ onSetup, onAssistente, onSuggestionSelect }: Prop
             <span className="relative z-10 italic text-navy-900">problema</span>
             <span
               aria-hidden="true"
-              className="absolute bottom-0.5 left-0 right-0 z-0 h-2.5 bg-sage-200/70"
+              className="absolute bottom-0.5 left-0 right-0 z-0 h-2.5 bg-cream-200/80"
             />
           </span>{" "}
           no condomínio?

@@ -8,36 +8,36 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Paleta principal do Amigo do Prédio
+        // Paleta principal do Amigo do Prédio — Fase 45
         navy: {
-          50: "#f0f4f9",
-          100: "#dbe5ef",
-          200: "#b9cde0",
-          300: "#8badc9",
-          400: "#5c87ad",
-          500: "#406b94",
-          600: "#32547a",
-          700: "#2a4463",
-          800: "#1f3147", // azul escuro principal
-          900: "#16243a",
-          950: "#0d1726",
+          50:  "#edf4f8",
+          100: "#d1e5ef",
+          200: "#a3ccdf",
+          300: "#72aecc",
+          400: "#468fb5",
+          500: "#307398",
+          600: "#275d7c",
+          700: "#234B63", // navy principal #234B63
+          800: "#1b3a4f",
+          900: "#132b3b",
+          950: "#0c1d27",
         },
-        sage: {
-          50: "#f3f8f4",
-          100: "#e3efe5",
-          200: "#c8dfcc",
-          300: "#9ec7a6",
-          400: "#6fa97c",
-          500: "#4f8d5e", // verde suave principal
-          600: "#3d7249",
-          700: "#325b3c",
-          800: "#2a4832",
-          900: "#243b2b",
+        terracotta: {
+          50:  "#fdf3ee",
+          100: "#fae4d5",
+          200: "#f5c9ab",
+          300: "#edaa7e",
+          400: "#e38b5b",
+          500: "#C97852", // terracotta accent #C97852
+          600: "#a6613f",
+          700: "#844c30",
+          800: "#633823",
+          900: "#492618",
         },
         cream: {
-          50: "#fdfcf9",
-          100: "#f9f6ef",
-          200: "#f1ebde",
+          50:  "#FAF7F2",
+          100: "#F7F1E8", // brand cream #F7F1E8
+          200: "#EDE5D4",
         },
       },
       fontFamily: {

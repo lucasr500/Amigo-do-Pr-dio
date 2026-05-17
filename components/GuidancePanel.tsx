@@ -211,13 +211,13 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                     {/* Feedback de sucesso */}
                     {isSuccess ? (
                       <div className="flex items-center gap-2.5">
-                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-sage-100">
-                          <svg className="h-3 w-3 text-sage-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
+                          <svg className="h-3 w-3 text-navy-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                             <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         </span>
                         <div>
-                          <p className="text-[12px] font-semibold text-sage-700">
+                          <p className="text-[12px] font-semibold text-navy-700">
                             {item.resolveAction.successMessage}
                           </p>
                           <p className="text-[11px] text-navy-500">
@@ -245,7 +245,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                             <button
                               type="button"
                               onClick={() => handleStartResolve(item)}
-                              className="inline-flex items-center gap-1.5 rounded-full bg-sage-600 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-sage-700 active:scale-[0.97]"
+                              className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
                             >
                               <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                 <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -280,7 +280,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                               <button
                                 type="button"
                                 onClick={() => handleConfirmDone(item)}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-sage-600 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-sage-700 active:scale-[0.97]"
+                                className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -315,7 +315,7 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
                                 type="button"
                                 onClick={() => handleConfirmExpiry(item)}
                                 disabled={!expiryDate}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-sage-600 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-sage-700 active:scale-[0.97] disabled:opacity-40"
+                                className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97] disabled:opacity-40"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />

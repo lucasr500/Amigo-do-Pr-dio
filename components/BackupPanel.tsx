@@ -172,17 +172,17 @@ export default function BackupPanel({ onImported }: Props) {
 
           {/* Sucesso */}
           {importState.phase === "success" && (
-            <div className="rounded-xl border border-sage-200 bg-sage-50/60 px-4 py-3.5">
+            <div className="rounded-xl border border-cream-200 bg-cream-100/60 px-4 py-3.5">
               <div className="flex items-center gap-2.5">
-                <svg className="h-4 w-4 flex-shrink-0 text-sage-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <svg className="h-4 w-4 flex-shrink-0 text-navy-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <div>
-                  <p className="text-[12.5px] font-semibold text-sage-800">
+                  <p className="text-[12.5px] font-semibold text-navy-800">
                     Dados restaurados
                   </p>
                   {importState.nomeCondominio && (
-                    <p className="text-[11px] text-sage-600">
+                    <p className="text-[11px] text-navy-500">
                       {importState.nomeCondominio}
                     </p>
                   )}

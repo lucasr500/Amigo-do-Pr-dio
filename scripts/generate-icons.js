@@ -4,6 +4,11 @@
  *
  * Execução: node scripts/generate-icons.js
  * Saída: public/icons/icon-192.png, icon-512.png, apple-touch-icon.png
+ *
+ * Fase 45 — Paleta atualizada:
+ *   Navy  #234B63  →  R:35  G:75  B:99
+ *   Cream #F7F1E8  →  R:247 G:241 B:232
+ * Design: dois volumes de prédio (esquerdo mais baixo, direito mais alto)
  */
 
 const fs = require("fs");
@@ -70,21 +75,19 @@ function encodePng(width, height, rgb) {
 // ── Desenho do ícone ─────────────────────────────────────────────────────────
 
 /**
- * Design: Prédio estilizado em cream sobre fundo navy.
+ * Design: Dois volumes de prédio estilizados em cream sobre fundo navy.
  * Coordenadas de referência em 192×192; escaladas proporcionalmente.
  *
  * Paleta:
- *   Navy  #1f3147  →  R:31  G:49  B:71
- *   Cream #f9f5ef  →  R:249 G:245 B:239
- *   Sage  #5b956e  →  R:91  G:149 B:110
+ *   Navy  #234B63  →  R:35  G:75  B:99
+ *   Cream #F7F1E8  →  R:247 G:241 B:232
  */
 function generateIcon(size) {
   const px = new Uint8Array(size * size * 3);
   const sc = size / 192;
 
-  const NAVY  = [31,  49,  71];
-  const CREAM = [249, 245, 239];
-  const SAGE  = [91,  149, 110];
+  const NAVY  = [35,  75,  99];
+  const CREAM = [247, 241, 232];
 
   function set(x, y, col) {
     x = Math.round(x);
@@ -105,48 +108,33 @@ function generateIcon(size) {
         set(x, y, col);
   }
 
-  function fillCircle(cx, cy, r, col) {
-    const rx = Math.round(cx * sc);
-    const ry = Math.round(cy * sc);
-    const rr = Math.round(r * sc);
-    for (let dy = -rr; dy <= rr; dy++)
-      for (let dx = -rr; dx <= rr; dx++)
-        if (dx * dx + dy * dy <= rr * rr)
-          set(rx + dx, ry + dy, col);
-  }
-
   // 1. Fundo navy
   fillRect(0, 0, 191, 191, NAVY);
 
-  // 2. Corpo do prédio (cream)
-  fillRect(52, 76, 140, 152, CREAM);
+  // 2. Prédio esquerdo — volume menor (mais baixo)
+  //    x: 42→92, y: 96→156  (50 wide × 60 tall)
+  fillRect(42, 96, 92, 156, CREAM);
 
-  // 3. Telhado triangular — pico em (96, 54), base em y=76 de x=52 a x=140
-  const peakX = 96 * sc;
-  const peakY = 54 * sc;
-  const baseY = 76 * sc;
-  const bx1   = 52 * sc;
-  const bx2   = 140 * sc;
-  for (let ry = Math.round(peakY); ry < Math.round(baseY); ry++) {
-    const t  = (ry - peakY) / (baseY - peakY);
-    const hw = t * (bx2 - bx1) / 2;
-    for (let rx = Math.round(peakX - hw); rx <= Math.round(peakX + hw); rx++)
-      set(rx, ry, CREAM);
-  }
+  // 3. Prédio direito — volume maior (mais alto)
+  //    x: 98→150, y: 64→156  (52 wide × 92 tall)
+  fillRect(98, 64, 150, 156, CREAM);
 
-  // 4. Janelas — linha superior (navy recortado no cream)
-  fillRect(64,  88, 83,  105, NAVY);  // esquerda
-  fillRect(109, 88, 128, 105, NAVY);  // direita
+  // 4. Janelas do prédio esquerdo (navy no cream) — 2×2 grid
+  fillRect(52, 105, 63, 115, NAVY);
+  fillRect(72, 105, 83, 115, NAVY);
+  fillRect(52, 123, 63, 133, NAVY);
+  fillRect(72, 123, 83, 133, NAVY);
 
-  // 5. Janelas — linha inferior
-  fillRect(64,  112, 83,  129, NAVY);
-  fillRect(109, 112, 128, 129, NAVY);
+  // 5. Janelas do prédio direito — 2×3 grid
+  fillRect(108, 74, 119, 84,  NAVY);
+  fillRect(129, 74, 140, 84,  NAVY);
+  fillRect(108, 92, 119, 102, NAVY);
+  fillRect(129, 92, 140, 102, NAVY);
+  fillRect(108, 110, 119, 120, NAVY);
+  fillRect(129, 110, 140, 120, NAVY);
 
-  // 6. Porta — base centralizada
-  fillRect(84, 132, 108, 152, NAVY);
-
-  // 7. Ponto sage no topo (identidade de cor do produto)
-  fillCircle(96, 54, 4.5, SAGE);
+  // 6. Porta no prédio direito — base centralizada
+  fillRect(116, 134, 132, 156, NAVY);
 
   return encodePng(size, size, px);
 }

@@ -187,8 +187,8 @@ const TIER_LABELS: Record<HabitTier, string> = {
 const TIER_COLORS: Record<HabitTier, string> = {
   new: "bg-navy-100 text-navy-600",
   exploring: "bg-amber-50 text-amber-700",
-  forming: "bg-sage-50 text-sage-700",
-  habitual: "bg-sage-100 text-sage-800",
+  forming: "bg-cream-100 text-navy-700",
+  habitual: "bg-navy-100 text-navy-800",
   power: "bg-navy-800 text-white",
 };
 
@@ -322,7 +322,7 @@ function AuditSection() {
   const visible = results ? results.filter((r) => filter === "all" || r.status === filter) : [];
 
   const statusColor = (s: AuditResult["status"]) =>
-    s === "pass" ? "text-sage-700 bg-sage-50 border-sage-200"
+    s === "pass" ? "text-navy-700 bg-navy-50 border-navy-200"
     : s === "review" ? "text-amber-700 bg-amber-50 border-amber-200"
     : "text-red-700 bg-red-50 border-red-200";
 
@@ -354,9 +354,9 @@ function AuditSection() {
         <>
           {/* Summary grid */}
           <div className="mb-4 grid grid-cols-3 gap-2">
-            <div className="rounded-xl border border-sage-200 bg-sage-50 p-3 text-center">
-              <p className="text-[20px] font-bold text-sage-700">{summary.pass}</p>
-              <p className="text-[10px] font-semibold uppercase text-sage-600">Passou</p>
+            <div className="rounded-xl border border-navy-200 bg-navy-50 p-3 text-center">
+              <p className="text-[20px] font-bold text-navy-700">{summary.pass}</p>
+              <p className="text-[10px] font-semibold uppercase text-navy-600">Passou</p>
             </div>
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
               <p className="text-[20px] font-bold text-amber-700">{summary.review}</p>

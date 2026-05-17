@@ -207,7 +207,7 @@ export default function ComunicadoPanel() {
             disabled={filledCount === 0}
             className={`inline-flex w-full items-center justify-center gap-2 rounded-full py-3 text-[13px] font-medium transition-all active:scale-[0.98] ${
               copied
-                ? "bg-sage-500 text-white"
+                ? "bg-navy-700 text-white"
                 : copyError
                   ? "bg-amber-500 text-white"
                   : "bg-navy-800 text-cream-50 hover:bg-navy-900 disabled:opacity-40"
@@ -261,7 +261,7 @@ export default function ComunicadoPanel() {
               Selecione o texto da prévia e copie manualmente.
             </p>
           ) : copied ? (
-            <p className="mt-2 text-center text-[10.5px] text-sage-600">
+            <p className="mt-2 text-center text-[10.5px] text-navy-500">
               Cole no WhatsApp, e-mail ou mural do condomínio.
             </p>
           ) : filledCount === 0 ? (

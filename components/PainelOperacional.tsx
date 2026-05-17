@@ -232,7 +232,7 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
               <p className="text-[12.5px] font-medium text-navy-800">{meta.title}</p>
               <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-navy-100">
                 <div
-                  className="h-full rounded-full bg-sage-400 transition-all duration-300"
+                  className="h-full rounded-full bg-navy-400 transition-all duration-300"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -250,7 +250,7 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
                 )}
               </p>
             </div>
-            <span className="flex-shrink-0 text-[11.5px] font-semibold text-sage-600">
+            <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-600">
               Continuar →
             </span>
           </button>
@@ -268,10 +268,10 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
                     logInteraction("profile-suggestion", s.label);
                     onAsk(s.q);
                   }}
-                  className="inline-flex items-center gap-1 rounded-full bg-sage-50 px-2.5 py-1 text-[11px] font-medium text-sage-700 ring-1 ring-sage-200 transition-colors hover:bg-sage-100 hover:ring-sage-300 active:scale-95"
+                  className="inline-flex items-center gap-1 rounded-full bg-cream-100 px-2.5 py-1 text-[11px] font-medium text-navy-700 ring-1 ring-navy-200 transition-colors hover:bg-cream-200 hover:ring-navy-300 active:scale-95"
                 >
                   {s.label}
-                  <span className="text-sage-400" aria-hidden="true">›</span>
+                  <span className="text-navy-400" aria-hidden="true">›</span>
                 </button>
               ))}
             </div>

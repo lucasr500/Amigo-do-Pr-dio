@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Amigo do Prédio",
   },
   icons: {
@@ -35,7 +35,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#1f3147",
+  themeColor: "#234B63",
   viewportFit: "cover",
 };
 
@@ -46,7 +46,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" className={`${fraunces.variable} ${interTight.variable}`}>
-      <body className="font-sans bg-cream-50 text-navy-800 antialiased">
+      <body className="font-sans bg-cream-50 text-navy-700 antialiased">
         {children}
       </body>
     </html>

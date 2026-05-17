@@ -220,7 +220,7 @@ export default function SimuladorReajusteCota() {
           <div className="border-t border-navy-50 p-4">
 
             {/* Balanço em destaque */}
-            <div className={`mb-4 rounded-xl px-4 py-4 text-center ${resultado.balanco >= 0 ? "bg-sage-800" : "bg-navy-800"}`}>
+            <div className={`mb-4 rounded-xl px-4 py-4 text-center ${resultado.balanco >= 0 ? "bg-navy-700" : "bg-navy-800"}`}>
               <p className="text-[10.5px] font-medium uppercase tracking-[0.10em] text-cream-50/60">
                 Balanço projetado
               </p>
@@ -244,7 +244,7 @@ export default function SimuladorReajusteCota() {
               </div>
               <div className="flex justify-between rounded-lg bg-navy-50 px-3 py-2">
                 <span className="text-[11.5px] text-navy-500">Reajuste mínimo estimado</span>
-                <span className={`text-[12.5px] font-semibold ${resultado.reajusteMinimo > 0 ? "text-amber-600" : "text-sage-700"}`}>
+                <span className={`text-[12.5px] font-semibold ${resultado.reajusteMinimo > 0 ? "text-amber-600" : "text-navy-600"}`}>
                   {resultado.reajusteMinimo > 0 ? `+${fmtPct(resultado.reajusteMinimo)}%` : "Sem necessidade"}
                 </span>
               </div>

@@ -433,7 +433,7 @@ export const TOPICS: Topic[] = [
     id: "lgpd",
     title: "Proteção de dados",
     icon: "🔒",
-    examplePrompt: "Posso divulgar inadimplentes no grupo do WhatsApp?",
+    examplePrompt: "Câmera no corredor do andar: precisa de autorização?",
   },
   {
     id: "responsabilidade",
@@ -457,7 +457,7 @@ export const TOPICS: Topic[] = [
     id: "financeiro",
     title: "Finanças e rateio",
     icon: "💼",
-    examplePrompt: "A cota está cobrindo as despesas do prédio?",
+    examplePrompt: "Como calcular o reajuste necessário da cota condominial?",
   },
 ];
 

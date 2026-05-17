@@ -66,7 +66,7 @@ function buildStatusItems(m: MemoriaOperacional, profile: CondominioProfile | nu
 }
 
 const STATUS_STYLE: Record<StatusItem["status"], string> = {
-  ok:      "bg-sage-50 text-sage-700 ring-1 ring-sage-200",
+  ok:      "bg-navy-50 text-navy-600 ring-1 ring-navy-100",
   atencao: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
   revisar: "bg-amber-100 text-amber-800 ring-1 ring-amber-300",
   vencido: "bg-amber-100 text-amber-900 ring-1 ring-amber-400 font-semibold",
@@ -144,7 +144,7 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
                 {attentionCount} item{attentionCount > 1 ? "s" : ""} para revisar
               </p>
             ) : (
-              <p className="text-[11px] font-medium text-sage-600">Tudo em dia</p>
+              <p className="text-[11px] font-medium text-navy-600">Tudo em dia</p>
             )}
             <p className="text-[10px] text-navy-400">{okCount} em ordem</p>
           </div>

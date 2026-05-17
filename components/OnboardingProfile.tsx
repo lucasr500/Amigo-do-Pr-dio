@@ -79,15 +79,15 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
   if (view === "bridge") {
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-        <div className="rounded-2xl border border-sage-200 bg-sage-50/60 p-4">
+        <div className="rounded-2xl border border-cream-200 bg-cream-100/60 p-4">
           <div className="mb-3 flex items-center gap-2.5">
             <span
-              className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sage-100 text-[11px]"
+              className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] text-navy-600"
               aria-hidden="true"
             >
               ✓
             </span>
-            <p className="text-[13px] font-semibold text-sage-800">
+            <p className="text-[13px] font-semibold text-navy-800">
               Condomínio configurado
             </p>
           </div>
@@ -104,7 +104,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
             <button
               type="button"
               onClick={handleSetupMemoria}
-              className="inline-flex items-center gap-1.5 rounded-full bg-sage-600 px-4 py-1.5 text-[12px] font-medium text-white transition-all hover:bg-sage-700 active:scale-[0.97]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-4 py-1.5 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
             >
               Ativar monitoramento
               <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -128,11 +128,11 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
   if (view === "updated") {
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-        <div className="flex items-center gap-2.5 rounded-xl border border-sage-200 bg-sage-50/60 px-4 py-2.5">
-          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sage-100 text-[11px]" aria-hidden="true">
+        <div className="flex items-center gap-2.5 rounded-xl border border-cream-200 bg-cream-100/60 px-4 py-2.5">
+          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] text-navy-600" aria-hidden="true">
             ✓
           </span>
-          <p className="text-[12.5px] font-medium text-sage-800">Perfil atualizado</p>
+          <p className="text-[12.5px] font-medium text-navy-800">Perfil atualizado</p>
         </div>
       </section>
     );
@@ -149,7 +149,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
           className="flex w-full items-center gap-2.5 rounded-xl border border-navy-100 bg-white/70 px-4 py-2.5 text-left transition-colors hover:bg-white active:bg-navy-50"
         >
           <span
-            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sage-100 text-[11px]"
+            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[11px] text-navy-600"
             aria-hidden="true"
           >
             ✓
@@ -177,23 +177,23 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
         <button
           type="button"
           onClick={() => { setView("expanded"); void trackEvent("onboarding_started"); }}
-          className="flex w-full items-center gap-2.5 rounded-xl border border-sage-200 bg-sage-50/60 px-4 py-2.5 text-left transition-colors hover:bg-sage-50 active:bg-sage-100"
+          className="flex w-full items-center gap-2.5 rounded-xl border border-cream-200 bg-cream-100/60 px-4 py-2.5 text-left transition-colors hover:bg-cream-100 active:bg-cream-200"
         >
           <span
-            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sage-100 text-[13px]"
+            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-cream-200 text-[13px]"
             aria-hidden="true"
           >
             ✦
           </span>
           <div className="flex-1">
-            <p className="text-[12.5px] font-medium text-sage-800">
+            <p className="text-[12.5px] font-medium text-navy-700">
               Identificar meu condomínio
             </p>
-            <p className="text-[11.5px] text-sage-600">
+            <p className="text-[11.5px] text-navy-500">
               Ativa alertas e orientações específicas para o seu prédio
             </p>
           </div>
-          <span className="flex-shrink-0 text-[11px] font-semibold text-sage-600">
+          <span className="flex-shrink-0 text-[11px] font-semibold text-navy-500">
             Configurar →
           </span>
         </button>
@@ -223,7 +223,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
               onClick={() => set(field, value as CondominioProfile[typeof field])}
               className={`rounded-full px-3.5 py-1 text-[12px] font-medium ring-1 transition-all active:scale-95 ${
                 selected
-                  ? "bg-sage-400 text-white ring-sage-400"
+                  ? "bg-navy-700 text-white ring-navy-700"
                   : "bg-white text-navy-700 ring-navy-200 hover:ring-navy-300"
               }`}
             >
@@ -237,9 +237,9 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
 
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-2xl border border-sage-200 bg-sage-50/40 p-4">
+      <div className="rounded-2xl border border-cream-200 bg-cream-50/60 p-4">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-sage-800">
+          <p className="text-[13px] font-semibold text-navy-800">
             {isEditRef.current ? "Editar perfil" : "Meu condomínio"}
           </p>
           <span className="text-[11px] text-navy-400">
@@ -259,7 +259,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
               }))
             }
             placeholder="Ex: Residencial das Flores"
-            className="w-full rounded-xl border border-navy-200 bg-white px-3 py-1.5 text-[12.5px] text-navy-800 placeholder-navy-300 focus:border-sage-300 focus:outline-none focus:ring-1 focus:ring-sage-200"
+            className="w-full rounded-xl border border-navy-200 bg-white px-3 py-1.5 text-[12.5px] text-navy-800 placeholder-navy-300 focus:border-navy-400 focus:outline-none focus:ring-1 focus:ring-navy-200"
           />
         </div>
 
@@ -303,7 +303,7 @@ export default function OnboardingProfile({ onProfileSaved, onSetupMemoria, forc
           <button
             type="button"
             onClick={save}
-            className="rounded-xl bg-sage-500 px-5 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-sage-600 active:bg-sage-700"
+            className="rounded-xl bg-navy-700 px-5 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-navy-800 active:bg-navy-900"
           >
             Salvar
           </button>

@@ -6,13 +6,22 @@
 
 ---
 
-## Estado atual do produto (2026-05-17 — Fase 43)
+## Estado atual do produto (2026-05-17 — Fase 44)
 
 ### Bundle
-- Rota principal (`/`): 220 kB First Load JS (margem de ~10 kB para o limite 230 kB — confirmado Fase 41)
+- Rota principal (`/`): ≤ 221 kB First Load JS (margem ≥ 9 kB — confirmado Fase 44)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 44
+- **Validação interna:** 20 cenários do laboratório (Fase 43) avaliados — média 3.85/5. Zero falhas críticas. Resultado documentado em `docs/resultado-validacao-cenarios-fase-44.md`.
+- **Matriz de maturidade aplicada:** 13 fluxos reavaliados. Resultado em `docs/resultado-matriz-maturidade-fase-44.md`.
+- **Hero chips refinados:** chip 3 "Nome no grupo" → "Querem expor inadimplente" (label mais preciso). Chip 5 "Convocar assembleia" → "Vazamento entre apts." (crise > procedimento, score +0.5).
+- **TOPICS lgpd:** examplePrompt mudou de duplicata do chip 3 para "Câmera no corredor: precisa de autorização?" — elimina redundância e cobre cenário C21.
+- **TOPICS financeiro:** examplePrompt mudou de abstrato → "Como calcular o reajuste necessário da cota condominial?" — mais acionável, conecta ao SimuladorReajusteCota.
+- **CAT_TO_NEXTACTION expandido:** +5 categorias — `cobranca`, `trabalhista`, `financeiro`, `areas-comuns`, `manutencao`. Total: 15 categorias com próximo passo.
+- **CAT_TO_COMUNICADO expandido:** +`manutencao` (comunicado de serviço) e +`financeiro` (simular reajuste). Total: 9 categorias com bridge Assistente → Ferramentas.
 
 ### Entregues na Fase 43
 - **Hero reposicionado:** "Recebeu um problema no condomínio?" — chips situacionais (5 situações clicáveis → Assistente + auto-submit). "Ativar monitoramento" passou para link secundário. `onSuggestionSelect` prop adicionado.

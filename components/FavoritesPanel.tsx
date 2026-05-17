@@ -47,7 +47,7 @@ export default function FavoritesPanel({ onSelect, refreshKey }: FavoritesPanelP
               onClick={() => onSelect(fav.q)}
               className="flex flex-1 items-center gap-3 px-3.5 py-2.5 text-left"
             >
-              <span className="text-[13px] text-sage-500" aria-hidden="true">
+              <span className="text-[13px] text-terracotta-500" aria-hidden="true">
                 ★
               </span>
               <span className="flex-1 truncate text-[13px] text-navy-700">

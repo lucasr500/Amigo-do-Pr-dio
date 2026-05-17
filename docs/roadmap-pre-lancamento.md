@@ -85,6 +85,8 @@
 - [x] Insight de mandato adicionado (Fase 41): `lib/insights.ts` — cobre janela 90–180 dias (pré-GuidancePanel)
 - [x] Visão futura financeiro documentada (Fase 41): `docs/visao-futura-financeiro-demonstrativos.md` — demonstrativo da administradora, previsão orçamentária, reajuste de cota
 - [x] **Fase 43 — Tempo até o alívio:** Hero reposicionado para "problema-primeiro" com chips situacionais; QuickAccessCards mostram perguntas situacionais; AskInput com placeholder situacional; "Próximo passo" explícito nas respostas do Assistente (10 categorias); CAT_TO_COMUNICADO expandido (responsabilidade, gestão); TOPICS examplePrompts atualizados para situações reais; Laboratório de 50+ cenários criado; Matriz de maturidade de 11 fluxos; Tese do tempo até o alívio documentada
+- [x] **Fase 44 — Validação e lapidação cirúrgica:** 20 cenários validados internamente (média 3.85/5, zero falhas críticas); Hero chip 3 → "Querem expor inadimplente" (mais preciso), chip 5 → "Vazamento entre apts." (crise > procedimento); TOPICS lgpd e financeiro refinados; CAT_TO_NEXTACTION expandido para 15 categorias; CAT_TO_COMUNICADO expandido para 9 categorias (manutencao + financeiro); Documentos: resultado-validacao-cenarios-fase-44.md, resultado-matriz-maturidade-fase-44.md
+- [x] **Fase 45 — Atualização estética completa:** Nova paleta Navy #234B63 / Cream #F7F1E8 / Terracotta #C97852; sistema de cores Tailwind atualizado (navy + terracotta + cream); sage eliminado de todos os componentes (18 arquivos); ícones PWA regenerados com novo design (dois volumes, fundo #234B63); Header, Hero, Response, GuidancePanel, DicaDoDia, OnboardingProfile, BackupPanel, ChecklistPanel, ComunicadoPanel, CondominioStatusHeader, ContextualInsight, FavoritesPanel, MemoriaPanel, PainelOperacional, ProximasDatas, QuickAccessCards, RevisaoMensal, SimuladorReajusteCota, TimelineOperacional — todos atualizados; PWA theme-color #234B63; apple statusBarStyle → black-translucent; build 222 kB
 
 ---
 
@@ -133,5 +135,5 @@
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-17 (Fase 40)*
+*Versão: 2026-05-17 (Fase 45)*
 *Atualizar conforme marcos forem atingidos.*

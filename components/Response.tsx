@@ -24,6 +24,8 @@ const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; icon: string; h
   cobranca:         { label: "Gerar notificação de cobrança",  icon: "💰", hint: "Formalize a comunicação ao condômino" },
   responsabilidade: { label: "Registrar ocorrência formal",    icon: "📝", hint: "Documente o dano antes de acionar responsáveis" },
   gestao:           { label: "Gerar comunicado interno",       icon: "📢", hint: "Formalize a decisão por escrito" },
+  manutencao:       { label: "Gerar comunicado de serviço",    icon: "🔧", hint: "Informe os moradores sobre a manutenção" },
+  financeiro:       { label: "Simular reajuste de cota",       icon: "💼", hint: "Calcule o reajuste antes de propor em assembleia" },
 };
 
 // Próximo passo por categoria — mostrado quando a entrada KB não tem dica específica
@@ -32,12 +34,17 @@ const CAT_TO_NEXTACTION: Partial<Record<string, string>> = {
   obras:            "Solicite ao condômino o tipo de obra, cronograma e, se necessário, documentação técnica antes de qualquer decisão.",
   assembleias:      "Verifique na convenção o prazo mínimo de antecedência para convocação e o quórum exigido para o tema da pauta.",
   inadimplencia:    "Acione a administradora para formalizar a cobrança pelos canais adequados. Evite abordagem direta sem respaldo formal.",
+  cobranca:         "Formalize o procedimento de cobrança com a administradora antes de qualquer contato direto com o devedor.",
   responsabilidade: "Solicite vistoria imediata do local do dano e documente com fotos antes de acionar qualquer seguro ou responsável.",
   funcionarios:     "Verifique o contrato, a CCT da sua região e as obrigações legais antes de tomar qualquer decisão sobre o funcionário.",
+  trabalhista:      "Consulte o histórico funcional, a CCT da sua região e o contrato vigente antes de qualquer ação disciplinar ou rescisória.",
   lgpd:             "Não publique dados pessoais sem verificar os limites da LGPD e da convenção. Prefira comunicação interna por canais adequados.",
   locacao:          "Verifique a convenção para identificar o que compete ao condomínio versus o que é responsabilidade do locador ou locatário.",
   gestao:           "Documente a decisão em ata ou comunicado antes de comunicar aos condôminos.",
   convencao:        "Alterações de convenção geralmente exigem quórum qualificado (2/3 dos condôminos). Consulte os requisitos antes de convocar.",
+  financeiro:       "Levante os números de arrecadação e despesa dos últimos 3 meses antes de propor qualquer reajuste de cota em assembleia.",
+  "areas-comuns":   "Verifique na convenção e no regulamento interno o que diz sobre uso, responsabilidade e autorização para modificações nessa área.",
+  manutencao:       "Registre a data do serviço, o responsável e o laudo (quando exigido) para manter o histórico e proteger o condomínio em caso de questionamento.",
 };
 
 // Rótulos em português para o chip "Tema identificado"
@@ -223,7 +230,7 @@ export default function Response({
             >
               <rect x="5" y="7" width="6" height="13" rx="0.5" fill="currentColor" opacity="0.95" />
               <rect x="13" y="4" width="6" height="16" rx="0.5" fill="currentColor" />
-              <circle cx="19.5" cy="5" r="1.6" fill="#6fa97c" />
+              <circle cx="19.5" cy="5" r="1.6" fill="#C97852" />
             </svg>
           </div>
 
@@ -280,10 +287,10 @@ export default function Response({
 
                       {/* Dica prática */}
                       {entry.dica && (
-                        <div className="rounded-r-lg border-l-[2.5px] border-sage-300 bg-sage-50/70 py-2.5 pl-3 pr-3">
+                        <div className="rounded-r-lg border-l-[2.5px] border-terracotta-200 bg-terracotta-50/60 py-2.5 pl-3 pr-3">
                           <div className="mb-1.5 flex items-center gap-1.5">
                             <LightbulbIcon />
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sage-600">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-terracotta-600">
                               Dica prática
                             </p>
                           </div>
@@ -357,16 +364,16 @@ export default function Response({
                               logInteraction("checklist-cta", cl.id);
                               onNavigateToChecklist?.(cl.id);
                             }}
-                            className="flex w-full items-center gap-3 rounded-xl border border-sage-200 bg-sage-50/60 px-3 py-2.5 text-left transition-colors hover:bg-sage-50 active:bg-sage-100"
+                            className="flex w-full items-center gap-3 rounded-xl border border-navy-100 bg-navy-50/50 px-3 py-2.5 text-left transition-colors hover:bg-navy-50 active:bg-navy-100"
                           >
                             <span className="text-[17px] leading-none" aria-hidden="true">{cl.icon}</span>
                             <div className="flex-1">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sage-600">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
                                 Checklist operacional
                               </p>
                               <p className="text-[12.5px] font-medium text-navy-800">{cl.title}</p>
                             </div>
-                            <span className="flex-shrink-0 text-[11.5px] font-semibold text-sage-600">
+                            <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-500">
                               Abrir →
                             </span>
                           </button>
@@ -480,7 +487,7 @@ export default function Response({
                                 }}
                                 className="group flex w-full items-center gap-3 rounded-2xl border border-navy-100 bg-white p-3.5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-200 hover:shadow-[0_4px_16px_-6px_rgba(31,49,71,0.15)] active:scale-[0.99]"
                               >
-                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50 text-[15px] transition-colors duration-200 group-hover:bg-sage-50">
+                                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50 text-[15px] transition-colors duration-200 group-hover:bg-cream-100">
                                   {CATEGORIA_ICONS[s.categoria] ?? "📋"}
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -568,7 +575,7 @@ export default function Response({
         >
           <div className="flex items-center gap-2 rounded-full bg-navy-900 px-5 py-2.5 text-[13px] font-medium text-cream-50 shadow-xl ring-1 ring-white/10">
             <svg
-              className="h-3.5 w-3.5 text-sage-400"
+              className="h-3.5 w-3.5 text-terracotta-300"
               viewBox="0 0 16 16"
               fill="none"
               aria-hidden="true"
@@ -663,7 +670,7 @@ function NextStepIcon() {
 function LightbulbIcon() {
   return (
     <svg
-      className="h-3 w-3 flex-shrink-0 text-sage-500"
+      className="h-3 w-3 flex-shrink-0 text-terracotta-500"
       viewBox="0 0 12 12"
       fill="none"
       aria-hidden="true"
@@ -688,7 +695,7 @@ function ConfidenceBadge({ level, label }: ConfidenceBadgeProps) {
 
   const styles =
     level === "high"
-      ? "border-sage-200 bg-sage-50 text-sage-600"
+      ? "border-terracotta-200 bg-terracotta-50 text-terracotta-600"
       : "border-navy-100 bg-navy-50 text-navy-500";
 
   return (
@@ -712,7 +719,7 @@ function ActionPill({ icon, label, onClick, active }: ActionPillProps) {
       onClick={onClick}
       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-150 active:scale-95 ${
         active
-          ? "border-sage-200 bg-sage-50 text-sage-700"
+          ? "border-terracotta-200 bg-terracotta-50 text-terracotta-700"
           : "border-navy-100 bg-white text-navy-500 hover:border-navy-200 hover:bg-navy-50"
       }`}
     >

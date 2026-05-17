@@ -16,8 +16,8 @@ type Props = {
 };
 
 const TONE_STYLE: Record<InsightTone, { container: string; text: string; sub: string }> = {
-  stable:   { container: "bg-sage-50/60",  text: "text-sage-700",  sub: "text-sage-500"  },
-  positive: { container: "bg-sage-50/70",  text: "text-sage-800",  sub: "text-sage-600"  },
+  stable:   { container: "bg-cream-100/60", text: "text-navy-700",  sub: "text-navy-500"  },
+  positive: { container: "bg-cream-100/70", text: "text-navy-800",  sub: "text-navy-600"  },
   notice:   { container: "bg-navy-50/50",  text: "text-navy-600",  sub: "text-navy-400"  },
   upcoming: { container: "bg-amber-50/60", text: "text-amber-800", sub: "text-amber-600" },
 };

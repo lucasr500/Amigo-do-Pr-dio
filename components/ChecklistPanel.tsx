@@ -148,12 +148,12 @@ export default function ChecklistPanel() {
                     </span>
                   )}
                   {hasProgress && criticalPending === 0 && (
-                    <span className="rounded-full bg-sage-50 px-2 py-0.5 text-[10px] font-medium text-sage-700 ring-1 ring-sage-200">
+                    <span className="rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-medium text-navy-600 ring-1 ring-navy-100">
                       Continuar
                     </span>
                   )}
                   {isComplete && (
-                    <span className="text-[11px] font-medium text-sage-600">
+                    <span className="text-[11px] font-medium text-navy-600">
                       ✓ {done}/{total}
                     </span>
                   )}
@@ -182,7 +182,7 @@ export default function ChecklistPanel() {
               {hydrated && done > 0 && (
                 <div className="h-0.5 bg-navy-50">
                   <div
-                    className="h-full bg-sage-400 transition-all duration-300"
+                    className="h-full bg-navy-400 transition-all duration-300"
                     style={{ width: `${Math.round((done / total) * 100)}%` }}
                   />
                 </div>
@@ -201,7 +201,7 @@ export default function ChecklistPanel() {
                           <span
                             className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[4px] border-[1.5px] transition-all duration-150 ${
                               checked[item.id]
-                                ? "border-sage-400 bg-sage-400"
+                                ? "border-navy-600 bg-navy-600"
                                 : item.critical
                                   ? "border-amber-300 bg-white"
                                   : "border-navy-200 bg-white"

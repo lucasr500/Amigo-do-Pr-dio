@@ -91,10 +91,10 @@ export default function DicaDoDia({ onAsk }: DicaDoDiaProps) {
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up stagger-2">
-      <div className="rounded-2xl border border-sage-100 bg-sage-50/60 p-4">
+      <div className="rounded-2xl border border-cream-200 bg-cream-100/60 p-4">
         <div className="mb-2 flex items-center gap-2">
           <svg
-            className="h-3.5 w-3.5 text-sage-500"
+            className="h-3.5 w-3.5 text-navy-400"
             viewBox="0 0 16 16"
             fill="none"
             aria-hidden="true"
@@ -108,7 +108,7 @@ export default function DicaDoDia({ onAsk }: DicaDoDiaProps) {
             />
             <path d="M8 12.5v1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sage-700">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
             Dica operacional · {dica.tema}
           </p>
         </div>
@@ -116,7 +116,7 @@ export default function DicaDoDia({ onAsk }: DicaDoDiaProps) {
         <button
           type="button"
           onClick={() => onAsk(dica.prompt)}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11.5px] font-medium text-sage-700 ring-1 ring-sage-200 transition-all duration-150 hover:bg-sage-50 active:scale-95"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[11.5px] font-medium text-navy-600 ring-1 ring-navy-200 transition-all duration-150 hover:bg-navy-50 active:scale-95"
         >
           Saber mais
           <svg

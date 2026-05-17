@@ -181,7 +181,7 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
                       <div
                         className={`relative z-10 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] ${
                           event.tipo === "checklist"
-                            ? "bg-sage-100 text-sage-600"
+                            ? "bg-navy-100 text-navy-600"
                             : event.tipo === "vencimento"
                             ? "bg-navy-100 text-navy-600"
                             : event.tipo === "favorito"

@@ -140,7 +140,7 @@ function buildRows(m: MemoriaOperacional, profile: CondominioProfile | null): St
 // ─── Badge config ─────────────────────────────────────────────────────────────
 
 const BADGE: Record<CondominioHealthStatus, { ring: string; bg: string; text: string; dot: string }> = {
-  "em-dia":  { ring: "ring-sage-100",  bg: "bg-sage-50/80",   text: "text-sage-700",   dot: "bg-sage-400"  },
+  "em-dia":  { ring: "ring-navy-100",  bg: "bg-navy-50/80",   text: "text-navy-600",   dot: "bg-navy-400"  },
   "atencao": { ring: "ring-amber-100", bg: "bg-amber-50/80",  text: "text-amber-700",  dot: "bg-amber-400" },
   "pendente":{ ring: "ring-amber-200", bg: "bg-amber-50",     text: "text-amber-800",  dot: "bg-amber-500" },
   "critico": { ring: "ring-amber-300", bg: "bg-amber-100/80", text: "text-amber-900",  dot: "bg-amber-600" },
@@ -327,7 +327,7 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
               }`}
             >
               <svg
-                className="h-3.5 w-3.5 flex-shrink-0 text-sage-500"
+                className="h-3.5 w-3.5 flex-shrink-0 text-navy-500"
                 viewBox="0 0 16 16"
                 fill="none"
                 aria-hidden="true"
@@ -340,7 +340,7 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span className="text-[11.5px] text-sage-700">
+              <span className="text-[11.5px] text-navy-600">
                 {okRows.length === 1
                   ? `${okRows[0].label} em dia`
                   : `${okRows.length} itens em dia`}

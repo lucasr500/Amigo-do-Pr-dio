@@ -46,7 +46,7 @@ function urgencyTextColor(u: UrgencyLevel): string {
     case "breve":              return "text-amber-500";
     case "planejamento":
     case "acompanhar":         return "text-navy-500";
-    default:                   return "text-sage-600";
+    default:                   return "text-navy-500";
   }
 }
 
