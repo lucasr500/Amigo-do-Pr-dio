@@ -28,6 +28,13 @@ const CAT_LABEL: Record<string, string> = {
   manutencao:      "Manutenção",
 };
 
+const ORIGEM_LABEL: Partial<Record<NonNullable<Pendencia["origem"]>, string>> = {
+  response: "Assistente",
+  guidance: "Alerta",
+  memoria: "Memória",
+  manual: "Manual",
+};
+
 type Props = {
   refreshKey?: number;
 };
@@ -98,15 +105,20 @@ export default function PendenciasCard({ refreshKey }: Props) {
       <div className="animate-fade-in-up rounded-[18px] border border-navy-100/80 bg-white/80 px-4 py-3.5 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_4px_16px_-8px_rgba(31,49,71,0.10)]">
 
         {/* Cabeçalho */}
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-            Próximos passos
-          </p>
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+              Próximos passos
+            </p>
+            <p className="mt-0.5 text-[11.5px] leading-snug text-navy-400">
+              Ações salvas pelo Assistente, pelos alertas ou adicionadas por você.
+            </p>
+          </div>
           {!adding && (
             <button
               type="button"
               onClick={() => setAdding(true)}
-              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-medium text-navy-400 transition-colors hover:bg-navy-50 hover:text-navy-600 active:scale-[0.97]"
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11.5px] font-medium text-navy-400 transition-colors hover:bg-navy-50 hover:text-navy-600 active:scale-[0.97]"
               aria-label="Adicionar próximo passo"
             >
               <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -152,10 +164,19 @@ export default function PendenciasCard({ refreshKey }: Props) {
                   <p className="line-clamp-2 text-[13px] leading-snug text-navy-800">
                     {p.titulo}
                   </p>
-                  {p.categoria && CAT_LABEL[p.categoria] && (
-                    <span className="mt-0.5 inline-block rounded-full bg-navy-50 px-2 py-px text-[10px] font-medium text-navy-500">
-                      {CAT_LABEL[p.categoria]}
-                    </span>
+                  {(p.origem || (p.categoria && CAT_LABEL[p.categoria])) && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {p.origem && ORIGEM_LABEL[p.origem] && (
+                        <span className="inline-block rounded-full bg-navy-50 px-2 py-px text-[10px] font-medium text-navy-500">
+                          {ORIGEM_LABEL[p.origem]}
+                        </span>
+                      )}
+                      {p.categoria && CAT_LABEL[p.categoria] && (
+                        <span className="inline-block rounded-full bg-white/80 px-2 py-px text-[10px] font-medium text-navy-400 ring-1 ring-navy-100/80">
+                          {CAT_LABEL[p.categoria]}
+                        </span>
+                      )}
+                    </div>
                   )}
                   {isStale(p.createdAt) && (
                     <span className="mt-0.5 block text-[10px] text-navy-400">
@@ -199,9 +220,7 @@ export default function PendenciasCard({ refreshKey }: Props) {
           </div>
         ) : openItems.length === 0 ? (
           <p className="text-[12.5px] leading-relaxed text-navy-400">
-            Quando o Assistente responder uma pergunta, você pode{" "}
-            <span className="text-navy-600">salvar o próximo passo aqui</span>{" "}
-            para acompanhar depois.
+            Quando uma orientação virar ação, salve aqui para acompanhar depois.
           </p>
         ) : null}
 
