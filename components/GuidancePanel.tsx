@@ -21,6 +21,8 @@ const GUIDANCE_TITULO_OVERRIDE: Partial<Record<string, string>> = {
   caixa:      "Verificar limpeza da caixa d'água",
   elevador:   "Agendar manutenção do elevador",
   extintores: "Verificar inspeção dos extintores",
+  spda:       "Verificar vistoria SPDA",
+  eletrica:   "Verificar vistoria elétrica",
 };
 
 type Props = {
@@ -178,7 +180,8 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
 
   const guidanceCategoria = (id: string): string | undefined => {
     if (id.startsWith("avcb") || id.startsWith("dedet") || id.startsWith("caixa") ||
-        id.startsWith("elevador") || id.startsWith("extintores")) return "manutencao";
+        id.startsWith("elevador") || id.startsWith("extintores") ||
+        id.startsWith("spda") || id.startsWith("eletrica")) return "manutencao";
     if (id.startsWith("ago")) return "assembleias";
     if (id.startsWith("seguro") || id.startsWith("mandato")) return "gestao";
     return undefined;
