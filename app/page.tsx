@@ -16,6 +16,7 @@ import {
   hasProfile,
   computeCondominioHealth,
   CondominioHealthStatus,
+  addPendencia,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import FavoritesPanel from "@/components/FavoritesPanel";
@@ -28,6 +29,7 @@ import CondominioStatusHeader from "@/components/CondominioStatusHeader";
 import GuidancePanel from "@/components/GuidancePanel";
 import ContextualInsight from "@/components/ContextualInsight";
 import ProximasDatas from "@/components/ProximasDatas";
+import PendenciasCard from "@/components/PendenciasCard";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 type ToolAnchor =
@@ -127,13 +129,17 @@ export default function HomePage() {
     incrementUsage();
     if (result.isDefault) {
       void trackEvent("query_fallback", {
-        q: q.slice(0, 80),
         detected_category: result.detectedCategory,
+        score: result.score,
+        blocked_by_domain: result.blockedByDomainAnchor,
+        query_length: q.length,
       });
     } else {
       void trackEvent("query_submitted", {
-        q: q.slice(0, 80),
+        matched_id: result.matched?.id ?? null,
         categoria: result.matched?.categoria ?? null,
+        score: result.score,
+        query_length: q.length,
       });
     }
     setAnswerResult(result);
@@ -143,6 +149,11 @@ export default function HomePage() {
 
   const handleAsk = () => executeAsk(question.trim());
   const handleRetry = () => executeAsk(submittedQuestion);
+
+  const handleSavePendencia = (titulo: string, categoria: string, matchedId: string) => {
+    addPendencia({ titulo, categoria, origem: "response", matchedId });
+    setRefreshKey((k) => k + 1);
+  };
 
   const navigateTab = (tab: AppTab) => {
     if (typeof window !== "undefined") {
@@ -243,6 +254,9 @@ export default function HomePage() {
             {healthStatus !== "critico" && healthStatus !== "pendente" && (
               <HomeContextual refreshKey={refreshKey} />
             )}
+
+            <PendenciasCard refreshKey={refreshKey} />
+
             {healthStatus !== "critico" && (
               <DicaDoDia
                 onAsk={handleSuggestionSelect}
@@ -296,6 +310,7 @@ export default function HomePage() {
               onNewQuestion={handleNewQuestion}
               onNavigateToChecklist={handleNavigateToChecklist}
               onNavigateToFerramentas={handleNavigateToFerramentas}
+              onSavePendencia={handleSavePendencia}
             />
 
           </div>

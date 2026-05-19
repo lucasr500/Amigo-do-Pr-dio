@@ -119,9 +119,19 @@ const CAMPOS: Campo[] = [
   },
 ];
 
+const ESSENTIAL_KEYS: Array<keyof MemoriaOperacional> = [
+  "vencimentoAVCB", "vencimentoSeguro", "fimMandatoSindico",
+];
+
+const MANUTENCAO_KEYS: Array<keyof MemoriaOperacional> = [
+  "ultimaAGO", "ultimaDedetizacao", "ultimaLimpezaCaixaDAgua",
+  "ultimaManutencaoElevador", "ultimaInspecaoExtintores",
+  "ultimaVistoriaSPDA", "ultimaVistoriaEletrica",
+];
+
 const GRUPO_LABEL: Record<string, string> = {
-  vencimentos:  "Vencimentos",
-  manutencoes:  "Manutenções realizadas",
+  vencimentos:  "Essenciais",
+  manutencoes:  "Manutenções e rotinas",
   fornecedores: "Fornecedores",
 };
 
@@ -139,13 +149,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
     const profile = getProfile();
     setDraft(memoria);
     setHasElevador(profile?.hasElevador === true);
-    const manutencaoKeys: Array<keyof MemoriaOperacional> = [
-      "ultimaAGO", "ultimaDedetizacao", "ultimaLimpezaCaixaDAgua",
-      "ultimaManutencaoElevador", "ultimaInspecaoExtintores",
-      "ultimaVistoriaSPDA", "ultimaVistoriaEletrica",
-    ];
-    const hasManutencoesData = manutencaoKeys.some((k) => memoria[k]);
-    setShowManutencoes(hasManutencoesData);
+    setShowManutencoes(MANUTENCAO_KEYS.some((k) => memoria[k]));
     setHydrated(true);
   }, []);
 
@@ -153,11 +157,16 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   useEffect(() => {
     if (autoExpand && hydrated && !expanded) {
       setExpanded(true);
-      setShowManutencoes(true);
+      const mem = getMemoriaOperacional();
+      const eCount = ESSENTIAL_KEYS.filter((k) => mem[k] && mem[k] !== "").length;
+      setShowManutencoes(eCount >= 3 || MANUTENCAO_KEYS.some((k) => mem[k]));
     }
   }, [autoExpand, hydrated, expanded]);
 
   if (!hydrated) return null;
+
+  const essentialCount = ESSENTIAL_KEYS.filter((k) => draft[k] && draft[k] !== "").length;
+  const manutencaoFilled = MANUTENCAO_KEYS.filter((k) => draft[k] && draft[k] !== "").length;
 
   const set = <K extends keyof MemoriaOperacional>(key: K, value: MemoriaOperacional[K]) => {
     setSaved(false);
@@ -208,8 +217,6 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
     }, 1600);
   };
 
-  const filledCount = Object.values(draft).filter((v) => v && v !== "").length;
-
   const camposFiltrados = CAMPOS.filter((c) => {
     if ((c.key === "ultimaManutencaoElevador" || c.key === "prestadoraElevador") && !hasElevador) return false;
     return true;
@@ -219,13 +226,27 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
 
   // ── Collapsed ──────────────────────────────────────────────────────────────
   if (!expanded) {
+    const ctaLabel =
+      essentialCount === 0 ? "Registrar →"
+      : essentialCount < 3 ? "Completar →"
+      : "Atualizar →";
+
+    const collapsedSubtitle =
+      essentialCount === 0
+        ? "AVCB, seguro e mandato — registre para monitoramento ativo"
+        : essentialCount < 3
+        ? `${essentialCount} de 3 essenciais · ${3 - essentialCount} ${3 - essentialCount === 1 ? "faltando" : "faltando"}`
+        : manutencaoFilled > 0
+        ? `Essenciais completos · ${manutencaoFilled} rotina${manutencaoFilled > 1 ? "s" : ""} registrada${manutencaoFilled > 1 ? "s" : ""}`
+        : "Essenciais completos · adicionar manutenções e rotinas?";
+
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
         <button
           type="button"
           onClick={() => {
             setExpanded(true);
-            setShowManutencoes(true);
+            setShowManutencoes(essentialCount >= 3 || manutencaoFilled > 0);
             logInteraction("memoria-panel-aberto", "");
           }}
           className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
@@ -241,13 +262,11 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
               Vencimentos e manutenções
             </p>
             <p className="text-[11.5px] text-navy-400">
-              {filledCount > 0
-                ? `${filledCount} item${filledCount > 1 ? "s" : ""} monitorado${filledCount > 1 ? "s" : ""} · toque para atualizar`
-                : "AVCB, seguro, mandato e manutenções — tudo em um lugar"}
+              {collapsedSubtitle}
             </p>
           </div>
           <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-500">
-            {filledCount > 0 ? "Atualizar →" : "Registrar →"}
+            {ctaLabel}
           </span>
         </button>
       </section>
@@ -260,7 +279,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
       <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-navy-800">
-            Datas e manutenções
+            Vencimentos e manutenções
           </p>
           <button
             type="button"
@@ -271,11 +290,11 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
           </button>
         </div>
 
-        {/* Nota introdutória — visível apenas quando filledCount === 0 */}
-        {filledCount === 0 && (
+        {/* Nota introdutória — visível apenas quando nenhum essencial foi preenchido */}
+        {essentialCount === 0 && (
           <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Preencha o que souber. Cada data registrada ativa acompanhamento na aba Início, e você pode completar o restante depois.
+              Comece pelas três datas mais importantes — AVCB, seguro e mandato do síndico. As manutenções e rotinas podem ser adicionadas depois.
             </p>
           </div>
         )}
@@ -307,6 +326,23 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                     {showManutencoes ? "Recolher ↑" : "Expandir ↓"}
                   </span>
                 </button>
+              ) : grupo === "vencimentos" ? (
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-400">
+                    Essenciais
+                  </p>
+                  <div className="flex items-center gap-1">
+                    {ESSENTIAL_KEYS.map((k) => (
+                      <span
+                        key={k}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          draft[k] && draft[k] !== "" ? "bg-navy-500" : "bg-navy-200"
+                        }`}
+                      />
+                    ))}
+                    <span className="ml-1 text-[10px] text-navy-400">{essentialCount}/3</span>
+                  </div>
+                </div>
               ) : (
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-400">
                   {GRUPO_LABEL[grupo]}

@@ -101,6 +101,7 @@ const KEYS = {
   MEMORIA:            "amigo_memoria",
   SESSION_META:       "amigo_session_meta",
   RESOLUTION_EVENTS:  "amigo_resolution_events",
+  PENDENCIAS:         "amigo_pendencias",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -379,6 +380,59 @@ export function hasMemoriaOperacional(): boolean {
 export function countMemoriaItens(): number {
   const m = getMemoriaOperacional();
   return Object.values(m).filter((v) => v !== undefined && v !== "").length;
+}
+
+// ─── Pendências ───────────────────────────────────────────────────────────────
+// Sistema leve de próximos passos do síndico.
+// Persiste em localStorage; não incluído no UserBackup v1.
+
+export type Pendencia = {
+  id: string;
+  titulo: string;
+  categoria?: string;
+  origem?: "manual" | "response" | "guidance" | "revisao";
+  matchedId?: string | null;
+  status: "aberta" | "concluida";
+  createdAt: string;
+  completedAt?: string;
+};
+
+export function getPendencias(): Pendencia[] {
+  return safeRead<Pendencia[]>(KEYS.PENDENCIAS, []);
+}
+
+export function addPendencia(
+  p: Omit<Pendencia, "id" | "createdAt" | "status">
+): Pendencia {
+  const all = getPendencias();
+  const nova: Pendencia = {
+    ...p,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    status: "aberta",
+    createdAt: new Date().toISOString(),
+  };
+  all.push(nova);
+  safeWrite(KEYS.PENDENCIAS, all.slice(-50)); // máx 50 registros
+  return nova;
+}
+
+export function completePendencia(id: string): void {
+  safeWrite(
+    KEYS.PENDENCIAS,
+    getPendencias().map((p) =>
+      p.id === id
+        ? { ...p, status: "concluida" as const, completedAt: new Date().toISOString() }
+        : p
+    )
+  );
+}
+
+export function deletePendencia(id: string): void {
+  safeWrite(KEYS.PENDENCIAS, getPendencias().filter((p) => p.id !== id));
+}
+
+export function getPendenciasAbertas(): Pendencia[] {
+  return getPendencias().filter((p) => p.status === "aberta");
 }
 
 // ─── Habit score ─────────────────────────────────────────────────────────────

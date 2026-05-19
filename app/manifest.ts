@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Amigo do Prédio",
-    short_name: "Amigo do Prédio",
+    short_name: "Amigo Prédio",
     description: "Orientações práticas para a rotina do síndico.",
     start_url: "/",
     scope: "/",

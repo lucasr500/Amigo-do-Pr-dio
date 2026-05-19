@@ -57,7 +57,7 @@ export default function AskInput({
           <button
             type="submit"
             disabled={!value.trim() || isLoading}
-            className="group/btn inline-flex min-h-11 items-center gap-2 rounded-2xl bg-navy-800 px-5 py-2.5 text-[14px] font-semibold text-cream-50 shadow-sm transition-all duration-200 hover:bg-navy-900 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-navy-200 disabled:hover:shadow-sm sm:text-[14.5px]"
+            className="group/btn inline-flex min-h-11 items-center gap-2 rounded-2xl bg-navy-700 px-5 py-2.5 text-[14px] font-semibold text-cream-50 shadow-sm transition-all duration-200 hover:bg-navy-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-navy-200 disabled:hover:shadow-sm sm:text-[14.5px]"
           >
             {isLoading ? (
               <>

@@ -6,13 +6,47 @@
 
 ---
 
-## Estado atual do produto (2026-05-17 — Fase 44)
+## Estado atual do produto (2026-05-18 — Fase 50)
 
 ### Bundle
-- Rota principal (`/`): ≤ 221 kB First Load JS (margem ≥ 9 kB — confirmado Fase 44)
+- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 50 (utilidade recorrente — Próximos passos)
+- **`lib/session.ts`:** tipo `Pendencia` + chave `amigo_pendencias` + 5 funções: `addPendencia`, `completePendencia`, `deletePendencia`, `getPendencias`, `getPendenciasAbertas`. Máx 50 registros. Não incluído no backup v1 (chave separada, sem impacto em import/export).
+- **`components/PendenciasCard.tsx`** (novo): card na aba Início, sempre visível. Mostra até 5 pendências abertas com botão de conclusão circular; formulário inline para adição manual; estado vazio com instrução de uso do Assistente. Usa `refreshKey` para re-leitura após saves externos.
+- **`components/Response.tsx`:** prop opcional `onSavePendencia` adicionada; estado `savedPendenciaId` para feedback "Salvo ✓" por resposta; botão "Salvar nos próximos passos" ao final do bloco "Próximo passo" — aparece apenas quando `CAT_TO_NEXTACTION[categoria]` existe e prop está conectada.
+- **`app/page.tsx`:** `handleSavePendencia` criado; `onSavePendencia` passado para Response; `PendenciasCard` renderizado na aba Início após HomeContextual.
+- **Bundle:** 224 kB (+1 kB). Margem: 6 kB antes do limite.
+
+### Entregues na Fase 49 (privacidade da telemetria e ativação segura)
+- **Query bruta removida do Supabase:** `q: q.slice(0, 80)` eliminado dos eventos `query_submitted` e `query_fallback` em `app/page.tsx`. Substituído por campos estruturais sem PII: `matched_id`, `categoria`, `score`, `query_length` (submitted) e `detected_category`, `score`, `blocked_by_domain`, `query_length` (fallback).
+- **Admin adaptado:** `aggregateRemote()` em `app/admin/page.tsx` atualizado para usar os novos campos. `Aggregated` type ganhou campo `source: "local" | "remote"`. Rótulos das seções "Top perguntas" e "Tokens sem resposta" agora diferem entre fonte local e remota — sem quebrar dados locais (localStorage).
+- **Documentação de privacidade:** seção "Privacidade: query bruta nunca é enviada ao Supabase" criada no manual com lista completa de campos coletados, o que cada um representa, o que é evitado e por quê.
+- **Nota localStorage:** explicitado que `logQuery()` armazena query completa apenas localmente (no dispositivo do usuário) — jamais transmitida.
+
+### Entregues na Fase 48 (validação técnica silenciosa)
+- **PWA manifest:** `short_name` corrigido de `"Amigo do Prédio"` (16 chars) → `"Amigo Prédio"` (12 chars) — evita truncamento no home screen Android. `name` mantido como "Amigo do Prédio".
+- **Telemetria auditada:** zero PII nos eventos estruturados. Exceção identificada e documentada: `q:` nos eventos de query — resolvida na Fase 49.
+- **PWA config validada:** manifest.ts, layout.tsx, icons (192/512/apple-touch-icon), maskable, theme_color, background_color, safe-area, display standalone — todos corretos.
+- **Supabase:** NOT ativado (sem `.env.local`). Telemetria opera em no-op silencioso. Guia completo em `docs/setup-supabase-telemetria.md`. Próximo passo manual: criar projeto Supabase + criar `.env.local`.
+- **Auditoria /admin:** requer browser com dev server (`npm run dev` → `localhost:3000/admin`). Offline (scripts/audit.js) confirmou 87% recall. Auditoria ao vivo é passo do fundador.
+
+### Entregues na Fase 47 (coerência visual e percepção premium)
+- **Hero copy**: corpo atualizado para nomear os 3 essenciais — "Registre AVCB, seguro e mandato do síndico — 3 datas que protegem o prédio. O app avisa antes que qualquer prazo vire urgência." Usuários sem dados agora entendem o valor antes de qualquer cadastro.
+- **MemoriaPanel título expandido**: "Datas e manutenções" → "Vencimentos e manutenções" — elimina inconsistência com o texto do estado colapsado.
+- **AskInput botão submit**: `bg-navy-800 hover:bg-navy-900` → `bg-navy-700 hover:bg-navy-800` — alinha com a cor primária da marca (`#234B63` = navy-700), coerente com todos os botões "Salvar" do app.
+- **Auditoria terracota**: todos os usos de terracota validados como semanticamente corretos — apenas em estados de urgência/ação: GuidancePanel (critico + botão urgentes), CondominioStatusHeader (badge critico + linhas de alerta), ProximasDatas (vencido/urgente), Response (dica prática + ActionPill ativo + toast).
+- **Identidade visual confirmada**: BrandMark usa `/brand/logo-oficial.png` com `bg-[#234B63]` ✓; BottomNav `bg-[#fffaf1]/[0.96]` ✓; fundo body `#FBF8F2` ✓; nenhum novo elemento pesado de azul introduzido.
+
+### Entregues na Fase 46 (maturação interna — sem beta)
+- **MemoriaPanel progressivo:** seção "Essenciais" (AVCB, Seguro, Mandato) com indicador de progresso (dots + contador "X/3"); collapsed state com subtítulos contextuais por nível de preenchimento; seção "Manutenções e rotinas" renomeada; texto de intro focado nas 3 datas essenciais; abertura inteligente — foca nos essenciais se incompletos, expande rotinas se prontos. Premissa: `docs/consolidacao-interna-sem-beta-fase-45.md`.
+- **Response — ação antes de explicação:** "Próximo passo" movido para o topo do card de contexto (antes da base legal); aparece sempre quando disponível para a categoria (não mais exclusivo quando sem dica); maior destaque visual (border-navy-500). Ordem: Próximo passo → Base legal → Dica prática → Veja também → CTAs → Disclaimer.
+
+### Entregues na Fase 45 (estética completa)
+- Nova paleta Navy #234B63 / Cream #F7F1E8 / Terracotta #C97852; sistema de cores Tailwind atualizado; sage eliminado; ícones PWA regenerados; 19 componentes atualizados; build 222 kB.
 
 ### Entregues na Fase 44
 - **Validação interna:** 20 cenários do laboratório (Fase 43) avaliados — média 3.85/5. Zero falhas críticas. Resultado documentado em `docs/resultado-validacao-cenarios-fase-44.md`.
@@ -305,7 +339,36 @@ Eventos mais importantes para acompanhar:
 - `simulador_calculado`: uso do simulador de multa
 - `guidance_resolved`: usuários resolvendo pendências reais
 
-### Propriedades seguras coletadas (sem dados pessoais)
+### Privacidade: query bruta nunca é enviada ao Supabase (Fase 49)
+
+A pergunta digitada pelo usuário **nunca é transmitida** para o Supabase. Em vez disso, os eventos de query enviam apenas sinais estruturais:
+
+**`query_submitted`** (match encontrado na KB):
+- `matched_id` — ID da entrada KB que respondeu (ex: `"barulho-noite-22h"`) — não é PII
+- `categoria` — categoria da resposta (ex: `"multas"`) — não é PII
+- `score` — pontuação do match (número inteiro) — não é PII
+- `query_length` — comprimento em caracteres da pergunta — não é PII
+
+**`query_fallback`** (sem match):
+- `detected_category` — categoria inferida pelo motor mesmo sem match (ex: `"obras"`) — não é PII
+- `score` — score máximo atingido (mostra o quão perto chegou) — não é PII
+- `blocked_by_domain` — `true` se a pergunta estava fora do escopo condominial — não é PII
+- `query_length` — comprimento em caracteres — não é PII
+
+**O que isso permite analisar:**
+- Quais categorias da KB são mais consultadas → priorizar melhorias editoriais
+- Quais categorias têm mais fallback → lacunas de cobertura
+- Score médio dos fallbacks → calibrar limiares do motor
+- Se os fora-do-escopo estão sendo bloqueados corretamente
+
+**O que é evitado:**
+- Texto literal da pergunta (pode conter nomes, apartamentos, valores)
+- Tokens normalizados da query (derivados do texto, igualmente sensíveis)
+- Qualquer dado do perfil, memória operacional ou localStorage
+
+**Nota: localStorage é local-only.** O log de queries em `amigo_queries` (via `logQuery()`) permanece no dispositivo do usuário — jamais é transmitido ao Supabase. O painel `/admin` acessa esse log localmente quando não há Supabase configurado.
+
+### Propriedades seguras coletadas (eventos de ferramentas)
 - `tipo_comunicado`: qual modelo foi usado ("assembleia", "obra", etc.)
 - `campos_preenchidos`: contagem de campos preenchidos (número, não conteúdo)
 - `meses`: meses de atraso no simulador (número)
@@ -334,18 +397,17 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 
 ---
 
-## Próximas tarefas prioritárias (Fase 42)
+## Próximas tarefas prioritárias (pós-Fase 49)
 
-1. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari)
-2. **Configurar Supabase** — 15 min — ver `docs/setup-supabase-telemetria.md`
-3. **Rodar auditoria em /admin** — meta recall ≥ 75%
-4. **Testar "Próximas datas" manualmente** — registrar vencimentos futuros e passados, verificar ordenação e cores
-5. **Revisão jurídica** dos rascunhos legais
-6. **Canal de feedback** e convite para primeiros 5 síndicos beta
-7. **Beta com síndicos reais** — apenas após itens 1–6 concluídos
+1. **Configurar Supabase** (ação manual — ~15 min) — ver `docs/setup-supabase-telemetria.md`. Telemetria já está privacy-safe (Fase 49) — pode ativar com segurança.
+2. **Rodar auditoria em /admin ao vivo** — `npm run dev` → `localhost:3000/admin` → "Rodar auditoria" — confirmar recall ≥ 75% (esperado 87%).
+3. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`. `short_name` já corrigido para 12 chars (Fase 48).
+4. **Revisão jurídica** dos rascunhos legais (`docs/rascunho-termos-de-uso.md`, `docs/rascunho-politica-privacidade.md`)
+5. **Canal de feedback** antes de qualquer exposição externa
+6. **Não fazer beta com síndicos** até itens 1–4 concluídos — ver `docs/consolidacao-interna-sem-beta-fase-45.md`
 
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-17 (Fase 41 concluída)*
+*Versão: 2026-05-18 (Fase 50 concluída)*
 *Atualizar a seção "Estado atual" a cada sprint.*

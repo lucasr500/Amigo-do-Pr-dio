@@ -53,6 +53,7 @@ type Aggregated = {
   topFallbackTokens: { token: string; count: number }[];
   tierDist: Record<HabitTier, number>;
   recentEvents: RawEvent[];
+  source: "local" | "remote";
 };
 
 function aggregateRemote(events: RawEvent[]): Aggregated {
@@ -72,12 +73,15 @@ function aggregateRemote(events: RawEvent[]): Aggregated {
 
     if (e.event === "query_submitted" || e.event === "query_fallback") {
       totalQueries++;
-      const q = (e.properties.q as string | undefined) ?? "";
-      if (q) queries[q] = (queries[q] ?? 0) + 1;
+      // Fase 49: sem campo q — agrupamos por matched_id/categoria (submitted) ou detected_category (fallback)
+      const matchedId = (e.properties.matched_id as string | undefined) ?? "";
+      const categoria = (e.properties.categoria as string | undefined) ?? "";
+      const detectedCat = (e.properties.detected_category as string | undefined) ?? "";
+      const key = matchedId || categoria;
+      if (key) queries[key] = (queries[key] ?? 0) + 1;
       if (e.event === "query_fallback") {
         fallbackCount++;
-        const tokens = q.split(/\s+/).filter((t) => t.length > 2);
-        tokens.forEach((t) => { fallbackTokens[t] = (fallbackTokens[t] ?? 0) + 1; });
+        if (detectedCat) fallbackTokens[detectedCat] = (fallbackTokens[detectedCat] ?? 0) + 1;
       }
     }
 
@@ -112,6 +116,7 @@ function aggregateRemote(events: RawEvent[]): Aggregated {
     topFallbackTokens,
     tierDist,
     recentEvents: events.slice(0, 50),
+    source: "remote",
   };
 }
 
@@ -161,6 +166,7 @@ function aggregateLocal(): Aggregated {
     topFallbackTokens,
     tierDist,
     recentEvents: [],
+    source: "local",
   };
 }
 
@@ -500,7 +506,7 @@ export default function AdminPage() {
             {data.topQueries.length > 0 && (
               <section>
                 <p className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">
-                  Top perguntas respondidas
+                  {data.source === "remote" ? "Top entradas KB respondidas" : "Top perguntas respondidas"}
                 </p>
                 <div className="divide-y divide-navy-50 rounded-xl border border-navy-100 bg-white">
                   {data.topQueries.map(({ q, count }, i) => (
@@ -520,7 +526,7 @@ export default function AdminPage() {
             {data.topFallbackTokens.length > 0 && (
               <section>
                 <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">
-                  Tokens sem resposta (gaps editoriais)
+                  {data.source === "remote" ? "Categorias sem resposta (gaps editoriais)" : "Tokens sem resposta (gaps editoriais)"}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {data.topFallbackTokens.map(({ token, count }) => (

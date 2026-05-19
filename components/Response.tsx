@@ -142,6 +142,7 @@ type ResponseProps = {
   onNewQuestion?: () => void;
   onNavigateToChecklist?: (checklistId: string) => void;
   onNavigateToFerramentas?: (anchor?: ToolAnchor) => void;
+  onSavePendencia?: (titulo: string, categoria: string, matchedId: string) => void;
 };
 
 export default function Response({
@@ -154,12 +155,14 @@ export default function Response({
   onNewQuestion,
   onNavigateToChecklist,
   onNavigateToFerramentas,
+  onSavePendencia,
 }: ResponseProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [copied, setCopied] = useState(false);
   const [liked, setLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [savedPendenciaId, setSavedPendenciaId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const entry: KnowledgeEntry | null = answerResult?.matched ?? null;
@@ -185,6 +188,7 @@ export default function Response({
     setCopied(false);
     setLiked(entry ? isFavorited(entry.id) : false);
     setShowToast(false);
+    setSavedPendenciaId(null);
     let i = 0;
     const interval = setInterval(() => {
       if (i < answer.length) {
@@ -356,9 +360,48 @@ export default function Response({
                     )}
                   </p>
 
-                  {/* Fundamento legal + dica — aparecem após a digitação completa */}
+                  {/* Conteúdo contextual — aparece após a digitação completa */}
                   {!isTyping && !isDefault && entry && (
                     <div className="mt-4 animate-fade-in space-y-2.5">
+                      {/* Próximo passo — ação imediata antes do contexto jurídico */}
+                      {CAT_TO_NEXTACTION[entry.categoria] && (
+                        <div className="rounded-r-lg border-l-[2.5px] border-navy-500 bg-navy-100/40 py-2.5 pl-3 pr-3">
+                          <div className="mb-1.5 flex items-center gap-1.5">
+                            <NextStepIcon />
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-600">
+                              Próximo passo
+                            </p>
+                          </div>
+                          <p className="text-[14px] leading-relaxed text-navy-700">
+                            {CAT_TO_NEXTACTION[entry.categoria]}
+                          </p>
+                          {onSavePendencia && (
+                            <div className="mt-2 flex justify-end">
+                              <button
+                                type="button"
+                                disabled={savedPendenciaId === entry.id}
+                                onClick={() => {
+                                  if (savedPendenciaId === entry.id) return;
+                                  setSavedPendenciaId(entry.id);
+                                  onSavePendencia(
+                                    CAT_TO_NEXTACTION[entry.categoria]!,
+                                    entry.categoria,
+                                    entry.id,
+                                  );
+                                }}
+                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                                  savedPendenciaId === entry.id
+                                    ? "cursor-default text-navy-400"
+                                    : "text-navy-500 hover:bg-navy-200/60 hover:text-navy-700"
+                                }`}
+                              >
+                                {savedPendenciaId === entry.id ? "Salvo ✓" : "Salvar nos próximos passos"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Base legal */}
                       <div className="rounded-r-lg border-l-[2.5px] border-navy-200 bg-navy-50/60 py-2.5 pl-3 pr-3">
                         <div className="mb-1.5 flex items-center gap-1.5">
@@ -387,25 +430,8 @@ export default function Response({
                         </div>
                       )}
 
-                      {entry.dica && renderRelated("sm:hidden")}
-
-                      {/* Próximo passo — categoria-wide, só quando não há dica específica */}
-                      {!entry.dica && CAT_TO_NEXTACTION[entry.categoria] && (
-                        <div className="rounded-r-lg border-l-[2.5px] border-navy-300 bg-navy-50/50 py-2.5 pl-3 pr-3">
-                          <div className="mb-1.5 flex items-center gap-1.5">
-                            <NextStepIcon />
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
-                              Próximo passo
-                            </p>
-                          </div>
-                          <p className="text-[14px] leading-relaxed text-navy-700">
-                            {CAT_TO_NEXTACTION[entry.categoria]}
-                          </p>
-                        </div>
-                      )}
-
                       {/* Veja também — entradas relacionadas da mesma categoria */}
-                      {renderRelated(entry.dica ? "hidden sm:block" : "")}
+                      {renderRelated("")}
 
                       {/* Checklist operacional recomendado — ponte entre Q&A e ferramentas */}
                       {(() => {
