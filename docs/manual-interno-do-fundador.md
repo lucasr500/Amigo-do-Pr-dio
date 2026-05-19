@@ -6,13 +6,24 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 58)
+## Estado atual do produto (2026-05-19 — Fase 59)
 
 ### Bundle
 - Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 59 (integração segura GuidancePanel ↔ Próximos Passos)
+
+Fecha o ciclo de utilidade recorrente sem criar automações perigosas — alertas de AVCB/Seguro/Mandato não são marcados como renovados sem dado real.
+
+- **`components/GuidancePanel.tsx`:** `commitResolution()` agora detecta pendência aberta com `origem === "guidance"` e `matchedId === item.id`. Se encontrar, chama `completePendencia(related.id)` imediatamente após gravar o dado no localStorage, e dispara `pendencia_completed_from_guidance_resolution { guidance_id, priority }`. A Timeline recolhe a conclusão normalmente via `onResolved?.()` depois dos 2500 ms de sucesso. Import de `completePendencia` adicionado.
+- **`components/PendenciasCard.tsx`:** ao concluir pendência com `origem === "guidance"`, exibe por 5 s a mensagem discreta: "Concluído. Se isso envolvia vencimento, atualize a data no monitoramento." — sem modal, sem navegação forçada, sem abrir MemoriaPanel. Implementado via `guidanceFeedback` state + `feedbackTimer` ref com cleanup no unmount.
+- **`components/PendenciasCard.tsx`:** indicador temporal discreto "Aberto há mais de 14 dias" abaixo da tag de categoria de cada pendência com mais de 14 dias de `createdAt`. Helper `isStale(createdAt)` puro, calculado no render — zero persistência, zero dueDate, zero prazo editável.
+- **`lib/telemetry.ts`:** `"pendencia_completed_from_guidance_resolution"` adicionado ao union `TelemetryEvent`. Fields enviados: `guidance_id`, `priority` — zero PII.
+- **Decisão registrada:** concluir pendência no PendenciasCard nunca atualiza GuidancePanel nem grava dados de memória automaticamente. Motivo: AVCB, Seguro e Mandato exigem nova data real — marcar automaticamente como renovado seria dado falso, perigoso para o condomínio.
+- **Build:** 223 kB (sem variação). Margem: 7 kB antes do limite.
 
 ### Entregues na Fase 58 (cold start & preview de valor)
 

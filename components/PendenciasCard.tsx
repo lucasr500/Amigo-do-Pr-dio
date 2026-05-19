@@ -37,7 +37,13 @@ export default function PendenciasCard({ refreshKey }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [adding, setAdding] = useState(false);
   const [novoTitulo, setNovoTitulo] = useState("");
+  const [guidanceFeedback, setGuidanceFeedback] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); };
+  }, []);
 
   useEffect(() => {
     setPendencias(getPendenciasAbertas());
@@ -60,6 +66,11 @@ export default function PendenciasCard({ refreshKey }: Props) {
       origem: p?.origem ?? null,
       matched_id: p?.matchedId ?? null,
     });
+    if (p?.origem === "guidance") {
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+      setGuidanceFeedback(true);
+      feedbackTimer.current = setTimeout(() => setGuidanceFeedback(false), 5000);
+    }
   };
 
   const handleAdd = () => {
@@ -79,6 +90,8 @@ export default function PendenciasCard({ refreshKey }: Props) {
   };
 
   const openItems = pendencias.slice(0, 5);
+  const isStale = (createdAt: string) =>
+    Date.now() - new Date(createdAt).getTime() > 14 * 86_400_000;
 
   return (
     <section className="px-5 pb-2 sm:px-6">
@@ -103,6 +116,13 @@ export default function PendenciasCard({ refreshKey }: Props) {
             </button>
           )}
         </div>
+
+        {/* Feedback após concluir pendência de monitoramento */}
+        {guidanceFeedback && (
+          <p className="mb-2.5 text-[11.5px] leading-relaxed text-navy-500">
+            Concluído. Se isso envolvia vencimento, atualize a data no monitoramento.
+          </p>
+        )}
 
         {/* Lista de pendências */}
         {openItems.length > 0 && (
@@ -135,6 +155,11 @@ export default function PendenciasCard({ refreshKey }: Props) {
                   {p.categoria && CAT_LABEL[p.categoria] && (
                     <span className="mt-0.5 inline-block rounded-full bg-navy-50 px-2 py-px text-[10px] font-medium text-navy-500">
                       {CAT_LABEL[p.categoria]}
+                    </span>
+                  )}
+                  {isStale(p.createdAt) && (
+                    <span className="mt-0.5 block text-[10px] text-navy-400">
+                      Aberto há mais de 14 dias
                     </span>
                   )}
                 </div>

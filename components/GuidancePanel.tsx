@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   addPendencia,
+  completePendencia,
   getMemoriaOperacional,
   getPendenciasAbertas,
   getProfile,
@@ -134,6 +135,18 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
 
   const commitResolution = (item: GuidanceItem, value: string) => {
     resolveMemoriaField(item.resolveAction.field, value, item.resolveAction.successMessage);
+
+    const related = getPendenciasAbertas().find(
+      (p) => p.origem === "guidance" && p.matchedId === item.id
+    );
+    if (related) {
+      completePendencia(related.id);
+      void trackEvent("pendencia_completed_from_guidance_resolution", {
+        guidance_id: item.id,
+        priority: item.priority,
+      });
+    }
+
     void trackEvent("guidance_resolved", {
       id: item.id,
       field: item.resolveAction.field as string,
