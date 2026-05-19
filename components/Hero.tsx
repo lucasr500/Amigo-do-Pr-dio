@@ -36,7 +36,7 @@ export default function Hero({ onSetup, onAssistente, onSuggestionSelect }: Prop
           Seu condomínio sob controle.
         </h2>
         <p className="mt-3 max-w-[350px] text-[14px] leading-relaxed text-cream-100/82">
-          Registre AVCB, seguro e mandato do síndico — 3 datas que protegem o prédio. O app avisa antes que qualquer prazo vire urgência.
+          Registre AVCB, seguro e mandato do síndico — 3 datas que protegem o prédio. Em 2 minutos o monitoramento está ativo e o app avisa você antes que qualquer prazo vire urgência.
         </p>
 
         <div className="mt-4 flex flex-wrap gap-1.5">

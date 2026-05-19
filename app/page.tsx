@@ -28,6 +28,7 @@ import GuidancePanel from "@/components/GuidancePanel";
 import ContextualInsight from "@/components/ContextualInsight";
 import ProximasDatas from "@/components/ProximasDatas";
 import PendenciasCard from "@/components/PendenciasCard";
+import GuidancePreview from "@/components/GuidancePreview";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 type ToolAnchor =
@@ -232,6 +233,11 @@ export default function HomePage() {
                 onAssistente={() => setActiveTab("assistente")}
                 onSuggestionSelect={handleSuggestionSelect}
               />
+            )}
+
+            {/* Preview de valor — visível apenas no estado sem dados */}
+            {!hasCondominioData && (
+              <GuidancePreview onSetup={handleScrollToMemoria} />
             )}
 
             {hasCondominioData && (

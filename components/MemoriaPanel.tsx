@@ -317,7 +317,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
         {essentialCount === 0 && (
           <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Comece pelas três datas mais importantes — AVCB, seguro e mandato do síndico. As manutenções e rotinas podem ser adicionadas depois.
+              Comece pelas três datas mais importantes — AVCB, seguro e mandato do síndico. Não sabe uma data agora? Use &ldquo;lembrar depois&rdquo; no campo e preencha quando encontrar o documento. As manutenções podem ser adicionadas depois.
             </p>
           </div>
         )}

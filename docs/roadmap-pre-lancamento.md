@@ -17,7 +17,7 @@
 - [x] 5 novas lacunas editoriais resolvidas (Fase 34): emergência, subsíndico, multa inválida, dano vizinho, animal locatário
 - [x] KB preparada para RAG futuro — documentação estrutural pronta (Fase 34)
 - [ ] Recall geral ≥ 75% no painel /admin (projetado ~87% com AUDIT_CASES Fase 33 — verificar ao vivo)
-- [ ] Confidence gap calibrado: < 20% de respostas borderline na auditoria
+- [x] Confidence gap calibrado: < 20% de respostas borderline na auditoria — 11/83 = 13,3% (Fase 57 — confirmado offline)
 
 ### Produto / experiência
 - [x] Fluxo de onboarding completo funciona sem instrução: novo usuário → ativa monitoramento em < 3 min (Fase 35)
@@ -42,7 +42,7 @@
 
 ### Conteúdo legal
 - [x] Disclaimer jurídico visível e claro em toda resposta do Assistente
-- [ ] Sem resposta que afirme "pode fazer X" sem mencionar que depende da convenção
+- [x] Sem resposta que afirme "pode fazer X" sem mencionar que depende da convenção — auditoria editorial concluída (Fase 57): 316 entradas varridas, 3 corrigidas (`autorizacao-obras`, `vaga-uso-comum-preferencia`, `coleta-seletiva-condominio`)
 - [x] Dados sensíveis (LGPD, trabalhista, financeiro) com aviso de "consulte especialista" — Fase 53: `SENSITIVE_CATEGORY_NOTICE` em `Response.tsx`
 
 ---
@@ -90,6 +90,8 @@
 - [x] **Fase 46 — Maturação interna (sem beta):** MemoriaPanel progressivo — seção "Essenciais" (AVCB/Seguro/Mandato) com dots de progresso (X/3), collapsed state com subtítulos contextuais por nível (0/parcial/completo+rotinas), abertura inteligente, intro text focada nas 3 essenciais; Response reorganizada — "Próximo passo" movido para primeiro card (antes da base legal), sempre visível quando disponível para a categoria (removido `!entry.dica`), destaque visual reforçado. Premissa registrada: `docs/consolidacao-interna-sem-beta-fase-45.md` — sem beta, sem síndicos, sem exposição externa.
 - [x] **Fase 47 — Coerência visual e percepção premium:** Hero copy atualizado para nomear AVCB, seguro e mandato antes do cadastro; MemoriaPanel título corrigido (consistência colapsado ↔ expandido); AskInput submit alinhado à cor primária navy-700; auditoria de terracota confirmou uso semanticamente correto em todos os componentes (urgência/ação); identidade BrandMark + bg-body + BottomNav validados. Bundle 223 kB. Sem beta, sem síndicos.
 - [x] **Fase 48 — Validação técnica silenciosa:** PWA manifest auditado e corrigido (`short_name` 16→12 chars para evitar truncamento Android); telemetria auditada — zero PII estrutural, exceção documentada (`q:` truncado nos eventos de query); todos os arquivos PWA validados (manifest, layout, icons, safe-area, maskable, theme_color); Supabase documentado como próximo passo manual (guia completo em `docs/setup-supabase-telemetria.md`); auditoria /admin documentada como ação do fundador (recall esperado 87%). Bundle 223 kB. Sem beta, sem síndicos.
+- [x] **Fase 58 — Cold Start & Preview de Valor:** estado sem dados da Home redesenhado para demonstrar o valor do monitoramento antes do cadastro; novo componente `GuidancePreview.tsx` (estático, sem localStorage, sem interferência no GuidancePanel real) com 2 itens mockados (AVCB vence em 23 dias + Mandato termina em 68 dias), badge "Exemplo" e CTA "Cadastrar as 3 datas"; Hero com copy atualizado ("Em 2 minutos o monitoramento está ativo"); `PendenciasCard` empty state re-escrito para ensinar o loop Assistente → próximo passo → acompanhamento; `MemoriaPanel` intro note atualizada para incluir orientação "Não sabe agora? Use lembrar depois". Bundle 223 kB (+1 kB). TypeScript zero erros. Sem beta, sem síndicos.
+- [x] **Fase 57 — Auditoria editorial da KB (fechar critérios de conteúdo legal):** 316 entradas varridas com análise de padrões assertivos (`pode fazer X`, `é obrigado`, `tem direito a Y`); 3 entradas corrigidas — `autorizacao-obras` (documentos exigíveis dependem da convenção/regimento), `coleta-seletiva-condominio` (exigências específicas variam por legislação municipal), `vaga-uso-comum-preferencia` (locação requer aprovação em assembleia; "direito de preferência legal" suavizado). 25 entradas avaliadas e mantidas — assertivas baseadas em estatuto legal direto (CLT, CC, CPC, NR-10). Confidence gap: 11/83 = 13,3% (< 20%). Recall A: 100%. FAIL: 0. Build 222 kB. TypeScript zero erros. Sem beta, sem síndicos.
 - [x] **Fase 56 — Ativação segura do Supabase (docs e validação):** `docs/setup-supabase-telemetria.md` corrigido — bug RLS `TO authenticated` → `TO anon` (o `/admin` usa anon key via `fetchRecentEvents()`; sem correção, painel nunca leria dados remotos); referências ao campo `q` removidas das queries SQL (eliminado na Fase 49); +7 eventos novos documentados (pendências, backup_imported, session_duration); checklist de ativação 9 passos criado; SQL de diagnóstico expandido (+pendências por origem, taxa de conclusão). Auditoria offline confirmada: 87% recall (72/83 PASS, 0 FAIL), Recall A 100%, Bloqueio C 100% — motor estável. TypeScript zero erros. Sem beta, sem síndicos.
 - [x] **Fase 55 — Onboarding sem bloqueio: "Não sei agora — lembrar depois":** botão discreto abaixo do input de cada campo essencial vazio (AVCB, Seguro, Mandato) no MemoriaPanel; cria pendência com `origem: "memoria"`, título específico por campo, `categoria: "gestao"`, `matchedId: fieldKey`; deduplicação via `getPendenciasAbertas()` filtrado por `origem + matchedId`, inicializado no `useEffect` de mount; feedback "Lembrete salvo ✓" inline; evento `pendencia_created_from_memoria` com `{ field }` — zero PII; `"memoria"` adicionado ao union `Pendencia.origem` em `session.ts`; ajuste opcional de títulos do GuidancePanel via `GUIDANCE_TITULO_OVERRIDE` (5 verbos de ação mais precisos). Bundle 222 kB (sem variação). TypeScript zero erros. Sem beta, sem síndicos.
 - [x] **Fase 54 — Conexão GuidancePanel → Próximos passos:** botão "Salvar nos próximos passos" no painel de ações de cada item do GuidancePanel (critico e atencao); título gerado deterministicamente (`Renovar X` para type expiry, `X` para type done); `origem: "guidance"`, `matchedId: item.id`; deduplicação por `getPendenciasAbertas()` filtrado por `origem + matchedId` — inicializado no `useEffect([refreshKey])`; `onPendenciaSaved` callback propaga `setRefreshKey` para atualizar PendenciasCard imediatamente; feedback inline "Salvo ✓" por item; evento `pendencia_created_from_guidance` com `{ guidance_id, priority }` — zero PII; bundle 222 kB (sem variação). TypeScript zero erros. Sem beta, sem síndicos.
@@ -146,5 +148,5 @@
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 56)*
+*Versão: 2026-05-19 (Fase 57)*
 *Atualizar conforme marcos forem atingidos.*

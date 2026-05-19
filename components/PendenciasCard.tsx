@@ -174,10 +174,9 @@ export default function PendenciasCard({ refreshKey }: Props) {
           </div>
         ) : openItems.length === 0 ? (
           <p className="text-[12.5px] leading-relaxed text-navy-400">
-            Nenhum próximo passo registrado.{" "}
-            <span className="text-navy-500">
-              Use o Assistente para salvar ações.
-            </span>
+            Quando o Assistente responder uma pergunta, você pode{" "}
+            <span className="text-navy-600">salvar o próximo passo aqui</span>{" "}
+            para acompanhar depois.
           </p>
         ) : null}
 

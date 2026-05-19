@@ -6,13 +6,36 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 56)
+## Estado atual do produto (2026-05-19 — Fase 58)
 
 ### Bundle
-- Rota principal (`/`): 222 kB First Load JS (margem 8 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 58 (cold start & preview de valor)
+
+Resolve o principal gap de produto: usuário sem dados não conseguia perceber o valor do app antes de qualquer cadastro.
+
+- **`components/GuidancePreview.tsx` (novo):** componente estático de preview — nenhum hook, nenhum localStorage, JSX puro. Mostra 2 itens de monitoramento simulados (AVCB vencendo em 23 dias + Mandato em 68 dias) com badges "Exemplo" e um CTA "Cadastrar as 3 datas" que aciona o scroll para o MemoriaPanel. Aparece na tela inicial apenas quando `!hasCondominioData`.
+- **`app/page.tsx`:** import de `GuidancePreview` adicionado; bloco `{!hasCondominioData && <GuidancePreview onSetup={handleScrollToMemoria} />}` inserido entre Hero e o bloco GuidancePanel/CondominioStatusHeader — garante que usuários sem dados vejam imediatamente o que o monitoramento entrega, sem exigir cadastro primeiro.
+- **`components/Hero.tsx`:** copy do corpo atualizado para incluir prazo concreto — "Em 2 minutos o monitoramento está ativo e o app avisa você antes que qualquer prazo vire urgência." (+14 chars; promise de tempo + promise de valor).
+- **`components/PendenciasCard.tsx`:** estado vazio reescrito para ensinar o loop correto: "Quando o Assistente responder uma pergunta, você pode **salvar o próximo passo aqui** para acompanhar depois." — orienta o fluxo Assistente → Próximos passos em vez de apenas indicar vazio.
+- **`components/MemoriaPanel.tsx`:** nota de intro (quando `essentialCount === 0`) expandida com instrução de menor fricção: "Não sabe uma data agora? Use 'lembrar depois' no campo e preencha quando encontrar o documento." — remove bloqueio cognitivo do onboarding.
+- **Build:** 223 kB (+1 kB). Margem: 7 kB antes do limite.
+
+### Entregues na Fase 57 (auditoria editorial da KB)
+
+- **3 entradas da KB corrigidas em `lib/knowledge.json`** — apenas campo `resposta`, sem alteração de IDs, categorias, keywords ou estrutura:
+  - **`autorizacao-obras`:** adicionado "— os documentos exigíveis dependem do tipo de obra e do que a convenção ou regimento prevê." ao fim da resposta. Antes: afirmava que síndico *pode exigir* ART e autorização da prefeitura de forma universal; agora relativiza corretamente.
+  - **`coleta-seletiva-condominio`:** substituída assertiva "O condomínio é obrigado... com lixeiras separadas por tipo de material" por formulação que indica base legal nacional (Lei 12.305/2010) e adiciona "As exigências específicas... variam conforme a legislação do município." Obrigação geral preservada; variação municipal explicitada.
+  - **`vaga-uso-comum-preferencia`:** adicionado "desde que haja aprovação em assembleia" à permissão de locação de vagas comuns; removido "legal" de "direito de preferência legal" (CC art. 1.338 aplica-se a vagas privadas, não inequivocamente a vagas de uso comum). Procedimento e prazo mantidos intactos.
+- **25 entradas avaliadas e mantidas** — assertivas baseadas em estatuto direto (CLT, CC, CPC, NR-10, Lei do Inquilinato). Afirmativas legais não precisam de ressalva de convenção.
+- **Confidence gap fechado:** 11/83 REVIEW = 13,3% — abaixo do limiar de 20%. Todos são B→A (motor respondeu casos grays — não é regressão).
+- **Auditoria offline estável:** 72/83 PASS (87%), 0 FAIL, Recall A 100%, Bloqueio C 100% — idêntico à Fase 56.
+- **Build:** 222 kB (sem variação). TypeScript: zero erros.
+- **Critérios de beta fechados pela Fase 57:** "Confidence gap < 20%" e "Sem resposta categórica sem ressalva de convenção" — ambos `[x]` no roadmap.
 
 ### Entregues na Fase 56 (ativação segura do Supabase — docs e validação)
 
@@ -466,5 +489,5 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 56 concluída)*
+*Versão: 2026-05-19 (Fase 57 concluída)*
 *Atualizar a seção "Estado atual" a cada sprint.*

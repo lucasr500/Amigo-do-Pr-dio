@@ -61,7 +61,7 @@
       "id": "autorizacao-obras",
       "categoria": "obras",
       "pergunta": "Morador precisa avisar antes de fazer obra?",
-      "resposta": "Sim. O morador deve comunicar a administração antes de iniciar qualquer obra, especialmente se envolver estrutura, instalações hidráulicas ou elétricas, geração de ruído ou movimentação de materiais pelas áreas comuns. O síndico pode exigir ART do responsável técnico, autorização da prefeitura e cronograma da obra.",
+      "resposta": "Sim. O morador deve comunicar a administração antes de iniciar qualquer obra, especialmente se envolver estrutura, instalações hidráulicas ou elétricas, geração de ruído ou movimentação de materiais pelas áreas comuns. O síndico pode exigir ART do responsável técnico, autorização da prefeitura e cronograma da obra — os documentos exigíveis dependem do tipo de obra e do que a convenção ou regimento prevê.",
       "contexto": "O art. 1.336, II do CC proíbe alterações que prejudiquem a estrutura do edifício. A convenção pode definir quais obras exigem autorização prévia e quais documentos são necessários.",
       "dica": "Coloque por escrito todas as exigências e prazos antes de autorizar. Isso protege o condomínio e o próprio morador.",
       "keywords": [
@@ -3013,7 +3013,7 @@
       "id": "coleta-seletiva-condominio",
       "categoria": "gestao",
       "pergunta": "O condomínio tem obrigações legais sobre descarte de lixo e reciclagem?",
-      "resposta": "Sim. O condomínio é obrigado a organizar o descarte correto dos resíduos, com lixeiras separadas por tipo de material e destinação adequada. Descarte irregular pode gerar multa ambiental para o condomínio — e o síndico pode ser responsabilizado pessoalmente.",
+      "resposta": "Sim. O condomínio tem obrigação legal de organizar o descarte correto dos resíduos, conforme a Lei 12.305/2010 (Política Nacional de Resíduos Sólidos). As exigências específicas — como separação por tipo de material e pontos de coleta — variam conforme a legislação do município. Descarte irregular pode gerar multa ambiental para o condomínio — e o síndico pode ser responsabilizado pessoalmente.",
       "contexto": "Constituição Federal, Art. 225 — dever de preservar o meio ambiente. Lei 12.305/2010 (Política Nacional de Resíduos Sólidos) — obrigações de coleta seletiva e destinação adequada dos resíduos.",
       "dica": "Instale lixeiras separadas por tipo, afixe instruções visuais e oriente moradores por circular. Para resíduos especiais (pilhas, eletrônicos, medicamentos), crie pontos específicos de coleta.",
       "keywords": [
@@ -4196,7 +4196,7 @@
       "id": "vaga-uso-comum-preferencia",
       "categoria": "areas-comuns",
       "pergunta": "Vaga de garagem de uso comum pode ser alugada para terceiros? Condôminos têm preferência?",
-      "resposta": "Sim, vagas de uso comum podem ser alugadas pelo condomínio. Mas os condôminos têm direito de preferência legal sobre terceiros estranhos ao condomínio. O procedimento correto: oferecer primeiro aos condôminos por prazo razoável (em geral 30 dias); somente se nenhum se interessar, o condomínio pode alugar para terceiros.",
+      "resposta": "Sim, vagas de uso comum podem ser alugadas pelo condomínio, desde que haja aprovação em assembleia. Os condôminos têm preferência sobre terceiros estranhos ao condomínio. O procedimento correto: oferecer primeiro aos condôminos por prazo razoável (em geral 30 dias); somente se nenhum se interessar, o condomínio pode alugar para terceiros.",
       "contexto": "Art. 1.338 do CC. O direito de preferência não é automático — o condômino precisa se manifestar dentro do prazo fixado. A receita do aluguel integra as receitas do condomínio.",
       "dica": "Documente formalmente a oferta feita aos condôminos (circular, e-mail ou comunicado) antes de contratar com terceiro. Isso protege o condomínio de contestações posteriores.",
       "keywords": [
