@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { exportUserData, importUserData, parseAndValidateUserData, ImportResult } from "@/lib/session";
+import { useEffect, useRef, useState } from "react";
+import { exportUserData, importUserData, parseAndValidateUserData, getStorageSizeKB, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 type Props = {
@@ -17,6 +17,11 @@ type ImportState =
 export default function BackupPanel({ onImported }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
+  const [storageSizeKB, setStorageSizeKB] = useState<number | null>(null);
+
+  useEffect(() => {
+    setStorageSizeKB(getStorageSizeKB());
+  }, []);
 
   const handleExport = () => {
     exportUserData();
@@ -147,6 +152,7 @@ export default function BackupPanel({ onImported }: Props) {
                   : "Backup sem nome de condomínio"}
                 {importState.summary.memoriaCount > 0 && ` · ${importState.summary.memoriaCount} datas registradas`}
                 {importState.summary.favoritesCount > 0 && ` · ${importState.summary.favoritesCount} favorito${importState.summary.favoritesCount > 1 ? "s" : ""}`}
+                {importState.summary.pendenciasCount != null && importState.summary.pendenciasCount > 0 && ` · ${importState.summary.pendenciasCount} próximo${importState.summary.pendenciasCount > 1 ? "s passos" : " passo"}`}
               </p>
               <p className="text-[11px] text-amber-600 mb-3">
                 Os dados atuais do dispositivo serão substituídos.
@@ -218,11 +224,16 @@ export default function BackupPanel({ onImported }: Props) {
           )}
         </div>
 
-        {/* Nota de privacidade */}
-        <div className="border-t border-navy-50 px-5 py-2.5">
+        {/* Nota de privacidade + indicador de armazenamento */}
+        <div className="border-t border-navy-50 px-5 py-2.5 space-y-0.5">
           <p className="text-[10.5px] text-navy-400">
             Os dados ficam apenas no seu dispositivo — nada é enviado a servidores nesta versão.
           </p>
+          {storageSizeKB !== null && storageSizeKB > 0 && (
+            <p className="text-[10.5px] text-navy-300">
+              Dados armazenados: ~{storageSizeKB} KB
+            </p>
+          )}
         </div>
       </div>
     </section>

@@ -22,8 +22,6 @@ import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import FavoritesPanel from "@/components/FavoritesPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import DicaDoDia from "@/components/DicaDoDia";
-import OnboardingProfile from "@/components/OnboardingProfile";
-import MemoriaPanel from "@/components/MemoriaPanel";
 import HomeContextual from "@/components/HomeContextual";
 import CondominioStatusHeader from "@/components/CondominioStatusHeader";
 import GuidancePanel from "@/components/GuidancePanel";
@@ -51,6 +49,9 @@ const TimelineOperacional = dynamic(() => import("@/components/TimelineOperacion
 const RevisaoMensal = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
 const BackupPanel = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
+// Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
+const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
+const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 
 export default function HomePage() {
   const [question, setQuestion] = useState("");
@@ -152,7 +153,14 @@ export default function HomePage() {
 
   const handleSavePendencia = (titulo: string, categoria: string, matchedId: string) => {
     addPendencia({ titulo, categoria, origem: "response", matchedId });
+    void trackEvent("pendencia_created_from_response", { categoria, matched_id: matchedId });
     setRefreshKey((k) => k + 1);
+  };
+
+  const handleBack = () => {
+    setQuestion(submittedQuestion); // restaura pergunta no input para reedição
+    setSubmittedQuestion("");
+    setAnswerResult(null);
   };
 
   const navigateTab = (tab: AppTab) => {
@@ -198,9 +206,6 @@ export default function HomePage() {
     navigateTab("ferramentas");
   };
 
-  const toolHighlight = (anchor: ToolAnchor) =>
-    highlightToolAnchor === anchor ? "tool-anchor-highlight" : "";
-
   // Chamado pela bridge do OnboardingProfile: expande MemoriaPanel automaticamente
   const handleSetupMemoria = () => {
     setShouldExpandMemoria(true);
@@ -233,6 +238,7 @@ export default function HomePage() {
               <GuidancePanel
                 onAsk={handleSuggestionSelect}
                 onResolved={() => setRefreshKey((k) => k + 1)}
+                onPendenciaSaved={() => setRefreshKey((k) => k + 1)}
                 refreshKey={refreshKey}
               />
             )}
@@ -282,6 +288,23 @@ export default function HomePage() {
                 <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
                   Descreva a situação. O app organiza o próximo passo com clareza.
                 </p>
+              </div>
+            )}
+
+            {/* Botão voltar — só visível quando há resposta ativa */}
+            {submittedQuestion && !isLoading && (
+              <div className="px-4 pt-2 pb-0 sm:px-5">
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  aria-label="Voltar para nova pergunta"
+                  className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-navy-400 transition-colors hover:bg-navy-100/70 hover:text-navy-600 active:scale-[0.97]"
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-[11.5px] font-medium">Voltar</span>
+                </button>
               </div>
             )}
 

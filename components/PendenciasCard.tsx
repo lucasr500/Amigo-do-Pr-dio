@@ -8,6 +8,7 @@ import {
   logInteraction,
   type Pendencia,
 } from "@/lib/session";
+import { trackEvent } from "@/lib/telemetry";
 
 const CAT_LABEL: Record<string, string> = {
   multas:          "Multas",
@@ -50,9 +51,15 @@ export default function PendenciasCard({ refreshKey }: Props) {
   if (!hydrated) return null;
 
   const handleComplete = (id: string) => {
+    const p = pendencias.find((x) => x.id === id);
     completePendencia(id);
-    setPendencias((prev) => prev.filter((p) => p.id !== id));
+    setPendencias((prev) => prev.filter((x) => x.id !== id));
     logInteraction("pendencia-concluida", id);
+    void trackEvent("pendencia_completed", {
+      categoria: p?.categoria ?? null,
+      origem: p?.origem ?? null,
+      matched_id: p?.matchedId ?? null,
+    });
   };
 
   const handleAdd = () => {
@@ -63,6 +70,7 @@ export default function PendenciasCard({ refreshKey }: Props) {
     setNovoTitulo("");
     setAdding(false);
     logInteraction("pendencia-adicionada-manual", titulo.slice(0, 40));
+    void trackEvent("pendencia_created_manual", {});
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {

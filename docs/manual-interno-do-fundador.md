@@ -6,13 +6,70 @@
 
 ---
 
-## Estado atual do produto (2026-05-18 — Fase 50)
+## Estado atual do produto (2026-05-19 — Fase 56)
 
 ### Bundle
-- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 222 kB First Load JS (margem 8 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 56 (ativação segura do Supabase — docs e validação)
+
+Fase de documentação e auditoria. Zero alterações de código-fonte.
+
+- **`docs/setup-supabase-telemetria.md` corrigido e atualizado:**
+  - **Bug RLS corrigido:** policy `"read_admin" TO authenticated` → `"read_anon" TO anon`. A função `fetchRecentEvents()` em `lib/telemetry.ts` usa a anon key; com `TO authenticated`, o `/admin` nunca conseguiria ler dados remotos mesmo com Supabase configurado. Bug silencioso — painel caía silenciosamente para dados locais sem indicação de erro.
+  - **Eventos `q` removidos:** referências a `properties->>'q'` nas queries SQL e na tabela de eventos esperados removidas — campo eliminado na Fase 49. Queries atualizadas para usar `properties->>'categoria'` (fallback por categoria) e pendência metrics.
+  - **Novos eventos documentados:** +7 eventos adicionados à tabela — `session_duration`, `backup_imported`, `pendencia_created_manual/from_response/from_guidance/from_memoria`, `pendencia_completed`.
+  - **Checklist de ativação criado:** 9 itens sequenciais — desde criar projeto Supabase até confirmar dados no `/admin` em produção.
+  - **SQL de diagnóstico expandido:** +2 queries novas — pendências criadas por origem e taxa de conclusão de pendências.
+  - Versão atualizada para Fase 56 (2026-05-19).
+
+- **Auditoria offline confirmada:** `node scripts/audit.js` — 72/83 PASS (87%), 0 FAIL, 11 REVIEW (todos B→A — motor respondeu em casos esperados como fallback, não é regressão). Recall A: 100% (64/64). Bloqueio C: 100% (4/4). Resultado idêntico à Fase 37 — motor estável após todas as fases de produto.
+
+- **Privacidade confirmada:** zero PII nos eventos de telemetria. Inventário completo documentado no manual. Todos os 5 novos eventos de pendência (Fases 50–55) transmitem apenas `categoria`, `origem`, `matched_id` — nunca título, nunca texto do usuário.
+
+- **`.env.local` ainda não criado** — ativação do Supabase é ação manual do fundador (~15 min). Guia agora correto e completo.
+
+### Entregues na Fase 55 (onboarding sem bloqueio: "Não sei agora — lembrar depois")
+- **`Pendencia.origem` ampliado:** adicionado `"memoria"` ao union em `lib/session.ts`. Distingue pendências criadas pelo MemoriaPanel de pendências manuais (`"manual"`), de resposta (`"response"`) e de guidance (`"guidance"`). Backups v2 exportam/importam essa origem normalmente; backups v1 não são afetados.
+- **`MEMORIA_LEMBRAR` em MemoriaPanel.tsx:** mapa módulo-nível com títulos e campo de telemetria para os 3 essenciais. Títulos: "Cadastrar data do AVCB" / "Cadastrar vencimento do seguro condominial" / "Cadastrar fim do mandato do síndico".
+- **`savedMemoriaIds: Set<string>` state:** inicializado no `useEffect` de mount a partir de `getPendenciasAbertas()` filtrado por `origem === "memoria"`. Garante que ao re-abrir o panel (re-mount por troca de aba), o estado "Lembrete salvo ✓" persiste enquanto a pendência estiver aberta.
+- **`handleLembrarDepois(key)` handler:** guard de duplicata → `addPendencia({ titulo, categoria: "gestao", origem: "memoria", matchedId: key })` → `trackEvent("pendencia_created_from_memoria", { field })` → `setSavedMemoriaIds`.
+- **Botão JSX:** `"Não sei agora — lembrar depois"` / `"Lembrete salvo ✓"` — renderizado abaixo do input de data apenas quando `ESSENTIAL_KEYS.includes(key)` e `!(draft[key] && draft[key] !== "")`. Invisível após preenchimento do campo. Estilo `text-[11px] text-navy-400 hover:text-navy-600` — discretíssimo, sem terracota, sem alarme.
+- **`GUIDANCE_TITULO_OVERRIDE` em GuidancePanel.tsx:** 5 verbos de ação mais precisos para pendências criadas via guidance: "Convocar AGO", "Agendar dedetização", "Verificar limpeza da caixa d'água", "Agendar manutenção do elevador", "Verificar inspeção dos extintores". Sem impacto no layout do GuidancePanel.
+- **Bundle:** 222 kB (sem variação). Margem: 8 kB antes do limite.
+
+### Entregues na Fase 54 (conexão GuidancePanel → Próximos passos)
+- **`onPendenciaSaved?: () => void` em GuidancePanel:** novo callback opcional; propagado para `page.tsx` como `() => setRefreshKey((k) => k + 1)` — garante que o `PendenciasCard` na aba Início reflita imediatamente a nova pendência criada.
+- **`savedGuidanceIds: Set<string>` state:** inicializado no `useEffect([refreshKey])` a partir de `getPendenciasAbertas()` filtrado por `origem === "guidance"`. Deduplicação persistente: se o usuário sair do app e voltar, o botão continua "Salvo ✓" enquanto a pendência estiver aberta. Ao concluir a pendência (PendenciasCard), `refreshKey` muda → `useEffect` re-executa → `savedGuidanceIds` atualizado.
+- **`guidanceCategoria(id)` helper inline:** mapeia prefixos de `GuidanceItem.id` para categorias: `avcb/dedet/caixa/elevador/extintores` → `"manutencao"`, `ago` → `"assembleias"`, `seguro/mandato` → `"gestao"`. Zero impacto em outros sistemas.
+- **`handleSaveGuidancePendencia(item)`:** cria pendência com `titulo` determinístico (`Renovar X` para type expiry, `X` para type done), `origem: "guidance"`, `matchedId: item.id`. Dispara `pendencia_created_from_guidance` com `{ guidance_id, priority }` — zero PII. Atualiza `savedGuidanceIds` localmente e chama `onPendenciaSaved?.()`.
+- **Botão JSX:** `"Salvar nos próximos passos"` / `"Salvo ✓"` — terciário e discreto, dentro do bloco `!isResolving`, abaixo dos botões primário (Registrar) e secundário (Ver orientação). Estilo idêntico ao botão equivalente em `Response.tsx` (`text-[11px] text-navy-500 hover:bg-navy-200/60`). Desabilitado quando já salvo.
+- **Bundle:** 222 kB (sem variação). Margem: 8 kB antes do limite.
+
+### Entregues na Fase 53 (disclaimers jurídicos inline nas categorias sensíveis)
+- **`SENSITIVE_CATEGORY_NOTICE` em `Response.tsx`:** mapa simples `Partial<Record<string, string>>` com avisos específicos para `lgpd`, `trabalhista` e `financeiro`. Zero novos componentes, zero dependências, zero impacto em outros arquivos.
+- **Posição na UI:** o aviso sensível aparece logo antes do "Aviso jurídico" geral — após os blocos Próximo passo / Base legal / Dica prática / CTAs / Aviso regional CCT. Visível apenas para as três categorias sensíveis; demais categorias inalteradas.
+- **Visual:** `rounded-lg bg-navy-50/50 px-3 py-2.5` com `InfoIcon` em `text-navy-500` e texto em `text-[12.5px] text-navy-500` — discreta, premium, sem alarme, sem duplicação visual do disclaimer geral.
+- **Critérios de beta fechados:** 2 dos 3 itens de "Conteúdo legal" no roadmap marcados como concluídos (`disclaimer visível` + `dados sensíveis com aviso`). Critério remanescente: "sem resposta que afirme 'pode fazer X' sem mencionar que depende da convenção" — auditoria editorial.
+- **Bundle:** 222 kB (sem variação). Margem: 8 kB antes do limite.
+
+### Entregues na Fase 52 (estabilização técnica e performance)
+- **Dynamic imports: MemoriaPanel + OnboardingProfile:** movidos de imports estáticos para `dynamic(() => import(...), { ssr: false })` — exclusivos da aba Condomínio, mesmo padrão já aplicado a `TimelineOperacional`, `RevisaoMensal` e `BackupPanel`. Ambos têm `if (!hydrated) return null` — sem flash de conteúdo parcial. Comportamento `autoExpand` do MemoriaPanel preservado: o prop `true` é recebido quando o componente monta, e o `useEffect([autoExpand, hydrated, expanded])` dispara na hidratação.
+- **Dead code removido:** função `toolHighlight` em `app/page.tsx` estava definida mas nunca chamada no JSX (os componentes usam `highlighted={highlightToolAnchor === anchor}` diretamente). Removida sem impacto.
+- **Validação lógica dos fluxos (Fase 51):** todos os fluxos rastreados no código sem regressão: salvar pendência via Response → `handleSavePendencia` + `addPendencia` + `refreshKey` ✓; concluir pendência → `completePendencia` + local state ✓; Timeline ao navegar para Condomínio → monta fresh e lê localStorage atualizado ✓; backup v2 exporta/importa pendências ✓; backup v1 continua importando silenciosamente ✓; botão Voltar restaura pergunta no input ✓.
+- **Telemetria auditada:** 3 eventos de pendência confirmados sem PII — `pendencia_created_manual` envia `{}`; `pendencia_created_from_response` envia `{ categoria, matched_id }`; `pendencia_completed` envia `{ categoria, origem, matched_id }`. Título nunca transmitido. No-op silencioso sem Supabase.
+- **Bundle:** 222 kB (−3 kB vs Fase 51). Margem: 8 kB antes do limite.
+
+### Entregues na Fase 51 (consolidação segura da camada "Próximos passos")
+- **Backup v2:** `exportUserData()` agora exporta versão `"2"` com campo `pendencias: Pendencia[]`. `parseAndValidateUserData()` e `importUserData()` aceitam v1 (sem pendências) e v2 (com pendências). Backups v1 antigos continuam importando sem erro — campo pendências é simplesmente ausente e ignorado. `ImportResult.summary` ganhou `pendenciasCount?: number`.
+- **Indicador de armazenamento:** `getStorageSizeKB()` em `lib/session.ts` — conta apenas chaves `amigo_*` em UTF-16, retorna KB arredondado. `BackupPanel.tsx` lê via `useEffect` e exibe "Dados armazenados: ~X KB" discretamente no rodapé. Fecha critério roadmap `[ ] localStorage não excede limites típicos`.
+- **Timeline de pendências concluídas:** `getPendenciasConcluidas()` adicionado em `lib/session.ts`. `TimelineOperacional.tsx` inclui pendências com `status === "concluida"` como eventos `tipo: "pendencia"` com ícone `✓`. Fecha o ciclo de utilidade recorrente: o síndico vê o que resolveu no histórico do condomínio.
+- **Telemetria de pendências (sem PII):** 3 eventos adicionados a `TelemetryEvent`: `pendencia_created_manual`, `pendencia_created_from_response`, `pendencia_completed`. Campos enviados: `categoria`, `origem`, `matched_id` — nunca o título. `PendenciasCard` dispara `pendencia_created_manual` e `pendencia_completed`. `page.tsx` dispara `pendencia_created_from_response` em `handleSavePendencia`.
+- **Botão "Voltar" no Assistente:** aparece no canto superior esquerdo da aba Assistente quando há resposta ativa (`submittedQuestion && !isLoading`). Seta `←` pequena + texto "Voltar". Chama `handleBack`, que limpa a resposta e restaura a pergunta no input para reedição. Não aparece na tela inicial do Assistente. Não quebra favoritos, histórico, compartilhamento, CTAs ou ActionPills existentes.
+- **Bundle:** 225 kB (+1 kB). Margem: 5 kB antes do limite.
 
 ### Entregues na Fase 50 (utilidade recorrente — Próximos passos)
 - **`lib/session.ts`:** tipo `Pendencia` + chave `amigo_pendencias` + 5 funções: `addPendencia`, `completePendencia`, `deletePendencia`, `getPendencias`, `getPendenciasAbertas`. Máx 50 registros. Não incluído no backup v1 (chave separada, sem impacto em import/export).
@@ -96,11 +153,11 @@
 - **Relatório RC:** `docs/relatorio-rc-interno-fase-38.md`
 
 ### Pendências remanescentes pré-beta
-- **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari)
-- **Configurar Supabase** — 15 min, ver `docs/setup-supabase-telemetria.md`
-- **Revisão jurídica** dos rascunhos legais
-- **Auditoria /admin ao vivo** — clicar "Rodar auditoria" e confirmar recall ≥ 75%
-- **Canal de feedback** antes de convidar síndicos
+- **Configurar Supabase** — 15 min, ver `docs/setup-supabase-telemetria.md` (corrigido na Fase 56 — guia agora fiel ao código). Checklist completo no documento.
+- **Auditoria /admin ao vivo** — `npm run dev` → `localhost:3000/admin` → "Rodar auditoria". Recall esperado 87% (confirmado offline na Fase 56).
+- **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`
+- **Revisão jurídica** dos rascunhos legais — `docs/rascunho-termos-de-uso.md`, `docs/rascunho-politica-privacidade.md`
+- **Canal de feedback** antes de qualquer exposição externa
 
 ### Funcionalidades ativas
 - 4 abas com navegação Apple-like (BottomNav fixo)
@@ -295,17 +352,17 @@ O ChecklistPanel renderiza automaticamente todos os checklists do array.
 
 ## Performance e bundle
 
-### Estratégia de carregamento (Fase 31)
+### Estratégia de carregamento (atualizado na Fase 52)
 Components de abas não-iniciais são carregados sob demanda via `next/dynamic` com `ssr: false`.
-Isso reduz o First Load JS da rota principal sem afetar a experiência do usuário.
 
 **Componentes com dynamic import em page.tsx:**
-- Aba Ferramentas: ComunicadoPanel, SimuladorMulta, ChecklistPanel, PainelOperacional
-- Aba Condomínio: TimelineOperacional, RevisaoMensal, BackupPanel
+- Aba Ferramentas: ComunicadoPanel, SimuladorMulta, ChecklistPanel, PainelOperacional, SimuladorReajusteCota
+- Aba Condomínio: OnboardingProfile, MemoriaPanel, TimelineOperacional, RevisaoMensal, BackupPanel
 
-**Componentes carregados no boot (aba Início):**
+**Componentes estáticos (carregam no boot — aba Início e Assistente):**
 - Header, Hero, DicaDoDia, HomeContextual, CondominioStatusHeader, GuidancePanel, ContextualInsight
-- OnboardingProfile, MemoriaPanel (necessários para o fluxo de ativação inicial)
+- ProximasDatas, PendenciasCard, AskInput, Response, QuickAccessCards
+- FavoritesPanel, HistoryPanel (Assistente — pequenos, carregam com a aba)
 
 ### Quando o bundle crescer
 Se o First Load JS da rota `/` ultrapassar 230 kB, investigar:
@@ -397,17 +454,17 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 
 ---
 
-## Próximas tarefas prioritárias (pós-Fase 49)
+## Próximas tarefas prioritárias (pós-Fase 56)
 
-1. **Configurar Supabase** (ação manual — ~15 min) — ver `docs/setup-supabase-telemetria.md`. Telemetria já está privacy-safe (Fase 49) — pode ativar com segurança.
-2. **Rodar auditoria em /admin ao vivo** — `npm run dev` → `localhost:3000/admin` → "Rodar auditoria" — confirmar recall ≥ 75% (esperado 87%).
-3. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`. `short_name` já corrigido para 12 chars (Fase 48).
+1. **Configurar Supabase** (ação manual — ~15 min) — `docs/setup-supabase-telemetria.md` agora correto e com checklist completo. Telemetria privacy-safe (Fase 49). Bug RLS corrigido no guia (Fase 56).
+2. **Rodar auditoria em /admin ao vivo** — `npm run dev` → `localhost:3000/admin` → "Rodar auditoria" — esperado 87% (confirmado offline Fase 56).
+3. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`.
 4. **Revisão jurídica** dos rascunhos legais (`docs/rascunho-termos-de-uso.md`, `docs/rascunho-politica-privacidade.md`)
 5. **Canal de feedback** antes de qualquer exposição externa
-6. **Não fazer beta com síndicos** até itens 1–4 concluídos — ver `docs/consolidacao-interna-sem-beta-fase-45.md`
+6. **Não fazer beta com síndicos** — ver `docs/consolidacao-interna-sem-beta-fase-45.md`
 
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-18 (Fase 50 concluída)*
+*Versão: 2026-05-19 (Fase 56 concluída)*
 *Atualizar a seção "Estado atual" a cada sprint.*

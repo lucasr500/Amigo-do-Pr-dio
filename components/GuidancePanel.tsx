@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  addPendencia,
   getMemoriaOperacional,
+  getPendenciasAbertas,
   getProfile,
   hasMemoriaOperacional,
   logInteraction,
@@ -11,17 +13,28 @@ import {
 import { buildGuidanceItems, GuidanceItem } from "@/lib/guidance";
 import { trackEvent } from "@/lib/telemetry";
 
+// Sobreposição de título para pendências de itens com ação verbal mais precisa
+const GUIDANCE_TITULO_OVERRIDE: Partial<Record<string, string>> = {
+  ago:        "Convocar Assembleia Ordinária (AGO)",
+  dedet:      "Agendar dedetização",
+  caixa:      "Verificar limpeza da caixa d'água",
+  elevador:   "Agendar manutenção do elevador",
+  extintores: "Verificar inspeção dos extintores",
+};
+
 type Props = {
   onAsk?: (q: string) => void;
   onResolved?: () => void;
+  onPendenciaSaved?: () => void;
   refreshKey?: number;
 };
 
-export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) {
+export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, refreshKey }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [items, setItems] = useState<GuidanceItem[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [savedGuidanceIds, setSavedGuidanceIds] = useState<Set<string>>(new Set());
 
   // Resolução inline
   type ResolveStep = "confirmDone" | "inputExpiry";
@@ -42,6 +55,10 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
     setExpandedId(null);
     setResolveState(null);
     setShowAll(false);
+    const existing = getPendenciasAbertas()
+      .filter((p) => p.origem === "guidance" && !!p.matchedId)
+      .map((p) => p.matchedId!);
+    setSavedGuidanceIds(new Set(existing));
     setHydrated(true);
     if (built.length > 0) {
       void trackEvent("guidance_panel_shown", {
@@ -145,6 +162,27 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
   };
 
   const todayLabel = new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+
+  const guidanceCategoria = (id: string): string | undefined => {
+    if (id.startsWith("avcb") || id.startsWith("dedet") || id.startsWith("caixa") ||
+        id.startsWith("elevador") || id.startsWith("extintores")) return "manutencao";
+    if (id.startsWith("ago")) return "assembleias";
+    if (id.startsWith("seguro") || id.startsWith("mandato")) return "gestao";
+    return undefined;
+  };
+
+  const handleSaveGuidancePendencia = (item: GuidanceItem) => {
+    if (savedGuidanceIds.has(item.id)) return;
+    const titleOverride = Object.entries(GUIDANCE_TITULO_OVERRIDE)
+      .find(([prefix]) => item.id.startsWith(prefix))?.[1];
+    const titulo = titleOverride ?? (item.resolveAction.type === "expiry"
+      ? `Renovar ${item.label}`
+      : item.label);
+    addPendencia({ titulo, categoria: guidanceCategoria(item.id), origem: "guidance", matchedId: item.id });
+    void trackEvent("pendencia_created_from_guidance", { guidance_id: item.id, priority: item.priority });
+    setSavedGuidanceIds((prev) => new Set([...prev, item.id]));
+    onPendenciaSaved?.();
+  };
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
@@ -257,33 +295,51 @@ export default function GuidancePanel({ onAsk, onResolved, refreshKey }: Props) 
 
                         {/* Ações principais */}
                         {!isResolving && (
-                          <div className="mt-3.5 flex flex-wrap items-center gap-2">
-                            {/* Botão resolução — PRIORIDADE MÁXIMA */}
-                            <button
-                              type="button"
-                              onClick={() => handleStartResolve(item)}
-                              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
-                            >
-                              <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                              {item.resolveAction.buttonLabel}
-                            </button>
-
-                            {/* Botão orientação */}
-                            {onAsk && (
+                          <>
+                            <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                              {/* Botão resolução — PRIORIDADE MÁXIMA */}
                               <button
                                 type="button"
-                                onClick={() => handleAsk(item)}
-                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-navy-200 bg-white px-3.5 py-2 text-[12px] font-medium text-navy-700 transition-all hover:bg-navy-50 active:scale-[0.97]"
+                                onClick={() => handleStartResolve(item)}
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
                               >
-                                Ver orientação
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                  <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
+                                {item.resolveAction.buttonLabel}
                               </button>
-                            )}
-                          </div>
+
+                              {/* Botão orientação */}
+                              {onAsk && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAsk(item)}
+                                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-navy-200 bg-white px-3.5 py-2 text-[12px] font-medium text-navy-700 transition-all hover:bg-navy-50 active:scale-[0.97]"
+                                >
+                                  Ver orientação
+                                  <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Salvar nos próximos passos — ação terciária discreta */}
+                            <div className="mt-2">
+                              <button
+                                type="button"
+                                disabled={savedGuidanceIds.has(item.id)}
+                                onClick={() => handleSaveGuidancePendencia(item)}
+                                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-medium transition-colors ${
+                                  savedGuidanceIds.has(item.id)
+                                    ? "cursor-default text-navy-400"
+                                    : "text-navy-500 hover:bg-navy-200/60 hover:text-navy-700"
+                                }`}
+                              >
+                                {savedGuidanceIds.has(item.id) ? "Salvo ✓" : "Salvar nos próximos passos"}
+                              </button>
+                            </div>
+                          </>
                         )}
 
                         {/* UI de resolução: "done" — confirmar data de hoje */}

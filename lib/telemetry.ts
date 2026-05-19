@@ -57,7 +57,12 @@ export type TelemetryEvent =
   | "comunicado_gerado"
   | "comunicado_copiado"
   | "simulador_calculado"
-  | "simulador_reajuste_calculado";
+  | "simulador_reajuste_calculado"
+  | "pendencia_created_manual"
+  | "pendencia_created_from_response"
+  | "pendencia_created_from_guidance"
+  | "pendencia_created_from_memoria"
+  | "pendencia_completed";
 
 type QueuedEvent = {
   event: string;

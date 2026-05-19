@@ -5,6 +5,7 @@ import {
   getMemoriaOperacional,
   getChecklistStorage,
   getFavorites,
+  getPendenciasConcluidas,
   logInteraction,
   MemoriaOperacional,
 } from "@/lib/session";
@@ -16,7 +17,7 @@ type TimelineEvent = {
   label: string;
   detalhe?: string;
   icon: string;
-  tipo: "manutencao" | "vencimento" | "checklist" | "favorito";
+  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia";
 };
 
 const MEMORIA_MAP: Partial<
@@ -103,6 +104,22 @@ function buildTimeline(): TimelineEvent[] {
       detalhe: formatRelativeDate(new Date(fav.ts)),
       icon: "★",
       tipo: "favorito",
+    });
+  }
+
+  const concluidas = getPendenciasConcluidas()
+    .filter((p) => !!p.completedAt)
+    .slice(-10);
+  for (const p of concluidas) {
+    const date = new Date(p.completedAt!);
+    if (isNaN(date.getTime())) continue;
+    events.push({
+      id: `pend-${p.id}`,
+      date,
+      label: `Concluído: "${p.titulo.length > 45 ? p.titulo.slice(0, 45) + "…" : p.titulo}"`,
+      detalhe: formatRelativeDate(date),
+      icon: "✓",
+      tipo: "pendencia",
     });
   }
 

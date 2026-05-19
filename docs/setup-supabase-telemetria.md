@@ -13,9 +13,9 @@ Sem telemetria, o produto funciona normalmente — todas as chamadas em `lib/tel
 Com telemetria ativa, você passa a enxergar:
 - Quantos síndicos abriram o app por dia (`session_open`)
 - Taxa de sucesso do Assistente: queries respondidas vs fallback
-- Quais perguntas geram fallback (para priorizar expansão da KB)
 - Adoção do monitoramento (`onboarding_completed`, `memoria_saved`)
 - Ferramentas mais usadas (`comunicado_copiado`, `simulador_calculado`)
+- Pendências criadas e concluídas (`pendencia_created_*`, `pendencia_completed`)
 
 ---
 
@@ -58,14 +58,17 @@ CREATE POLICY "insert_only"
   TO anon
   WITH CHECK (true);
 
--- Usuários autenticados podem ler (painel admin via Supabase Auth)
-CREATE POLICY "read_admin"
+-- Anon pode ler — necessário para o painel /admin que usa a anon key
+CREATE POLICY "read_anon"
   ON events FOR SELECT
-  TO authenticated
+  TO anon
   USING (true);
 ```
 
-> **Nota de segurança:** A policy `insert_only` permite que qualquer pessoa com a anon key insira eventos. Isso é intencional — os eventos não contêm dados pessoais. A leitura é restrita a usuários autenticados, mas o painel `/admin` usa a anon key diretamente. Para beta inicial com volume baixo, isso é aceitável. Em produção com escala, adicionar rate limiting no Supabase Edge Functions.
+> **Nota de segurança:** Ambas as policies usam `TO anon` porque o painel `/admin` autentica
+> via senha local (`NEXT_PUBLIC_ADMIN_KEY`) e chama `fetchRecentEvents()` com a anon key.
+> Os eventos não contêm dados pessoais — apenas métricas de uso agregável.
+> Para produção com escala, adicionar rate limiting via Supabase Edge Functions.
 
 ---
 
@@ -92,7 +95,7 @@ NEXT_PUBLIC_ADMIN_KEY=<senha-para-o-painel-admin>
 
 > **IMPORTANTE — segurança do `NEXT_PUBLIC_ADMIN_KEY`:**
 > - Esta senha protege o painel `/admin` em produção
-> - Sem ela configurada, o painel `/admin` é bloqueado automaticamente em produção (Fase 38)
+> - Sem ela configurada, o painel `/admin` é bloqueado automaticamente em produção
 > - Em desenvolvimento local, sem a variável, o painel abre sem senha (modo dev)
 > - Usar senha forte e não compartilhar publicamente
 > - Não commitar `.env.local` no git (já está no `.gitignore`)
@@ -127,9 +130,25 @@ Se o app está hospedado no Vercel:
 
 ### Painel `/admin`
 
-1. Acessar `/admin` — agora vai pedir senha (ADMIN_KEY configurada)
+1. Acessar `/admin` — vai pedir senha (`NEXT_PUBLIC_ADMIN_KEY`)
 2. Na seção "Telemetria (Supabase)", deve aparecer dados reais
 3. Se Supabase não responder, o painel cai silenciosamente para dados locais
+
+---
+
+## Checklist de ativação
+
+Execute cada passo em ordem e marque ao concluir:
+
+- [ ] Projeto criado no Supabase (Passo 1)
+- [ ] Tabela `events` criada com as duas policies `anon` (Passo 2)
+- [ ] URL e anon key copiadas (Passo 3)
+- [ ] `.env.local` criado na raiz do projeto (Passo 4)
+- [ ] Servidor de dev reiniciado após criar `.env.local`
+- [ ] Evento `query_submitted` aparece no Supabase após teste local (Passo 6)
+- [ ] Variáveis adicionadas no Vercel (Passo 5)
+- [ ] Deploy realizado no Vercel
+- [ ] `/admin` abre com senha e mostra dados do Supabase em produção
 
 ---
 
@@ -138,14 +157,21 @@ Se o app está hospedado no Vercel:
 | Evento | Quando dispara | Propriedades úteis |
 |--------|----------------|--------------------|
 | `session_open` | Ao abrir o app | `is_returning` |
-| `query_submitted` | Pergunta respondida | `q` (80 chars), `score`, `categoria` |
-| `query_fallback` | Pergunta sem resposta | `q` (80 chars) |
+| `session_duration` | Ao fechar/minimizar | `seconds` |
+| `query_submitted` | Pergunta respondida | `score`, `categoria` |
+| `query_fallback` | Pergunta sem resposta | `categoria` |
 | `onboarding_completed` | Perfil salvo pela 1ª vez | — |
 | `memoria_saved` | Datas operacionais salvas | — |
 | `comunicado_copiado` | Comunicado copiado | `tipo_comunicado`, `campos_preenchidos` |
 | `simulador_calculado` | Cálculo de multa executado | `meses`, `usou_valores_padrao` |
 | `guidance_resolved` | Item de guidance marcado ok | — |
 | `backup_exported` | Backup baixado | — |
+| `backup_imported` | Backup restaurado | — |
+| `pendencia_created_manual` | Próximo passo criado manualmente | — |
+| `pendencia_created_from_response` | Próximo passo criado via resposta | `categoria` |
+| `pendencia_created_from_guidance` | Próximo passo criado via alerta | `guidance_id`, `priority` |
+| `pendencia_created_from_memoria` | Lembrar depois (campo vazio) | `field` |
+| `pendencia_completed` | Próximo passo marcado como feito | `origem` |
 
 ---
 
@@ -177,25 +203,41 @@ SELECT
   count(*) filter (where event = 'query_submitted') as total,
   count(*) filter (where event = 'query_fallback') as fallback,
   round(100.0 * count(*) filter (where event = 'query_fallback') /
-    nullif(count(*), 0), 1) as taxa_fallback
+    nullif(count(*) filter (where event IN ('query_submitted', 'query_fallback')), 0), 1) as taxa_fallback
 FROM events
 WHERE event IN ('query_submitted', 'query_fallback')
   AND ts > now() - interval '7 days';
 
--- Top 10 perguntas sem resposta
-SELECT properties->>'q' as pergunta, count(*) as vezes
+-- Categorias com mais fallback (onde expandir a KB)
+SELECT properties->>'categoria' as categoria, count(*) as fallbacks
 FROM events
 WHERE event = 'query_fallback'
-  AND ts > now() - interval '7 days'
+  AND ts > now() - interval '30 days'
 GROUP BY 1 ORDER BY 2 DESC LIMIT 10;
 
 -- Adoção do monitoramento
 SELECT count(distinct session_id) as ativaram_monitoramento
 FROM events WHERE event = 'memoria_saved';
+
+-- Pendências criadas por origem
+SELECT
+  properties->>'origem' as origem,
+  count(*) as criadas
+FROM events
+WHERE event LIKE 'pendencia_created%'
+  AND ts > now() - interval '30 days'
+GROUP BY 1 ORDER BY 2 DESC;
+
+-- Taxa de conclusão de pendências
+SELECT
+  count(*) filter (where event LIKE 'pendencia_created%') as criadas,
+  count(*) filter (where event = 'pendencia_completed') as concluidas
+FROM events
+WHERE ts > now() - interval '30 days';
 ```
 
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-16 (Fase 38)*
+*Versão: 2026-05-19 (Fase 56)*
 *Executar Passo 5 (Vercel) antes do convite para beta.*

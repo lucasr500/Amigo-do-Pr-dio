@@ -58,6 +58,13 @@ const CAT_TO_NEXTACTION: Partial<Record<string, string>> = {
   manutencao:       "Registre a data do serviço, o responsável e o laudo (quando exigido) para manter o histórico e proteger o condomínio em caso de questionamento.",
 };
 
+// Aviso jurídico específico por categoria sensível — aparece antes do disclaimer geral
+const SENSITIVE_CATEGORY_NOTICE: Partial<Record<string, string>> = {
+  lgpd:        "As informações acima são orientativas. Em situações que envolvam dados pessoais, imagens, câmeras ou exposição de moradores, vale validar o caso concreto com orientação especializada.",
+  trabalhista: "As informações acima são orientativas. Em decisões sobre funcionários, jornada, advertência, dispensa ou encargos, confirme a regra aplicável com a administradora, contador ou profissional especializado.",
+  financeiro:  "As informações acima são orientativas. Antes de deliberações sobre cobrança, reajuste, taxa extra ou orçamento, valide os números e procedimentos com a administradora ou contador responsável.",
+};
+
 // Rótulos em português para o chip "Tema identificado"
 const CATEGORY_LABELS_PT: Record<string, string> = {
   multas: "Multas e advertências",
@@ -499,6 +506,18 @@ export default function Response({
                           <p className="text-[14px] leading-relaxed text-amber-700">
                             Os valores trabalhistas citados seguem a CCT SECOVI-Rio (Rio de Janeiro). Se o seu condomínio está em outro estado, consulte a CCT local — salários e benefícios variam por região.
                           </p>
+                        </div>
+                      )}
+
+                      {/* Aviso de categoria sensível — lgpd, trabalhista, financeiro */}
+                      {SENSITIVE_CATEGORY_NOTICE[entry.categoria] && (
+                        <div className="rounded-lg bg-navy-50/50 px-3 py-2.5">
+                          <div className="flex items-start gap-2">
+                            <InfoIcon className="text-navy-500" />
+                            <p className="text-[12.5px] leading-relaxed text-navy-500">
+                              {SENSITIVE_CATEGORY_NOTICE[entry.categoria]}
+                            </p>
+                          </div>
                         </div>
                       )}
 

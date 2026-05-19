@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import {
+  addPendencia,
   getMemoriaOperacional,
+  getPendenciasAbertas,
   saveMemoriaOperacional,
   getProfile,
   logInteraction,
@@ -135,6 +137,13 @@ const GRUPO_LABEL: Record<string, string> = {
   fornecedores: "Fornecedores",
 };
 
+// Títulos e campo de telemetria para pendências criadas via "lembrar depois"
+const MEMORIA_LEMBRAR: Partial<Record<keyof MemoriaOperacional, { titulo: string; campo: string }>> = {
+  vencimentoAVCB:    { titulo: "Cadastrar data do AVCB",                    campo: "avcb" },
+  vencimentoSeguro:  { titulo: "Cadastrar vencimento do seguro condominial", campo: "seguro" },
+  fimMandatoSindico: { titulo: "Cadastrar fim do mandato do síndico",        campo: "mandato" },
+};
+
 export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -143,6 +152,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   const [saved, setSaved] = useState(false);
   const [savedSummary, setSavedSummary] = useState<string[]>([]);
   const [showManutencoes, setShowManutencoes] = useState(false);
+  const [savedMemoriaIds, setSavedMemoriaIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const memoria = getMemoriaOperacional();
@@ -150,6 +160,10 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
     setDraft(memoria);
     setHasElevador(profile?.hasElevador === true);
     setShowManutencoes(MANUTENCAO_KEYS.some((k) => memoria[k]));
+    const existing = getPendenciasAbertas()
+      .filter((p) => p.origem === "memoria" && !!p.matchedId)
+      .map((p) => p.matchedId!);
+    setSavedMemoriaIds(new Set(existing));
     setHydrated(true);
   }, []);
 
@@ -171,6 +185,15 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   const set = <K extends keyof MemoriaOperacional>(key: K, value: MemoriaOperacional[K]) => {
     setSaved(false);
     setDraft((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleLembrarDepois = (key: keyof MemoriaOperacional) => {
+    if (savedMemoriaIds.has(key)) return;
+    const entry = MEMORIA_LEMBRAR[key];
+    if (!entry) return;
+    addPendencia({ titulo: entry.titulo, categoria: "gestao", origem: "memoria", matchedId: String(key) });
+    void trackEvent("pendencia_created_from_memoria", { field: entry.campo });
+    setSavedMemoriaIds((prev) => new Set([...prev, key]));
   };
 
   const salvar = () => {
@@ -376,6 +399,21 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                             placeholder={placeholder}
                             className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
                           />
+                        )}
+                        {/* Lembrar depois — apenas nos essenciais quando o campo está vazio */}
+                        {ESSENTIAL_KEYS.includes(key) && !(draft[key] && draft[key] !== "") && (
+                          <button
+                            type="button"
+                            disabled={savedMemoriaIds.has(key)}
+                            onClick={() => handleLembrarDepois(key)}
+                            className={`mt-1.5 inline-flex items-center gap-1 text-[11px] transition-colors ${
+                              savedMemoriaIds.has(key)
+                                ? "cursor-default text-navy-400"
+                                : "text-navy-400 hover:text-navy-600"
+                            }`}
+                          >
+                            {savedMemoriaIds.has(key) ? "Lembrete salvo ✓" : "Não sei agora — lembrar depois"}
+                          </button>
                         )}
                       </div>
                     </div>
