@@ -101,9 +101,9 @@ export default function HomeResumoPredio({ refreshKey }: Props) {
           </span>
         </div>
 
-        {summary.nextAttention ? (
+        {summary.guidanceCount > 0 ? (
           <p className="mt-2 text-[12px] leading-relaxed text-navy-500">
-            Próxima atenção: {summary.nextAttention}
+            Confira os alertas acima para os detalhes.
           </p>
         ) : (
           <p className="mt-2 text-[12px] leading-relaxed text-navy-500">

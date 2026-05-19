@@ -10,9 +10,7 @@ type Props = {
 
 const SITUATIONS = [
   { label: "Barulho após as 22h", q: "Morador está fazendo barulho depois das 22h. Como devo agir?" },
-  { label: "Obra sem aviso", q: "Morador começou obra sem comunicar ao condomínio. O que fazer?" },
   { label: "Exposição de inadimplente", q: "Querem divulgar nome de inadimplente no grupo do WhatsApp. É permitido?" },
-  { label: "Mandato vencendo", q: "O mandato do síndico está perto do fim. Quais os próximos passos?" },
   { label: "Vazamento entre apartamentos", q: "Morador reclama de infiltração vinda do apartamento de cima. Quem é responsável e como devo proceder?" },
 ];
 
@@ -26,7 +24,7 @@ export default function Hero({ onSetup, onAssistente, onSuggestionSelect }: Prop
               Monitoramento condominial
             </p>
             <p className="mt-1 text-[12.5px] text-cream-100/72">
-              Assistente, memória e rotina em um só lugar.
+              Monitora prazos do prédio e orienta em situações críticas.
             </p>
           </div>
           <BrandMark className="h-14 w-14 shrink-0 ring-1 ring-cream-100/10" rounded="rounded-[18px]" />

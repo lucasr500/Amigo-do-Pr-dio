@@ -189,6 +189,13 @@ export default function PendenciasCard({ refreshKey }: Props) {
           </ul>
         )}
 
+        {/* Indicador de overflow — itens além do limite de 5 */}
+        {pendencias.length > 5 && (
+          <p className="mb-2 text-[11px] text-navy-400">
+            +{pendencias.length - 5} próximo{pendencias.length - 5 !== 1 ? "s" : ""} passo{pendencias.length - 5 !== 1 ? "s" : ""} oculto{pendencias.length - 5 !== 1 ? "s" : ""}
+          </p>
+        )}
+
         {/* Formulário inline de adição */}
         {adding ? (
           <div className="flex items-center gap-2 pt-0.5">

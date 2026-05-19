@@ -236,11 +236,11 @@ export function buildGuidanceItems(
         id: "dedet-atrasada",
         icon: "🐛",
         label: "Dedetização",
-        urgencyLabel: `Última há ${ds} dias — possivelmente atrasada`,
+        urgencyLabel: `Última há ${ds} dias — verificar se realizada`,
         context:
           `A dedetização semestral das áreas comuns, garagem e tubulações é uma referência operacional importante para prevenir infestações. Como o registro passou de 6 meses, vale verificar com a administradora ou prestador se o serviço já foi realizado. ${ROTINA_DISCLAIMER}`,
         askQ: "Com que frequência deve ser feita a dedetização do condomínio?",
-        priority: "critico",
+        priority: "atencao",
         resolveAction: { field: "ultimaDedetizacao", type: "done", buttonLabel: "Dedetização realizada", successMessage: "Dedetização registrada" },
       });
     } else if (ds > 150) {
@@ -266,11 +266,11 @@ export function buildGuidanceItems(
         id: "caixa-atrasada",
         icon: "💧",
         label: "Limpeza da caixa d'água",
-        urgencyLabel: `Última há ${ds} dias — possivelmente atrasada`,
+        urgencyLabel: `Última há ${ds} dias — verificar se realizada`,
         context:
           `A limpeza semestral da caixa d'água é uma referência operacional importante para manter a qualidade da água. Como o registro passou de 6 meses, vale verificar se o serviço já foi realizado e documentado. ${ROTINA_DISCLAIMER}`,
         askQ: "Com que frequência deve ser limpa a caixa d'água do condomínio?",
-        priority: "critico",
+        priority: "atencao",
         resolveAction: { field: "ultimaLimpezaCaixaDAgua", type: "done", buttonLabel: "Limpeza realizada", successMessage: "Limpeza registrada" },
       });
     } else if (ds > 150) {
@@ -296,11 +296,11 @@ export function buildGuidanceItems(
         id: "elevador-atrasado",
         icon: "🛗",
         label: "Manutenção do elevador",
-        urgencyLabel: `${ds} dias sem manutenção registrada — verifique o contrato`,
+        urgencyLabel: `${ds} dias sem registro — confirmar com a prestadora`,
         context:
           `A manutenção mensal do elevador costuma estar prevista em contrato e em exigências técnicas locais. Como passou de 45 dias sem registro, confirme com a prestadora se a visita foi feita e documentada. ${ROTINA_DISCLAIMER}`,
         askQ: "Com que frequência o elevador precisa de manutenção?",
-        priority: "critico",
+        priority: "atencao",
         resolveAction: { field: "ultimaManutencaoElevador", type: "done", buttonLabel: "Manutenção realizada", successMessage: "Manutenção registrada" },
       });
     } else if (ds > 30) {
@@ -327,11 +327,11 @@ export function buildGuidanceItems(
         id: "extintores-atrasados",
         icon: "🧯",
         label: "Inspeção dos extintores",
-        urgencyLabel: `${mo} meses sem inspeção — possivelmente atrasada`,
+        urgencyLabel: `${mo} meses sem registro — verificar se realizada`,
         context:
           `A inspeção anual dos extintores é uma referência operacional de segurança. Como passou de 12 meses, vale confirmar com a empresa responsável se a inspeção foi realizada e registrada. ${ROTINA_DISCLAIMER}`,
         askQ: "Qual o prazo para manutenção dos extintores do condomínio?",
-        priority: "critico",
+        priority: "atencao",
         resolveAction: { field: "ultimaInspecaoExtintores", type: "done", buttonLabel: "Inspeção realizada", successMessage: "Inspeção registrada" },
       });
     } else if (ds > 330) {
@@ -358,11 +358,11 @@ export function buildGuidanceItems(
         id: "spda-atrasado",
         icon: "⚡",
         label: "Vistoria SPDA",
-        urgencyLabel: `${mo} meses sem vistoria — possivelmente atrasada`,
+        urgencyLabel: `${mo} meses sem registro — verificar laudo com técnico`,
         context:
           `A vistoria periódica do SPDA ajuda a manter o sistema de proteção contra descargas atmosféricas em condição operacional. Como passou de 12 meses, vale verificar o laudo e confirmar a necessidade de nova vistoria com responsável técnico. ${ROTINA_DISCLAIMER}`,
         askQ: "Com que frequência deve ser feita a vistoria do para-raios?",
-        priority: "critico",
+        priority: "atencao",
         resolveAction: { field: "ultimaVistoriaSPDA", type: "done", buttonLabel: "Vistoria realizada", successMessage: "Vistoria SPDA registrada" },
       });
     } else if (ds > 330) {
@@ -389,11 +389,11 @@ export function buildGuidanceItems(
         id: "eletrica-atrasada",
         icon: "🔌",
         label: "Vistoria elétrica",
-        urgencyLabel: `${mo} meses sem vistoria — possivelmente atrasada`,
+        urgencyLabel: `${mo} meses sem registro — verificar laudo com técnico`,
         context:
           `A vistoria das instalações elétricas é uma referência operacional de prevenção. Como passou de 12 meses, vale verificar se há laudo recente ou necessidade de inspeção por profissional habilitado. ${ROTINA_DISCLAIMER}`,
         askQ: "Com que frequência deve ser feita a vistoria elétrica?",
-        priority: "critico",
+        priority: "atencao",
         resolveAction: { field: "ultimaVistoriaEletrica", type: "done", buttonLabel: "Vistoria realizada", successMessage: "Vistoria elétrica registrada" },
       });
     } else if (ds > 330) {

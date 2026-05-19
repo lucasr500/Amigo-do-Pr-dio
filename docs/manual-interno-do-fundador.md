@@ -6,13 +6,23 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 66)
+## Estado atual do produto (2026-05-19 — Fase 67)
 
 ### Bundle
 - Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 67 (Primeiros 10 Segundos + Calibração de Urgência)
+
+Duas correções cirúrgicas dos achados do relatório pós-Fase 66. Zero feature nova.
+
+- **`components/Hero.tsx`:** subtitle atualizado de "Assistente, memória e rotina em um só lugar." para "Monitora prazos do prédio e orienta em situações críticas." — comunica a função dual (monitoramento + orientação) nos primeiros 2 segundos. Chips situacionais reduzidos de 5 para 3 (barulho, inadimplente, vazamento) — economiza ~35px verticais, tornando o `GuidancePreview` visível sem scroll em iPhones menores.
+- **`lib/guidance.ts`:** 6 rotinas operacionais atrasadas (`dedet-atrasada`, `caixa-atrasada`, `elevador-atrasado`, `extintores-atrasados`, `spda-atrasado`, `eletrica-atrasada`) rebaixadas de `priority: "critico"` para `priority: "atencao"`. AVCB, seguro, mandato e AGO permanecem `"critico"`. urgencyLabel de cada rotina ajustado para refletir incerteza operacional ("verificar se realizada", "confirmar com a prestadora", "verificar laudo com técnico") em vez de "possivelmente atrasada". Motor de prioridade e ordenação preservados.
+- **`components/PendenciasCard.tsx`:** indicador de overflow `"+N próximos passos ocultos"` quando há mais de 5 pendências abertas. Zero expansão automática, zero paginação, zero modal.
+- **`components/HomeResumoPredio.tsx`:** suprime `"Próxima atenção: {urgencyLabel}"` (que duplicava o GuidancePanel acima) e exibe "Confira os alertas acima para os detalhes." quando `guidanceCount > 0`. Quando não há alertas, mantém "Sem alertas ativos agora. Mantenha as datas essenciais atualizadas."
+- **Bundle:** 225 kB (inalterado). Sem nova feature, nova aba, novo card, schema, KB, motor, backup ou biblioteca.
 
 ### Entregues na Fase 66 (Validação Mobile, Densidade da Home e Controle de Bundle)
 
