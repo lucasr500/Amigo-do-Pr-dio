@@ -6,13 +6,25 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 60)
+## Estado atual do produto (2026-05-19 — Fase 61)
 
 ### Bundle
-- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 224 kB First Load JS (margem 6 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 61 (Ritual Mensal + prova de valor acumulado)
+
+Transforma a Revisão Mensal em ritual recorrente visível na Home e adiciona uma primeira camada de valor acumulado sem dashboard, calendário, nova aba ou backend.
+
+- **`components/RevisaoMensalCard.tsx`:** card da Home enriquecido com bloco "Este mês no prédio": próximos passos concluídos no mês, pendências abertas e alertas acompanhados (`origem: "guidance"` concluídos no mês). Se não houver dados, mostra "Conclua próximos passos para montar o resumo do mês." Copy principal: "Sua revisão mensal está disponível" + "Reserve 3 minutos para verificar pendências, vencimentos e cuidados importantes do prédio."
+- **Regra de exibição:** permanece oculto sem memória operacional; com dados, aparece quando a revisão ainda não foi concluída no mês e estamos entre os dias 1–7 ou o card ainda não foi aberto/visto no mês. Controle mínimo em `localStorage` (`amigo_revisao_mensal_home`) registra apenas `seenMonthKey` e `openCount`; não entra no backup e não altera dados operacionais.
+- **`app/page.tsx`:** CTA "Fazer revisão" navega para a aba Condomínio e rola até a seção `#revisao-mensal`. Sem rota nova, sem modal, sem bloqueio de uso, sem notificação.
+- **`components/RevisaoMensal.tsx`:** seção "O que foi resolvido neste mês" mostra até 4 pendências concluídas no mês via `getPendenciasConcluidas()`, com títulos truncados; estado vazio: "Os próximos passos concluídos neste mês aparecerão aqui."
+- **`lib/telemetry.ts`:** adiciona `revisao_mensal_progress_viewed`; eventos da revisão mensal usam apenas `month_key`, `open_count`, `completed_count` e `pending_count`. Zero texto livre, zero dados do condomínio, zero datas reais.
+- **`ProximasDatas`:** não alterado nesta fase. Agrupamento por horizonte temporal fica como hipótese futura por exigir mudança visual maior e risco desnecessário para o objetivo central.
+- **Sem backend, login, IA/RAG, push notification, nova aba, calendário, kanban, responsáveis, anexos, comentários, upload, WhatsApp, paywall, novas ferramentas financeiras ou KB.**
 
 ### Complemento documental da Fase 60
 
@@ -516,5 +528,5 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 60 — higiene documental)*
+*Versão: 2026-05-19 (Fase 61)*
 *Atualizar a seção "Estado atual" a cada sprint.*

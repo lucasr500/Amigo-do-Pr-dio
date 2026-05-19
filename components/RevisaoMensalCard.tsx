@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getSessionMeta, hasMemoriaOperacional } from "@/lib/session";
+import {
+  getCurrentMonthKey,
+  getPendenciasAbertas,
+  getPendenciasConcluidas,
+  getRevisaoMensalHomeMeta,
+  getSessionMeta,
+  hasMemoriaOperacional,
+  recordRevisaoMensalHomeOpen,
+} from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 type Props = {
@@ -16,18 +24,58 @@ function isDoneThisMonth(lastAt: string | null): boolean {
   return last.getFullYear() === now.getFullYear() && last.getMonth() === now.getMonth();
 }
 
+function isInMonthlyWindow(): boolean {
+  const day = new Date().getDate();
+  return day >= 1 && day <= 7;
+}
+
+function isThisMonth(iso?: string): boolean {
+  if (!iso) return false;
+  const date = new Date(iso);
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
 export default function RevisaoMensalCard({ refreshKey, onOpen }: Props) {
   const [show, setShow] = useState(false);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [guidanceCount, setGuidanceCount] = useState(0);
   const trackedRef = useRef(false);
 
   useEffect(() => {
     if (!hasMemoriaOperacional()) { setShow(false); return; }
     const meta = getSessionMeta();
-    if (!isDoneThisMonth(meta.lastRevisaoMensalAt)) {
+    const monthKey = getCurrentMonthKey();
+    const homeMeta = getRevisaoMensalHomeMeta();
+    const completedThisMonth = getPendenciasConcluidas()
+      .filter((p) => isThisMonth(p.completedAt));
+    const openItems = getPendenciasAbertas();
+    const guidanceThisMonth = completedThisMonth
+      .filter((p) => p.origem === "guidance").length;
+    const shouldShow =
+      !isDoneThisMonth(meta.lastRevisaoMensalAt) &&
+      (isInMonthlyWindow() || homeMeta.seenMonthKey !== monthKey);
+
+    setCompletedCount(completedThisMonth.length);
+    setPendingCount(openItems.length);
+    setGuidanceCount(guidanceThisMonth);
+
+    if (shouldShow) {
       setShow(true);
       if (!trackedRef.current) {
         trackedRef.current = true;
-        void trackEvent("revisao_mensal_surface_seen", {});
+        void trackEvent("revisao_mensal_surface_seen", {
+          month_key: monthKey,
+          open_count: homeMeta.openCount,
+          completed_count: completedThisMonth.length,
+          pending_count: openItems.length,
+        });
+        void trackEvent("revisao_mensal_progress_viewed", {
+          month_key: monthKey,
+          completed_count: completedThisMonth.length,
+          pending_count: openItems.length,
+        });
       }
     } else {
       setShow(false);
@@ -36,12 +84,19 @@ export default function RevisaoMensalCard({ refreshKey, onOpen }: Props) {
 
   if (!show) return null;
 
-  const mes = new Date().toLocaleDateString("pt-BR", { month: "long" });
-
   const handleOpen = () => {
-    void trackEvent("revisao_mensal_opened_from_home", {});
+    const monthKey = getCurrentMonthKey();
+    const meta = recordRevisaoMensalHomeOpen(monthKey);
+    void trackEvent("revisao_mensal_opened_from_home", {
+      month_key: monthKey,
+      open_count: meta.openCount,
+      completed_count: completedCount,
+      pending_count: pendingCount,
+    });
     onOpen?.();
   };
+
+  const hasProgress = completedCount > 0 || pendingCount > 0 || guidanceCount > 0;
 
   return (
     <section className="px-5 pb-3 sm:px-6">
@@ -50,11 +105,31 @@ export default function RevisaoMensalCard({ refreshKey, onOpen }: Props) {
           Revisão mensal
         </p>
         <p className="mt-1 text-[13.5px] font-semibold leading-snug text-navy-800">
-          Sua revisão de {mes} está disponível
+          Sua revisão mensal está disponível
         </p>
         <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
           Reserve 3 minutos para verificar pendências, vencimentos e cuidados importantes do prédio.
         </p>
+
+        <div className="mt-3 rounded-xl bg-navy-50/55 px-3 py-2.5">
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.09em] text-navy-400">
+            Este mês no prédio
+          </p>
+          {hasProgress ? (
+            <div className="mt-1.5 space-y-1 text-[12px] leading-snug text-navy-600">
+              <p>{completedCount} próximo{completedCount !== 1 ? "s" : ""} passo{completedCount !== 1 ? "s" : ""} concluído{completedCount !== 1 ? "s" : ""}</p>
+              <p>{pendingCount} pendência{pendingCount !== 1 ? "s" : ""} aberta{pendingCount !== 1 ? "s" : ""}</p>
+              {guidanceCount > 0 && (
+                <p>{guidanceCount} alerta{guidanceCount !== 1 ? "s" : ""} acompanhado{guidanceCount !== 1 ? "s" : ""}</p>
+              )}
+            </div>
+          ) : (
+            <p className="mt-1.5 text-[12px] leading-relaxed text-navy-500">
+              Conclua próximos passos para montar o resumo do mês.
+            </p>
+          )}
+        </div>
+
         <button
           type="button"
           onClick={handleOpen}

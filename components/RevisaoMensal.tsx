@@ -6,9 +6,11 @@ import {
   recordRevisaoMensal,
   getMemoriaOperacional,
   getProfile,
+  getPendenciasConcluidas,
   logInteraction,
   MemoriaOperacional,
   CondominioProfile,
+  type Pendencia,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
@@ -28,6 +30,22 @@ function diasDesde(iso: string): number {
 
 function isFuture(iso: string): boolean {
   return new Date(iso).getTime() > Date.now();
+}
+
+function isThisMonth(iso?: string): boolean {
+  if (!iso) return false;
+  const date = new Date(iso);
+  const now = new Date();
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+}
+
+function isDoneThisMonth(lastAt: string | null): boolean {
+  if (!lastAt) return false;
+  return isThisMonth(lastAt);
+}
+
+function shortTitle(title: string): string {
+  return title.length > 54 ? `${title.slice(0, 54)}…` : title;
 }
 
 function buildStatusItems(m: MemoriaOperacional, profile: CondominioProfile | null): StatusItem[] {
@@ -88,6 +106,7 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
   const [hydrated, setHydrated] = useState(false);
   const [show, setShow] = useState(false);
   const [items, setItems] = useState<StatusItem[]>([]);
+  const [resolvedThisMonth, setResolvedThisMonth] = useState<Pendencia[]>([]);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -95,17 +114,18 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
     const m = getMemoriaOperacional();
     const profile = getProfile();
     const built = buildStatusItems(m, profile);
+    const resolved = getPendenciasConcluidas()
+      .filter((p) => isThisMonth(p.completedAt))
+      .slice(-4)
+      .reverse();
 
     if (built.length === 0) return;
 
-    const daysSinceLast = meta.lastRevisaoMensalAt
-      ? Math.floor((Date.now() - new Date(meta.lastRevisaoMensalAt).getTime()) / 86400000)
-      : null;
-
-    const shouldShow = daysSinceLast === null || daysSinceLast >= 25;
+    const shouldShow = !isDoneThisMonth(meta.lastRevisaoMensalAt);
 
     if (shouldShow) {
       setItems(built);
+      setResolvedThisMonth(resolved);
       setShow(true);
       void trackEvent("revisao_mensal_shown", { item_count: built.length });
       logInteraction("revisao-mensal-exibida", String(built.length));
@@ -161,6 +181,26 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
               <span className="font-bold" aria-hidden="true">{STATUS_SYMBOL[item.status]}</span>
             </span>
           ))}
+        </div>
+
+        <div className="mb-3 rounded-xl bg-navy-50/55 px-3 py-2.5">
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+            O que foi resolvido neste mês
+          </p>
+          {resolvedThisMonth.length > 0 ? (
+            <ul className="mt-2 space-y-1.5">
+              {resolvedThisMonth.map((p) => (
+                <li key={p.id} className="flex items-start gap-2 text-[12px] leading-snug text-navy-700">
+                  <span className="mt-[1px] text-navy-400" aria-hidden="true">✓</span>
+                  <span className="line-clamp-2">{shortTitle(p.titulo)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1.5 text-[12px] leading-relaxed text-navy-500">
+              Os próximos passos concluídos neste mês aparecerão aqui.
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-3 border-t border-navy-50 pt-3">

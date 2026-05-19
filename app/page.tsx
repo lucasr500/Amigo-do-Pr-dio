@@ -68,6 +68,7 @@ export default function HomePage() {
   const [pendingToolAnchor, setPendingToolAnchor] = useState<ToolAnchor | null>(null);
   const [highlightToolAnchor, setHighlightToolAnchor] = useState<ToolAnchor | null>(null);
   const [pendingChecklistId, setPendingChecklistId] = useState<string | null>(null);
+  const [focusRevisaoMensal, setFocusRevisaoMensal] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   useEffect(() => {
@@ -116,6 +117,25 @@ export default function HomePage() {
       window.clearTimeout(second);
     };
   }, [activeTab, pendingToolAnchor]);
+
+  useEffect(() => {
+    if (activeTab !== "condominio" || !focusRevisaoMensal) return;
+    const scrollToRevisao = () => {
+      const el = document.getElementById("revisao-mensal");
+      if (!el) return false;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    };
+    const first = window.setTimeout(scrollToRevisao, 120);
+    const second = window.setTimeout(() => {
+      scrollToRevisao();
+      setFocusRevisaoMensal(false);
+    }, 320);
+    return () => {
+      window.clearTimeout(first);
+      window.clearTimeout(second);
+    };
+  }, [activeTab, focusRevisaoMensal]);
 
   const executeAsk = async (q: string) => {
     if (!q || isLoading) return;
@@ -213,6 +233,11 @@ export default function HomePage() {
     setShouldExpandMemoria(true);
   };
 
+  const handleOpenRevisaoMensal = () => {
+    setFocusRevisaoMensal(true);
+    navigateTab("condominio");
+  };
+
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
       <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
@@ -273,7 +298,7 @@ export default function HomePage() {
             {hasCondominioData && (
               <RevisaoMensalCard
                 refreshKey={refreshKey}
-                onOpen={() => navigateTab("condominio")}
+                onOpen={handleOpenRevisaoMensal}
               />
             )}
 
@@ -426,10 +451,12 @@ export default function HomePage() {
 
             <TimelineOperacional refreshKey={refreshKey} />
 
-            <RevisaoMensal
-              refreshKey={refreshKey}
-              onDone={() => setRefreshKey((k) => k + 1)}
-            />
+            <div id="revisao-mensal" className="scroll-mt-3">
+              <RevisaoMensal
+                refreshKey={refreshKey}
+                onDone={() => setRefreshKey((k) => k + 1)}
+              />
+            </div>
 
             <BackupPanel onImported={() => setRefreshKey((k) => k + 1)} />
 

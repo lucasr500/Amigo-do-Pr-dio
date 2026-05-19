@@ -102,6 +102,7 @@ const KEYS = {
   SESSION_META:       "amigo_session_meta",
   RESOLUTION_EVENTS:  "amigo_resolution_events",
   PENDENCIAS:         "amigo_pendencias",
+  REVISAO_MENSAL_HOME:"amigo_revisao_mensal_home",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -437,6 +438,36 @@ export function getPendenciasAbertas(): Pendencia[] {
 
 export function getPendenciasConcluidas(): Pendencia[] {
   return getPendencias().filter((p) => p.status === "concluida");
+}
+
+// ─── Revisão mensal na Home ─────────────────────────────────────────────────
+// Controle mínimo de visualização do ritual mensal. Não participa do backup:
+// é apenas estado local de surfacing para não insistir no card fora da janela.
+
+type RevisaoMensalHomeMeta = {
+  seenMonthKey: string | null;
+  openCount: number;
+};
+
+export function getCurrentMonthKey(date = new Date()): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function getRevisaoMensalHomeMeta(): RevisaoMensalHomeMeta {
+  return safeRead<RevisaoMensalHomeMeta>(KEYS.REVISAO_MENSAL_HOME, {
+    seenMonthKey: null,
+    openCount: 0,
+  });
+}
+
+export function recordRevisaoMensalHomeOpen(monthKey = getCurrentMonthKey()): RevisaoMensalHomeMeta {
+  const meta = getRevisaoMensalHomeMeta();
+  const next = {
+    seenMonthKey: monthKey,
+    openCount: meta.seenMonthKey === monthKey ? meta.openCount + 1 : 1,
+  };
+  safeWrite(KEYS.REVISAO_MENSAL_HOME, next);
+  return next;
 }
 
 // ─── Tamanho estimado dos dados do app em localStorage ───────────────────────
