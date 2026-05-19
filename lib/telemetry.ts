@@ -60,6 +60,7 @@ export type TelemetryEvent =
   | "assistant_fallback_contextual"
   | "assistant_fallback_generic"
   | "assistant_suggestion_clicked"
+  | "local_context_notice_shown"
   | "comunicado_gerado"
   | "comunicado_copiado"
   | "simulador_calculado"

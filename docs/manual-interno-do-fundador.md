@@ -6,13 +6,24 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 63)
+## Estado atual do produto (2026-05-19 — Fase 64)
 
 ### Bundle
-- Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 226 kB First Load JS (margem 4 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 64 (Assistente contextual sem IA + preparação para IA futura)
+
+Torna o Assistente mais conectado ao prédio usando apenas dados locais já cadastrados, sem IA, RAG, API externa, backend, login, alteração de schema, KB ou motor de busca.
+
+- **`components/Response.tsx`:** adiciona aviso discreto "Contexto do prédio" quando a orientação tem relação com dados existentes na MemoriaOperacional. Sem dado local relevante, a resposta permanece igual.
+- **Contextos cobertos:** seguro, AVCB, mandato/assembleia e manutenção. Quando a data é válida e simples de calcular, o texto menciona apenas a distância em dias; nunca transmite datas reais nem inventa informação.
+- **Perguntas relacionadas:** sugestões hardcoded por categoria para multas, obras, inadimplência/cobrança e assembleias, usando o `onSuggestionSelect` já existente. Não cria busca nova, conversa persistente ou refinamento de scoring.
+- **`components/HistoryPanel.tsx`:** microcopy ajustada para "Perguntas recentes" + "Retome uma dúvida anterior." Sem threads e sem memória semântica.
+- **Telemetria privacy-safe:** evento `local_context_notice_shown` com apenas `categoria`, `context_type` e `has_memoria`. Zero pergunta, resposta, datas reais, dados do condomínio ou texto livre.
+- **Plano futuro de IA/RAG:** `docs/plano-futuro-ia-rag-contextual.md` documenta onde IA entraria depois como fallback ancorado na KB e protegido por backend seguro, sem substituir GuidancePanel, MemoriaOperacional ou Próximos Passos.
 
 ### Entregues na Fase 63 (Home Cockpit + atualização manual)
 

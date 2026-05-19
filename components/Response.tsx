@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { AnswerResult, KnowledgeEntry, ConfidenceLevel } from "@/lib/data";
 import { TOPICS, getConfidenceLabel, getRelatedEntries } from "@/lib/data";
-import { saveFavorite, isFavorited, logShare, logInteraction } from "@/lib/session";
+import {
+  saveFavorite,
+  isFavorited,
+  logShare,
+  logInteraction,
+  getMemoriaOperacional,
+  type MemoriaOperacional,
+} from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { APP_URL } from "@/lib/config";
 import BrandMark from "@/components/BrandMark";
@@ -57,6 +64,110 @@ const CAT_TO_NEXTACTION: Partial<Record<string, string>> = {
   "areas-comuns":   "Verifique na convenção e no regulamento interno o que diz sobre uso, responsabilidade e autorização para modificações nessa área.",
   manutencao:       "Registre a data do serviço, o responsável e o laudo (quando exigido) para manter o histórico e proteger o condomínio em caso de questionamento.",
 };
+
+const RELATED_QUESTION_PROMPTS: Partial<Record<string, string[]>> = {
+  multas: [
+    "Como formalizar uma advertência?",
+    "Quando a multa precisa de assembleia?",
+  ],
+  obras: [
+    "Quando exigir ART/RRT?",
+    "Como comunicar obra aos moradores?",
+  ],
+  inadimplencia: [
+    "Pode expor nome de inadimplente?",
+    "Quando iniciar cobrança judicial?",
+  ],
+  cobranca: [
+    "Pode expor nome de inadimplente?",
+    "Quando iniciar cobrança judicial?",
+  ],
+  assembleias: [
+    "Como convocar assembleia corretamente?",
+    "O que fazer em caso de empate?",
+  ],
+};
+
+type LocalContextNotice = {
+  contextType: "avcb" | "seguro" | "mandato" | "manutencao";
+  text: string;
+};
+
+const MANUTENCAO_MEMORIA_FIELDS: Array<keyof MemoriaOperacional> = [
+  "ultimaDedetizacao",
+  "ultimaLimpezaCaixaDAgua",
+  "ultimaManutencaoElevador",
+  "ultimaInspecaoExtintores",
+  "ultimaVistoriaSPDA",
+  "ultimaVistoriaEletrica",
+];
+
+function daysUntil(dateValue?: string): number | null {
+  if (!dateValue) return null;
+  const target = new Date(`${dateValue}T00:00:00`);
+  if (Number.isNaN(target.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.ceil((target.getTime() - today.getTime()) / 86_400_000);
+}
+
+function formatDueText(label: string, dateValue?: string): string | null {
+  const days = daysUntil(dateValue);
+  if (days === null) return null;
+  if (days < 0) return `${label} registrado no app já passou do vencimento.`;
+  if (days === 0) return `${label} registrado no app vence hoje.`;
+  if (days === 1) return `${label} registrado no app vence em 1 dia.`;
+  return `${label} registrado no app vence em ${days} dias.`;
+}
+
+function entryHasAny(entry: KnowledgeEntry, terms: string[]): boolean {
+  const haystack = `${entry.id} ${entry.categoria} ${entry.pergunta} ${entry.resposta} ${entry.contexto} ${entry.keywords.join(" ")}`.toLowerCase();
+  return terms.some((term) => haystack.includes(term));
+}
+
+function hasMaintenanceMemory(memoria: MemoriaOperacional): boolean {
+  return MANUTENCAO_MEMORIA_FIELDS.some((field) => Boolean(memoria[field]));
+}
+
+function getLocalContextNotice(entry: KnowledgeEntry): LocalContextNotice | null {
+  const memoria = getMemoriaOperacional();
+
+  if (entryHasAny(entry, ["seguro", "apólice", "apolice", "sinistro"]) && memoria.vencimentoSeguro) {
+    const dueText = formatDueText("O seguro", memoria.vencimentoSeguro);
+    return {
+      contextType: "seguro",
+      text: dueText
+        ? `${dueText} Aproveite para revisar cobertura contra incêndio, danos elétricos e responsabilidade civil.`
+        : "Como o seguro do prédio está registrado no app, vale conferir a renovação antes do vencimento.",
+    };
+  }
+
+  if (entryHasAny(entry, ["avcb", "bombeiros", "incêndio", "incendio"]) && memoria.vencimentoAVCB) {
+    const dueText = formatDueText("O AVCB", memoria.vencimentoAVCB);
+    return {
+      contextType: "avcb",
+      text: dueText
+        ? `${dueText} Se estiver perto do vencimento, trate a renovação como prioridade operacional.`
+        : "O AVCB já está cadastrado no monitoramento do prédio. Se estiver perto do vencimento, priorize a renovação.",
+    };
+  }
+
+  if ((entry.categoria === "assembleias" || entryHasAny(entry, ["mandato", "eleição", "eleicao", "síndico", "sindico"])) && memoria.fimMandatoSindico) {
+    return {
+      contextType: "mandato",
+      text: "Como o fim do mandato está cadastrado, verifique se há tempo suficiente para convocação da assembleia.",
+    };
+  }
+
+  if (entry.categoria === "manutencao" && hasMaintenanceMemory(memoria)) {
+    return {
+      contextType: "manutencao",
+      text: "Use as datas cadastradas no monitoramento para conferir se essa manutenção está dentro do prazo.",
+    };
+  }
+
+  return null;
+}
 
 // Aviso jurídico específico por categoria sensível — aparece antes do disclaimer geral
 const SENSITIVE_CATEGORY_NOTICE: Partial<Record<string, string>> = {
@@ -171,12 +282,18 @@ export default function Response({
   const [showToast, setShowToast] = useState(false);
   const [savedPendenciaId, setSavedPendenciaId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const localContextTrackedRef = useRef<string | null>(null);
 
   const entry: KnowledgeEntry | null = answerResult?.matched ?? null;
   const isDefault = answerResult?.isDefault ?? false;
   const score = answerResult?.score ?? 0;
   const suggestions = answerResult?.suggestions ?? [];
   const related = entry ? getRelatedEntries(entry.categoria, entry.id, 2) : [];
+  const relatedPrompts = entry ? (RELATED_QUESTION_PROMPTS[entry.categoria] ?? []) : [];
+  const localContextNotice = useMemo(
+    () => (entry && !isDefault ? getLocalContextNotice(entry) : null),
+    [entry, isDefault],
+  );
   const detectedCategory = answerResult?.detectedCategory ?? null;
   const contextualFallback = answerResult?.contextualFallback ?? null;
   // Para o fallback com categoria detectada, exibe mensagem contextual em vez do texto genérico
@@ -218,6 +335,18 @@ export default function Response({
       }, 100);
     }
   }, [isLoading, answer]);
+
+  useEffect(() => {
+    if (!entry || !localContextNotice) return;
+    const trackingKey = `${entry.id}:${localContextNotice.contextType}`;
+    if (localContextTrackedRef.current === trackingKey) return;
+    localContextTrackedRef.current = trackingKey;
+    void trackEvent("local_context_notice_shown", {
+      categoria: entry.categoria,
+      context_type: localContextNotice.contextType,
+      has_memoria: true,
+    });
+  }, [entry, localContextNotice?.contextType]);
 
   const handleCopy = async () => {
     if (!answer) return;
@@ -409,6 +538,21 @@ export default function Response({
                         </div>
                       )}
 
+                      {/* Contexto local — usa apenas dados já cadastrados no app */}
+                      {localContextNotice && (
+                        <div className="rounded-r-lg border-l-[2.5px] border-navy-300 bg-navy-50/70 py-2.5 pl-3 pr-3">
+                          <div className="mb-1.5 flex items-center gap-1.5">
+                            <InfoIcon className="text-navy-500" />
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
+                              Contexto do prédio
+                            </p>
+                          </div>
+                          <p className="text-[14px] leading-relaxed text-navy-700">
+                            {localContextNotice.text}
+                          </p>
+                        </div>
+                      )}
+
                       {/* Base legal */}
                       <div className="rounded-r-lg border-l-[2.5px] border-navy-200 bg-navy-50/60 py-2.5 pl-3 pr-3">
                         <div className="mb-1.5 flex items-center gap-1.5">
@@ -439,6 +583,26 @@ export default function Response({
 
                       {/* Veja também — entradas relacionadas da mesma categoria */}
                       {renderRelated("")}
+
+                      {relatedPrompts.length > 0 && (
+                        <div>
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">
+                            Perguntas relacionadas
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {relatedPrompts.map((prompt) => (
+                              <button
+                                key={prompt}
+                                type="button"
+                                onClick={() => onSuggestionSelect?.(prompt)}
+                                className="rounded-full border border-navy-100 bg-white px-3 py-1.5 text-left text-[12px] font-medium text-navy-600 transition-colors hover:border-navy-200 hover:bg-navy-50 active:bg-navy-100"
+                              >
+                                {prompt}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Checklist operacional recomendado — ponte entre Q&A e ferramentas */}
                       {(() => {

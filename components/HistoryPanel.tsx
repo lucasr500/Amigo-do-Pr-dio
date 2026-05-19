@@ -24,10 +24,15 @@ export default function HistoryPanel({ onSelect, refreshKey }: HistoryPanelProps
 
   return (
     <section className="px-5 pb-5 sm:px-6 animate-fade-in-up">
-      <div className="mb-2.5 flex items-center justify-between">
-        <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
-          Suas últimas perguntas
-        </h3>
+      <div className="mb-2.5 flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-navy-500">
+            Perguntas recentes
+          </h3>
+          <p className="mt-0.5 text-[11.5px] text-navy-400">
+            Retome uma dúvida anterior.
+          </p>
+        </div>
         <button
           type="button"
           onClick={handleClear}
