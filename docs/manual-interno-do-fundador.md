@@ -14,6 +14,10 @@
 - TypeScript: zero erros
 - Build: Compiled successfully
 
+### Complemento documental da Fase 60
+
+Higiene documental mínima, sem alteração funcional: README atualizado para refletir o estado real do PWA, comentário de setup em `lib/telemetry.ts` alinhado ao guia Supabase atual (`read_anon TO anon`) e linguagem do guia de telemetria neutralizada para "uso externo" / "exposição externa". Nenhuma UI, lógica de produto, localStorage, telemetria runtime, Supabase runtime, KB ou componente visual foi alterado.
+
 ### Entregues na Fase 60 (ritual mensal na Home)
 
 Surfacea a Revisão Mensal na aba Início de forma discreta, no momento certo, sem push notification, backend ou modal obrigatório.
@@ -58,7 +62,7 @@ Resolve o principal gap de produto: usuário sem dados não conseguia perceber o
 - **Confidence gap fechado:** 11/83 REVIEW = 13,3% — abaixo do limiar de 20%. Todos são B→A (motor respondeu casos grays — não é regressão).
 - **Auditoria offline estável:** 72/83 PASS (87%), 0 FAIL, Recall A 100%, Bloqueio C 100% — idêntico à Fase 56.
 - **Build:** 222 kB (sem variação). TypeScript: zero erros.
-- **Critérios de beta fechados pela Fase 57:** "Confidence gap < 20%" e "Sem resposta categórica sem ressalva de convenção" — ambos `[x]` no roadmap.
+- **Critérios internos fechados pela Fase 57:** "Confidence gap < 20%" e "Sem resposta categórica sem ressalva de convenção" — ambos `[x]` no roadmap.
 
 ### Entregues na Fase 56 (ativação segura do Supabase — docs e validação)
 
@@ -99,7 +103,7 @@ Fase de documentação e auditoria. Zero alterações de código-fonte.
 - **`SENSITIVE_CATEGORY_NOTICE` em `Response.tsx`:** mapa simples `Partial<Record<string, string>>` com avisos específicos para `lgpd`, `trabalhista` e `financeiro`. Zero novos componentes, zero dependências, zero impacto em outros arquivos.
 - **Posição na UI:** o aviso sensível aparece logo antes do "Aviso jurídico" geral — após os blocos Próximo passo / Base legal / Dica prática / CTAs / Aviso regional CCT. Visível apenas para as três categorias sensíveis; demais categorias inalteradas.
 - **Visual:** `rounded-lg bg-navy-50/50 px-3 py-2.5` com `InfoIcon` em `text-navy-500` e texto em `text-[12.5px] text-navy-500` — discreta, premium, sem alarme, sem duplicação visual do disclaimer geral.
-- **Critérios de beta fechados:** 2 dos 3 itens de "Conteúdo legal" no roadmap marcados como concluídos (`disclaimer visível` + `dados sensíveis com aviso`). Critério remanescente: "sem resposta que afirme 'pode fazer X' sem mencionar que depende da convenção" — auditoria editorial.
+- **Critérios internos fechados:** 2 dos 3 itens de "Conteúdo legal" no roadmap marcados como concluídos (`disclaimer visível` + `dados sensíveis com aviso`). Critério remanescente: "sem resposta que afirme 'pode fazer X' sem mencionar que depende da convenção" — auditoria editorial.
 - **Bundle:** 222 kB (sem variação). Margem: 8 kB antes do limite.
 
 ### Entregues na Fase 52 (estabilização técnica e performance)
@@ -198,7 +202,7 @@ Fase de documentação e auditoria. Zero alterações de código-fonte.
 - **Checklist RC atualizado:** tabela de histórico + status por grupo
 - **Relatório RC:** `docs/relatorio-rc-interno-fase-38.md`
 
-### Pendências remanescentes pré-beta
+### Pendências operacionais internas
 - **Configurar Supabase** — 15 min, ver `docs/setup-supabase-telemetria.md` (corrigido na Fase 56 — guia agora fiel ao código). Checklist completo no documento.
 - **Auditoria /admin ao vivo** — `npm run dev` → `localhost:3000/admin` → "Rodar auditoria". Recall esperado 87% (confirmado offline na Fase 56).
 - **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`
@@ -227,21 +231,21 @@ Fase de documentação e auditoria. Zero alterações de código-fonte.
   → `public/icons/icon-192.png`, `public/icons/icon-512.png`, `public/icons/apple-touch-icon.png`
 - **Manifest corrigido:** `app/manifest.ts` com 4 entradas de ícone (192 any, 192 maskable, 512 any, 512 maskable)
 - **Layout atualizado:** `app/layout.tsx` referencia apple-touch-icon para iOS
-- **Checklist RC:** `docs/checklist-release-candidate-interno.md` — 20 grupos de verificação pré-beta
-- **Plano técnico IA/RAG:** `docs/plano-tecnico-ia-rag-fase-36.md` — arquitetura, riscos, critérios de início
+- **Checklist RC:** `docs/checklist-release-candidate-interno.md` — 20 grupos de verificação interna
+- **Plano técnico futuro:** `docs/plano-tecnico-ia-rag-fase-36.md` — referência arquivada, não ativa nesta fase
 
 ### Qualidade da KB e motor
 - Entradas KB: 316 (+5 da Fase 34)
 - Motor determinístico: Recall A 100%, Bloqueio C 100% — confirmado offline Fase 37
 - Guia editorial: `docs/guia-qualidade-editorial-kb.md`
-- Preparação RAG: `docs/preparacao-kb-para-rag.md`
+- Preparação futura da KB: `docs/preparacao-kb-para-rag.md`
 - Princípio: não mexer no motor sem bug documentado; foco na qualidade da KB
 
-### Pendências remanescentes pré-beta
+### Pendências operacionais internas
 - **Teste em dispositivo físico:** verificar PWA em Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`
 - **Verificação manual grupos 4–16:** fluxo zero dados, onboarding, assistente, ferramentas, backup (relatório RC, seções 4–16)
 - **Auditoria ao vivo em /admin:** clicar "Rodar auditoria" e confirmar recall ≥ 75% — esperado 87%
-- **Beta com síndicos reais:** apenas futuramente, aproximadamente uma semana antes do lançamento
+- **Exposição externa:** manter bloqueada até nova decisão explícita do fundador.
 
 ---
 
@@ -500,17 +504,17 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 
 ---
 
-## Próximas tarefas prioritárias (pós-Fase 56)
+## Próximas tarefas prioritárias (pós-Fase 60)
 
 1. **Configurar Supabase** (ação manual — ~15 min) — `docs/setup-supabase-telemetria.md` agora correto e com checklist completo. Telemetria privacy-safe (Fase 49). Bug RLS corrigido no guia (Fase 56).
 2. **Rodar auditoria em /admin ao vivo** — `npm run dev` → `localhost:3000/admin` → "Rodar auditoria" — esperado 87% (confirmado offline Fase 56).
 3. **Teste PWA em dispositivo físico** — Android (Chrome) e iOS (Safari) — guia: `docs/teste-pwa-dispositivo-real.md`.
 4. **Revisão jurídica** dos rascunhos legais (`docs/rascunho-termos-de-uso.md`, `docs/rascunho-politica-privacidade.md`)
 5. **Canal de feedback** antes de qualquer exposição externa
-6. **Não fazer beta com síndicos** — ver `docs/consolidacao-interna-sem-beta-fase-45.md`
+6. **Manter sem exposição externa** — ver `docs/consolidacao-interna-sem-beta-fase-45.md`
 
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 57 concluída)*
+*Versão: 2026-05-19 (Fase 60 — higiene documental)*
 *Atualizar a seção "Estado atual" a cada sprint.*

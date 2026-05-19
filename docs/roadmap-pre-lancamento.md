@@ -1,12 +1,12 @@
-# Roadmap Pré-Lançamento — Amigo do Prédio
+# Roadmap De Maturação Interna — Amigo do Prédio
 
-> **Critérios claros de "pronto para beta".**
+> **Critérios claros de prontidão operacional interna.**
 > O produto está em fase de lapidação silenciosa. Este documento define o que
-> precisa estar sólido antes de convidar os primeiros usuários externos.
+> precisa estar sólido antes de qualquer exposição externa.
 
 ---
 
-## Critérios de beta
+## Critérios internos
 
 ### Motor de respostas
 - [x] Recall A (resposta direta): 100% — sem falso negativo nas perguntas diretas (Fase 33)
@@ -47,33 +47,13 @@
 
 ---
 
-## Fases de lançamento
+## Foco atual de maturação interna
 
-### Fase Alpha (onde estamos)
+### Fase interna (onde estamos)
 - Fundador testa todas as funcionalidades
 - Identifica bugs e inconsistências antes de qualquer usuário externo
 - Sem pressão de feedback, sem compromisso de suporte
-- Dura: até critérios de beta acima estarem todos verdes
-
-### Fase Beta Fechada (próximo passo)
-- 5–15 síndicos convidados manualmente
-- Perfil: síndico voluntário, prédio residencial, São Paulo ou grande cidade
-- Modo: uso real, sem roteiro, sem orientação (teste de naturalidade)
-- Coleta: telemetria + entrevistas curtas após 2 semanas
-- Critério de sucesso: pelo menos 3 síndicos voltam sem ser lembrados
-- Duração: 4–6 semanas
-
-### Fase Beta Aberta
-- Landing page pública com formulário "quero testar"
-- Lista de espera, convites em lotes
-- Foco: volume de feedback, não viral
-- Monitora: taxa de ativação (cadastra dados do prédio?), retenção D7, categorias de pergunta mais comuns
-- Critério de sucesso: NPS > 40, retenção D7 > 25%
-
-### Lançamento público
-- Apenas quando produto for estável e monetização definida
-- Foco inicial: síndicos voluntários (não administradoras)
-- Canal: comunidades de síndicos no WhatsApp, grupos no Facebook, LinkedIn
+- Dura até os critérios internos acima estarem verificados ao vivo
 
 - [x] Tese de copiloto operacional documentada (Fase 40): `docs/tese-produto-copiloto-operacional.md`
 - [x] Reposicionamento de copy principal: Hero, Ferramentas, Assistente, Condomínio (Fase 40)
@@ -91,6 +71,7 @@
 - [x] **Fase 47 — Coerência visual e percepção premium:** Hero copy atualizado para nomear AVCB, seguro e mandato antes do cadastro; MemoriaPanel título corrigido (consistência colapsado ↔ expandido); AskInput submit alinhado à cor primária navy-700; auditoria de terracota confirmou uso semanticamente correto em todos os componentes (urgência/ação); identidade BrandMark + bg-body + BottomNav validados. Bundle 223 kB. Sem beta, sem síndicos.
 - [x] **Fase 48 — Validação técnica silenciosa:** PWA manifest auditado e corrigido (`short_name` 16→12 chars para evitar truncamento Android); telemetria auditada — zero PII estrutural, exceção documentada (`q:` truncado nos eventos de query); todos os arquivos PWA validados (manifest, layout, icons, safe-area, maskable, theme_color); Supabase documentado como próximo passo manual (guia completo em `docs/setup-supabase-telemetria.md`); auditoria /admin documentada como ação do fundador (recall esperado 87%). Bundle 223 kB. Sem beta, sem síndicos.
 - [x] **Fase 60 — Ritual Mensal na Home:** `RevisaoMensalCard.tsx` (novo) surfacea a Revisão Mensal na aba Início de forma discreta — exibe-se apenas quando há dados de memória operacional e a revisão não foi concluída no mês calendário atual; lê `lastRevisaoMensalAt` de `getSessionMeta()` após hidratação, reavalia a cada `refreshKey`, desaparece automaticamente após `recordRevisaoMensal()`; CTA "Fazer revisão" navega para aba Condomínio (sem rota nova, sem modal obrigatório); posição: após `PendenciasCard`, antes de `DicaDoDia` — GuidancePanel crítico permanece prioritário; oculto no estado sem dados para não diluir onboarding; +2 eventos de telemetria sem PII (`revisao_mensal_surface_seen`, `revisao_mensal_opened_from_home`). Bundle 223 kB (sem variação). TypeScript zero erros. Sem beta, sem síndicos.
+- [x] **Fase 60 — Higiene documental mínima:** comentário de setup em `lib/telemetry.ts` alinhado ao guia Supabase atual (`read_anon TO anon`); README atualizado para estado real do produto (PWA mobile-first, Next.js 14, TypeScript, Tailwind, localStorage, sem backend completo/login/billing, telemetria opcional privacy-safe, paleta atual, limite 230 kB); `docs/setup-supabase-telemetria.md` neutralizado para "uso externo" / "exposição externa". Zero alteração funcional. Sem beta, sem síndicos.
 - [x] **Fase 59 — Integração segura dos ciclos GuidancePanel ↔ Próximos Passos:** resolver item no GuidancePanel (`commitResolution`) agora conclui automaticamente a pendência aberta com `origem: "guidance"` e `matchedId` correspondente, quando existir — sem marcar datas como renovadas sem novo valor real; evento `pendencia_completed_from_guidance_resolution` com `{ guidance_id, priority }` (zero PII); concluir pendência de `origem: "guidance"` no `PendenciasCard` exibe mensagem discreta de 5 s: "Concluído. Se isso envolvia vencimento, atualize a data no monitoramento." — sem modal, sem fluxo obrigatório, sem abrir MemoriaPanel automaticamente; destaque temporal discreto em pendências abertas há mais de 14 dias ("Aberto há mais de 14 dias") calculado por `createdAt`, sem `dueDate`, sem prazo editável, sem alarme. Bundle 223 kB (sem variação). TypeScript zero erros. Sem beta, sem síndicos.
 - [x] **Fase 58 — Cold Start & Preview de Valor:** estado sem dados da Home redesenhado para demonstrar o valor do monitoramento antes do cadastro; novo componente `GuidancePreview.tsx` (estático, sem localStorage, sem interferência no GuidancePanel real) com 2 itens mockados (AVCB vence em 23 dias + Mandato termina em 68 dias), badge "Exemplo" e CTA "Cadastrar as 3 datas"; Hero com copy atualizado ("Em 2 minutos o monitoramento está ativo"); `PendenciasCard` empty state re-escrito para ensinar o loop Assistente → próximo passo → acompanhamento; `MemoriaPanel` intro note atualizada para incluir orientação "Não sabe agora? Use lembrar depois". Bundle 223 kB (+1 kB). TypeScript zero erros. Sem beta, sem síndicos.
 - [x] **Fase 57 — Auditoria editorial da KB (fechar critérios de conteúdo legal):** 316 entradas varridas com análise de padrões assertivos (`pode fazer X`, `é obrigado`, `tem direito a Y`); 3 entradas corrigidas — `autorizacao-obras` (documentos exigíveis dependem da convenção/regimento), `coleta-seletiva-condominio` (exigências específicas variam por legislação municipal), `vaga-uso-comum-preferencia` (locação requer aprovação em assembleia; "direito de preferência legal" suavizado). 25 entradas avaliadas e mantidas — assertivas baseadas em estatuto legal direto (CLT, CC, CPC, NR-10). Confidence gap: 11/83 = 13,3% (< 20%). Recall A: 100%. FAIL: 0. Build 222 kB. TypeScript zero erros. Sem beta, sem síndicos.
@@ -105,14 +86,15 @@
 
 ---
 
-## O que NÃO fazer antes do beta
+## O que NÃO fazer nesta fase interna
 
 - Não investir em marketing/SEO antes de ter produto sólido
-- Não construir backend/login antes de validar retenção
-- Não implementar LLM antes de atingir critérios do plano-ia-rag-futuro.md
-- Não monetizar antes de ter ≥ 50 usuários ativos regulares
-- Não publicar na App Store antes de ter feedback beta
-- Não construir para administradoras antes de validar para síndicos individuais
+- Não construir backend/login
+- Não implementar LLM
+- Não monetizar
+- Não publicar na App Store
+- Não construir para administradoras
+- Não iniciar exposição externa
 
 ---
 
@@ -126,26 +108,25 @@
 
 ### Semana 3–4
 1. Refinamento de copy e microcopy
-2. Identificar e convidar 5 primeiros beta testers
-3. Criar canal de feedback (WhatsApp direto ou Notion form)
+2. Revisar documentação operacional
+3. Validar checklist PWA em dispositivo físico
 
 ### Semana 5–6
-1. Coletar feedback dos primeiros 5 usuários
-2. Ajustar com base no feedback real
-3. Expandir para 15 usuários se os primeiros 5 forem positivos
+1. Revalidar build e bundle
+2. Revisar rascunhos jurídicos internos
+3. Consolidar pendências técnicas restantes
 
 ---
 
-## Métricas de acompanhamento (pós-beta)
+## Métricas internas de acompanhamento
 
-| Métrica | Alvo beta | Alvo lançamento |
+| Métrica | Referência interna | Observação |
 |---|---|---|
-| Ativação (onboarding completo) | > 60% | > 75% |
-| Retenção D3 | > 30% | > 40% |
-| Retenção D7 | > 20% | > 30% |
-| Recall do assistente | > 75% | > 85% |
-| Fallback rate | < 40% | < 25% |
-| NPS | > 30 | > 50 |
+| Ativação do monitoramento | acompanhar | local/remoto se Supabase estiver ativo |
+| Uso de próximos passos | acompanhar | criação e conclusão de pendências |
+| Recall do assistente | ≥ 75% | verificar em /admin |
+| Fallback rate | acompanhar | usar categorias, sem query bruta |
+| Bundle `/` | < 230 kB | manter margem operacional |
 
 ---
 

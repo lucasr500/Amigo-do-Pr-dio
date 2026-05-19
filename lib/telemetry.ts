@@ -12,7 +12,11 @@
 //      );
 //      ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 //      CREATE POLICY "insert_only" ON events FOR INSERT TO anon WITH CHECK (true);
-//      CREATE POLICY "read_admin" ON events FOR SELECT TO authenticated USING (true);
+//      CREATE POLICY "read_anon" ON events FOR SELECT TO anon USING (true);
+//
+//      O /admin usa NEXT_PUBLIC_ADMIN_KEY para proteger a interface e lê eventos
+//      via fetchRecentEvents() com a anon key. Por isso, a leitura remota depende
+//      de policy SELECT para anon. Ver docs/setup-supabase-telemetria.md.
 //   3. Adicionar em .env.local:
 //      NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 //      NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
@@ -152,7 +156,7 @@ export function startSessionTimer(): () => void {
 
 // ─── Supabase read (admin dashboard) ─────────────────────────────────────────
 // Busca eventos recentes para o painel do fundador.
-// Requer RLS policy "read_admin" ou disable RLS na tabela events.
+// Requer RLS policy SELECT para anon, conforme o guia de setup.
 
 export type RawEvent = {
   event: string;

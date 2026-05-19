@@ -1,7 +1,7 @@
 # Setup Supabase — Telemetria Amigo do Prédio
 
 > **Guia completo para ativar telemetria real.**
-> Executar uma única vez antes da beta pública.
+> Executar uma única vez antes de qualquer exposição externa.
 > Tempo estimado: 15–20 minutos.
 
 ---
@@ -21,7 +21,7 @@ Com telemetria ativa, você passa a enxergar:
 
 ## Passo 1 — Criar projeto no Supabase
 
-1. Acessar https://supabase.com e criar conta (gratuita para o volume esperado na beta)
+1. Acessar https://supabase.com e criar conta (gratuita para o volume esperado no uso inicial)
 2. Criar novo projeto:
    - **Name:** amigo-do-predio
    - **Database Password:** gerar senha forte e salvar em local seguro
@@ -152,7 +152,7 @@ Execute cada passo em ordem e marque ao concluir:
 
 ---
 
-## Eventos esperados na beta
+## Eventos esperados no uso inicial
 
 | Evento | Quando dispara | Propriedades úteis |
 |--------|----------------|--------------------|
@@ -177,14 +177,14 @@ Execute cada passo em ordem e marque ao concluir:
 
 ## Limites do plano gratuito Supabase
 
-| Recurso | Limite gratuito | Estimativa de uso (beta 10 síndicos) |
+| Recurso | Limite gratuito | Estimativa de uso inicial |
 |---------|-----------------|---------------------------------------|
 | Rows | 500.000 | ~500/dia → ok por meses |
 | Storage | 1 GB | N/A (só tabela de eventos) |
 | Bandwidth | 5 GB/mês | N/A (eventos são pequenos) |
 | Edge requests | 500k/mês | N/A |
 
-Para a beta inicial, o plano gratuito é mais que suficiente.
+Para uso inicial com baixo volume, o plano gratuito é mais que suficiente.
 
 ---
 
@@ -240,4 +240,4 @@ WHERE ts > now() - interval '30 days';
 
 *Documento interno — Amigo do Prédio*
 *Versão: 2026-05-19 (Fase 56)*
-*Executar Passo 5 (Vercel) antes do convite para beta.*
+*Executar Passo 5 (Vercel) antes de qualquer uso externo.*
