@@ -6,13 +6,26 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 64)
+## Estado atual do produto (2026-05-19 — Fase 66)
 
 ### Bundle
-- Rota principal (`/`): 226 kB First Load JS (margem 4 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 66 (Validação Mobile, Densidade da Home e Controle de Bundle)
+
+Fase de estabilização pós-Fases 58–65. Zero feature nova. Foco em hierarquia da Home, alarmismo do GuidancePanel e bundle.
+
+- **`app/page.tsx`:** `ContextualInsight` convertido de import estático para `dynamic()` com `ssr: false`. `lib/insights.ts` (~7.6 kB fonte, único consumidor) sai do chunk inicial → bundle / cai de 226 kB para 225 kB.
+- **`app/page.tsx`:** `DicaDoDia` oculta no estado sem dados (`!hasCondominioData && ...`). Estado sem dados agora mantém foco em `Hero` + `GuidancePreview` como onboarding principal, sem que a dica operacional dispute atenção com o CTA de cadastro.
+- **Auditoria documentada:** hierarquia da Home por cenário (sem dados, dados em dia, 1 alerta crítico, muitas manutenções atrasadas, vários próximos passos); análise do GuidancePanel pós-Fase 65; análise do assistente contextual. Sem problema objetivo encontrado além dos dois acima.
+- **Sem backend, login, IA/RAG, calendário, nova aba, schema, KB, motor de busca, biblioteca ou feature nova.**
+
+### Entregues na Fase 65 (Monitoramento de rotinas recorrentes no GuidancePanel)
+
+Expandiu o GuidancePanel para cobrir rotinas operacionais além de vencimentos: dedetização, limpeza da caixa d'água, manutenção do elevador, extintores, SPDA e vistoria elétrica. Motor determinístico com thresholds e `ROTINA_DISCLAIMER` para clareza de periodicidade. Bundle 226 kB.
 
 ### Entregues na Fase 64 (Assistente contextual sem IA + preparação para IA futura)
 

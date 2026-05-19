@@ -27,7 +27,6 @@ import DicaDoDia from "@/components/DicaDoDia";
 import HomeContextual from "@/components/HomeContextual";
 import CondominioStatusHeader from "@/components/CondominioStatusHeader";
 import GuidancePanel from "@/components/GuidancePanel";
-import ContextualInsight from "@/components/ContextualInsight";
 import ProximasDatas from "@/components/ProximasDatas";
 import PendenciasCard from "@/components/PendenciasCard";
 import GuidancePreview from "@/components/GuidancePreview";
@@ -57,6 +56,8 @@ const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajus
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
+// Insight contextual — só visível sem alertas ativos; insights.ts (~7 kB) fica fora do chunk inicial
+const ContextualInsight = dynamic(() => import("@/components/ContextualInsight"), { ssr: false });
 
 export default function HomePage() {
   const [question, setQuestion] = useState("");
@@ -344,7 +345,7 @@ export default function HomePage() {
               <HomeContextual refreshKey={refreshKey} />
             )}
 
-            {healthStatus !== "critico" && (
+            {hasCondominioData && healthStatus !== "critico" && (
               <DicaDoDia
                 onAsk={handleSuggestionSelect}
                 compact={healthStatus === "pendente"}
