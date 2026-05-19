@@ -29,6 +29,7 @@ import ContextualInsight from "@/components/ContextualInsight";
 import ProximasDatas from "@/components/ProximasDatas";
 import PendenciasCard from "@/components/PendenciasCard";
 import GuidancePreview from "@/components/GuidancePreview";
+import RevisaoMensalCard from "@/components/RevisaoMensalCard";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 type ToolAnchor =
@@ -268,6 +269,13 @@ export default function HomePage() {
             )}
 
             <PendenciasCard refreshKey={refreshKey} />
+
+            {hasCondominioData && (
+              <RevisaoMensalCard
+                refreshKey={refreshKey}
+                onOpen={() => navigateTab("condominio")}
+              />
+            )}
 
             {healthStatus !== "critico" && (
               <DicaDoDia

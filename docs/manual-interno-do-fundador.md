@@ -6,13 +6,25 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 59)
+## Estado atual do produto (2026-05-19 — Fase 60)
 
 ### Bundle
 - Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 60 (ritual mensal na Home)
+
+Surfacea a Revisão Mensal na aba Início de forma discreta, no momento certo, sem push notification, backend ou modal obrigatório.
+
+- **`components/RevisaoMensalCard.tsx` (novo):** card leve para a aba Início. Lê `lastRevisaoMensalAt` via `getSessionMeta()` após hidratação. Exibe-se apenas quando: (1) há `hasMemoriaOperacional()` e (2) a revisão não foi concluída no mês calendário atual (year + month). Reutiliza `trackedRef` para disparar `revisao_mensal_surface_seen` apenas uma vez por mount, independente de quantas vezes `refreshKey` mudar. CTA "Fazer revisão" dispara `revisao_mensal_opened_from_home` e navega para aba Condomínio via `onOpen` prop — a `RevisaoMensal` real já está lá e se auto-exibe.
+- **`app/page.tsx`:** import estático de `RevisaoMensalCard`; renderizado na aba Início após `PendenciasCard` e antes de `DicaDoDia`, gatilhado por `hasCondominioData` — garante que usuários sem dados não vejam o card.
+- **`lib/telemetry.ts`:** +2 eventos ao union `TelemetryEvent` — `revisao_mensal_surface_seen` e `revisao_mensal_opened_from_home`. Fields: `{}` — zero PII.
+- **Decisão sobre estado sem dados:** card oculto. Sem dados de memória, `buildStatusItems()` retorna array vazio e a RevisaoMensal no destino nada exibiria. Além disso, o foco da Home sem dados é `GuidancePreview` + CTA de onboarding — que não pode ser diluído por ritual que pressupõe dados existentes.
+- **Hierarquia na Home com dados:** GuidancePanel (urgências críticas) → ProximasDatas → ContextualInsight → HomeContextual → PendenciasCard → **RevisaoMensalCard** → DicaDoDia. Urgências continuam prioritárias.
+- **Desaparece automaticamente:** quando `recordRevisaoMensal()` é chamado na aba Condomínio, `onDone` incrementa `refreshKey` → `RevisaoMensalCard` re-avalia → some da Home.
+- **Build:** 223 kB (sem variação). Margem: 7 kB antes do limite.
 
 ### Entregues na Fase 59 (integração segura GuidancePanel ↔ Próximos Passos)
 

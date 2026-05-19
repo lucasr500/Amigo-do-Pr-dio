@@ -63,7 +63,9 @@ export type TelemetryEvent =
   | "pendencia_created_from_guidance"
   | "pendencia_created_from_memoria"
   | "pendencia_completed"
-  | "pendencia_completed_from_guidance_resolution";
+  | "pendencia_completed_from_guidance_resolution"
+  | "revisao_mensal_surface_seen"
+  | "revisao_mensal_opened_from_home";
 
 type QueuedEvent = {
   event: string;
