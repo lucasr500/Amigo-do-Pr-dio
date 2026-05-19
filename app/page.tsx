@@ -17,6 +17,8 @@ import {
   computeCondominioHealth,
   CondominioHealthStatus,
   addPendencia,
+  getPendenciasAbertas,
+  getPendenciasConcluidas,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import FavoritesPanel from "@/components/FavoritesPanel";
@@ -30,6 +32,7 @@ import ProximasDatas from "@/components/ProximasDatas";
 import PendenciasCard from "@/components/PendenciasCard";
 import GuidancePreview from "@/components/GuidancePreview";
 import RevisaoMensalCard from "@/components/RevisaoMensalCard";
+import HomeResumoPredio from "@/components/HomeResumoPredio";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 type ToolAnchor =
@@ -69,6 +72,7 @@ export default function HomePage() {
   const [highlightToolAnchor, setHighlightToolAnchor] = useState<ToolAnchor | null>(null);
   const [pendingChecklistId, setPendingChecklistId] = useState<string | null>(null);
   const [focusRevisaoMensal, setFocusRevisaoMensal] = useState(false);
+  const [homeRefreshFeedback, setHomeRefreshFeedback] = useState("Atualizado agora");
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   useEffect(() => {
@@ -238,6 +242,25 @@ export default function HomePage() {
     navigateTab("condominio");
   };
 
+  const handleHomeRefresh = () => {
+    const completedMonthCount = getPendenciasConcluidas().filter((p) => {
+      if (!p.completedAt) return false;
+      const completedAt = new Date(p.completedAt);
+      const now = new Date();
+      return completedAt.getFullYear() === now.getFullYear() && completedAt.getMonth() === now.getMonth();
+    }).length;
+    const hasData = hasMemoriaOperacional() || hasProfile();
+    void trackEvent("home_refreshed_manual", {
+      pending_count: getPendenciasAbertas().length,
+      completed_month_count: completedMonthCount,
+      has_guidance: healthStatus === "critico" || healthStatus === "pendente" || healthStatus === "atencao",
+      has_memoria: hasData,
+    });
+    setRefreshKey((k) => k + 1);
+    setHomeRefreshFeedback("Dados atualizados");
+    window.setTimeout(() => setHomeRefreshFeedback("Atualizado agora"), 1800);
+  };
+
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
       <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
@@ -247,6 +270,21 @@ export default function HomePage() {
         {/* ── 1. INÍCIO — painel operacional silencioso ──────────────── */}
         {activeTab === "inicio" && (
           <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
+
+            {hasCondominioData && (
+              <div className="flex items-center justify-between px-5 pb-2 pt-1 sm:px-6">
+                <p className="text-[11px] font-medium text-navy-400">
+                  {homeRefreshFeedback}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleHomeRefresh}
+                  className="inline-flex min-h-8 items-center gap-1 rounded-full px-2 text-[11.5px] font-medium text-navy-400 transition-colors hover:bg-navy-50 hover:text-navy-600 active:scale-[0.97]"
+                >
+                  Atualizar
+                </button>
+              </div>
+            )}
 
             {hasCondominioData ? (
               <CondominioStatusHeader
@@ -276,6 +314,19 @@ export default function HomePage() {
             )}
 
             {hasCondominioData && (
+              <HomeResumoPredio refreshKey={refreshKey} />
+            )}
+
+            <PendenciasCard refreshKey={refreshKey} />
+
+            {hasCondominioData && (
+              <RevisaoMensalCard
+                refreshKey={refreshKey}
+                onOpen={handleOpenRevisaoMensal}
+              />
+            )}
+
+            {hasCondominioData && (
               <ProximasDatas
                 onAsk={handleSuggestionSelect}
                 onNavigateToCondominio={() => setActiveTab("condominio")}
@@ -291,15 +342,6 @@ export default function HomePage() {
 
             {healthStatus !== "critico" && healthStatus !== "pendente" && (
               <HomeContextual refreshKey={refreshKey} />
-            )}
-
-            <PendenciasCard refreshKey={refreshKey} />
-
-            {hasCondominioData && (
-              <RevisaoMensalCard
-                refreshKey={refreshKey}
-                onOpen={handleOpenRevisaoMensal}
-              />
             )}
 
             {healthStatus !== "critico" && (

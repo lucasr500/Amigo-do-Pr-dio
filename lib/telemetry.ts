@@ -44,6 +44,8 @@ export type TelemetryEvent =
   | "whatsapp_shared"
   | "home_contextual_alert_tap"
   | "home_contextual_shown"
+  | "home_refreshed_manual"
+  | "home_summary_viewed"
   | "onboarding_started"
   | "onboarding_completed"
   | "condominio_status_shown"

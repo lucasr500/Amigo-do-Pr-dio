@@ -6,13 +6,24 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 61)
+## Estado atual do produto (2026-05-19 — Fase 63)
 
 ### Bundle
-- Rota principal (`/`): 224 kB First Load JS (margem 6 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Entregues na Fase 63 (Home Cockpit + atualização manual)
+
+Fortalece a aba Início como cockpit operacional leve, sem criar dashboard pesado, calendário, nova aba, backend ou nova arquitetura.
+
+- **`components/HomeResumoPredio.tsx` (novo):** bloco compacto "Hoje no prédio" para usuários com dados. Usa apenas dados locais: pendências abertas, pendências concluídas no mês, `computeCondominioHealth()` e `buildGuidanceItems()` para sintetizar status, progresso e próxima atenção. Não exibe títulos de pendências nem datas reais.
+- **`app/page.tsx`:** hierarquia da Home com dados ajustada para: Status/Header → GuidancePanel → Hoje no prédio → Próximos passos → Revisão Mensal → Próximas datas → Contextual/Dica. GuidancePanel continua prioritário quando há alerta real; DicaDoDia perde protagonismo quando há ações concretas.
+- **Atualização manual:** controle discreto "Atualizado agora" + botão "Atualizar" no topo da Home com dados. Ao clicar, incrementa `refreshKey`, re-lê estado local e mostra feedback "Dados atualizados". Não faz fetch externo, não chama Supabase e não altera dados.
+- **Pull-to-refresh:** não implementado. Decisão: risco desnecessário para scroll nativo/iOS PWA; botão explícito entrega a sensação de app vivo com menor superfície de regressão.
+- **Telemetria privacy-safe:** adicionados `home_summary_viewed` e `home_refreshed_manual` com apenas `pending_count`, `completed_month_count`, `has_guidance` e `has_memoria`. Zero títulos, datas reais, texto livre ou dados do condomínio.
+- **Sem backend, login, IA/RAG, calendário, kanban, nova aba, simulador, upload, WhatsApp, biblioteca, KB ou motor de busca.**
 
 ### Entregues na Fase 61 (Ritual Mensal + prova de valor acumulado)
 
@@ -528,5 +539,5 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 61)*
+*Versão: 2026-05-19 (Fase 63)*
 *Atualizar a seção "Estado atual" a cada sprint.*
