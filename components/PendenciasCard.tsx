@@ -111,7 +111,7 @@ export default function PendenciasCard({ refreshKey }: Props) {
               Próximos passos
             </p>
             <p className="mt-0.5 text-[11.5px] leading-snug text-navy-400">
-              Ações salvas pelo Assistente, pelos alertas ou adicionadas por você.
+              Dúvidas e alertas viram ações acompanháveis aqui.
             </p>
           </div>
           {!adding && (
@@ -227,7 +227,7 @@ export default function PendenciasCard({ refreshKey }: Props) {
           </div>
         ) : openItems.length === 0 ? (
           <p className="text-[12.5px] leading-relaxed text-navy-400">
-            Quando uma orientação virar ação, salve aqui para acompanhar depois.
+            Quando uma orientação virar ação, salve aqui para acompanhar até concluir.
           </p>
         ) : null}
 

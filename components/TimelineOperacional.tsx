@@ -168,9 +168,9 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
           ◷
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-[12.5px] font-medium text-navy-800">Histórico do condomínio</p>
+          <p className="text-[12.5px] font-medium text-navy-800">Histórico operacional</p>
           <p className="text-[11px] text-navy-400">
-            {events.length} evento{events.length !== 1 ? "s" : ""} registrado{events.length !== 1 ? "s" : ""}
+            {events.length} registro{events.length !== 1 ? "s" : ""} para lembrar o que foi feito
           </p>
         </div>
         <span className="flex-shrink-0 text-[11px] text-navy-400">

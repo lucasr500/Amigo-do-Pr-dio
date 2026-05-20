@@ -54,6 +54,8 @@
 - Identifica bugs e inconsistências antes de qualquer usuário externo
 - Sem pressão de feedback, sem compromisso de suporte
 - Dura até os critérios internos acima estarem verificados ao vivo
+- Produto segue pré-beta interno: ainda não vendável, sem teste com síndicos por enquanto, sem tráfego pago e sem exposição comercial.
+- Features seguem congeladas. Próximas fases devem elevar confiança, observabilidade e clareza operacional sem IA, login, billing ou backend completo.
 
 - [x] Tese de copiloto operacional documentada (Fase 40): `docs/tese-produto-copiloto-operacional.md`
 - [x] Reposicionamento de copy principal: Hero, Ferramentas, Assistente, Condomínio (Fase 40)
@@ -71,6 +73,7 @@
 - [x] **Fase 47 — Coerência visual e percepção premium:** Hero copy atualizado para nomear AVCB, seguro e mandato antes do cadastro; MemoriaPanel título corrigido (consistência colapsado ↔ expandido); AskInput submit alinhado à cor primária navy-700; auditoria de terracota confirmou uso semanticamente correto em todos os componentes (urgência/ação); identidade BrandMark + bg-body + BottomNav validados. Bundle 223 kB. Sem beta, sem síndicos.
 - [x] **Fase 48 — Validação técnica silenciosa:** PWA manifest auditado e corrigido (`short_name` 16→12 chars para evitar truncamento Android); telemetria auditada — zero PII estrutural, exceção documentada (`q:` truncado nos eventos de query); todos os arquivos PWA validados (manifest, layout, icons, safe-area, maskable, theme_color); Supabase documentado como próximo passo manual (guia completo em `docs/setup-supabase-telemetria.md`); auditoria /admin documentada como ação do fundador (recall esperado 87%). Bundle 223 kB. Sem beta, sem síndicos.
 - [x] **Fase 67 — Primeiros 10 Segundos + Calibração de Urgência:** Hero com subtitle "Monitora prazos do prédio e orienta em situações críticas." e chips reduzidos de 5 para 3 (barulho, inadimplente, vazamento) — GuidancePreview visível sem scroll em iPhones menores; 6 rotinas operacionais atrasadas rebaixadas de `"critico"` para `"atencao"` no `guidance.ts` (dedet, caixa, elevador, extintores, SPDA, elétrica) com urgencyLabel mais preciso — AVCB/seguro/mandato/AGO permanecem `"critico"`; `PendenciasCard` com indicador "+N ocultos" quando há mais de 5 pendências abertas; `HomeResumoPredio` exibe "Confira os alertas acima para os detalhes." em vez de repetir o urgencyLabel do GuidancePanel. Bundle 225 kB. TypeScript zero erros. Zero feature nova.
+- [x] **Fase 70 — Maturidade comercial percebida sem overbuilding:** microcopy curta em Próximos Passos, Revisão Mensal, Timeline, Backup e Assistente para reforçar o ciclo dúvida → ação → acompanhamento → histórico, limites informativos e dados locais enquanto não há login. Documentação atualizada para registrar produto pré-beta interno, não vendável, sem teste com síndicos por enquanto, features congeladas e Supabase apenas como telemetria opcional. Sem IA, login, billing, backend completo, nova feature, nova aba, KB, guidance ou schema.
 - [x] **Fase 66 — Validação Mobile, Densidade da Home e Controle de Bundle:** `ContextualInsight` convertido para `dynamic()` → `lib/insights.ts` sai do chunk inicial; bundle / cai de 226 para 225 kB; `DicaDoDia` oculta no estado sem dados para preservar foco do onboarding em `GuidancePreview` + CTA de cadastro; auditoria completa da Home por 5 cenários (sem dados, dados em dia, 1 alerta crítico, muitas manutenções, vários próximos passos); análise do GuidancePanel pós-Fase 65 (linguagem de rotinas, alarmismo, ROTINA_DISCLAIMER); análise do assistente contextual (bloco "Contexto do prédio"). Zero feature nova. Bundle 225 kB. TypeScript zero erros.
 - [x] **Fase 64 — Assistente contextual sem IA + preparação para IA futura:** `Response` passa a exibir um aviso discreto "Contexto do prédio" quando a orientação combina com dados locais já existentes na MemoriaOperacional (seguro, AVCB, mandato/assembleia e manutenção); sem dado local, a resposta permanece igual. Sugestões hardcoded por categoria usam o `onSuggestionSelect` existente, sem busca nova, conversa persistente ou scoring novo. `HistoryPanel` ganhou microcopy "Perguntas recentes" / "Retome uma dúvida anterior." Telemetria sem PII: `local_context_notice_shown` envia apenas categoria, tipo de contexto e booleano de memória. Documento `docs/plano-futuro-ia-rag-contextual.md` criado para delimitar IA/RAG futura como fallback ancorado na KB, não substituto do produto. Bundle 226 kB. Sem IA, RAG, API externa, backend, schema, KB, motor de busca ou biblioteca.
 - [x] **Fase 63 — Home Cockpit + atualização manual:** novo bloco `HomeResumoPredio` ("Hoje no prédio") na Home com dados, usando apenas estado local para resumir pendências abertas, ações concluídas no mês, status operacional e próxima atenção via guidance; hierarquia ajustada para Status/Header → GuidancePanel → Hoje no prédio → Próximos passos → Revisão Mensal → Próximas datas → Contextual/Dica; controle discreto "Atualizado agora" + "Atualizar" incrementa `refreshKey` e re-lê dados locais, sem fetch externo/Supabase/escrita; pull-to-refresh não implementado por risco desnecessário no iOS PWA; telemetria sem PII (`home_summary_viewed`, `home_refreshed_manual`). Bundle 225 kB. Sem backend, IA, nova aba, calendário, gráfico, KB, motor de busca ou biblioteca.
@@ -100,16 +103,19 @@
 - Não publicar na App Store
 - Não construir para administradoras
 - Não iniciar exposição externa
+- Não testar com síndicos enquanto o fundador ainda não tiver concluído smoke tests internos e observado uso próprio recorrente
+- Não criar planos, preços, paywall ou promessa comercial de venda
 
 ---
 
 ## Sequência de trabalho recomendada (próximas semanas)
 
 ### Semana 1–2 (agora)
-1. Rodar auditoria em /admin — identificar recall real
-2. Preencher lacunas de alta prioridade (5 entradas na KB)
-3. Testar fluxo completo sem dados: novo dispositivo → onboarding → consulta
-4. Testar backup export/import
+1. Rodar smoke test interno completo em fim de semana
+2. Ativar Supabase apenas como telemetria opcional, se houver disponibilidade
+3. Rodar auditoria em /admin — identificar recall real
+4. Testar fluxo completo sem dados: novo dispositivo → onboarding → consulta
+5. Testar backup export/import
 
 ### Semana 3–4
 1. Refinamento de copy e microcopy
@@ -120,6 +126,20 @@
 1. Revalidar build e bundle
 2. Revisar rascunhos jurídicos internos
 3. Consolidar pendências técnicas restantes
+
+### Critérios mínimos antes de cogitar venda
+- Persistência e backup sem perda nos fluxos internos testados.
+- Termos, privacidade e disclaimers revisados juridicamente.
+- Telemetria interna mostrando uso recorrente e gargalos reais.
+- Smoke test interno repetido sem bug crítico.
+- Evidência de retorno ao app por alertas, próximos passos ou revisão mensal.
+- Suporte esperado documentado e viável para o fundador.
+
+### Por que não IA/login/billing/backend completo agora
+- IA/RAG aumentaria risco jurídico e operacional antes de validação de retenção.
+- Login e backend completo resolveriam maturidade técnica, mas aumentariam superfície de suporte sem prova comercial.
+- Billing e planos pagos antecipariam promessa comercial antes de confiança, suporte e termos estarem maduros.
+- O foco atual é observar, reduzir riscos e provar o ciclo operacional existente.
 
 ---
 

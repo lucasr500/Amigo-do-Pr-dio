@@ -6,13 +6,39 @@
 
 ---
 
-## Estado atual do produto (2026-05-19 — Fase 67)
+## Estado atual do produto (2026-05-20 — Fase 70)
 
 ### Bundle
 - Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 203 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
+
+### Diretriz comercial atual
+
+O Amigo do Prédio segue como produto pré-beta interno. Ainda não é vendável, não deve ser apresentado como beta para síndicos, não deve receber tráfego pago e não deve ser posicionado como SaaS pronto.
+
+Posicionamento correto nesta etapa: copiloto operacional leve para síndicos que precisam acompanhar prazos, organizar ações e decidir com mais clareza.
+
+O produto não é advogado virtual, consultoria jurídica, substituto da administradora, ERP condominial, ferramenta de compliance completo ou app B2B para administradoras.
+
+Features seguem congeladas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
+
+Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
+
+Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+### Entregues na Fase 70 (Maturidade comercial percebida sem overbuilding)
+
+Fase de microcopy e documentação. Zero feature nova.
+
+- **`components/PendenciasCard.tsx`:** subtítulo e empty state reforçam o ciclo "dúvida/alerta → ação acompanhável → conclusão", sem novo layout.
+- **`components/RevisaoMensalCard.tsx`:** copy da revisão mensal ajustada para comunicar retorno recorrente e itens que ficaram para trás.
+- **`components/TimelineOperacional.tsx`:** título/copy ajustados para "Histórico operacional" e memória do que foi feito, evitando tom de log técnico.
+- **`components/BackupPanel.tsx`:** copy esclarece que, enquanto não há login, o backup protege os dados salvos no dispositivo.
+- **`components/Response.tsx`:** disclaimer reforça caráter informativo e apoio administrativo ao síndico; fallback passa a dizer que não encontrou orientação específica na base atual.
+- **Documentação:** roadmap e smoke test registram pré-beta interno, produto ainda não vendável, sem teste com síndicos por enquanto, features congeladas, Supabase como telemetria opcional e critérios mínimos antes de venda.
+- **Sem alterações:** Hero, GuidancePreview, MemoriaPanel, GuidancePanel, thresholds de guidance, KB, motor de busca, schema de backup, package, manifest, simuladores e estrutura da Home.
 
 ### Entregues na Fase 67 (Primeiros 10 Segundos + Calibração de Urgência)
 

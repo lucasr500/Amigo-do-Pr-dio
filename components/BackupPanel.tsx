@@ -84,8 +84,8 @@ export default function BackupPanel({ onImported }: Props) {
             Backup do condomínio
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
-            Seus dados ficam salvos neste dispositivo. Exporte para protegê-los ou
-            transferi-los para outro aparelho.
+            Seus dados ficam salvos neste dispositivo. Enquanto não há login, o
+            backup protege suas informações e permite restaurar em outro aparelho.
           </p>
         </div>
 
@@ -227,7 +227,7 @@ export default function BackupPanel({ onImported }: Props) {
         {/* Nota de privacidade + indicador de armazenamento */}
         <div className="border-t border-navy-50 px-5 py-2.5 space-y-0.5">
           <p className="text-[10.5px] text-navy-400">
-            Os dados do condomínio ficam apenas no seu dispositivo — a telemetria não inclui esses dados.
+            Os dados do condomínio ficam apenas neste dispositivo — a telemetria não inclui essas informações.
           </p>
           {storageSizeKB !== null && storageSizeKB > 0 && (
             <p className="text-[10.5px] text-navy-300">

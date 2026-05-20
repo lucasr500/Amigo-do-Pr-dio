@@ -689,7 +689,7 @@ export default function Response({
                       <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
                         <InfoIcon className="text-navy-400" />
                         <p className="text-[13px] leading-relaxed text-navy-400">
-                          Esta orientação tem caráter informativo e ajuda na organização da gestão condominial. Situações específicas podem exigir análise da administradora, assessoria jurídica ou profissional responsável.
+                          Esta orientação é informativa e serve como apoio administrativo ao síndico. Situações específicas podem exigir análise da administradora, assessoria jurídica ou profissional responsável.
                         </p>
                       </div>
                     </div>
@@ -787,7 +787,7 @@ export default function Response({
                       <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
                         <InfoIcon className="text-navy-300" />
                         <p className="text-[13px] leading-relaxed text-navy-400">
-                          Mais temas sendo adicionados regularmente. As orientações têm caráter informativo — situações específicas podem exigir análise da administradora ou assessoria especializada.
+                          Não encontrei uma orientação específica na base atual. As respostas são informativas e podem exigir análise da administradora ou assessoria especializada.
                         </p>
                       </div>
                     </div>

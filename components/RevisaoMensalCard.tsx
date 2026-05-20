@@ -108,7 +108,7 @@ export default function RevisaoMensalCard({ refreshKey, onOpen }: Props) {
           Sua revisão mensal está disponível
         </p>
         <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
-          Reserve 3 minutos para verificar pendências, vencimentos e cuidados importantes do prédio.
+          Reserve 3 minutos para revisar pendências, vencimentos e o que ficou para trás.
         </p>
 
         <div className="mt-3 rounded-xl bg-navy-50/55 px-3 py-2.5">

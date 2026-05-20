@@ -1,6 +1,7 @@
 # Smoke Test Interno — Amigo do Prédio
 
 Este checklist não substitui teste com síndicos. Ele é apenas validação interna do fundador.
+O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo nesta etapa.
 
 ## 1. Estado zerado
 
@@ -68,3 +69,11 @@ Este checklist não substitui teste com síndicos. Ele é apenas validação int
 - [ ] Rodar auditoria.
 - [ ] Registrar recall.
 - [ ] Registrar categorias problemáticas.
+
+## 10. Maturidade comercial percebida
+
+- [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.
+- [ ] Confirmar que Próximos Passos deixa claro o ciclo dúvida → ação → acompanhamento.
+- [ ] Confirmar que Revisão Mensal e Timeline explicam por que voltar ao app.
+- [ ] Confirmar que Backup informa dados locais e proteção sem login.
+- [ ] Confirmar que o Assistente não parece advogado virtual, consultoria jurídica ou substituto da administradora.
