@@ -116,7 +116,26 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Confirmar eventos de ocorrência sem descrição, unidade/local, texto de mensagem ou data exata.
 - [ ] Confirmar eventos `weekly_review_viewed` e `weekly_review_completed` sem PII nem texto livre.
 
-## 13. Saúde Operacional — Início (compact) e Condomínio (full)
+## 13. Hubs da Home — HomeCondominioHub e HomeAcaoHub
+
+- [ ] Confirmar que HomeCondominioHub aparece no Início com dados cadastrados.
+- [ ] Confirmar que HomeCondominioHub NÃO aparece sem dados (exibe Hero).
+- [ ] Confirmar que HomeCondominioHub exibe: "Seu condomínio", nome (ou "Condomínio em acompanhamento"), porcentagem, badge de status, barra visual, frase diagnóstica, microcopy "Índice operacional baseado nos dados cadastrados no app."
+- [ ] Confirmar que HomeCondominioHub exibe no máximo 3 sinais (fatores missing/partial).
+- [ ] Confirmar que HomeCondominioHub NÃO exibe lista completa de fatores nem sugestões.
+- [ ] Confirmar que HomeAcaoHub aparece no Início com dados cadastrados.
+- [ ] Confirmar que HomeAcaoHub exibe seção de revisão semanal com "Revisar agora" quando pendente.
+- [ ] Confirmar que HomeAcaoHub marca revisão como concluída ao clicar "Revisar agora".
+- [ ] Confirmar que HomeAcaoHub exibe lista de próximos passos (até 3) com conclusão.
+- [ ] Confirmar que HomeAcaoHub exibe próxima data mais urgente.
+- [ ] Confirmar que HomeAcaoHub exibe "+ Registrar ocorrência →" navegando para Ferramentas.
+- [ ] Confirmar que CondominioStatusHeader NÃO aparece mais na Home.
+- [ ] Confirmar que RevisaoSemanalCard, PendenciasCard e ProximasDatas NÃO aparecem como cards separados na Home.
+- [ ] Confirmar que SaudeOperacionalPanel NÃO aparece na aba Condomínio.
+- [ ] Confirmar ordem: HomeCondominioHub → GuidancePanel → HomeAcaoHub → Contextual/Dica.
+- [ ] Confirmar que aba Condomínio mantém: OnboardingProfile, MemoriaPanel, TimelineOperacional, RevisaoMensal, BackupPanel.
+
+## 14. Saúde Operacional — Início (compact) e Condomínio (full) [REFERÊNCIA HISTÓRICA — Fase 76]
 
 - [ ] Confirmar que SaudeOperacionalPanel compact aparece no Início quando há dados cadastrados.
 - [ ] Confirmar que SaudeOperacionalPanel compact NÃO aparece no Início sem dados cadastrados.
@@ -129,7 +148,7 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Confirmar que a versão full permanece intacta na aba Condomínio (fatores, sugestões, disclaimer).
 - [ ] Confirmar ordem no Início: CondominioStatusHeader → compact → GuidancePanel → RevisaoSemanalCard → PendenciasCard.
 
-## 14. Índice de Saúde Operacional — aba Condomínio
+## 15. Índice de Saúde Operacional — aba Condomínio [REFERÊNCIA HISTÓRICA — Fase 75]
 
 - [ ] Confirmar que o painel NÃO aparece na aba Condomínio com localStorage zerado (sem dados cadastrados).
 - [ ] Cadastrar AVCB, Seguro e Mandato e confirmar que o painel aparece antes de OnboardingProfile.

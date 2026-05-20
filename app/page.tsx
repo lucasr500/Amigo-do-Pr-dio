@@ -25,12 +25,8 @@ import FavoritesPanel from "@/components/FavoritesPanel";
 import HistoryPanel from "@/components/HistoryPanel";
 import DicaDoDia from "@/components/DicaDoDia";
 import HomeContextual from "@/components/HomeContextual";
-import CondominioStatusHeader from "@/components/CondominioStatusHeader";
 import GuidancePanel from "@/components/GuidancePanel";
-import ProximasDatas from "@/components/ProximasDatas";
-import PendenciasCard from "@/components/PendenciasCard";
 import GuidancePreview from "@/components/GuidancePreview";
-import RevisaoMensalCard from "@/components/RevisaoMensalCard";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 type ToolAnchor =
@@ -53,10 +49,11 @@ const TimelineOperacional = dynamic(() => import("@/components/TimelineOperacion
 const RevisaoMensal = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
 const BackupPanel = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
 const RegistroRapido = dynamic(() => import("@/components/RegistroRapido"), { ssr: false });
-const RevisaoSemanalCard = dynamic(() => import("@/components/RevisaoSemanalCard"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
+// Aba Home — hubs principais
+const HomeCondominioHub = dynamic(() => import("@/components/HomeCondominioHub"), { ssr: false });
+const HomeAcaoHub = dynamic(() => import("@/components/HomeAcaoHub"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
-const SaudeOperacionalPanel = dynamic(() => import("@/components/SaudeOperacionalPanel"), { ssr: false });
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 // Insight contextual — só visível sem alertas ativos; insights.ts (~7 kB) fica fora do chunk inicial
@@ -291,10 +288,7 @@ export default function HomePage() {
             )}
 
             {hasCondominioData ? (
-              <CondominioStatusHeader
-                onAsk={handleSuggestionSelect}
-                refreshKey={refreshKey}
-              />
+              <HomeCondominioHub refreshKey={refreshKey} />
             ) : (
               <Hero
                 onSetup={handleScrollToMemoria}
@@ -309,10 +303,6 @@ export default function HomePage() {
             )}
 
             {hasCondominioData && (
-              <SaudeOperacionalPanel variant="compact" refreshKey={refreshKey} />
-            )}
-
-            {hasCondominioData && (
               <GuidancePanel
                 onAsk={handleSuggestionSelect}
                 onResolved={() => setRefreshKey((k) => k + 1)}
@@ -322,39 +312,10 @@ export default function HomePage() {
             )}
 
             {hasCondominioData && (
-              <RevisaoSemanalCard
+              <HomeAcaoHub
                 refreshKey={refreshKey}
-                onDone={() => setRefreshKey((k) => k + 1)}
-              />
-            )}
-
-            <PendenciasCard refreshKey={refreshKey} />
-
-            {/* Atalho discreto para registro de ocorrência (formulário em Ferramentas) */}
-            {hasCondominioData && (
-              <div className="px-5 pb-1 sm:px-6">
-                <button
-                  type="button"
-                  onClick={() => handleNavigateToFerramentas("registro-rapido")}
-                  className="text-[12px] font-medium text-navy-400 transition-colors hover:text-navy-600"
-                >
-                  + Registrar ocorrência
-                </button>
-              </div>
-            )}
-
-            {hasCondominioData && (
-              <RevisaoMensalCard
-                refreshKey={refreshKey}
-                onOpen={handleOpenRevisaoMensal}
-              />
-            )}
-
-            {hasCondominioData && (
-              <ProximasDatas
-                onAsk={handleSuggestionSelect}
-                onNavigateToCondominio={() => setActiveTab("condominio")}
-                refreshKey={refreshKey}
+                onDoneReview={() => setRefreshKey((k) => k + 1)}
+                onNavigateToFerramentas={() => handleNavigateToFerramentas("registro-rapido")}
               />
             )}
 
@@ -535,10 +496,6 @@ export default function HomePage() {
                 </p>
               )}
             </div>
-
-            {hasCondominioData && (
-              <SaudeOperacionalPanel refreshKey={refreshKey} />
-            )}
 
             <OnboardingProfile
               onProfileSaved={() => setRefreshKey((k) => k + 1)}

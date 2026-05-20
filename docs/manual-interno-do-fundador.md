@@ -675,6 +675,28 @@ Sem IA, login, billing, backend, nova aba, promessa jurídica ou compliance. Nen
 
 ---
 
+---
+
+## Fase 76B — Home consolidada em dois hubs (2026-05-20)
+
+Reorganização da Home para responder duas perguntas em poucos segundos:
+- "Como está meu prédio?" → Hub 1
+- "O que fazer agora?" → Hub 2
+
+**Hub 1 — `HomeCondominioHub`**: substitui `CondominioStatusHeader` + `SaudeOperacionalPanel compact`. Um único card com nome do prédio, porcentagem de saúde operacional, barra, frase diagnóstica, até 3 sinais e microcopy "Índice operacional baseado nos dados cadastrados no app." Usa `computeHealthScore()` + `getProfile()`.
+
+**Hub 2 — `HomeAcaoHub`**: substitui `RevisaoSemanalCard` + `PendenciasCard` + `ProximasDatas` + botão RegistroRapido. Um único card com 4 seções: revisão semanal (status + "Revisar agora"), próximos passos (lista top 3 com conclusão + adicionar), próxima data mais urgente, atalho "Registrar ocorrência →".
+
+**Aba Condomínio**: `SaudeOperacionalPanel full` removido. A aba volta a focar nos dados (OnboardingProfile, MemoriaPanel, TimelineOperacional, RevisaoMensal, BackupPanel).
+
+Ordem final do Início com dados: HomeCondominioHub → GuidancePanel → HomeAcaoHub → Contextual/Dica.
+
+"Home motiva, Condomínio alimenta. GuidancePanel detalha e permite ação."
+
+Sem IA, login, billing, backend, nova aba, promessa jurídica ou compliance. Nenhum arquivo congelado alterado. Bundle `/` mantido.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 76)*
+*Versão: 2026-05-20 (Fase 76B)*
 *Atualizar a seção "Estado atual" a cada sprint.*

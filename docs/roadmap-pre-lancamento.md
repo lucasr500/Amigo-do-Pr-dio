@@ -188,6 +188,21 @@
 
 ---
 
+---
+
+## Fase 76B — Home consolidada em dois hubs (2026-05-20)
+
+**Entregue:** reorganização da Home em cockpit operacional com dois hubs.
+
+- `HomeCondominioHub`: identidade + saúde operacional (% + barra + status + sinais).
+- `HomeAcaoHub`: rotina consolidada (revisão semanal + próximos passos + próxima data + registrar ocorrência).
+- `SaudeOperacionalPanel full` removido da aba Condomínio (redundante com o hub).
+- 4 componentes separados removidos da Home; substituídos por 2 hubs dinâmicos.
+- Bundle `/` mantido ou reduzido (imports estáticos pesados movidos para chunks lazy).
+- Sem IA, login, billing, backend, nova aba, promessa jurídica.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 76)*
+*Versão: 2026-05-20 (Fase 76B)*
 *Atualizar conforme marcos forem atingidos.*
