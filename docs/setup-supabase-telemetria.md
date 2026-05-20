@@ -17,6 +17,19 @@ Com telemetria ativa, você passa a enxergar:
 - Ferramentas mais usadas (`comunicado_copiado`, `simulador_calculado`)
 - Pendências criadas e concluídas (`pendencia_created_*`, `pendencia_completed`)
 
+## Escopo e privacidade
+
+Nesta fase, Supabase é apenas telemetria interna opcional. Ele não é backend de persistência do produto, não sincroniza dados do condomínio e não substitui o `localStorage`.
+
+Não enviar ao Supabase:
+- pergunta bruta;
+- título de pendência;
+- nome do condomínio;
+- datas reais;
+- dados do perfil, da memória operacional ou qualquer PII.
+
+A telemetria serve para observabilidade de fallback, guidance, pendências, revisão mensal, sessão e CTA/fluxos. Os dados operacionais do condomínio continuam no dispositivo e no backup local exportável pelo usuário.
+
 ---
 
 ## Passo 1 — Criar projeto no Supabase
@@ -159,7 +172,7 @@ Execute cada passo em ordem e marque ao concluir:
 | `session_open` | Ao abrir o app | `is_returning` |
 | `session_duration` | Ao fechar/minimizar | `seconds` |
 | `query_submitted` | Pergunta respondida | `score`, `categoria` |
-| `query_fallback` | Pergunta sem resposta | `categoria` |
+| `query_fallback` | Pergunta sem resposta | `detected_category`, `score`, `blocked_by_domain`, `query_length` |
 | `onboarding_completed` | Perfil salvo pela 1ª vez | — |
 | `memoria_saved` | Datas operacionais salvas | — |
 | `comunicado_copiado` | Comunicado copiado | `tipo_comunicado`, `campos_preenchidos` |
@@ -171,7 +184,7 @@ Execute cada passo em ordem e marque ao concluir:
 | `pendencia_created_from_response` | Próximo passo criado via resposta | `categoria` |
 | `pendencia_created_from_guidance` | Próximo passo criado via alerta | `guidance_id`, `priority` |
 | `pendencia_created_from_memoria` | Lembrar depois (campo vazio) | `field` |
-| `pendencia_completed` | Próximo passo marcado como feito | `origem` |
+| `pendencia_completed` | Próximo passo marcado como feito | `categoria`, `origem`, `matched_id` |
 
 ---
 

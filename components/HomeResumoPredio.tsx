@@ -41,10 +41,13 @@ function statusLabel(status: CondominioHealthStatus): string {
   }
 }
 
-function buildMainLine(pendingCount: number, completedMonthCount: number): string {
+function buildMainLine(pendingCount: number, completedMonthCount: number, guidanceCount: number): string {
   if (pendingCount > 0 || completedMonthCount > 0) {
     const completedLabel = completedMonthCount === 1 ? "1 ação concluída" : `${completedMonthCount} ações concluídas`;
     return `${pendingCount} próximo${pendingCount !== 1 ? "s" : ""} passo${pendingCount !== 1 ? "s" : ""} aberto${pendingCount !== 1 ? "s" : ""} · ${completedLabel} este mês`;
+  }
+  if (guidanceCount > 0) {
+    return "Há pontos que merecem atenção — confira os alertas acima";
   }
   return "Tudo certo por enquanto — revise o prédio quando tiver um minuto";
 }
@@ -67,7 +70,7 @@ export default function HomeResumoPredio({ refreshKey }: Props) {
       completedMonthCount: completedMonth.length,
       guidanceCount: guidance.length,
       nextAttention,
-      mainLine: buildMainLine(pending.length, completedMonth.length),
+      mainLine: buildMainLine(pending.length, completedMonth.length, guidance.length),
     });
     setHydrated(true);
 

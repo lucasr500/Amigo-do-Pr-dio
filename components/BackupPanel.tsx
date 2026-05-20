@@ -227,7 +227,7 @@ export default function BackupPanel({ onImported }: Props) {
         {/* Nota de privacidade + indicador de armazenamento */}
         <div className="border-t border-navy-50 px-5 py-2.5 space-y-0.5">
           <p className="text-[10.5px] text-navy-400">
-            Os dados ficam apenas no seu dispositivo — nada é enviado a servidores nesta versão.
+            Os dados do condomínio ficam apenas no seu dispositivo — a telemetria não inclui esses dados.
           </p>
           {storageSizeKB !== null && storageSizeKB > 0 && (
             <p className="text-[10.5px] text-navy-300">

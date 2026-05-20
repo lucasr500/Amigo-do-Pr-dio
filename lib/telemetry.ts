@@ -1,4 +1,6 @@
 // Telemetria centralizada — Supabase via REST (zero dependências externas).
+// Supabase aqui é observabilidade interna opcional; não persiste nem sincroniza
+// dados do condomínio, não substitui localStorage e não deve receber PII.
 //
 // Setup Supabase (uma vez):
 //   1. Criar projeto em https://supabase.com
