@@ -6,7 +6,7 @@
 
 ---
 
-## Estado atual do produto (2026-05-20 — Fase 70)
+## Estado atual do produto (2026-05-20 — Fase 71)
 
 ### Bundle
 - Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
@@ -22,11 +22,23 @@ Posicionamento correto nesta etapa: copiloto operacional leve para síndicos que
 
 O produto não é advogado virtual, consultoria jurídica, substituto da administradora, ERP condominial, ferramenta de compliance completo ou app B2B para administradoras.
 
-Features seguem congeladas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
+Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
 
 Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
 
 Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+### Entregues na Fase 71 (Rotina viva do síndico)
+
+Primeira camada de rotina semanal sem ERP, sem protocolo formal e sem backend.
+
+- **Registro rápido:** componente compacto para registrar ocorrências simples da rotina do prédio: barulho, vazamento, obra, inadimplência, manutenção, funcionário, área comum, assembleia e outro. Campos mínimos: tipo, descrição curta e unidade/local opcional. Não é livro oficial, denúncia, protocolo jurídico ou sistema de gestão.
+- **Próximo passo por ocorrência:** ao salvar uma ocorrência, o usuário pode criar uma pendência com `origem: "ocorrencia"` para acompanhar a situação. Não há prazo editável, responsável, prioridade, comentários ou subtarefas.
+- **Mensagem administrativa copiável:** para tipos compatíveis, o app gera modelo curto, determinístico e editável para moradores. Não integra WhatsApp, não envia automaticamente e não inclui nomes, unidade/local ou texto da ocorrência.
+- **Timeline:** ocorrência registrada aparece como memória operacional humana, sem descrição livre. A timeline continua sendo histórico leve, não log técnico.
+- **Backup v3:** exporta/importa ocorrências junto de perfil, memória, favoritos, checklists e pendências. Backups v1 e v2 continuam aceitos.
+- **Telemetria sem PII:** `ocorrencia_created`, `admin_message_generated` e `admin_message_copied` enviam apenas tipo, origem/flags e mês agregado quando aplicável. Nunca enviam descrição, unidade/local, nome, texto da mensagem, data exata ou dados do condomínio.
+- **Revisão semanal:** documentada como próxima evolução; não implementada nesta fase para manter a entrega pequena.
 
 ### Entregues na Fase 70 (Maturidade comercial percebida sem overbuilding)
 
@@ -599,5 +611,5 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 63)*
+*Versão: 2026-05-20 (Fase 71)*
 *Atualizar a seção "Estado atual" a cada sprint.*

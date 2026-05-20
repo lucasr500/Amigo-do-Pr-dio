@@ -102,6 +102,7 @@ const KEYS = {
   SESSION_META:       "amigo_session_meta",
   RESOLUTION_EVENTS:  "amigo_resolution_events",
   PENDENCIAS:         "amigo_pendencias",
+  OCORRENCIAS:        "amigo_ocorrencias",
   REVISAO_MENSAL_HOME:"amigo_revisao_mensal_home",
 } as const;
 
@@ -391,7 +392,7 @@ export type Pendencia = {
   id: string;
   titulo: string;
   categoria?: string;
-  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria";
+  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia";
   matchedId?: string | null;
   status: "aberta" | "concluida";
   createdAt: string;
@@ -438,6 +439,58 @@ export function getPendenciasAbertas(): Pendencia[] {
 
 export function getPendenciasConcluidas(): Pendencia[] {
   return getPendencias().filter((p) => p.status === "concluida");
+}
+
+// ─── Ocorrências leves ───────────────────────────────────────────────────────
+// Registro operacional simples da rotina do prédio. Não é livro oficial,
+// protocolo formal ou consultoria jurídica.
+
+export type OcorrenciaTipo =
+  | "barulho"
+  | "vazamento"
+  | "obra"
+  | "inadimplencia"
+  | "manutencao"
+  | "funcionario"
+  | "area-comum"
+  | "assembleia"
+  | "outro";
+
+export type Ocorrencia = {
+  id: string;
+  tipo: OcorrenciaTipo;
+  descricao: string;
+  local?: string;
+  createdAt: string;
+  hasNextStep?: boolean;
+  messageGeneratedAt?: string;
+};
+
+export function getOcorrencias(): Ocorrencia[] {
+  return safeRead<Ocorrencia[]>(KEYS.OCORRENCIAS, []);
+}
+
+export function addOcorrencia(
+  o: Omit<Ocorrencia, "id" | "createdAt">
+): Ocorrencia {
+  const all = getOcorrencias();
+  const nova: Ocorrencia = {
+    ...o,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: new Date().toISOString(),
+  };
+  all.push(nova);
+  safeWrite(KEYS.OCORRENCIAS, all.slice(-80));
+  return nova;
+}
+
+export function markOcorrenciaMessageGenerated(id: string): void {
+  safeWrite(
+    KEYS.OCORRENCIAS,
+    getOcorrencias().map((o) =>
+      o.id === id ? { ...o, messageGeneratedAt: new Date().toISOString() } : o
+    )
+  );
 }
 
 // ─── Revisão mensal na Home ─────────────────────────────────────────────────
@@ -737,34 +790,36 @@ export function computeCondominioHealth(): CondominioHealth {
 }
 
 // ─── Backup e restauração de dados do usuário ────────────────────────────────
-// Exporta os dados operacionais do síndico (perfil, memória, favoritos, checklists, pendências).
+// Exporta os dados operacionais do síndico (perfil, memória, favoritos, checklists, pendências, ocorrências).
 // Diferente de exportTelemetry (que exporta dados de uso/análise), este backup é
 // destinado ao próprio usuário para proteção e migração de dispositivo.
 //
 // Versões:
 //   v1 — perfil, memória, favoritos, checklists (sem pendências)
 //   v2 — idem + pendências (amigo_pendencias)
+//   v3 — idem + ocorrências leves (amigo_ocorrencias)
 
 export type UserBackup = {
-  version: "1" | "2";
+  version: "1" | "2" | "3";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
   memoria: MemoriaOperacional;
   favorites: FavoriteEntry[];
   checklists: ChecklistStorage;
-  pendencias?: Pendencia[]; // presente em v2, ausente em v1
+  pendencias?: Pendencia[]; // presente em v2+, ausente em v1
+  ocorrencias?: Ocorrencia[]; // presente em v3, ausente em v1/v2
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "2",
+    version: "3",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -772,6 +827,7 @@ export function exportUserData(): void {
     favorites: getFavorites(),
     checklists: getChecklistStorage(),
     pendencias: getPendencias(),
+    ocorrencias: getOcorrencias(),
   };
 
   try {
@@ -790,7 +846,7 @@ export function exportUserData(): void {
 }
 
 // Valida o backup sem escrever no localStorage — usado para mostrar preview antes da confirmação.
-// Aceita v1 (sem pendências) e v2 (com pendências).
+// Aceita v1 (sem pendências), v2 (com pendências) e v3 (com ocorrências).
 export function parseAndValidateUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -805,7 +861,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -821,16 +877,23 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
+    if (d.version === "3" && !Array.isArray(d.ocorrencias)) {
+      return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
+    }
 
     const profile = d.profile as CondominioProfile | null;
     const memoria = d.memoria as MemoriaOperacional;
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    // Pendências: presentes apenas em v2
+    // Pendências: presentes em v2+
     const pendenciasCount =
-      d.version === "2" && Array.isArray(d.pendencias)
+      (d.version === "2" || d.version === "3") && Array.isArray(d.pendencias)
         ? (d.pendencias as Pendencia[]).length
+        : undefined;
+    const ocorrenciasCount =
+      d.version === "3" && Array.isArray(d.ocorrencias)
+        ? (d.ocorrencias as Ocorrencia[]).length
         : undefined;
 
     return {
@@ -840,6 +903,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
         memoriaCount,
         favoritesCount,
         pendenciasCount,
+        ocorrenciasCount,
       },
     };
   } catch {
@@ -847,7 +911,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
   }
 }
 
-// Importa backup v1 ou v2. v1 não restaura pendências. v2 restaura pendências.
+// Importa backup v1, v2 ou v3. v1 não restaura pendências; v3 restaura ocorrências.
 export function importUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -862,7 +926,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -879,6 +943,9 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
+    if (d.version === "3" && !Array.isArray(d.ocorrencias)) {
+      return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
+    }
 
     // Escrita — cada campo individualmente para não quebrar os demais em caso de falha parcial
     // Perfil: se o backup tinha perfil null, limpa o perfil local (restaura o estado exportado)
@@ -891,11 +958,19 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    // Pendências: restaura apenas em v2 com campo válido
+    // Pendências: restaura em v2+ com campo válido
     let pendenciasCount: number | undefined;
-    if (d.version === "2" && Array.isArray(d.pendencias)) {
+    if ((d.version === "2" || d.version === "3") && Array.isArray(d.pendencias)) {
       safeWrite(KEYS.PENDENCIAS, d.pendencias);
       pendenciasCount = (d.pendencias as Pendencia[]).length;
+    }
+
+    let ocorrenciasCount: number | undefined;
+    if (d.version === "3" && Array.isArray(d.ocorrencias)) {
+      safeWrite(KEYS.OCORRENCIAS, d.ocorrencias);
+      ocorrenciasCount = (d.ocorrencias as Ocorrencia[]).length;
+    } else {
+      try { localStorage.removeItem(KEYS.OCORRENCIAS); } catch { /* noop */ }
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -910,6 +985,7 @@ export function importUserData(jsonString: string): ImportResult {
         memoriaCount,
         favoritesCount,
         pendenciasCount,
+        ocorrenciasCount,
       },
     };
   } catch {

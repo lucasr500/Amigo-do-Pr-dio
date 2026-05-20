@@ -32,6 +32,7 @@ const ORIGEM_LABEL: Partial<Record<NonNullable<Pendencia["origem"]>, string>> = 
   response: "Assistente",
   guidance: "Alerta",
   memoria: "Memória",
+  ocorrencia: "Ocorrência",
   manual: "Manual",
 };
 

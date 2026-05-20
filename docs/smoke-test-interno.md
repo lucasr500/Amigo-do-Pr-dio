@@ -29,10 +29,21 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Criar via Assistente.
 - [ ] Criar via GuidancePanel.
 - [ ] Criar via “não sei agora”.
+- [ ] Criar via Registro rápido de ocorrência.
 - [ ] Criar 6+ itens e verificar overflow.
 - [ ] Concluir item e verificar Timeline.
 
-## 5. Assistente
+## 5. Registro rápido
+
+- [ ] Registrar ocorrência de barulho com descrição curta.
+- [ ] Confirmar que não há linguagem de livro oficial, denúncia ou protocolo.
+- [ ] Marcar criação de próximo passo e confirmar chip “Ocorrência”.
+- [ ] Confirmar ocorrência no Histórico operacional sem descrição livre.
+- [ ] Gerar mensagem administrativa copiável.
+- [ ] Copiar mensagem e confirmar que o texto é editável antes da cópia.
+- [ ] Confirmar que a mensagem não expõe unidade, nome ou descrição da ocorrência.
+
+## 6. Assistente
 
 - [ ] Perguntar sobre barulho.
 - [ ] Perguntar sobre inadimplência.
@@ -42,21 +53,23 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Fazer pergunta fora do escopo.
 - [ ] Testar botão Voltar.
 
-## 6. Ferramentas
+## 7. Ferramentas
 
 - [ ] Comunicado.
 - [ ] Checklist.
 - [ ] Multa.
 - [ ] Reajuste.
 
-## 7. Backup
+## 8. Backup
 
 - [ ] Exportar.
 - [ ] Limpar `localStorage`.
 - [ ] Importar.
 - [ ] Verificar dados restaurados.
+- [ ] Confirmar que backup v3 restaura ocorrências.
+- [ ] Confirmar que backup v1/v2 antigo continua sendo aceito.
 
-## 8. PWA
+## 9. PWA
 
 - [ ] Instalar no iPhone/Android quando possível.
 - [ ] Verificar safe-area.
@@ -64,13 +77,14 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Verificar scroll.
 - [ ] Verificar input de data.
 
-## 9. /admin
+## 10. /admin
 
 - [ ] Rodar auditoria.
 - [ ] Registrar recall.
 - [ ] Registrar categorias problemáticas.
+- [ ] Confirmar eventos de ocorrência sem descrição, unidade/local, texto de mensagem ou data exata.
 
-## 10. Maturidade comercial percebida
+## 11. Maturidade comercial percebida
 
 - [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.
 - [ ] Confirmar que Próximos Passos deixa claro o ciclo dúvida → ação → acompanhamento.

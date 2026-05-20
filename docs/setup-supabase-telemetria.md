@@ -24,11 +24,14 @@ Nesta fase, Supabase é apenas telemetria interna opcional. Ele não é backend 
 Não enviar ao Supabase:
 - pergunta bruta;
 - título de pendência;
+- descrição de ocorrência;
+- unidade/local de ocorrência;
+- texto de mensagem administrativa gerada;
 - nome do condomínio;
 - datas reais;
 - dados do perfil, da memória operacional ou qualquer PII.
 
-A telemetria serve para observabilidade de fallback, guidance, pendências, revisão mensal, sessão e CTA/fluxos. Os dados operacionais do condomínio continuam no dispositivo e no backup local exportável pelo usuário.
+A telemetria serve para observabilidade de fallback, guidance, pendências, ocorrências agregadas, mensagens administrativas, revisão mensal, sessão e CTA/fluxos. Os dados operacionais do condomínio continuam no dispositivo e no backup local exportável pelo usuário.
 
 ---
 
@@ -185,6 +188,9 @@ Execute cada passo em ordem e marque ao concluir:
 | `pendencia_created_from_guidance` | Próximo passo criado via alerta | `guidance_id`, `priority` |
 | `pendencia_created_from_memoria` | Lembrar depois (campo vazio) | `field` |
 | `pendencia_completed` | Próximo passo marcado como feito | `categoria`, `origem`, `matched_id` |
+| `ocorrencia_created` | Registro rápido salvo | `tipo`, `has_next_step`, `has_unit_or_location`, `source`, `month_key` |
+| `admin_message_generated` | Modelo administrativo gerado | `tipo`, `source` |
+| `admin_message_copied` | Modelo administrativo copiado | `tipo`, `source` |
 
 ---
 
@@ -247,10 +253,29 @@ SELECT
   count(*) filter (where event = 'pendencia_completed') as concluidas
 FROM events
 WHERE ts > now() - interval '30 days';
+
+-- Ocorrências por tipo, sem texto livre
+SELECT
+  properties->>'tipo' as tipo,
+  count(*) as registros
+FROM events
+WHERE event = 'ocorrencia_created'
+  AND ts > now() - interval '30 days'
+GROUP BY 1 ORDER BY 2 DESC;
+
+-- Mensagens administrativas geradas e copiadas
+SELECT
+  event,
+  properties->>'tipo' as tipo,
+  count(*) as total
+FROM events
+WHERE event IN ('admin_message_generated', 'admin_message_copied')
+  AND ts > now() - interval '30 days'
+GROUP BY 1, 2 ORDER BY 3 DESC;
 ```
 
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-19 (Fase 56)*
+*Versão: 2026-05-20 (Fase 71)*
 *Executar Passo 5 (Vercel) antes de qualquer uso externo.*

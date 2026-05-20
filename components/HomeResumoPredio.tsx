@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   computeCondominioHealth,
   getMemoriaOperacional,
+  getOcorrencias,
   getPendenciasAbertas,
   getPendenciasConcluidas,
   getProfile,
@@ -20,6 +21,8 @@ type SummaryState = {
   status: CondominioHealthStatus;
   pendingCount: number;
   completedMonthCount: number;
+  occurrenceWeekCount: number;
+  staleStepsCount: number;
   guidanceCount: number;
   nextAttention: string | null;
   mainLine: string;
@@ -41,9 +44,29 @@ function statusLabel(status: CondominioHealthStatus): string {
   }
 }
 
-function buildMainLine(pendingCount: number, completedMonthCount: number, guidanceCount: number): string {
+function buildMainLineWithRoutine(
+  pendingCount: number,
+  completedMonthCount: number,
+  guidanceCount: number,
+  occurrenceWeekCount: number,
+  staleStepsCount: number
+): string {
+  if (pendingCount > 0 || occurrenceWeekCount > 0 || staleStepsCount > 0) {
+    const parts: string[] = [];
+    if (pendingCount > 0) {
+      parts.push(`${pendingCount} próximo${pendingCount !== 1 ? "s" : ""} passo${pendingCount !== 1 ? "s" : ""} aberto${pendingCount !== 1 ? "s" : ""}`);
+    }
+    if (occurrenceWeekCount > 0) {
+      parts.push(`${occurrenceWeekCount} ocorrência${occurrenceWeekCount !== 1 ? "s" : ""} na semana`);
+    }
+    if (staleStepsCount > 0) {
+      parts.push(`${staleStepsCount} parado${staleStepsCount !== 1 ? "s" : ""} há mais de 14 dias`);
+    }
+    return parts.slice(0, 2).join(" · ");
+  }
   if (pendingCount > 0 || completedMonthCount > 0) {
     const completedLabel = completedMonthCount === 1 ? "1 ação concluída" : `${completedMonthCount} ações concluídas`;
+    if (pendingCount === 0) return `${completedLabel} este mês`;
     return `${pendingCount} próximo${pendingCount !== 1 ? "s" : ""} passo${pendingCount !== 1 ? "s" : ""} aberto${pendingCount !== 1 ? "s" : ""} · ${completedLabel} este mês`;
   }
   if (guidanceCount > 0) {
@@ -60,6 +83,9 @@ export default function HomeResumoPredio({ refreshKey }: Props) {
   useEffect(() => {
     const pending = getPendenciasAbertas();
     const completedMonth = getPendenciasConcluidas().filter((p) => isThisMonth(p.completedAt));
+    const staleSteps = pending.filter((p) => Date.now() - new Date(p.createdAt).getTime() > 14 * 86_400_000);
+    const weekAgo = Date.now() - 7 * 86_400_000;
+    const occurrenceWeek = getOcorrencias().filter((o) => new Date(o.createdAt).getTime() >= weekAgo);
     const health = computeCondominioHealth();
     const guidance = buildGuidanceItems(getMemoriaOperacional(), getProfile());
     const nextAttention = guidance[0]?.urgencyLabel ?? null;
@@ -68,9 +94,17 @@ export default function HomeResumoPredio({ refreshKey }: Props) {
       status: health.status,
       pendingCount: pending.length,
       completedMonthCount: completedMonth.length,
+      occurrenceWeekCount: occurrenceWeek.length,
+      staleStepsCount: staleSteps.length,
       guidanceCount: guidance.length,
       nextAttention,
-      mainLine: buildMainLine(pending.length, completedMonth.length, guidance.length),
+      mainLine: buildMainLineWithRoutine(
+        pending.length,
+        completedMonth.length,
+        guidance.length,
+        occurrenceWeek.length,
+        staleSteps.length
+      ),
     });
     setHydrated(true);
 
@@ -79,6 +113,8 @@ export default function HomeResumoPredio({ refreshKey }: Props) {
       void trackEvent("home_summary_viewed", {
         pending_count: pending.length,
         completed_month_count: completedMonth.length,
+        occurrence_week_count: occurrenceWeek.length,
+        stale_steps_count: staleSteps.length,
         has_guidance: guidance.length > 0,
         has_memoria: true,
       });

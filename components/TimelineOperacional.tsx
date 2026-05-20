@@ -5,9 +5,11 @@ import {
   getMemoriaOperacional,
   getChecklistStorage,
   getFavorites,
+  getOcorrencias,
   getPendenciasConcluidas,
   logInteraction,
   MemoriaOperacional,
+  type OcorrenciaTipo,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
@@ -17,7 +19,7 @@ type TimelineEvent = {
   label: string;
   detalhe?: string;
   icon: string;
-  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia";
+  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia" | "ocorrencia";
 };
 
 const MEMORIA_MAP: Partial<
@@ -39,6 +41,18 @@ const CHECKLIST_LABELS: Record<string, string> = {
   admissao:      "Checklist Admissão concluído",
   manutencao:    "Checklist Manutenção concluído",
   "sindico-novo": "Checklist Síndico novo concluído",
+};
+
+const OCORRENCIA_LABELS: Record<OcorrenciaTipo, string> = {
+  barulho: "Barulho",
+  vazamento: "Vazamento",
+  obra: "Obra",
+  inadimplencia: "Inadimplência",
+  manutencao: "Manutenção",
+  funcionario: "Funcionário",
+  "area-comum": "Área comum",
+  assembleia: "Assembleia",
+  outro: "Outro",
 };
 
 function formatRelativeDate(date: Date): string {
@@ -123,6 +137,20 @@ function buildTimeline(): TimelineEvent[] {
     });
   }
 
+  const ocorrencias = getOcorrencias().slice(-10);
+  for (const ocorrencia of ocorrencias) {
+    const date = new Date(ocorrencia.createdAt);
+    if (isNaN(date.getTime())) continue;
+    events.push({
+      id: `oc-${ocorrencia.id}`,
+      date,
+      label: `Ocorrência registrada: ${OCORRENCIA_LABELS[ocorrencia.tipo]}`,
+      detalhe: formatRelativeDate(date),
+      icon: "!",
+      tipo: "ocorrencia",
+    });
+  }
+
   return events.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 12);
 }
 
@@ -203,6 +231,8 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
                             ? "bg-navy-100 text-navy-600"
                             : event.tipo === "favorito"
                             ? "bg-amber-50 text-amber-600"
+                            : event.tipo === "ocorrencia"
+                            ? "bg-cream-100 text-navy-600"
                             : "bg-navy-50 text-navy-500"
                         }`}
                       >
