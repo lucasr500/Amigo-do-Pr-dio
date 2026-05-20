@@ -82,8 +82,10 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 ## 8. Ferramentas
 
 - [ ] Confirmar grupos visuais: Rotina do síndico / Comunicados / Simuladores / Checklists.
+- [ ] Confirmar que o subtítulo de Ferramentas diz "Ferramentas para o dia a dia do síndico: registrar, comunicar, simular e acompanhar."
 - [ ] Comunicado.
 - [ ] Checklist.
+- [ ] Confirmar que o ChecklistPanel exibe nota orientativa: "Checklists orientativos. Ajuste conforme a convenção, o regimento e a realidade do condomínio."
 - [ ] Multa.
 - [ ] Reajuste.
 - [ ] Confirmar que simuladores funcionam igual (lógica não alterada).

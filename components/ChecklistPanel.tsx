@@ -288,6 +288,10 @@ export default function ChecklistPanel({
           );
         })}
       </div>
+
+      <p className="mt-4 text-[10.5px] leading-relaxed text-navy-400">
+        Checklists orientativos. Ajuste conforme a convenção, o regimento e a realidade do condomínio.
+      </p>
     </section>
   );
 }

@@ -457,7 +457,7 @@ export default function HomePage() {
                 Ações práticas
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                Comunicados, simuladores e checklists para a rotina do síndico.
+                Ferramentas para o dia a dia do síndico: registrar, comunicar, simular e acompanhar.
               </p>
             </div>
 
