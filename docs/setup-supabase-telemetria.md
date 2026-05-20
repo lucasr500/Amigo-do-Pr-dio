@@ -191,6 +191,8 @@ Execute cada passo em ordem e marque ao concluir:
 | `ocorrencia_created` | Registro rápido salvo | `tipo`, `has_next_step`, `has_unit_or_location`, `source`, `month_key` |
 | `admin_message_generated` | Modelo administrativo gerado | `tipo`, `source` |
 | `admin_message_copied` | Modelo administrativo copiado | `tipo`, `source` |
+| `weekly_review_viewed` | Revisão semanal exibida | `week_key`, `occurrence_count`, `open_steps_count`, `stale_steps_count`, `has_guidance`, `has_monthly_review` |
+| `weekly_review_completed` | Revisão semanal concluída | `week_key`, `occurrence_count`, `open_steps_count`, `stale_steps_count`, `has_guidance`, `has_monthly_review` |
 
 ---
 
@@ -272,6 +274,15 @@ FROM events
 WHERE event IN ('admin_message_generated', 'admin_message_copied')
   AND ts > now() - interval '30 days'
 GROUP BY 1, 2 ORDER BY 3 DESC;
+
+-- Revisões semanais concluídas
+SELECT
+  properties->>'week_key' as semana,
+  count(*) as concluidas
+FROM events
+WHERE event = 'weekly_review_completed'
+  AND ts > now() - interval '60 days'
+GROUP BY 1 ORDER BY 1 DESC;
 ```
 
 ---

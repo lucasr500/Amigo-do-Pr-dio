@@ -104,6 +104,7 @@ const KEYS = {
   PENDENCIAS:         "amigo_pendencias",
   OCORRENCIAS:        "amigo_ocorrencias",
   REVISAO_MENSAL_HOME:"amigo_revisao_mensal_home",
+  REVISAO_SEMANAL:    "amigo_revisao_semanal",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -520,6 +521,40 @@ export function recordRevisaoMensalHomeOpen(monthKey = getCurrentMonthKey()): Re
     openCount: meta.seenMonthKey === monthKey ? meta.openCount + 1 : 1,
   };
   safeWrite(KEYS.REVISAO_MENSAL_HOME, next);
+  return next;
+}
+
+// ─── Revisão semanal ────────────────────────────────────────────────────────
+// Estado efêmero para evitar insistência no ritual durante a mesma semana.
+// Não entra no backup: não é dado operacional do condomínio.
+
+export type WeeklyReviewState = {
+  lastCompletedWeekKey: string | null;
+  lastCompletedAt: string | null;
+};
+
+export function getCurrentWeekKey(date = new Date()): string {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diffToMonday);
+  return d.toISOString().slice(0, 10);
+}
+
+export function getWeeklyReviewState(): WeeklyReviewState {
+  return safeRead<WeeklyReviewState>(KEYS.REVISAO_SEMANAL, {
+    lastCompletedWeekKey: null,
+    lastCompletedAt: null,
+  });
+}
+
+export function completeWeeklyReview(weekKey = getCurrentWeekKey()): WeeklyReviewState {
+  const next = {
+    lastCompletedWeekKey: weekKey,
+    lastCompletedAt: new Date().toISOString(),
+  };
+  safeWrite(KEYS.REVISAO_SEMANAL, next);
   return next;
 }
 

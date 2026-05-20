@@ -6,11 +6,11 @@
 
 ---
 
-## Estado atual do produto (2026-05-20 — Fase 71)
+## Estado atual do produto (2026-05-20 — Fase 72)
 
 ### Bundle
-- Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
-- Admin (`/admin`): 203 kB First Load JS
+- Rota principal (`/`): 226 kB First Load JS (margem 4 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
 
@@ -27,6 +27,17 @@ Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho 
 Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
 
 Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+### Entregues na Fase 72 (Revisão semanal compacta)
+
+Fecha o ciclo leve da rotina viva: ocorrência → próximo passo → revisão semanal → histórico.
+
+- **Revisão rápida da semana:** card compacto e condicional na Home com dados. Só aparece quando há memória operacional e algo útil para revisar: ocorrências da semana, próximos passos abertos/antigos, alertas ativos ou revisão mensal disponível.
+- **Sem obrigação formal:** não é auditoria, compliance, checklist jurídico, calendário ou protocolo. É apenas ritual interno de organização para o síndico não deixar situações paradas.
+- **Estado local efêmero:** `amigo_revisao_semanal` guarda apenas semana revisada e timestamp local. Não entra no backup e não cria backup v4.
+- **Timeline:** ao concluir, registra somente "Revisão semanal concluída", sem descrição de ocorrência, unidade/local, texto livre ou dado sensível.
+- **Telemetria sem PII:** `weekly_review_viewed` e `weekly_review_completed` enviam apenas `week_key`, contagens e booleanos permitidos. Nada de texto livre, pergunta/resposta, data exata ou dados do condomínio.
+- **Sem expansão de produto:** sem IA, login, billing, backend, WhatsApp, nova aba, calendário, filtros, arquivamento ou push notification.
 
 ### Entregues na Fase 71 (Rotina viva do síndico)
 
@@ -611,5 +622,5 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 71)*
+*Versão: 2026-05-20 (Fase 72)*
 *Atualizar a seção "Estado atual" a cada sprint.*

@@ -53,6 +53,7 @@ const TimelineOperacional = dynamic(() => import("@/components/TimelineOperacion
 const RevisaoMensal = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
 const BackupPanel = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
 const RegistroRapido = dynamic(() => import("@/components/RegistroRapido"), { ssr: false });
+const RevisaoSemanalCard = dynamic(() => import("@/components/RevisaoSemanalCard"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
@@ -317,6 +318,13 @@ export default function HomePage() {
 
             {hasCondominioData && (
               <HomeResumoPredio refreshKey={refreshKey} />
+            )}
+
+            {hasCondominioData && (
+              <RevisaoSemanalCard
+                refreshKey={refreshKey}
+                onDone={() => setRefreshKey((k) => k + 1)}
+              />
             )}
 
             {hasCondominioData && (

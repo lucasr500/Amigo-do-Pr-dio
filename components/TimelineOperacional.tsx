@@ -7,6 +7,7 @@ import {
   getFavorites,
   getOcorrencias,
   getPendenciasConcluidas,
+  getWeeklyReviewState,
   logInteraction,
   MemoriaOperacional,
   type OcorrenciaTipo,
@@ -19,7 +20,7 @@ type TimelineEvent = {
   label: string;
   detalhe?: string;
   icon: string;
-  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia" | "ocorrencia";
+  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia" | "ocorrencia" | "revisao";
 };
 
 const MEMORIA_MAP: Partial<
@@ -149,6 +150,21 @@ function buildTimeline(): TimelineEvent[] {
       icon: "!",
       tipo: "ocorrencia",
     });
+  }
+
+  const weeklyReview = getWeeklyReviewState();
+  if (weeklyReview.lastCompletedAt) {
+    const date = new Date(weeklyReview.lastCompletedAt);
+    if (!isNaN(date.getTime())) {
+      events.push({
+        id: `rev-semanal-${weeklyReview.lastCompletedWeekKey ?? "atual"}`,
+        date,
+        label: "Revisão semanal concluída",
+        detalhe: formatRelativeDate(date),
+        icon: "✓",
+        tipo: "revisao",
+      });
+    }
   }
 
   return events.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 12);

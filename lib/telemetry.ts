@@ -78,7 +78,9 @@ export type TelemetryEvent =
   | "revisao_mensal_progress_viewed"
   | "ocorrencia_created"
   | "admin_message_generated"
-  | "admin_message_copied";
+  | "admin_message_copied"
+  | "weekly_review_viewed"
+  | "weekly_review_completed";
 
 type QueuedEvent = {
   event: string;

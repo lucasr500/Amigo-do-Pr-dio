@@ -43,7 +43,18 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Copiar mensagem e confirmar que o texto é editável antes da cópia.
 - [ ] Confirmar que a mensagem não expõe unidade, nome ou descrição da ocorrência.
 
-## 6. Assistente
+## 6. Revisão semanal
+
+- [ ] Com memória operacional ativa, confirmar card “Revisão rápida da semana” quando houver algo útil para revisar.
+- [ ] Confirmar que o card não aparece no estado zerado sem memória operacional.
+- [ ] Confirmar no máximo 3–5 indicadores.
+- [ ] Concluir revisão semanal.
+- [ ] Confirmar feedback discreto de semana revisada.
+- [ ] Confirmar “Revisão semanal concluída” no Histórico operacional.
+- [ ] Confirmar que não há descrição de ocorrência, unidade/local, texto livre ou dado sensível na Timeline.
+- [ ] Confirmar que o estado semanal é efêmero e não exige backup v4.
+
+## 7. Assistente
 
 - [ ] Perguntar sobre barulho.
 - [ ] Perguntar sobre inadimplência.
@@ -53,14 +64,14 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Fazer pergunta fora do escopo.
 - [ ] Testar botão Voltar.
 
-## 7. Ferramentas
+## 8. Ferramentas
 
 - [ ] Comunicado.
 - [ ] Checklist.
 - [ ] Multa.
 - [ ] Reajuste.
 
-## 8. Backup
+## 9. Backup
 
 - [ ] Exportar.
 - [ ] Limpar `localStorage`.
@@ -68,8 +79,9 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Verificar dados restaurados.
 - [ ] Confirmar que backup v3 restaura ocorrências.
 - [ ] Confirmar que backup v1/v2 antigo continua sendo aceito.
+- [ ] Confirmar que a revisão semanal não criou backup v4.
 
-## 9. PWA
+## 10. PWA
 
 - [ ] Instalar no iPhone/Android quando possível.
 - [ ] Verificar safe-area.
@@ -77,14 +89,15 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Verificar scroll.
 - [ ] Verificar input de data.
 
-## 10. /admin
+## 11. /admin
 
 - [ ] Rodar auditoria.
 - [ ] Registrar recall.
 - [ ] Registrar categorias problemáticas.
 - [ ] Confirmar eventos de ocorrência sem descrição, unidade/local, texto de mensagem ou data exata.
+- [ ] Confirmar eventos `weekly_review_viewed` e `weekly_review_completed` sem PII nem texto livre.
 
-## 11. Maturidade comercial percebida
+## 12. Maturidade comercial percebida
 
 - [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.
 - [ ] Confirmar que Próximos Passos deixa claro o ciclo dúvida → ação → acompanhamento.

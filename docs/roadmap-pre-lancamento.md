@@ -75,6 +75,7 @@
 - [x] **Fase 67 — Primeiros 10 Segundos + Calibração de Urgência:** Hero com subtitle "Monitora prazos do prédio e orienta em situações críticas." e chips reduzidos de 5 para 3 (barulho, inadimplente, vazamento) — GuidancePreview visível sem scroll em iPhones menores; 6 rotinas operacionais atrasadas rebaixadas de `"critico"` para `"atencao"` no `guidance.ts` (dedet, caixa, elevador, extintores, SPDA, elétrica) com urgencyLabel mais preciso — AVCB/seguro/mandato/AGO permanecem `"critico"`; `PendenciasCard` com indicador "+N ocultos" quando há mais de 5 pendências abertas; `HomeResumoPredio` exibe "Confira os alertas acima para os detalhes." em vez de repetir o urgencyLabel do GuidancePanel. Bundle 225 kB. TypeScript zero erros. Zero feature nova.
 - [x] **Fase 70 — Maturidade comercial percebida sem overbuilding:** microcopy curta em Próximos Passos, Revisão Mensal, Timeline, Backup e Assistente para reforçar o ciclo dúvida → ação → acompanhamento → histórico, limites informativos e dados locais enquanto não há login. Documentação atualizada para registrar produto pré-beta interno, não vendável, sem teste com síndicos por enquanto, features congeladas e Supabase apenas como telemetria opcional. Sem IA, login, billing, backend completo, nova feature, nova aba, KB, guidance ou schema.
 - [x] **Fase 71 — Rotina viva do síndico:** registro rápido de ocorrências leves com dados locais, próximo passo opcional com `origem: "ocorrencia"`, mensagem administrativa copiável e determinística, Timeline alimentada por ocorrências sem descrição livre e backup v3 com compatibilidade v1/v2. Supabase continua apenas como telemetria opcional e recebe somente tipo/flags agregadas, nunca descrição, unidade/local, nomes, texto da mensagem ou datas reais. Revisão semanal, assembleia leve, biblioteca de decisões e score operacional ficam como hipóteses futuras.
+- [x] **Fase 72 — Revisão semanal compacta:** card "Revisão rápida da semana" condicional e discreto para revisar ocorrências, próximos passos, pendências antigas, alertas ativos e revisão mensal disponível. Estado local efêmero (`amigo_revisao_semanal`) fica fora do backup; não há backup v4. Conclusão alimenta Timeline apenas com "Revisão semanal concluída". Telemetria sem PII (`weekly_review_viewed`, `weekly_review_completed`) usa somente `week_key`, contagens e booleanos. Sem IA, login, billing, backend, WhatsApp, nova aba, calendário, filtros ou push.
 - [x] **Fase 66 — Validação Mobile, Densidade da Home e Controle de Bundle:** `ContextualInsight` convertido para `dynamic()` → `lib/insights.ts` sai do chunk inicial; bundle / cai de 226 para 225 kB; `DicaDoDia` oculta no estado sem dados para preservar foco do onboarding em `GuidancePreview` + CTA de cadastro; auditoria completa da Home por 5 cenários (sem dados, dados em dia, 1 alerta crítico, muitas manutenções, vários próximos passos); análise do GuidancePanel pós-Fase 65 (linguagem de rotinas, alarmismo, ROTINA_DISCLAIMER); análise do assistente contextual (bloco "Contexto do prédio"). Zero feature nova. Bundle 225 kB. TypeScript zero erros.
 - [x] **Fase 64 — Assistente contextual sem IA + preparação para IA futura:** `Response` passa a exibir um aviso discreto "Contexto do prédio" quando a orientação combina com dados locais já existentes na MemoriaOperacional (seguro, AVCB, mandato/assembleia e manutenção); sem dado local, a resposta permanece igual. Sugestões hardcoded por categoria usam o `onSuggestionSelect` existente, sem busca nova, conversa persistente ou scoring novo. `HistoryPanel` ganhou microcopy "Perguntas recentes" / "Retome uma dúvida anterior." Telemetria sem PII: `local_context_notice_shown` envia apenas categoria, tipo de contexto e booleano de memória. Documento `docs/plano-futuro-ia-rag-contextual.md` criado para delimitar IA/RAG futura como fallback ancorado na KB, não substituto do produto. Bundle 226 kB. Sem IA, RAG, API externa, backend, schema, KB, motor de busca ou biblioteca.
 - [x] **Fase 63 — Home Cockpit + atualização manual:** novo bloco `HomeResumoPredio` ("Hoje no prédio") na Home com dados, usando apenas estado local para resumir pendências abertas, ações concluídas no mês, status operacional e próxima atenção via guidance; hierarquia ajustada para Status/Header → GuidancePanel → Hoje no prédio → Próximos passos → Revisão Mensal → Próximas datas → Contextual/Dica; controle discreto "Atualizado agora" + "Atualizar" incrementa `refreshKey` e re-lê dados locais, sem fetch externo/Supabase/escrita; pull-to-refresh não implementado por risco desnecessário no iOS PWA; telemetria sem PII (`home_summary_viewed`, `home_refreshed_manual`). Bundle 225 kB. Sem backend, IA, nova aba, calendário, gráfico, KB, motor de busca ou biblioteca.
@@ -117,6 +118,7 @@
 3. Rodar auditoria em /admin — identificar recall real
 4. Testar fluxo completo sem dados: novo dispositivo → onboarding → consulta
 5. Testar backup export/import, incluindo ocorrência de backup v3 e restauração de backups v1/v2 antigos
+6. Testar revisão semanal: ocorrência → próximo passo → revisão concluída → Timeline
 
 ### Semana 3–4
 1. Refinamento de copy e microcopy
@@ -151,6 +153,7 @@
 | Ativação do monitoramento | acompanhar | local/remoto se Supabase estiver ativo |
 | Uso de próximos passos | acompanhar | criação e conclusão de pendências |
 | Registro rápido | acompanhar | ocorrências por tipo, sem texto livre |
+| Revisão semanal | acompanhar | viewed/completed, contagens agregadas |
 | Recall do assistente | ≥ 75% | verificar em /admin |
 | Fallback rate | acompanhar | usar categorias, sem query bruta |
 | Bundle `/` | < 230 kB | manter margem operacional |
@@ -158,5 +161,5 @@
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 71)*
+*Versão: 2026-05-20 (Fase 72)*
 *Atualizar conforme marcos forem atingidos.*
