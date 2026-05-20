@@ -80,7 +80,8 @@ export type TelemetryEvent =
   | "admin_message_generated"
   | "admin_message_copied"
   | "weekly_review_viewed"
-  | "weekly_review_completed";
+  | "weekly_review_completed"
+  | "data_cleared";
 
 type QueuedEvent = {
   event: string;

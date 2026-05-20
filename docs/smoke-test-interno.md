@@ -164,6 +164,64 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Confirmar que o painel NÃO exibe as palavras: "regular", "regularizado", "compliance", "conformidade", "saúde jurídica", "garantia", "segurança jurídica", "sem risco".
 - [ ] Confirmar que o índice NÃO aparece na aba Início (Home).
 
+## 16. Reset seguro e feedback de backup [Fase 77]
+
+- [ ] Confirmar que "Novo condomínio / limpar dados" aparece discretamente abaixo de Exportar/Restaurar no BackupPanel.
+- [ ] Confirmar que clicar abre aviso com texto: "Isso apagará os dados deste dispositivo. Exporte um backup antes se quiser guardar as informações."
+- [ ] Confirmar que o botão "Apagar dados" está desabilitado enquanto o campo não contém exatamente "APAGAR".
+- [ ] Confirmar que ao digitar "APAGAR" e confirmar, os dados são limpos e o app retorna ao estado zerado.
+- [ ] Confirmar feedback: "Dados apagados. Você pode começar um novo condomínio."
+- [ ] Confirmar que nenhum dado é apagado sem confirmação explícita.
+- [ ] Confirmar que cancelar na tela de confirmação volta ao estado idle sem apagar nada.
+- [ ] Confirmar feedback de exportação: após clicar em "Exportar dados", aparece mensagem com nome do arquivo (ex: "Backup exportado: amigo-do-predio-backup-YYYY-MM-DD.json").
+- [ ] Confirmar que o feedback de exportação desaparece após ~4 segundos.
+- [ ] Confirmar que backup v1/v2/v3 não foi alterado (importar arquivo exportado antes do reset deve funcionar).
+
+## 17. Assistente — Roteiro das 5 perguntas [Fase 77]
+
+Para cada pergunta abaixo, verificar:
+- resposta direta ou fallback honesto;
+- resposta completa visível sem truncamento;
+- tom administrativo/informativo (não advogado);
+- próximo passo claro quando disponível;
+- disclaimer/limite adequado;
+- possibilidade de salvar como próximo passo, se aplicável.
+
+- [ ] "Posso multar morador por barulho depois das 22h?"
+  - [ ] Resposta direta da base (não fallback)
+  - [ ] Menciona convenção/regimento como pré-requisito
+  - [ ] Próximo passo: documentar ocorrência
+  - [ ] Não afirma que pode aplicar multa sem verificar a convenção
+  - [ ] Botão "Salvar nos próximos passos" disponível
+
+- [ ] "Posso expor inadimplente no grupo do condomínio?"
+  - [ ] Resposta direta da base
+  - [ ] Menciona LGPD e riscos de exposição pública
+  - [ ] Não instrui a expor nome publicamente
+  - [ ] Disclaimer de categoria sensível visível (LGPD)
+
+- [ ] "Morador pode fazer obra sem avisar?"
+  - [ ] Resposta direta da base
+  - [ ] Menciona obrigação de comunicar ao síndico/administradora
+  - [ ] Próximo passo: solicitar documentação/cronograma
+  - [ ] Botão "Salvar nos próximos passos" disponível
+
+- [ ] "O inquilino pode votar na assembleia?"
+  - [ ] Resposta direta ou fallback contextual
+  - [ ] Menciona distinção entre locatário e condômino
+  - [ ] Tom informativo, não afirmativo absoluto
+
+- [ ] "O que faço se o AVCB está vencido?"
+  - [ ] Resposta direta da base
+  - [ ] Menciona urgência de regularização
+  - [ ] Contexto do prédio aparece se AVCB cadastrado no app
+  - [ ] Próximo passo claro
+  - [ ] Texto completo visível sem truncamento — sem max-height ou overflow escondido
+
+- [ ] Confirmar fallback honesto em pergunta fora do escopo (ex: "Qual o melhor investimento para o fundo de reserva?")
+- [ ] Confirmar botão "Voltar ←" funcional após resposta
+- [ ] Confirmar que o Assistente não parece advogado virtual nem consultoria jurídica
+
 ## 12. Maturidade comercial percebida
 
 - [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.

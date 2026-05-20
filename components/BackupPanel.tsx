@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { exportUserData, importUserData, parseAndValidateUserData, getStorageSizeKB, ImportResult } from "@/lib/session";
+import { exportUserData, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 type Props = {
@@ -14,18 +14,26 @@ type ImportState =
   | { phase: "success"; nomeCondominio?: string }
   | { phase: "error"; message: string };
 
+type ResetPhase = "idle" | "confirming" | "done";
+
 export default function BackupPanel({ onImported }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
   const [storageSizeKB, setStorageSizeKB] = useState<number | null>(null);
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
+  const [resetPhase, setResetPhase] = useState<ResetPhase>("idle");
+  const [resetInput, setResetInput] = useState("");
 
   useEffect(() => {
     setStorageSizeKB(getStorageSizeKB());
   }, []);
 
   const handleExport = () => {
+    const dateStr = new Date().toISOString().slice(0, 10);
     exportUserData();
     void trackEvent("backup_exported");
+    setExportFeedback(`Backup exportado: amigo-do-predio-backup-${dateStr}.json`);
+    setTimeout(() => setExportFeedback(null), 4000);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +79,16 @@ export default function BackupPanel({ onImported }: Props) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleConfirmReset = () => {
+    if (resetInput !== "APAGAR") return;
+    clearAllData();
+    void trackEvent("data_cleared");
+    setResetPhase("done");
+    setResetInput("");
+    setStorageSizeKB(0);
+    onImported?.();
+  };
+
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04),0_4px_16px_-6px_rgba(31,49,71,0.06)]">
@@ -113,6 +131,16 @@ export default function BackupPanel({ onImported }: Props) {
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+
+          {/* Feedback de exportação */}
+          {exportFeedback && (
+            <div className="flex items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/60 px-4 py-2.5">
+              <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-500" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="break-all text-[11.5px] text-navy-600">{exportFeedback}</p>
+            </div>
+          )}
 
           {/* Importar — idle */}
           {importState.phase === "idle" && (
@@ -221,6 +249,67 @@ export default function BackupPanel({ onImported }: Props) {
               >
                 Tentar novamente
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* Reset seguro — área discreta, separada de Exportar/Restaurar */}
+        <div className="mx-5 border-t border-navy-50" />
+        <div className="px-5 py-3.5">
+          {resetPhase === "idle" && (
+            <button
+              type="button"
+              onClick={() => setResetPhase("confirming")}
+              className="text-[11.5px] text-navy-400 transition-colors hover:text-terracotta-600"
+            >
+              Novo condomínio / limpar dados
+            </button>
+          )}
+
+          {resetPhase === "confirming" && (
+            <div className="rounded-xl border border-terracotta-200 bg-terracotta-50/60 px-4 py-3.5">
+              <p className="mb-1 text-[12.5px] font-semibold text-terracotta-800">
+                Limpar dados do dispositivo
+              </p>
+              <p className="mb-3 text-[11.5px] leading-relaxed text-terracotta-700">
+                Isso apagará os dados deste dispositivo. Exporte um backup antes se quiser guardar as informações.
+              </p>
+              <input
+                type="text"
+                value={resetInput}
+                onChange={(e) => setResetInput(e.target.value)}
+                placeholder="Digite APAGAR para confirmar"
+                autoComplete="off"
+                className="mb-3 w-full rounded-xl border border-terracotta-200 bg-white px-3 py-1.5 text-[12.5px] text-navy-800 placeholder:text-navy-300 focus:border-terracotta-400 focus:outline-none"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleConfirmReset}
+                  disabled={resetInput !== "APAGAR"}
+                  className="inline-flex items-center rounded-full bg-terracotta-600 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-terracotta-700 active:scale-[0.97] disabled:bg-navy-200 disabled:text-navy-400"
+                >
+                  Apagar dados
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setResetPhase("idle"); setResetInput(""); }}
+                  className="rounded-full px-3 py-1.5 text-[11.5px] text-navy-400 transition-colors hover:text-navy-600"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+
+          {resetPhase === "done" && (
+            <div className="flex items-center gap-2.5">
+              <svg className="h-4 w-4 flex-shrink-0 text-navy-500" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="text-[12.5px] text-navy-700">
+                Dados apagados. Você pode começar um novo condomínio.
+              </p>
             </div>
           )}
         </div>

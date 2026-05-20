@@ -577,6 +577,20 @@ export function getStorageSizeKB(): number {
   }
 }
 
+// ─── Limpeza de dados locais ─────────────────────────────────────────────────
+// Remove todas as chaves próprias do app. Usado pelo reset seguro em BackupPanel.
+// Não altera schema de backup — nenhum dado é exportado ou modificado, apenas removido.
+export function clearAllData(): void {
+  if (typeof window === "undefined") return;
+  try {
+    Object.values(KEYS).forEach((key) => {
+      localStorage.removeItem(key);
+    });
+  } catch {
+    // localStorage indisponível
+  }
+}
+
 // ─── Habit score ─────────────────────────────────────────────────────────────
 // Indicador leve de engajamento do usuário com o produto.
 // Calculado 100% client-side a partir de sinais do localStorage.

@@ -6,7 +6,42 @@
 
 ---
 
-## Estado atual do produto (2026-05-20 — Fase 73)
+## Estado atual do produto (2026-05-20 — Fase 77)
+
+### Bundle
+- Rota principal (`/`): 221 kB First Load JS (margem 9 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues na Fase 77 (Reset seguro, feedback de backup e validação do Assistente)
+
+Ciclo de controle interno e testabilidade. Nenhuma feature nova de produto adicionada. Sem IA, login, billing, backend, WhatsApp, nova aba, KB, guidance, schema de backup ou motor de busca alterados.
+
+- **Reset seguro (`components/BackupPanel.tsx`):** nova seção discreta "Novo condomínio / limpar dados" abaixo de Exportar/Restaurar. Fluxo de 3 estados: idle → confirming → done. O estado confirming exige digitar "APAGAR" antes de habilitar o botão "Apagar dados". Após confirmar, chama `clearAllData()` e reutiliza `onImported?.()` para disparar `setRefreshKey` e atualizar o app para estado zerado. Exibe feedback "Dados apagados. Você pode começar um novo condomínio." Nenhum dado apagado sem confirmação explícita.
+- **`clearAllData()` em `lib/session.ts`:** função centralizada que remove todas as 18 chaves `amigo_*` via `Object.values(KEYS).forEach(removeItem)`. SSR-safe (`typeof window === "undefined"`). Reutiliza o `KEYS` existente. Não altera schema de backup v1/v2/v3. Não cria backup v4.
+- **Feedback de exportação (`components/BackupPanel.tsx`):** após clicar "Exportar dados", exibe mensagem `"Backup exportado: amigo-do-predio-backup-YYYY-MM-DD.json"` que desaparece após 4 s. Não altera formato, conteúdo ou versão do backup. Não envia dados para servidor.
+- **Validação do Assistente (sem alteração de código):** `Response.tsx` inspecionado — o card principal não tem `max-height`, `overflow: hidden` ou qualquer constraint de altura. Texto da resposta principal (`<p>` com `text-[15px] leading-[1.7]`) e conteúdo contextual (próximo passo, base legal, dica, veja também) renderizam sem truncamento real. Nenhuma correção necessária.
+- **Smoke test:** seções 16 e 17 adicionadas ao `docs/smoke-test-interno.md` — roteiro do reset seguro (10 itens) e roteiro das 5 perguntas do Assistente com critérios detalhados.
+- **Bundle:** 221 kB (sem variação vs Fase 76B). Margem 9 kB.
+
+### Diretriz comercial atual
+
+O Amigo do Prédio segue como produto pré-beta interno. Ainda não é vendável, não deve ser apresentado como beta para síndicos, não deve receber tráfego pago e não deve ser posicionado como SaaS pronto.
+
+Posicionamento correto nesta etapa: copiloto operacional leve para síndicos que precisam acompanhar prazos, organizar ações e decidir com mais clareza.
+
+O produto não é advogado virtual, consultoria jurídica, substituto da administradora, ERP condominial, ferramenta de compliance completo ou app B2B para administradoras.
+
+Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
+
+Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
+
+Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+---
+
+## Estado anterior do produto (2026-05-20 — Fase 73)
 
 ### Bundle
 - Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
