@@ -42,7 +42,8 @@ type ToolAnchor =
   | "comunicado-cobranca"
   | "simulador-multa"
   | "simulador-reajuste"
-  | "checklists";
+  | "checklists"
+  | "registro-rapido";
 
 // Carregamento sob demanda — só necessários quando a aba é ativada
 const ComunicadoPanel = dynamic(() => import("@/components/ComunicadoPanel"), { ssr: false });
@@ -307,6 +308,11 @@ export default function HomePage() {
               <GuidancePreview onSetup={handleScrollToMemoria} />
             )}
 
+            {/* Hub de saúde operacional — antes das prioridades */}
+            {hasCondominioData && (
+              <HomeResumoPredio refreshKey={refreshKey} />
+            )}
+
             {hasCondominioData && (
               <GuidancePanel
                 onAsk={handleSuggestionSelect}
@@ -317,21 +323,26 @@ export default function HomePage() {
             )}
 
             {hasCondominioData && (
-              <HomeResumoPredio refreshKey={refreshKey} />
-            )}
-
-            {hasCondominioData && (
               <RevisaoSemanalCard
                 refreshKey={refreshKey}
                 onDone={() => setRefreshKey((k) => k + 1)}
               />
             )}
 
-            {hasCondominioData && (
-              <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
-            )}
-
             <PendenciasCard refreshKey={refreshKey} />
+
+            {/* Atalho discreto para registro de ocorrência (formulário em Ferramentas) */}
+            {hasCondominioData && (
+              <div className="px-5 pb-1 sm:px-6">
+                <button
+                  type="button"
+                  onClick={() => handleNavigateToFerramentas("registro-rapido")}
+                  className="text-[12px] font-medium text-navy-400 transition-colors hover:text-navy-600"
+                >
+                  + Registrar ocorrência
+                </button>
+              </div>
+            )}
 
             {hasCondominioData && (
               <RevisaoMensalCard
@@ -442,18 +453,41 @@ export default function HomePage() {
               <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
                 Ferramentas
               </p>
-                <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
+              <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
                 Ações práticas
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                Transforme orientações em comunicados, cálculos e checklists para a rotina do síndico.
+                Comunicados, simuladores e checklists para a rotina do síndico.
               </p>
             </div>
 
+            {/* ── Rotina do síndico ─────────────────────── */}
+            <div className="px-5 pb-1.5 sm:px-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
+                Rotina do síndico
+              </p>
+            </div>
+            <div id="registro-rapido">
+              <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
+            </div>
+
+            {/* ── Comunicados ──────────────────────────── */}
+            <div className="px-5 pb-1.5 pt-3 sm:px-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
+                Comunicados
+              </p>
+            </div>
             <ComunicadoPanel
               targetAnchor={pendingToolAnchor}
               highlightAnchor={highlightToolAnchor}
             />
+
+            {/* ── Simuladores ──────────────────────────── */}
+            <div className="px-5 pb-1.5 pt-3 sm:px-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
+                Simuladores
+              </p>
+            </div>
             <SimuladorMulta
               anchorId="simulador-multa"
               highlighted={highlightToolAnchor === "simulador-multa"}
@@ -462,13 +496,21 @@ export default function HomePage() {
               anchorId="simulador-reajuste"
               highlighted={highlightToolAnchor === "simulador-reajuste"}
             />
-            <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
+
+            {/* ── Checklists ───────────────────────────── */}
+            <div className="px-5 pb-1.5 pt-3 sm:px-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
+                Checklists
+              </p>
+            </div>
             <ChecklistPanel
               anchorId="checklists"
               highlighted={highlightToolAnchor === "checklists"}
               initialOpenId={pendingChecklistId}
               onInitialOpenConsumed={() => setPendingChecklistId(null)}
             />
+
+            <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
 
           </div>
         )}
@@ -482,9 +524,13 @@ export default function HomePage() {
                 Condomínio
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                {hasCondominioData ? "Memória do prédio" : "Ativar monitoramento"}
+                {hasCondominioData ? "Dados do prédio" : "Ativar monitoramento"}
               </p>
-              {!hasCondominioData && (
+              {hasCondominioData ? (
+                <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
+                  Dados que alimentam o monitoramento de prazos e alertas do app.
+                </p>
+              ) : (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
                   Registre os dados do seu prédio para ativar vencimentos, rotinas e alertas de acompanhamento.
                 </p>

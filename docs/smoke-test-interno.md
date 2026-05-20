@@ -14,7 +14,9 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Cadastrar AVCB, Seguro e Mandato.
 - [ ] Salvar.
 - [ ] Voltar à Home.
-- [ ] Confirmar StatusHeader, GuidancePanel e ProximasDatas.
+- [ ] Confirmar StatusHeader (slim: nome + badge + itens em dia), Hub de Saúde Operacional, GuidancePanel e ProximasDatas.
+- [ ] Confirmar que o Hub de Saúde Operacional aparece ANTES do GuidancePanel.
+- [ ] Confirmar que o Hub não repete as linhas de AVCB/Seguro/Mandato do GuidancePanel.
 
 ## 3. GuidancePanel
 
@@ -33,8 +35,11 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Criar 6+ itens e verificar overflow.
 - [ ] Concluir item e verificar Timeline.
 
-## 5. Registro rápido
+## 5. Registro rápido (agora em Ferramentas → Rotina do síndico)
 
+- [ ] Confirmar que na Home aparece atalho discreto “+ Registrar ocorrência” (não o formulário completo).
+- [ ] Clicar no atalho e confirmar que navega para Ferramentas, rolando até o Registro rápido.
+- [ ] Confirmar que Ferramentas exibe grupos: Rotina do síndico / Comunicados / Simuladores / Checklists.
 - [ ] Registrar ocorrência de barulho com descrição curta.
 - [ ] Confirmar que não há linguagem de livro oficial, denúncia ou protocolo.
 - [ ] Marcar criação de próximo passo e confirmar chip “Ocorrência”.
@@ -42,6 +47,16 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Gerar mensagem administrativa copiável.
 - [ ] Copiar mensagem e confirmar que o texto é editável antes da cópia.
 - [ ] Confirmar que a mensagem não expõe unidade, nome ou descrição da ocorrência.
+
+## 5b. Hub Saúde Operacional
+
+- [ ] Confirmar status “Em evolução” quando apenas perfil cadastrado, sem datas essenciais.
+- [ ] Confirmar status “Crítico” quando AVCB/Seguro/Mandato vencidos.
+- [ ] Confirmar status “Atenção” quando há alertas de atenção ou passos parados há +14 dias.
+- [ ] Confirmar status “Bem acompanhado” quando essenciais completos e sem alertas, mas com pendências.
+- [ ] Confirmar status “Tudo em ordem” quando essenciais completos, sem alertas e sem pendências.
+- [ ] Confirmar que o hub NÃO usa porcentagem, score numérico, “regular juridicamente”, “compliance” ou “saúde jurídica”.
+- [ ] Confirmar que os chips de indicadores mostram no máximo 5 itens.
 
 ## 6. Revisão semanal
 
@@ -66,10 +81,12 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 
 ## 8. Ferramentas
 
+- [ ] Confirmar grupos visuais: Rotina do síndico / Comunicados / Simuladores / Checklists.
 - [ ] Comunicado.
 - [ ] Checklist.
 - [ ] Multa.
 - [ ] Reajuste.
+- [ ] Confirmar que simuladores funcionam igual (lógica não alterada).
 
 ## 9. Backup
 
@@ -100,6 +117,9 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 ## 12. Maturidade comercial percebida
 
 - [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.
+- [ ] Confirmar que Hub de Saúde Operacional responde "Como está meu prédio agora?" de forma interpretativa.
+- [ ] Confirmar que Ferramentas responde "O que posso fazer agora?" com grupos claros.
+- [ ] Confirmar que aba Condomínio ("Dados do prédio") responde "Quais dados sustentam o acompanhamento?".
 - [ ] Confirmar que Próximos Passos deixa claro o ciclo dúvida → ação → acompanhamento.
 - [ ] Confirmar que Revisão Mensal e Timeline explicam por que voltar ao app.
 - [ ] Confirmar que Backup informa dados locais e proteção sem login.

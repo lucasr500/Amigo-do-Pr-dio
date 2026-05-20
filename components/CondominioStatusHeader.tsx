@@ -2,148 +2,22 @@
 
 import { useEffect, useState } from "react";
 import {
-  getMemoriaOperacional,
   getProfile,
   hasMemoriaOperacional,
   computeCondominioHealth,
   CondominioHealth,
   CondominioHealthStatus,
-  MemoriaOperacional,
-  CondominioProfile,
   logInteraction,
 } from "@/lib/session";
-import { ate, desde, past } from "@/lib/urgency";
 import { trackEvent } from "@/lib/telemetry";
-
-// ─── Status rows ──────────────────────────────────────────────────────────────
-
-type StatusRow = {
-  icon: string;
-  label: string;
-  status: "ok" | "atencao" | "revisar";
-  detalhe: string;
-  onAskQ?: string;
-};
-
-function formatDias(d: number): string {
-  if (d === 0) return "hoje";
-  if (d === 1) return "1 dia";
-  if (d < 30)  return `${d} dias`;
-  const mo = Math.round(d / 30);
-  return `${mo} mês${mo > 1 ? "es" : ""}`;
-}
-
-function buildRows(m: MemoriaOperacional, profile: CondominioProfile | null): StatusRow[] {
-  const rows: StatusRow[] = [];
-
-  if (m.vencimentoAVCB) {
-    const d = ate(m.vencimentoAVCB);
-    if (d < 0) {
-      rows.push({ icon: "📋", label: "AVCB", status: "revisar", detalhe: `Vencido há ${formatDias(Math.abs(d))}`, onAskQ: "Como renovar o AVCB do condomínio?" });
-    } else if (d <= 7) {
-      rows.push({ icon: "📋", label: "AVCB", status: "revisar", detalhe: d === 0 ? "Vence hoje" : `Vence em ${formatDias(d)}`, onAskQ: "Como renovar o AVCB do condomínio?" });
-    } else if (d <= 30) {
-      rows.push({ icon: "📋", label: "AVCB", status: "revisar", detalhe: `Vence em ${formatDias(d)}`, onAskQ: "Como renovar o AVCB do condomínio?" });
-    } else if (d <= 90) {
-      rows.push({ icon: "📋", label: "AVCB", status: "atencao", detalhe: `Vence em ${formatDias(d)}`, onAskQ: "Como renovar o AVCB do condomínio?" });
-    } else {
-      rows.push({ icon: "📋", label: "AVCB", status: "ok", detalhe: `Válido por ${formatDias(d)}` });
-    }
-  }
-
-  if (m.vencimentoSeguro) {
-    const d = ate(m.vencimentoSeguro);
-    if (d < 0) {
-      rows.push({ icon: "🛡️", label: "Seguro", status: "revisar", detalhe: `Vencido há ${formatDias(Math.abs(d))}`, onAskQ: "O seguro condominial é obrigatório?" });
-    } else if (d <= 30) {
-      rows.push({ icon: "🛡️", label: "Seguro", status: "revisar", detalhe: d === 0 ? "Renova hoje" : `Renova em ${formatDias(d)}`, onAskQ: "O seguro condominial é obrigatório?" });
-    } else if (d <= 90) {
-      rows.push({ icon: "🛡️", label: "Seguro", status: "atencao", detalhe: `Renova em ${formatDias(d)}`, onAskQ: "O seguro condominial é obrigatório?" });
-    } else {
-      rows.push({ icon: "🛡️", label: "Seguro", status: "ok", detalhe: `Válido por ${formatDias(d)}` });
-    }
-  }
-
-  if (m.ultimaAGO && past(m.ultimaAGO)) {
-    const meses = Math.floor(desde(m.ultimaAGO) / 30);
-    if (meses >= 14) {
-      rows.push({ icon: "👥", label: "AGO", status: "revisar", detalhe: `${meses} meses atrás`, onAskQ: "Quando deve ser realizada a assembleia ordinária?" });
-    } else if (meses >= 10) {
-      rows.push({ icon: "👥", label: "AGO", status: "atencao", detalhe: `${meses} meses atrás`, onAskQ: "Quando deve ser realizada a assembleia ordinária?" });
-    } else {
-      const label = meses === 0 ? "este mês" : `${meses} mês${meses > 1 ? "es" : ""} atrás`;
-      rows.push({ icon: "👥", label: "AGO", status: "ok", detalhe: label });
-    }
-  }
-
-  if (m.ultimaDedetizacao && past(m.ultimaDedetizacao)) {
-    const ds = desde(m.ultimaDedetizacao);
-    if (ds > 180) {
-      rows.push({ icon: "🐛", label: "Dedetização", status: "revisar", detalhe: `${formatDias(ds)} atrás`, onAskQ: "Com que frequência deve ser feita a dedetização do condomínio?" });
-    } else if (ds > 150) {
-      rows.push({ icon: "🐛", label: "Dedetização", status: "atencao", detalhe: `${formatDias(ds)} atrás`, onAskQ: "Com que frequência deve ser feita a dedetização do condomínio?" });
-    } else {
-      rows.push({ icon: "🐛", label: "Dedetização", status: "ok", detalhe: `${formatDias(ds)} atrás` });
-    }
-  }
-
-  if (m.ultimaLimpezaCaixaDAgua && past(m.ultimaLimpezaCaixaDAgua)) {
-    const ds = desde(m.ultimaLimpezaCaixaDAgua);
-    if (ds > 180) {
-      rows.push({ icon: "💧", label: "Caixa d'água", status: "revisar", detalhe: `${formatDias(ds)} atrás`, onAskQ: "Com que frequência deve ser limpa a caixa d'água do condomínio?" });
-    } else if (ds > 150) {
-      rows.push({ icon: "💧", label: "Caixa d'água", status: "atencao", detalhe: `${formatDias(ds)} atrás`, onAskQ: "Com que frequência deve ser limpa a caixa d'água do condomínio?" });
-    } else {
-      rows.push({ icon: "💧", label: "Caixa d'água", status: "ok", detalhe: `${formatDias(ds)} atrás` });
-    }
-  }
-
-  if (m.ultimaManutencaoElevador && profile?.hasElevador && past(m.ultimaManutencaoElevador)) {
-    const ds = desde(m.ultimaManutencaoElevador);
-    if (ds > 45) {
-      rows.push({ icon: "🛗", label: "Elevador", status: "revisar", detalhe: `${formatDias(ds)} sem manutenção`, onAskQ: "Com que frequência o elevador precisa de manutenção?" });
-    } else if (ds > 30) {
-      rows.push({ icon: "🛗", label: "Elevador", status: "atencao", detalhe: "Confirmar manutenção mensal", onAskQ: "Com que frequência o elevador precisa de manutenção?" });
-    } else {
-      rows.push({ icon: "🛗", label: "Elevador", status: "ok", detalhe: `${formatDias(ds)} atrás` });
-    }
-  }
-
-  if (m.ultimaInspecaoExtintores && past(m.ultimaInspecaoExtintores)) {
-    const ds = desde(m.ultimaInspecaoExtintores);
-    const mo = Math.floor(ds / 30);
-    if (ds > 210) {
-      rows.push({ icon: "🧯", label: "Extintores", status: "revisar", detalhe: `${mo} meses sem inspeção`, onAskQ: "Qual o prazo para manutenção dos extintores do condomínio?" });
-    } else if (ds > 150) {
-      rows.push({ icon: "🧯", label: "Extintores", status: "atencao", detalhe: "Prazo de inspeção se aproximando", onAskQ: "Qual o prazo para manutenção dos extintores do condomínio?" });
-    } else {
-      rows.push({ icon: "🧯", label: "Extintores", status: "ok", detalhe: `${mo} meses atrás` });
-    }
-  }
-
-  if (m.fimMandatoSindico) {
-    const d = ate(m.fimMandatoSindico);
-    if (d < 0) {
-      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "revisar", detalhe: `Vencido há ${formatDias(Math.abs(d))}`, onAskQ: "O que acontece quando o mandato do síndico vence?" });
-    } else if (d <= 30) {
-      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "revisar", detalhe: d === 0 ? "Vence hoje" : `Vence em ${formatDias(d)}`, onAskQ: "Como convocar uma assembleia para eleição de síndico?" });
-    } else if (d <= 90) {
-      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "atencao", detalhe: `Vence em ${formatDias(d)}`, onAskQ: "Com que antecedência devo convocar a assembleia de eleição do síndico?" });
-    } else {
-      rows.push({ icon: "🗳️", label: "Mandato do síndico", status: "ok", detalhe: `Válido por ${formatDias(d)}` });
-    }
-  }
-
-  return rows;
-}
 
 // ─── Badge config ─────────────────────────────────────────────────────────────
 
 const BADGE: Record<CondominioHealthStatus, { ring: string; bg: string; text: string; dot: string }> = {
-  "em-dia":  { ring: "ring-navy-100",  bg: "bg-navy-50/80",   text: "text-navy-600",   dot: "bg-navy-400"  },
-  "atencao": { ring: "ring-amber-100", bg: "bg-amber-50/70",  text: "text-amber-700",  dot: "bg-amber-300" },
-  "pendente":{ ring: "ring-amber-300", bg: "bg-amber-100",    text: "text-amber-800",  dot: "bg-amber-500" },
-  "critico": { ring: "ring-terracotta-300", bg: "bg-terracotta-50", text: "text-terracotta-800", dot: "bg-terracotta-500" },
+  "em-dia":  { ring: "ring-navy-100",       bg: "bg-navy-50/80",       text: "text-navy-600",       dot: "bg-navy-400"      },
+  "atencao": { ring: "ring-amber-100",      bg: "bg-amber-50/70",      text: "text-amber-700",      dot: "bg-amber-300"     },
+  "pendente":{ ring: "ring-amber-300",      bg: "bg-amber-100",        text: "text-amber-800",      dot: "bg-amber-500"     },
+  "critico": { ring: "ring-terracotta-300", bg: "bg-terracotta-50",    text: "text-terracotta-800", dot: "bg-terracotta-500"},
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -156,7 +30,6 @@ type Props = {
 export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [health, setHealth] = useState<CondominioHealth | null>(null);
-  const [rows, setRows] = useState<StatusRow[]>([]);
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
   const [hasProfileData, setHasProfileData] = useState(false);
 
@@ -170,10 +43,8 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
       return;
     }
 
-    const m = getMemoriaOperacional();
     const h = computeCondominioHealth();
     setHealth(h);
-    setRows(buildRows(m, profile));
     setHydrated(true);
 
     if (h.totalMonitored > 0) {
@@ -206,7 +77,7 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
               </span>
             </div>
             <p className="mt-2.5 text-[12.5px] leading-relaxed text-navy-500">
-              Registre as principais datas do prédio — como vencimento do AVCB e seguro — para ativar o monitoramento automático de vencimentos e manutenções.
+              Registre as principais datas do prédio para ativar o monitoramento de vencimentos e manutenções.
             </p>
             {onAsk && (
               <button
@@ -226,20 +97,13 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
     );
   }
 
-  const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
   const badge = BADGE[health.status];
-
-  const alertRows   = rows.filter((r) => r.status === "revisar");
-  const atencaoRows = rows.filter((r) => r.status === "atencao");
-  const okRows      = rows.filter((r) => r.status === "ok");
-  const hasUrgency  = alertRows.length > 0 || atencaoRows.length > 0;
+  const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   return (
-    <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
+    <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
       <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/90 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_16px_34px_-26px_rgba(31,49,71,0.32)]">
-
-        {/* Header: nome + badge de saúde */}
-        <div className="px-5 pt-5 pb-4">
+        <div className="px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
@@ -256,78 +120,11 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
               {health.label}
             </span>
           </div>
-          {health.executiveSummary && (
-            <p className="mt-2.5 text-[12.5px] leading-relaxed text-navy-500">
-              {health.executiveSummary}
-            </p>
-          )}
-        </div>
 
-        {/* Divisor */}
-        <div className="mx-5 border-t border-navy-50" />
-
-        {/* Linhas de status */}
-        <div className="px-2 py-2.5">
-
-          {/* Crítico / revisar — clicável, dispara pergunta */}
-          {alertRows.map((row) => (
-            <button
-              key={row.label}
-              type="button"
-              onClick={() => {
-                if (row.onAskQ && onAsk) {
-                  logInteraction("status-header-alert", row.label);
-                  onAsk(row.onAskQ);
-                }
-              }}
-              disabled={!row.onAskQ || !onAsk}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-3 text-left transition-colors hover:bg-terracotta-50/70 active:bg-terracotta-50 disabled:cursor-default"
-            >
-              <span className="flex-shrink-0 text-[14px] leading-none" aria-hidden="true">{row.icon}</span>
-              <span className="flex-1 text-[12.5px] font-medium text-navy-800">{row.label}</span>
-              <span className="text-[11px] font-medium text-terracotta-700">{row.detalhe}</span>
-              {row.onAskQ && onAsk && (
-                <svg className="h-3 w-3 flex-shrink-0 text-terracotta-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
-          ))}
-
-          {/* Atenção moderada */}
-          {atencaoRows.map((row) => (
-            <button
-              key={row.label}
-              type="button"
-              onClick={() => {
-                if (row.onAskQ && onAsk) {
-                  logInteraction("status-header-atencao", row.label);
-                  onAsk(row.onAskQ);
-                }
-              }}
-              disabled={!row.onAskQ || !onAsk}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-amber-50/50 active:bg-amber-50 disabled:cursor-default"
-            >
-              <span className="flex-shrink-0 text-[14px] leading-none" aria-hidden="true">{row.icon}</span>
-              <span className="flex-1 text-[12.5px] font-medium text-navy-700">{row.label}</span>
-              <span className="text-[11px] text-amber-500">{row.detalhe}</span>
-              {row.onAskQ && onAsk && (
-                <svg className="h-3 w-3 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </button>
-          ))}
-
-          {/* Em dia — resumo compacto */}
-          {okRows.length > 0 && (
-            <div
-              className={`flex items-center gap-2.5 px-2 ${
-                hasUrgency ? "mt-1 border-t border-navy-50 pt-2.5 pb-1" : "py-2.5"
-              }`}
-            >
+          {health.okCount > 0 && (
+            <div className="mt-3 flex items-center gap-2">
               <svg
-                className="h-3.5 w-3.5 flex-shrink-0 text-navy-500"
+                className="h-3.5 w-3.5 flex-shrink-0 text-navy-400"
                 viewBox="0 0 16 16"
                 fill="none"
                 aria-hidden="true"
@@ -340,21 +137,14 @@ export default function CondominioStatusHeader({ onAsk, refreshKey }: Props) {
                   strokeLinejoin="round"
                 />
               </svg>
-              <span className="text-[11.5px] text-navy-600">
-                {okRows.length === 1
-                  ? `${okRows[0].label} em dia`
-                  : `${okRows.length} itens em dia`}
+              <span className="text-[12px] text-navy-500">
+                {health.okCount === 1
+                  ? "1 item em dia"
+                  : `${health.okCount} itens em dia`}
               </span>
             </div>
           )}
         </div>
-
-        {/* Rodapé — resumo apenas quando há urgência */}
-        {hasUrgency && health.summary && (
-          <div className="border-t border-navy-50 px-5 py-2.5">
-            <p className="text-[11px] text-navy-400">{health.summary}</p>
-          </div>
-        )}
       </div>
     </section>
   );

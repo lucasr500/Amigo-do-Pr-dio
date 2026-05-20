@@ -6,10 +6,10 @@
 
 ---
 
-## Estado atual do produto (2026-05-20 — Fase 72)
+## Estado atual do produto (2026-05-20 — Fase 73)
 
 ### Bundle
-- Rota principal (`/`): 226 kB First Load JS (margem 4 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): 225 kB First Load JS (margem 5 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 204 kB First Load JS
 - TypeScript: zero erros
 - Build: Compiled successfully
@@ -27,6 +27,19 @@ Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho 
 Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
 
 Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+### Entregues na Fase 73 (Home enxuta, Saúde Operacional e Central de Ações)
+
+Reorganização da arquitetura de informação da Home e da aba Ferramentas. Nenhuma feature nova adicionada.
+
+- **Hub "Saúde operacional" (`components/HomeResumoPredio.tsx`):** substituído o card "Hoje no prédio" por um hub com status qualitativo de 5 níveis: *Crítico / Atenção / Em evolução / Bem acompanhado / Tudo em ordem*. Status determinístico baseado em sinais locais (prazos críticos, alertas de atenção, passos parados há mais de 14 dias, dados essenciais completos, pendências abertas, ocorrências da semana). Frase diagnóstica contextual e chips indicadores (até 5). Sem score numérico, sem porcentagem, sem linguagem de regularidade legal, sem gamificação.
+- **Hub posicionado antes do GuidancePanel:** a Home responde "Como está meu prédio agora?" antes de mostrar as ações urgentes.
+- **CondominioStatusHeader simplificado:** removidas as linhas de item por item (AVCB, Seguro, Mandato, etc.) que duplicavam o GuidancePanel. O header mantém apenas: nome do condomínio + badge geral + contagem de itens em dia ("X itens em dia"). GuidancePanel continua sendo o único lugar com detalhe e ação por item.
+- **RegistroRapido movido para Ferramentas:** saiu da aba Início como formulário completo. Entrou na aba Ferramentas no grupo "Rotina do síndico" (primeiro item). Na Home, mantido apenas atalho discreto "+ Registrar ocorrência" que navega para Ferramentas.
+- **Ferramentas em grupos visuais:** aba Ferramentas reorganizada com cabeçalhos de seção: *Rotina do síndico / Comunicados / Simuladores / Checklists*. PainelOperacional permanece ao final como área de exploração por tema. Sem nova rota, sem modal complexo, sem nova ferramenta.
+- **Aba Condomínio: copy de papel:** título alterado de "Memória do prédio" para "Dados do prédio" quando há dados cadastrados. Subtitle adicionado: "Dados que alimentam o monitoramento de prazos e alertas do app." Clarifica o papel da aba sem criar conta, login ou pagamento.
+- **Bundle:** 225 kB (−1 kB vs Fase 72). Margem: 5 kB. Simplificação do CondominioStatusHeader reduziu o JS ligeiramente.
+- **Sem IA, login, billing, backend, WhatsApp, nova aba, KB, guidance, backup, simuladores ou motor de busca alterados.**
 
 ### Entregues na Fase 72 (Revisão semanal compacta)
 
