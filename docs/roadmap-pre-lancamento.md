@@ -174,6 +174,20 @@
 
 ---
 
+---
+
+## Fase 76 — Saúde Operacional compacta no Início (2026-05-20)
+
+**Entregue:** versão compacta do índice de Saúde Operacional na aba Início.
+
+- `SaudeOperacionalPanel variant="compact"` substitui `HomeResumoPredio` na Home.
+- Compact: porcentagem + barra + frase + até 3 sinais + microcopy curta.
+- Full (Condomínio): fatores, sugestões, disclaimer — inalterado.
+- Redundância eliminada. Home motiva; Condomínio explica.
+- Sem IA, login, billing, backend, nova aba, promessa jurídica.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 75)*
+*Versão: 2026-05-20 (Fase 76)*
 *Atualizar conforme marcos forem atingidos.*

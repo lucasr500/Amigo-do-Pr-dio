@@ -658,6 +658,23 @@ Adicionado `SaudeOperacionalPanel` na aba Condomínio (guarded por `hasCondomini
 
 ---
 
+---
+
+## Fase 76 — Saúde Operacional compacta no Início (2026-05-20)
+
+`SaudeOperacionalPanel` agora aceita `variant?: "full" | "compact"`.
+
+- **Início:** renderiza `variant="compact"` — exibe porcentagem, barra, frase diagnóstica, até 3 sinais (fatores missing/partial) e microcopy "Baseado nos dados cadastrados no app."
+- **Condomínio:** mantém `variant="full"` — fatores completos, sugestões, disclaimer intactos.
+
+`HomeResumoPredio` foi removido da renderização do Início (arquivo não modificado). Eliminada redundância entre os dois blocos de "Saúde operacional" na Home.
+
+Ordem da Home com dados: CondominioStatusHeader → SaudeOperacionalPanel compact → GuidancePanel → RevisaoSemanalCard → PendenciasCard → demais blocos.
+
+Sem IA, login, billing, backend, nova aba, promessa jurídica ou compliance. Nenhum arquivo congelado alterado.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 75)*
+*Versão: 2026-05-20 (Fase 76)*
 *Atualizar a seção "Estado atual" a cada sprint.*

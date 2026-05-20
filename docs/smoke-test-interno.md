@@ -116,7 +116,20 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Confirmar eventos de ocorrência sem descrição, unidade/local, texto de mensagem ou data exata.
 - [ ] Confirmar eventos `weekly_review_viewed` e `weekly_review_completed` sem PII nem texto livre.
 
-## 13. Índice de Saúde Operacional
+## 13. Saúde Operacional — Início (compact) e Condomínio (full)
+
+- [ ] Confirmar que SaudeOperacionalPanel compact aparece no Início quando há dados cadastrados.
+- [ ] Confirmar que SaudeOperacionalPanel compact NÃO aparece no Início sem dados cadastrados.
+- [ ] Confirmar que a versão compact exibe: "Saúde operacional", porcentagem, barra, frase diagnóstica.
+- [ ] Confirmar que a versão compact exibe no máximo 3 sinais (fatores missing/partial).
+- [ ] Confirmar microcopy "Baseado nos dados cadastrados no app." na versão compact.
+- [ ] Confirmar que a versão compact NÃO exibe lista de fatores completa, sugestões ou disclaimer longo.
+- [ ] Confirmar que HomeResumoPredio NÃO aparece mais no Início.
+- [ ] Confirmar que NÃO há dois blocos de "Saúde operacional" simultaneamente no Início.
+- [ ] Confirmar que a versão full permanece intacta na aba Condomínio (fatores, sugestões, disclaimer).
+- [ ] Confirmar ordem no Início: CondominioStatusHeader → compact → GuidancePanel → RevisaoSemanalCard → PendenciasCard.
+
+## 14. Índice de Saúde Operacional — aba Condomínio
 
 - [ ] Confirmar que o painel NÃO aparece na aba Condomínio com localStorage zerado (sem dados cadastrados).
 - [ ] Cadastrar AVCB, Seguro e Mandato e confirmar que o painel aparece antes de OnboardingProfile.

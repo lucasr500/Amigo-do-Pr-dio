@@ -31,7 +31,6 @@ import ProximasDatas from "@/components/ProximasDatas";
 import PendenciasCard from "@/components/PendenciasCard";
 import GuidancePreview from "@/components/GuidancePreview";
 import RevisaoMensalCard from "@/components/RevisaoMensalCard";
-import HomeResumoPredio from "@/components/HomeResumoPredio";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 
 type ToolAnchor =
@@ -309,9 +308,8 @@ export default function HomePage() {
               <GuidancePreview onSetup={handleScrollToMemoria} />
             )}
 
-            {/* Hub de saúde operacional — antes das prioridades */}
             {hasCondominioData && (
-              <HomeResumoPredio refreshKey={refreshKey} />
+              <SaudeOperacionalPanel variant="compact" refreshKey={refreshKey} />
             )}
 
             {hasCondominioData && (

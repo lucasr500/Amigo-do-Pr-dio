@@ -37,9 +37,9 @@ const FACTOR_DOT: Record<"ok" | "partial" | "missing", string> = {
   missing: "bg-terracotta-500",
 };
 
-type Props = { refreshKey?: number };
+type Props = { refreshKey?: number; variant?: "full" | "compact" };
 
-export default function SaudeOperacionalPanel({ refreshKey }: Props) {
+export default function SaudeOperacionalPanel({ refreshKey, variant = "full" }: Props) {
   const [result, setResult] = useState<HealthScoreResult | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -53,6 +53,60 @@ export default function SaudeOperacionalPanel({ refreshKey }: Props) {
   const barColor   = BAR_COLOR[result.statusKey];
   const badgeStyle = BADGE_STYLE[result.statusKey];
   const badgeDot   = BADGE_DOT[result.statusKey];
+
+  if (variant === "compact") {
+    const signals = result.factors
+      .filter((f) => f.status !== "ok")
+      .slice(0, 3)
+      .map((f) => f.label);
+
+    return (
+      <section className="px-5 pb-3 sm:px-6">
+        <div className="rounded-[18px] border border-navy-100/80 bg-white/80 px-4 py-3.5 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_4px_16px_-8px_rgba(31,49,71,0.10)]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+                Saúde operacional
+              </p>
+              <p className="mt-1 font-display text-[26px] font-semibold leading-none tracking-tight text-navy-800">
+                {result.percentage}%
+              </p>
+            </div>
+            <span
+              className={`mt-0.5 inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-medium ring-1 ${badgeStyle}`}
+            >
+              <span
+                className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${badgeDot}`}
+                aria-hidden="true"
+              />
+              {result.statusLabel}
+            </span>
+          </div>
+
+          <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-navy-100/60">
+            <div
+              className={`h-full rounded-full ${barColor}`}
+              style={{ width: `${result.percentage}%` }}
+            />
+          </div>
+
+          <p className="mt-2 text-[12.5px] leading-snug text-navy-600">
+            {result.diagnosticPhrase}
+          </p>
+
+          {signals.length > 0 && (
+            <p className="mt-1.5 text-[11px] leading-snug text-navy-400">
+              {signals.join(" · ")}
+            </p>
+          )}
+
+          <p className="mt-2.5 text-[10px] leading-relaxed text-navy-300">
+            Baseado nos dados cadastrados no app.
+          </p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="px-5 pb-4 sm:px-6">
