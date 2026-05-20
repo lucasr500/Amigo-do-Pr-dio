@@ -57,6 +57,7 @@ const RegistroRapido = dynamic(() => import("@/components/RegistroRapido"), { ss
 const RevisaoSemanalCard = dynamic(() => import("@/components/RevisaoSemanalCard"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
+const SaudeOperacionalPanel = dynamic(() => import("@/components/SaudeOperacionalPanel"), { ssr: false });
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 // Insight contextual — só visível sem alertas ativos; insights.ts (~7 kB) fica fora do chunk inicial
@@ -536,6 +537,10 @@ export default function HomePage() {
                 </p>
               )}
             </div>
+
+            {hasCondominioData && (
+              <SaudeOperacionalPanel refreshKey={refreshKey} />
+            )}
 
             <OnboardingProfile
               onProfileSaved={() => setRefreshKey((k) => k + 1)}

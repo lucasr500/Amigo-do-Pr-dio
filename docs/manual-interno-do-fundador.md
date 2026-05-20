@@ -634,6 +634,30 @@ Fix: verificar se o novo componente tem dependências desnecessárias. Remover o
 
 ---
 
+---
+
+## Fase 75 — Índice de Saúde Operacional (2026-05-20)
+
+Adicionado `SaudeOperacionalPanel` na aba Condomínio (guarded por `hasCondominioData`, antes de `OnboardingProfile`).
+
+**O que é:** percentual operacional local (0–100%) indicando organização dos dados cadastrados no app. Determinístico, 100% client-side, sem IA, sem backend, sem Supabase, sem dado remoto.
+
+**Não é:** indicação de regularidade jurídica, compliance, ausência de risco ou garantia de qualquer natureza. Proibido usar: "100% regular", "regularizado", "sem risco", "compliance", "conformidade", "saúde jurídica", "garantia", "segurança jurídica".
+
+**Score (MAX_RAW = 90, normalizado para 100%):**
+- Essenciais (AVCB/Seguro/Mandato): 30 pts
+- Estado de alertas (guidance crítico/atenção): 20 pts
+- Próximos passos (stale/contagem): 15 pts
+- Revisão semanal concluída: 10 pts
+- Rotinas cadastradas (proporcional a 3+): 10 pts
+- Ocorrência com hasNextStep (semana): 5 pts
+
+**Faixas:** 0–39 Crítico · 40–59 Atenção · 60–79 Em evolução · 80–94 Bem acompanhado · 95–100 Tudo em ordem
+
+**Arquivos:** `lib/health-score.ts` (novo), `components/SaudeOperacionalPanel.tsx` (novo), `app/page.tsx` (dynamic import + render condicional). Nenhum arquivo congelado foi alterado.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 72)*
+*Versão: 2026-05-20 (Fase 75)*
 *Atualizar a seção "Estado atual" a cada sprint.*

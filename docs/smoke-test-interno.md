@@ -116,6 +116,22 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Confirmar eventos de ocorrência sem descrição, unidade/local, texto de mensagem ou data exata.
 - [ ] Confirmar eventos `weekly_review_viewed` e `weekly_review_completed` sem PII nem texto livre.
 
+## 13. Índice de Saúde Operacional
+
+- [ ] Confirmar que o painel NÃO aparece na aba Condomínio com localStorage zerado (sem dados cadastrados).
+- [ ] Cadastrar AVCB, Seguro e Mandato e confirmar que o painel aparece antes de OnboardingProfile.
+- [ ] Confirmar exibição de percentual (0–100%), badge de status e barra de progresso.
+- [ ] Confirmar que a faixa "Crítico" aparece quando AVCB/Seguro/Mandato estão vencidos.
+- [ ] Confirmar que a faixa "Atenção" aparece com alertas de atenção ou próximos passos parados há +14 dias.
+- [ ] Confirmar que a faixa "Em evolução" aparece com dados parciais e sem alertas críticos.
+- [ ] Confirmar que a faixa "Bem acompanhado" aparece com essenciais completos, sem alertas e poucas pendências.
+- [ ] Confirmar que a faixa "Tudo em ordem" é atingível com revisão semanal concluída, sem alertas e sem pendências paradas.
+- [ ] Confirmar que os fatores mostram no máximo 5 itens.
+- [ ] Confirmar que as sugestões mostram no máximo 3 itens.
+- [ ] Confirmar que o disclaimer "Este índice é apenas operacional e depende dos dados cadastrados no app." está visível.
+- [ ] Confirmar que o painel NÃO exibe as palavras: "regular", "regularizado", "compliance", "conformidade", "saúde jurídica", "garantia", "segurança jurídica", "sem risco".
+- [ ] Confirmar que o índice NÃO aparece na aba Início (Home).
+
 ## 12. Maturidade comercial percebida
 
 - [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.

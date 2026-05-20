@@ -161,6 +161,19 @@
 
 ---
 
+---
+
+## Fase 75 — Índice de Saúde Operacional (2026-05-20)
+
+**Entregue:** `SaudeOperacionalPanel` na aba Condomínio. Índice percentual local (0–100%) de organização operacional dos dados cadastrados.
+
+- Determinístico, client-side, sem IA, sem backend, sem login, sem billing, sem nova aba.
+- Não indica regularidade jurídica, compliance ou ausência de risco.
+- Faixas: Crítico / Atenção / Em evolução / Bem acompanhado / Tudo em ordem.
+- Dynamic import (ssr:false). Nenhum arquivo congelado alterado. Bundle / mantido.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 72)*
+*Versão: 2026-05-20 (Fase 75)*
 *Atualizar conforme marcos forem atingidos.*
