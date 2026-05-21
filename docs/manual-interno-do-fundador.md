@@ -6,29 +6,30 @@
 
 ---
 
-## Estado atual do produto (2026-05-21 — Fase 78)
+## Estado atual do produto (2026-05-21 — Fase 79)
 
 ### Bundle
-- Rota principal (`/`): 221 kB First Load JS (margem 9 kB — abaixo do limite de 230 kB)
+- Rota principal (`/`): a validar após build
 - Admin (`/admin`): 204 kB First Load JS
 - TypeScript: zero erros
-- Build: Compiled successfully
+- Build: a validar
 
-### Entregues na Fase 78 (Ferramentas como central de ações por categorias)
+### Entregues na Fase 79 (Agenda do Prédio v1)
 
-Reorganização da aba Ferramentas de layout flat para menu de categorias clicáveis. Nenhuma feature nova de produto. Sem IA, login, billing, backend, WhatsApp, nova aba, KB, guidance, schema de backup, simuladores, checklists ou comunicados alterados.
+Lista leve de eventos operacionais futuros integrada à Rotina do síndico. Sem calendário mensal, sem recorrência, sem push, sem nova aba, sem rota, sem modal obrigatório.
 
-- **Menu de categorias em `app/page.tsx`:** ao abrir Ferramentas, o usuário vê 5 cards em lista vertical (ícone + título + descrição + chevron): Rotina do síndico, Comunicados, Simuladores, Checklists, Explorar por tema. Nenhum componente fica aberto ao mesmo tempo.
-- **Navegação interna por `activeToolGroup`:** estado local `useState<ToolGroup | null>` em `app/page.tsx`. Ao clicar em um card, apenas o conteúdo daquele grupo é exibido. Botão discreto "← Voltar para ferramentas" retorna ao menu. Estado reseta para `null` ao sair da aba. Não persiste em localStorage. Sem query params, sem modal, sem nova rota.
-- **Link da Home preservado:** `handleNavigateToFerramentas("registro-rapido")` continua funcionando. O mapeamento `ANCHOR_TO_GROUP` garante que ao chegar via link, o grupo "Rotina do síndico" abre automaticamente e o scroll até `id="registro-rapido"` se mantém.
-- **Duplicidade visual eliminada:** cabeçalhos de seção externos ("Rotina do síndico", "Comunicados" etc.) removidos — o contexto já é dado pelo card clicado. ComunicadoPanel mantém seu cabeçalho interno ("Escolha um modelo").
-- **Copy atualizado:** subtítulo da aba no menu → "Registre ocorrências, gere comunicados, faça simulações e consulte checklists." Título principal: "Ferramentas". Em views internas, o subtítulo é suprimido.
-- **PainelOperacional mantido** dentro do grupo "Explorar por tema".
+- **`components/AgendaPredio.tsx` (novo):** formulário de criação (título, data, tipo, nota, opção de criar próximo passo vinculado), lista de pendentes ordenados por data com urgência por cor, concluir/excluir com confirmação, lista colapsável de concluídos. Disclaimer operacional ao fim.
+- **13 tipos de evento:** assembleia, manutencao, dedetizacao, caixa_agua, extintores, vistoria, obra, cobranca, reuniao, fornecedor, comunicado, retorno, outro.
+- **`lib/session.ts`:** `AgendaEventType`, `AgendaEvent`, `KEYS.AGENDA = "amigo_agenda"`, `"agenda"` adicionado ao union `Pendencia.origem`. 7 funções: `getAgendaEvents`, `addAgendaEvent`, `updateAgendaEvent`, `completeAgendaEvent`, `deleteAgendaEvent`, `getUpcomingAgendaEvents`, `getAgendaEventById`.
+- **Backup v4:** `UserBackup.version` agora inclui `"4"`, com campo `agenda?: AgendaEvent[]`. Import/export/validate atualizados. v1/v2/v3 continuam funcionando sem quebra — ao importar backup antigo, `KEYS.AGENDA` é limpo.
+- **`HomeAcaoHub`:** evento mais urgente da agenda compete com datas monitoradas. Quando a agenda vence, seção muda de "Próxima data" para "Próximo na agenda". CTA "Ver agenda →" adicionado ao lado de "+ Registrar ocorrência →". Prop `onNavigateToAgenda` conectada em `app/page.tsx`.
+- **`TimelineOperacional`:** eventos de agenda concluídos entram como "Item da agenda concluído" (📅) sem expor título, nota ou data exata.
+- **Telemetria (3 eventos):** `agenda_event_created`, `agenda_event_completed`, `agenda_event_deleted` — propriedades: `type`, `days_until`, `has_note`, `has_linked_step`. Sem título, nota, data, local ou PII.
+- **`app/page.tsx`:** `"agenda-predio"` adicionado ao tipo `ToolAnchor` e ao `ANCHOR_TO_GROUP`. `AgendaPredio` exibido abaixo de `RegistroRapido` dentro do grupo "Rotina do síndico". `handleNavigateToAgenda` conectado.
+- **`BackupPanel.tsx`:** texto de exportação atualizado para "Backup v4: memória, próximos passos, ocorrências e agenda". Summary de importação mostra contagem de eventos da agenda.
 - **Hipóteses futuras documentadas (não implementadas):**
-  - *Agenda do Prédio:* lista de eventos do condomínio (data, tipo, nota curta) com exibição na Home, entrada na Timeline e backup — sem grade mensal completa de início, sem ERP.
   - *IA no Assistente:* fallback ancorado na KB, não substituto do GuidancePanel; depende de backend seguro, custo, logs sem PII e revisão jurídica; antes da IA, melhorar contexto local determinístico.
   - *Condomínio → Conta:* aba poderá evoluir para "Conta" quando houver login, billing, suporte e termos — não implementar antes disso para evitar expectativa falsa.
-- **Bundle:** 221 kB (inalterado vs Fase 77). Margem 9 kB.
 
 ### Diretriz comercial atual
 
@@ -46,7 +47,7 @@ Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug 
 
 ---
 
-## Estado anterior do produto (2026-05-20 — Fase 77)
+## Estado anterior do produto (2026-05-21 — Fase 78)
 
 ### Bundle
 - Rota principal (`/`): 221 kB First Load JS (margem 9 kB — abaixo do limite de 230 kB)

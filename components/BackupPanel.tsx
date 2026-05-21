@@ -125,7 +125,7 @@ export default function BackupPanel({ onImported }: Props) {
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-[12.5px] font-medium text-navy-800">Exportar dados</p>
-              <p className="text-[11px] text-navy-400">Backup v3: memória, próximos passos e ocorrências</p>
+              <p className="text-[11px] text-navy-400">Backup v4: memória, próximos passos, ocorrências e agenda</p>
             </div>
             <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -182,6 +182,7 @@ export default function BackupPanel({ onImported }: Props) {
                 {importState.summary.favoritesCount > 0 && ` · ${importState.summary.favoritesCount} favorito${importState.summary.favoritesCount > 1 ? "s" : ""}`}
                 {importState.summary.pendenciasCount != null && importState.summary.pendenciasCount > 0 && ` · ${importState.summary.pendenciasCount} próximo${importState.summary.pendenciasCount > 1 ? "s passos" : " passo"}`}
                 {importState.summary.ocorrenciasCount != null && importState.summary.ocorrenciasCount > 0 && ` · ${importState.summary.ocorrenciasCount} ocorrência${importState.summary.ocorrenciasCount > 1 ? "s" : ""}`}
+                {importState.summary.agendaCount != null && importState.summary.agendaCount > 0 && ` · ${importState.summary.agendaCount} evento${importState.summary.agendaCount > 1 ? "s" : ""} na agenda`}
               </p>
               <p className="text-[11px] text-amber-600 mb-3">
                 Os dados atuais do dispositivo serão substituídos.

@@ -193,6 +193,9 @@ Execute cada passo em ordem e marque ao concluir:
 | `admin_message_copied` | Modelo administrativo copiado | `tipo`, `source` |
 | `weekly_review_viewed` | Revisão semanal exibida | `week_key`, `occurrence_count`, `open_steps_count`, `stale_steps_count`, `has_guidance`, `has_monthly_review` |
 | `weekly_review_completed` | Revisão semanal concluída | `week_key`, `occurrence_count`, `open_steps_count`, `stale_steps_count`, `has_guidance`, `has_monthly_review` |
+| `agenda_event_created` | Evento de agenda criado | `type`, `days_until`, `has_note`, `has_linked_step` |
+| `agenda_event_completed` | Evento de agenda concluído | `type`, `days_until` |
+| `agenda_event_deleted` | Evento de agenda excluído | `type` |
 
 ---
 

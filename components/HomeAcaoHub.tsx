@@ -10,6 +10,7 @@ import {
   getOcorrencias,
   getPendenciasAbertas,
   getProfile,
+  getUpcomingAgendaEvents,
   getWeeklyReviewState,
   hasMemoriaOperacional,
   type Pendencia,
@@ -52,12 +53,13 @@ function isStale(createdAt: string): boolean {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type NextDate = { label: string; daysRem: number; urgencyLevel: UrgencyLevel };
+type NextDate = { label: string; daysRem: number; urgencyLevel: UrgencyLevel; fromAgenda?: boolean };
 
 type Props = {
   refreshKey?: number;
   onDoneReview?: () => void;
   onNavigateToFerramentas?: () => void;
+  onNavigateToAgenda?: () => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -66,6 +68,7 @@ export default function HomeAcaoHub({
   refreshKey,
   onDoneReview,
   onNavigateToFerramentas,
+  onNavigateToAgenda,
 }: Props) {
   const [hydrated, setHydrated]             = useState(false);
   const [weekKey, setWeekKey]               = useState("");
@@ -101,8 +104,8 @@ export default function HomeAcaoHub({
     );
     const useful  = open.length > 0 || stale.length > 0 || guidance.length > 0 || occs.length > 0;
 
-    // Próxima data mais urgente
-    const dateRows: { label: string; iso: string }[] = [];
+    // Próxima data mais urgente (datas monitoradas + agenda)
+    const dateRows: { label: string; iso: string; fromAgenda?: boolean }[] = [];
     if (m.vencimentoAVCB)                               dateRows.push({ label: "AVCB",                iso: m.vencimentoAVCB });
     if (m.vencimentoSeguro)                             dateRows.push({ label: "Seguro condominial",   iso: m.vencimentoSeguro });
     if (m.fimMandatoSindico)                            dateRows.push({ label: "Mandato do síndico",   iso: m.fimMandatoSindico });
@@ -114,8 +117,15 @@ export default function HomeAcaoHub({
     if (m.ultimaVistoriaSPDA)                           dateRows.push({ label: "SPDA",                 iso: addDays(m.ultimaVistoriaSPDA, 365) });
     if (m.ultimaVistoriaEletrica)                       dateRows.push({ label: "Elétrica",             iso: addDays(m.ultimaVistoriaEletrica, 365) });
 
+    // Agenda: o próximo evento pendente compete com as datas monitoradas
+    const upcomingAgenda = getUpcomingAgendaEvents(90);
+    if (upcomingAgenda.length > 0) {
+      const next = upcomingAgenda[0];
+      dateRows.push({ label: next.title, iso: next.date, fromAgenda: true });
+    }
+
     const validDates = dateRows
-      .map((r) => ({ label: r.label, daysRem: ate(r.iso), urgencyLevel: urgencyVencimento(r.iso) }))
+      .map((r) => ({ label: r.label, daysRem: ate(r.iso), urgencyLevel: urgencyVencimento(r.iso), fromAgenda: r.fromAgenda }))
       .filter((r) => r.urgencyLevel !== "ausente")
       .sort((a, b) => a.daysRem - b.daysRem);
 
@@ -315,11 +325,13 @@ export default function HomeAcaoHub({
           )}
         </div>
 
-        {/* ── Próxima data ──────────────────────────────────────────── */}
+        {/* ── Próxima data / Próximo na agenda ─────────────────────── */}
         {nextDate && (
           <div className="border-t border-navy-50 px-4 py-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-[12.5px] font-semibold text-navy-800">Próxima data</p>
+              <p className="text-[12.5px] font-semibold text-navy-800">
+                {nextDate.fromAgenda ? "Próximo na agenda" : "Próxima data"}
+              </p>
               <span className={`shrink-0 text-[11.5px] font-medium ${urgencyTextColor(nextDate.urgencyLevel)}`}>
                 {formatDays(nextDate.daysRem)}
               </span>
@@ -328,14 +340,21 @@ export default function HomeAcaoHub({
           </div>
         )}
 
-        {/* ── Registrar ocorrência ──────────────────────────────────── */}
-        <div className="border-t border-navy-50 px-4 py-3">
+        {/* ── CTAs de navegação ─────────────────────────────────────── */}
+        <div className="border-t border-navy-50 px-4 py-3 flex items-center gap-4 flex-wrap">
           <button
             type="button"
             onClick={onNavigateToFerramentas}
             className="text-[12px] font-medium text-navy-400 transition-colors hover:text-navy-600"
           >
             + Registrar ocorrência →
+          </button>
+          <button
+            type="button"
+            onClick={onNavigateToAgenda}
+            className="text-[12px] font-medium text-navy-400 transition-colors hover:text-navy-600"
+          >
+            Ver agenda →
           </button>
         </div>
 

@@ -103,6 +103,7 @@ const KEYS = {
   RESOLUTION_EVENTS:  "amigo_resolution_events",
   PENDENCIAS:         "amigo_pendencias",
   OCORRENCIAS:        "amigo_ocorrencias",
+  AGENDA:             "amigo_agenda",
   REVISAO_MENSAL_HOME:"amigo_revisao_mensal_home",
   REVISAO_SEMANAL:    "amigo_revisao_semanal",
 } as const;
@@ -393,7 +394,7 @@ export type Pendencia = {
   id: string;
   titulo: string;
   categoria?: string;
-  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia";
+  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda";
   matchedId?: string | null;
   status: "aberta" | "concluida";
   createdAt: string;
@@ -440,6 +441,92 @@ export function getPendenciasAbertas(): Pendencia[] {
 
 export function getPendenciasConcluidas(): Pendencia[] {
   return getPendencias().filter((p) => p.status === "concluida");
+}
+
+// ─── Agenda do prédio ────────────────────────────────────────────────────────
+// Lista leve de eventos operacionais futuros. Sem recorrência, sem push,
+// sem calendário mensal — apenas registro e acompanhamento local.
+
+export type AgendaEventType =
+  | "assembleia"
+  | "manutencao"
+  | "dedetizacao"
+  | "caixa_agua"
+  | "extintores"
+  | "vistoria"
+  | "obra"
+  | "cobranca"
+  | "reuniao"
+  | "fornecedor"
+  | "comunicado"
+  | "retorno"
+  | "outro";
+
+export type AgendaEvent = {
+  id: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  type: AgendaEventType;
+  note?: string;
+  linkedPendenciaId?: string;
+  completedAt?: string;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export function getAgendaEvents(): AgendaEvent[] {
+  return safeRead<AgendaEvent[]>(KEYS.AGENDA, []);
+}
+
+export function addAgendaEvent(
+  e: Omit<AgendaEvent, "id" | "createdAt">
+): AgendaEvent {
+  const all = getAgendaEvents();
+  const nova: AgendaEvent = {
+    ...e,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: new Date().toISOString(),
+  };
+  all.push(nova);
+  safeWrite(KEYS.AGENDA, all.slice(-100));
+  return nova;
+}
+
+export function updateAgendaEvent(
+  id: string,
+  changes: Partial<Omit<AgendaEvent, "id" | "createdAt">>
+): void {
+  safeWrite(
+    KEYS.AGENDA,
+    getAgendaEvents().map((e) =>
+      e.id === id ? { ...e, ...changes, updatedAt: new Date().toISOString() } : e
+    )
+  );
+}
+
+export function completeAgendaEvent(id: string): void {
+  updateAgendaEvent(id, { completedAt: new Date().toISOString() });
+}
+
+export function deleteAgendaEvent(id: string): void {
+  safeWrite(KEYS.AGENDA, getAgendaEvents().filter((e) => e.id !== id));
+}
+
+export function getUpcomingAgendaEvents(limitDays = 90): AgendaEvent[] {
+  const today = todayISO();
+  return getAgendaEvents()
+    .filter((e) => !e.completedAt && e.date >= today)
+    .filter((e) => {
+      const diff = Math.floor(
+        (new Date(e.date).getTime() - new Date(today).getTime()) / 86400000
+      );
+      return diff <= limitDays;
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getAgendaEventById(id: string): AgendaEvent | null {
+  return getAgendaEvents().find((e) => e.id === id) ?? null;
 }
 
 // ─── Ocorrências leves ───────────────────────────────────────────────────────
@@ -847,9 +934,10 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v1 — perfil, memória, favoritos, checklists (sem pendências)
 //   v2 — idem + pendências (amigo_pendencias)
 //   v3 — idem + ocorrências leves (amigo_ocorrencias)
+//   v4 — idem + agenda do prédio (amigo_agenda)
 
 export type UserBackup = {
-  version: "1" | "2" | "3";
+  version: "1" | "2" | "3" | "4";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
@@ -857,18 +945,19 @@ export type UserBackup = {
   favorites: FavoriteEntry[];
   checklists: ChecklistStorage;
   pendencias?: Pendencia[]; // presente em v2+, ausente em v1
-  ocorrencias?: Ocorrencia[]; // presente em v3, ausente em v1/v2
+  ocorrencias?: Ocorrencia[]; // presente em v3+, ausente em v1/v2
+  agenda?: AgendaEvent[]; // presente em v4, ausente em v1/v2/v3
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "3",
+    version: "4",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -877,6 +966,7 @@ export function exportUserData(): void {
     checklists: getChecklistStorage(),
     pendencias: getPendencias(),
     ocorrencias: getOcorrencias(),
+    agenda: getAgendaEvents(),
   };
 
   try {
@@ -910,7 +1000,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -926,8 +1016,11 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if (d.version === "3" && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
+    }
+    if (d.version === "4" && !Array.isArray(d.agenda)) {
+      return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -937,12 +1030,16 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
 
     // Pendências: presentes em v2+
     const pendenciasCount =
-      (d.version === "2" || d.version === "3") && Array.isArray(d.pendencias)
+      (d.version === "2" || d.version === "3" || d.version === "4") && Array.isArray(d.pendencias)
         ? (d.pendencias as Pendencia[]).length
         : undefined;
     const ocorrenciasCount =
-      d.version === "3" && Array.isArray(d.ocorrencias)
+      (d.version === "3" || d.version === "4") && Array.isArray(d.ocorrencias)
         ? (d.ocorrencias as Ocorrencia[]).length
+        : undefined;
+    const agendaCount =
+      d.version === "4" && Array.isArray(d.agenda)
+        ? (d.agenda as AgendaEvent[]).length
         : undefined;
 
     return {
@@ -953,6 +1050,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
         favoritesCount,
         pendenciasCount,
         ocorrenciasCount,
+        agendaCount,
       },
     };
   } catch {
@@ -975,7 +1073,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -992,8 +1090,11 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if (d.version === "3" && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
+    }
+    if (d.version === "4" && !Array.isArray(d.agenda)) {
+      return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
 
     // Escrita — cada campo individualmente para não quebrar os demais em caso de falha parcial
@@ -1009,17 +1110,25 @@ export function importUserData(jsonString: string): ImportResult {
 
     // Pendências: restaura em v2+ com campo válido
     let pendenciasCount: number | undefined;
-    if ((d.version === "2" || d.version === "3") && Array.isArray(d.pendencias)) {
+    if ((d.version === "2" || d.version === "3" || d.version === "4") && Array.isArray(d.pendencias)) {
       safeWrite(KEYS.PENDENCIAS, d.pendencias);
       pendenciasCount = (d.pendencias as Pendencia[]).length;
     }
 
     let ocorrenciasCount: number | undefined;
-    if (d.version === "3" && Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4") && Array.isArray(d.ocorrencias)) {
       safeWrite(KEYS.OCORRENCIAS, d.ocorrencias);
       ocorrenciasCount = (d.ocorrencias as Ocorrencia[]).length;
     } else {
       try { localStorage.removeItem(KEYS.OCORRENCIAS); } catch { /* noop */ }
+    }
+
+    let agendaCount: number | undefined;
+    if (d.version === "4" && Array.isArray(d.agenda)) {
+      safeWrite(KEYS.AGENDA, d.agenda);
+      agendaCount = (d.agenda as AgendaEvent[]).length;
+    } else {
+      try { localStorage.removeItem(KEYS.AGENDA); } catch { /* noop */ }
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -1035,6 +1144,7 @@ export function importUserData(jsonString: string): ImportResult {
         favoritesCount,
         pendenciasCount,
         ocorrenciasCount,
+        agendaCount,
       },
     };
   } catch {

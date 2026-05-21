@@ -239,3 +239,27 @@ Para cada pergunta abaixo, verificar:
 - [ ] Confirmar que Revisão Mensal e Timeline explicam por que voltar ao app.
 - [ ] Confirmar que Backup informa dados locais e proteção sem login.
 - [ ] Confirmar que o Assistente não parece advogado virtual, consultoria jurídica ou substituto da administradora.
+
+## 19. Agenda do Prédio — Fase 79
+
+- [ ] Acessar Ferramentas → Rotina do síndico e confirmar que AgendaPredio aparece abaixo de RegistroRapido.
+- [ ] Confirmar seção com título "Agenda do prédio", subtítulo "Eventos e compromissos operacionais" e botão "+ Novo evento".
+- [ ] Criar evento: preencher título, data futura, tipo "Assembleia" e nota. Confirmar que "Salvar evento" fica habilitado somente quando título e data estão preenchidos.
+- [ ] Confirmar que evento aparece na lista de pendentes com ícone, tipo, data formatada e urgência por cor.
+- [ ] Criar evento sem nota — confirmar que salva normalmente.
+- [ ] Criar evento com "Criar próximo passo vinculado" marcado — confirmar pendência criada em Próximos Passos com origem "agenda".
+- [ ] Concluir evento — confirmar que desaparece da lista pendente.
+- [ ] Confirmar que evento concluído aparece na lista colapsável "Ver N concluídos".
+- [ ] Excluir evento pendente — confirmar que pede confirmação antes de excluir.
+- [ ] Confirmar que evento concluído aparece na TimelineOperacional como "Item da agenda concluído" (📅) sem título, nota ou data exata exposta.
+- [ ] Com evento pendente próximo, confirmar que HomeAcaoHub mostra "Próximo na agenda" em vez de "Próxima data".
+- [ ] Com evento pendente e datas monitoradas, confirmar que a data mais urgente vence (seja da agenda ou da memória).
+- [ ] Confirmar CTA "Ver agenda →" no HomeAcaoHub navega para Ferramentas → Rotina do síndico com AgendaPredio visível.
+- [ ] Exportar backup — confirmar que arquivo gerado tem version "4" e campo agenda.
+- [ ] Limpar dados e importar backup v4 — confirmar que eventos da agenda são restaurados.
+- [ ] Importar backup v3 antigo — confirmar que importa normalmente (agenda fica vazia, não quebra).
+- [ ] Confirmar que BackupPanel mostra "Backup v4: memória, próximos passos, ocorrências e agenda".
+- [ ] Confirmar que summary de importação mostra contagem de eventos da agenda quando > 0.
+- [ ] Confirmar disclaimer: "Agenda operacional. Confirme prazos formais com documentos, prestadores ou profissionais responsáveis."
+- [ ] Confirmar que AgendaPredio NÃO exibe calendário mensal, recorrência, push ou responsáveis.
+- [ ] Confirmar que ao trocar de aba e voltar para Ferramentas → Rotina do síndico, a Agenda ainda aparece.

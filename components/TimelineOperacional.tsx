@@ -8,6 +8,7 @@ import {
   getOcorrencias,
   getPendenciasConcluidas,
   getWeeklyReviewState,
+  getAgendaEvents,
   logInteraction,
   MemoriaOperacional,
   type OcorrenciaTipo,
@@ -20,7 +21,7 @@ type TimelineEvent = {
   label: string;
   detalhe?: string;
   icon: string;
-  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia" | "ocorrencia" | "revisao";
+  tipo: "manutencao" | "vencimento" | "checklist" | "favorito" | "pendencia" | "ocorrencia" | "revisao" | "agenda";
 };
 
 const MEMORIA_MAP: Partial<
@@ -165,6 +166,20 @@ function buildTimeline(): TimelineEvent[] {
         tipo: "revisao",
       });
     }
+  }
+
+  const agendaEvents = getAgendaEvents().filter((e) => !!e.completedAt).slice(-10);
+  for (const e of agendaEvents) {
+    const date = new Date(e.completedAt!);
+    if (isNaN(date.getTime())) continue;
+    events.push({
+      id: `agenda-${e.id}`,
+      date,
+      label: "Item da agenda concluído",
+      detalhe: formatRelativeDate(date),
+      icon: "📅",
+      tipo: "agenda",
+    });
   }
 
   return events.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 12);

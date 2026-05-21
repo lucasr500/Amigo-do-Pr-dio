@@ -38,12 +38,14 @@ type ToolAnchor =
   | "simulador-multa"
   | "simulador-reajuste"
   | "checklists"
-  | "registro-rapido";
+  | "registro-rapido"
+  | "agenda-predio";
 
 type ToolGroup = "rotina" | "comunicados" | "simuladores" | "checklists" | "temas";
 
 const ANCHOR_TO_GROUP: Partial<Record<ToolAnchor, ToolGroup>> = {
   "registro-rapido": "rotina",
+  "agenda-predio": "rotina",
   comunicado: "comunicados",
   "comunicado-infracao": "comunicados",
   "comunicado-obra": "comunicados",
@@ -55,7 +57,7 @@ const ANCHOR_TO_GROUP: Partial<Record<ToolAnchor, ToolGroup>> = {
 };
 
 const TOOL_CATEGORIES: Array<{ id: ToolGroup; icon: string; title: string; description: string }> = [
-  { id: "rotina",      icon: "📋", title: "Rotina do síndico", description: "Registre acontecimentos e acompanhe próximos passos." },
+  { id: "rotina",      icon: "📋", title: "Rotina do síndico", description: "Registre acontecimentos, agenda eventos e acompanhe próximos passos." },
   { id: "comunicados", icon: "📢", title: "Comunicados",        description: "Modelos administrativos para avisos aos moradores." },
   { id: "simuladores", icon: "🧮", title: "Simuladores",        description: "Cálculos simples para estimativas condominiais." },
   { id: "checklists",  icon: "✅", title: "Checklists",         description: "Listas orientativas para assembleias, obras e manutenção." },
@@ -71,6 +73,7 @@ const TimelineOperacional = dynamic(() => import("@/components/TimelineOperacion
 const RevisaoMensal = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
 const BackupPanel = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
 const RegistroRapido = dynamic(() => import("@/components/RegistroRapido"), { ssr: false });
+const AgendaPredio = dynamic(() => import("@/components/AgendaPredio"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
 // Aba Home — hubs principais
 const HomeCondominioHub = dynamic(() => import("@/components/HomeCondominioHub"), { ssr: false });
@@ -263,6 +266,11 @@ export default function HomePage() {
     navigateTab("ferramentas");
   };
 
+  const handleNavigateToAgenda = () => {
+    setPendingToolAnchor("agenda-predio");
+    navigateTab("ferramentas");
+  };
+
   // Chamado pela bridge do OnboardingProfile: expande MemoriaPanel automaticamente
   const handleSetupMemoria = () => {
     setShouldExpandMemoria(true);
@@ -346,6 +354,7 @@ export default function HomePage() {
                 refreshKey={refreshKey}
                 onDoneReview={() => setRefreshKey((k) => k + 1)}
                 onNavigateToFerramentas={() => handleNavigateToFerramentas("registro-rapido")}
+                onNavigateToAgenda={handleNavigateToAgenda}
               />
             )}
 
@@ -499,8 +508,13 @@ export default function HomePage() {
 
             {/* ── Rotina do síndico ─────────────────────────────────── */}
             {activeToolGroup === "rotina" && (
-              <div id="registro-rapido">
-                <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
+              <div className="space-y-6">
+                <div id="registro-rapido">
+                  <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
+                </div>
+                <div id="agenda-predio" className="border-t border-zinc-100 pt-6">
+                  <AgendaPredio onSaved={() => setRefreshKey((k) => k + 1)} />
+                </div>
               </div>
             )}
 
