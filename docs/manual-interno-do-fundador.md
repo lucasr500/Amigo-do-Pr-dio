@@ -6,13 +6,51 @@
 
 ---
 
-## Estado atual do produto (2026-05-21 — Fase 79)
+## Estado atual do produto (2026-05-21 — Fase 80)
 
 ### Bundle
 - Rota principal (`/`): a validar após build
 - Admin (`/admin`): 204 kB First Load JS
 - TypeScript: zero erros
 - Build: a validar
+
+### Entregues na Fase 80 (Conta & Dados — reorganização interna da aba Condomínio)
+
+Reorganização visual e conceitual da aba Condomínio sem nenhuma feature nova. Sem login, cobrança, backend, conta real, termos completos ou suporte ativo.
+
+- **Cabeçalho interno atualizado em `app/page.tsx`:** quando há dados cadastrados, título muda de "Dados do prédio" para "Conta & Dados"; subtitle atualizado para "Dados do prédio, histórico, backup e preferências do app." Sem dados, mantém "Ativar monitoramento" e copy original.
+- **Rótulos de seção discretos:** quando `hasCondominioData`, quatro marcadores visuais aparecem acima de cada grupo — "Dados do prédio", "Vencimentos e rotinas", "Histórico operacional", "Backup e segurança". Apenas labels de texto uppercase/tracking; nenhum componente interno alterado.
+- **Bloco estático "Suporte e termos":** informa que suporte, termos de uso e política de privacidade serão adicionados antes de qualquer versão comercial. Sem formulário, sem e-mail, sem integração externa. Aparece sempre, incluindo estado sem dados.
+- **Bloco estático "Preferências futuras":** informa que conta, cor do app, notificações e assinatura são hipóteses futuras. Sem toggle, sem persistência, sem backend. Aparece sempre.
+- **BottomNav inalterado:** label "Condomínio" preservado no menu inferior.
+- **Arquivos de componentes inalterados:** `OnboardingProfile`, `MemoriaPanel`, `TimelineOperacional`, `RevisaoMensal`, `BackupPanel` — nenhum tocado. `id="revisao-mensal"` preservado para scroll do link de Revisão Mensal.
+- **Hipóteses futuras (não implementadas):**
+  - *"Minha Conta":* aba poderá evoluir para área de conta real quando houver login, billing, suporte e termos finalizados — não implementar antes disso.
+  - *IA no Assistente:* fallback ancorado na KB; depende de backend seguro e revisão jurídica.
+
+### Diretriz comercial atual
+
+O Amigo do Prédio segue como produto pré-beta interno. Ainda não é vendável, não deve ser apresentado como beta para síndicos, não deve receber tráfego pago e não deve ser posicionado como SaaS pronto.
+
+Posicionamento correto nesta etapa: copiloto operacional leve para síndicos que precisam acompanhar prazos, organizar ações e decidir com mais clareza.
+
+O produto não é advogado virtual, consultoria jurídica, substituto da administradora, ERP condominial, ferramenta de compliance completo ou app B2B para administradoras.
+
+Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
+
+Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
+
+Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+---
+
+## Estado anterior do produto (2026-05-21 — Fase 79)
+
+### Bundle
+- Rota principal (`/`): 221 kB First Load JS (margem 9 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS
+- TypeScript: zero erros
+- Build: Compiled successfully
 
 ### Entregues na Fase 79 (Agenda do Prédio v1)
 

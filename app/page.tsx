@@ -562,16 +562,17 @@ export default function HomePage() {
         {activeTab === "condominio" && (
           <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
+            {/* ── Cabeçalho ─────────────────────────────────────────── */}
             <div className="px-5 pb-2 pt-1 sm:px-6">
               <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
                 Condomínio
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                {hasCondominioData ? "Dados do prédio" : "Ativar monitoramento"}
+                {hasCondominioData ? "Conta & Dados" : "Ativar monitoramento"}
               </p>
               {hasCondominioData ? (
                 <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
-                  Dados que alimentam o monitoramento de prazos e alertas do app.
+                  Dados do prédio, histórico, backup e preferências do app.
                 </p>
               ) : (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
@@ -580,12 +581,24 @@ export default function HomePage() {
               )}
             </div>
 
+            {/* ── Dados do prédio ───────────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-4 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Dados do prédio</p>
+              </div>
+            )}
             <OnboardingProfile
               onProfileSaved={() => setRefreshKey((k) => k + 1)}
               onSetupMemoria={handleSetupMemoria}
               forceShow
             />
 
+            {/* ── Vencimentos e rotinas ─────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Vencimentos e rotinas</p>
+              </div>
+            )}
             <MemoriaPanel
               onSaved={() => {
                 setRefreshKey((k) => k + 1);
@@ -594,8 +607,13 @@ export default function HomePage() {
               autoExpand={shouldExpandMemoria}
             />
 
+            {/* ── Histórico operacional ─────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Histórico operacional</p>
+              </div>
+            )}
             <TimelineOperacional refreshKey={refreshKey} />
-
             <div id="revisao-mensal" className="scroll-mt-3">
               <RevisaoMensal
                 refreshKey={refreshKey}
@@ -603,7 +621,33 @@ export default function HomePage() {
               />
             </div>
 
+            {/* ── Backup e segurança ────────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Backup e segurança</p>
+              </div>
+            )}
             <BackupPanel onImported={() => setRefreshKey((k) => k + 1)} />
+
+            {/* ── Suporte e termos ──────────────────────────────────── */}
+            <section className="px-5 pb-3 pt-4 sm:px-6">
+              <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Suporte e termos</p>
+                <p className="text-[12.5px] leading-relaxed text-navy-500">
+                  Antes de qualquer versão comercial, esta área reunirá suporte, termos de uso e política de privacidade. Por enquanto, o app segue em pré-beta interno.
+                </p>
+              </div>
+            </section>
+
+            {/* ── Preferências futuras ──────────────────────────────── */}
+            <section className="px-5 pb-8 sm:px-6">
+              <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
+                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Preferências futuras</p>
+                <p className="text-[12.5px] leading-relaxed text-navy-400">
+                  No futuro, esta área poderá reunir conta, cor do app, notificações e opções de assinatura.
+                </p>
+              </div>
+            </section>
 
           </div>
         )}

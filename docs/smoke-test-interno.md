@@ -240,6 +240,41 @@ Para cada pergunta abaixo, verificar:
 - [ ] Confirmar que Backup informa dados locais e proteção sem login.
 - [ ] Confirmar que o Assistente não parece advogado virtual, consultoria jurídica ou substituto da administradora.
 
+## 20. Conta & Dados — Fase 80
+
+### Estado sem dados cadastrados
+
+- [ ] Abrir aba Condomínio sem dados cadastrados.
+- [ ] Confirmar título: "Ativar monitoramento" (não "Conta & Dados").
+- [ ] Confirmar que rótulos de seção NÃO aparecem ("Dados do prédio", "Vencimentos e rotinas" etc.).
+- [ ] Confirmar que blocos "Suporte e termos" e "Preferências futuras" aparecem ao fim.
+- [ ] Confirmar que BottomNav exibe "Condomínio" (não alterado).
+
+### Estado com dados cadastrados
+
+- [ ] Cadastrar AVCB, Seguro e Mandato e voltar à aba Condomínio.
+- [ ] Confirmar título interno: "Conta & Dados".
+- [ ] Confirmar subtitle: "Dados do prédio, histórico, backup e preferências do app."
+- [ ] Confirmar rótulo "Dados do prédio" acima de OnboardingProfile.
+- [ ] Confirmar rótulo "Vencimentos e rotinas" acima de MemoriaPanel.
+- [ ] Confirmar rótulo "Histórico operacional" acima de TimelineOperacional.
+- [ ] Confirmar rótulo "Backup e segurança" acima de BackupPanel.
+- [ ] Confirmar que os rótulos são discretos (uppercase, texto pequeno, sem caixa, sem borda).
+
+### Blocos estáticos
+
+- [ ] Confirmar bloco "Suporte e termos" com texto: "Antes de qualquer versão comercial, esta área reunirá suporte, termos de uso e política de privacidade. Por enquanto, o app segue em pré-beta interno."
+- [ ] Confirmar bloco "Preferências futuras" com texto: "No futuro, esta área poderá reunir conta, cor do app, notificações e opções de assinatura."
+- [ ] Confirmar que nenhum bloco tem formulário, botão de ação, e-mail clicável ou integração externa.
+- [ ] Confirmar que nenhum bloco sugere que existe conta ativa ou suporte disponível imediatamente.
+
+### Regressões
+
+- [ ] Confirmar que link de RevisaoMensal da Home ainda abre aba Condomínio e rola até a seção correta.
+- [ ] Confirmar que OnboardingProfile, MemoriaPanel, TimelineOperacional, RevisaoMensal e BackupPanel funcionam normalmente.
+- [ ] Confirmar que exportar backup e importar backup continuam funcionando.
+- [ ] Confirmar que "Novo condomínio / limpar dados" continua funcionando no BackupPanel.
+
 ## 19. Agenda do Prédio — Fase 79
 
 - [ ] Acessar Ferramentas → Rotina do síndico e confirmar que AgendaPredio aparece abaixo de RegistroRapido.
