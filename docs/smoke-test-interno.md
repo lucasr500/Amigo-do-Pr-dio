@@ -298,3 +298,66 @@ Para cada pergunta abaixo, verificar:
 - [ ] Confirmar disclaimer: "Agenda operacional. Confirme prazos formais com documentos, prestadores ou profissionais responsáveis."
 - [ ] Confirmar que AgendaPredio NÃO exibe calendário mensal, recorrência, push ou responsáveis.
 - [ ] Confirmar que ao trocar de aba e voltar para Ferramentas → Rotina do síndico, a Agenda ainda aparece.
+
+## 21. Assistente contextual sem IA — Fase 81
+
+Objetivo: verificar que o bloco "Contexto do prédio" aparece corretamente nos novos casos e que o fallback está mais honesto.
+
+Pré-condição geral: dados cadastrados em Dados do prédio (AVCB, seguro, mandato) e ao menos uma ocorrência registrada.
+
+### Pergunta 1 — AVCB vencido
+
+- [ ] Cadastrar AVCB com data passada.
+- [ ] Perguntar no Assistente: "O que acontece se o AVCB vencer?"
+- [ ] Confirmar que a resposta principal é da KB (não inventada).
+- [ ] Confirmar que bloco "Contexto do prédio" aparece com menção ao vencimento do AVCB cadastrado.
+- [ ] Confirmar que o bloco NÃO menciona data exata, nome de pessoa, unidade ou nota.
+- [ ] Confirmar que o texto não parece orientação jurídica.
+
+### Pergunta 2 — Seguro vencendo
+
+- [ ] Cadastrar seguro com data a 15 dias.
+- [ ] Perguntar: "Como funciona o seguro do condomínio?"
+- [ ] Confirmar resposta da KB.
+- [ ] Confirmar bloco "Contexto do prédio" mencionando que o seguro vence em breve (prazo em dias, sem data exata exposta).
+- [ ] Confirmar ausência de conteúdo jurídico ou apólice.
+
+### Pergunta 3 — Obra / manutenção
+
+- [ ] Adicionar evento de tipo "Manutenção" ou "Extintores" na Agenda do Prédio com data futura dentro de 90 dias.
+- [ ] Perguntar: "Quando fazer manutenção dos extintores?"
+- [ ] Confirmar resposta da KB.
+- [ ] Confirmar bloco "Contexto do prédio" com texto sobre itens futuros na Agenda — sem expor título do evento, nota ou data exata.
+- [ ] Remover o evento da agenda e perguntar novamente — confirmar que bloco NÃO aparece (sem dado relevante).
+
+### Pergunta 4 — Barulho
+
+- [ ] Perguntar: "Morador está fazendo barulho depois da meia-noite. O que fazer?"
+- [ ] Confirmar resposta da KB (categoria multas ou áreas-comuns).
+- [ ] Confirmar bloco "Contexto do prédio" com sugestão de registrar como ocorrência e criar próximo passo.
+- [ ] Confirmar que o bloco NÃO menciona ocorrências existentes, unidade, nome ou texto livre.
+- [ ] Confirmar que o bloco NÃO parece protocolo oficial ou prova jurídica.
+
+### Pergunta 5 — Inadimplência
+
+- [ ] Perguntar: "Como cobrar morador inadimplente?"
+- [ ] Confirmar resposta da KB (categoria inadimplencia/cobranca).
+- [ ] Confirmar que o "Próximo passo" aparece normalmente.
+- [ ] Confirmar que nenhum bloco "Contexto do prédio" aparece para inadimplência (sem dado local relevante nesta categoria).
+
+### Pergunta 6 — Pergunta fora da base
+
+- [ ] Perguntar algo completamente fora do escopo: "Qual é a previsão do tempo amanhã?"
+- [ ] Confirmar que o fallback aparece (bloco default, não uma resposta inventada).
+- [ ] Confirmar novo texto: "Não encontrei uma orientação específica para essa situação na base atual. Use a resposta como ponto de partida e, se envolver risco jurídico, financeiro, trabalhista ou técnico, confirme com profissional habilitado."
+- [ ] Confirmar as três sugestões discretas em texto: "Reformule a pergunta com outras palavras", "Registre a situação como ocorrência no app", "Crie um próximo passo para acompanhar".
+- [ ] Confirmar que NÃO há botões novos de navegação no fallback.
+- [ ] Confirmar que o fallback NÃO inventa base legal ou resposta jurídica aberta.
+
+### Regressões
+
+- [ ] Confirmar que resposta normal (entrada KB com boa pontuação) continua aparecendo sem bloco desnecessário.
+- [ ] Confirmar que bloco "Contexto do prédio" aparece apenas quando houver dado local relevante ao tema.
+- [ ] Confirmar que GuidancePanel, HomeAcaoHub e AgendaPredio continuam funcionando normalmente.
+- [ ] Confirmar que exportar e importar backup continuam sem erro.
+- [ ] Confirmar que TypeScript zero erros e build limpo (/ 222 kB, /admin 204 kB).

@@ -9,6 +9,7 @@ import {
   logShare,
   logInteraction,
   getMemoriaOperacional,
+  getUpcomingAgendaEvents,
   type MemoriaOperacional,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
@@ -89,7 +90,7 @@ const RELATED_QUESTION_PROMPTS: Partial<Record<string, string[]>> = {
 };
 
 type LocalContextNotice = {
-  contextType: "avcb" | "seguro" | "mandato" | "manutencao";
+  contextType: "avcb" | "seguro" | "mandato" | "manutencao" | "barulho" | "agenda";
   text: string;
 };
 
@@ -163,6 +164,46 @@ function getLocalContextNotice(entry: KnowledgeEntry): LocalContextNotice | null
     return {
       contextType: "manutencao",
       text: "Use as datas cadastradas no monitoramento para conferir se essa manutenção está dentro do prazo.",
+    };
+  }
+
+  // Agenda — manutenção/rotina: só mostrar se houver eventos futuros relevantes
+  const isManuTema =
+    entry.categoria === "manutencao" ||
+    entryHasAny(entry, ["dedetizacao", "dedetização", "extintor", "elevador", "spda", "vistoria"]);
+  if (isManuTema) {
+    const agendaManu = getUpcomingAgendaEvents(90).filter((e) =>
+      ["manutencao", "dedetizacao", "caixa_agua", "extintores", "vistoria"].includes(e.type)
+    );
+    if (agendaManu.length > 0) {
+      return {
+        contextType: "agenda",
+        text: "Há itens futuros na Agenda do Prédio relacionados à rotina do condomínio. Confira a agenda para acompanhar os próximos compromissos.",
+      };
+    }
+  }
+
+  // Agenda — assembleia: só mostrar se houver evento futuro do tipo
+  const isAssembleiaTema =
+    entry.categoria === "assembleias" ||
+    entryHasAny(entry, ["assembleia", "eleicao", "eleição", "reuniao", "reunião"]);
+  if (isAssembleiaTema) {
+    const agendaAsm = getUpcomingAgendaEvents(90).filter((e) =>
+      ["assembleia", "reuniao"].includes(e.type)
+    );
+    if (agendaAsm.length > 0) {
+      return {
+        contextType: "agenda",
+        text: "Há compromisso futuro registrado na Agenda do Prédio. Confira a agenda antes de tomar próximos passos sobre assembleia.",
+      };
+    }
+  }
+
+  // Barulho/ocorrência: sugestão de registro, sem dados locais
+  if (entryHasAny(entry, ["barulho", "reclamacao", "reclamação", "perturbacao", "perturbação", "vizinho", "morador"])) {
+    return {
+      contextType: "barulho",
+      text: "Se esta situação precisar de acompanhamento, registre como ocorrência e crie um próximo passo para não perder o histórico.",
     };
   }
 
@@ -786,9 +827,16 @@ export default function Response({
 
                       <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
                         <InfoIcon className="text-navy-300" />
-                        <p className="text-[13px] leading-relaxed text-navy-400">
-                          Não encontrei uma orientação específica na base atual. As respostas são informativas e podem exigir análise da administradora ou assessoria especializada.
-                        </p>
+                        <div>
+                          <p className="text-[13px] leading-relaxed text-navy-400">
+                            Não encontrei uma orientação específica para essa situação na base atual. Use a resposta como ponto de partida e, se envolver risco jurídico, financeiro, trabalhista ou técnico, confirme com profissional habilitado.
+                          </p>
+                          <ul className="mt-2 space-y-1 text-[12px] text-navy-400">
+                            <li>· Reformule a pergunta com outras palavras</li>
+                            <li>· Registre a situação como ocorrência no app</li>
+                            <li>· Crie um próximo passo para acompanhar</li>
+                          </ul>
+                        </div>
                       </div>
                     </div>
                   )}

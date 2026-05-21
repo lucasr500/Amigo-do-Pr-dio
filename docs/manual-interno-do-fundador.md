@@ -6,13 +6,37 @@
 
 ---
 
-## Estado atual do produto (2026-05-21 — Fase 80)
+## Estado atual do produto (2026-05-21 — Fase 81)
 
 ### Bundle
-- Rota principal (`/`): a validar após build
+- Rota principal (`/`): 222 kB First Load JS (margem 8 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 204 kB First Load JS
 - TypeScript: zero erros
-- Build: a validar
+- Build: Compiled successfully
+
+### Entregues na Fase 81 (Assistente contextual sem IA)
+
+Extensão determinística do Assistente: respostas agora consideram dados locais já cadastrados quando o tema da pergunta tem relação clara com esses dados. Nenhuma IA, RAG, backend ou KB alterados.
+
+- **`components/Response.tsx` — `getLocalContextNotice()` estendido:** adicionados dois novos contextos ao bloco "Contexto do prédio" já existente:
+  - **Barulho/ocorrência:** detectado por palavras-chave simples (barulho, reclamação, perturbação, vizinho, morador). Exibe sugestão de registrar ocorrência e criar próximo passo. Sem dados locais sensíveis, texto fixo.
+  - **Agenda futura:** importa `getUpcomingAgendaEvents(90)` de `lib/session.ts`. Para temas de manutenção (filtra tipos: manutencao, dedetizacao, caixa_agua, extintores, vistoria), exibe mensagem se houver evento futuro relacionado. Para temas de assembleia (filtra tipos: assembleia, reuniao), idem. Sem expor título, nota ou data exata do evento.
+- **Tipo `LocalContextNotice.contextType` estendido:** de `"avcb" | "seguro" | "mandato" | "manutencao"` para `"avcb" | "seguro" | "mandato" | "manutencao" | "barulho" | "agenda"`.
+- **Telemetria `local_context_notice_shown` preservada:** evento existente absorve os novos `context_type` sem alteração em `lib/telemetry.ts`. Sem envio de título, nota, data, unidade, query ou dados sensíveis.
+- **Fallback mais honesto:** texto atualizado de "Não encontrei uma orientação específica na base atual..." para "Não encontrei uma orientação específica para essa situação na base atual. Use a resposta como ponto de partida e, se envolver risco jurídico, financeiro, trabalhista ou técnico, confirme com profissional habilitado." Três sugestões discretas em texto adicionadas: reformular a pergunta, registrar como ocorrência, criar próximo passo. Sem botões novos, sem navegação, sem alterar `app/page.tsx`.
+- **Limites mantidos:** motor de busca inalterado, KB inalterada, GuidancePanel inalterado, HomeAcaoHub inalterado, AgendaPredio inalterado, sem IA, sem RAG, sem backend.
+- **Hipóteses futuras (não implementadas):**
+  - *IA no Assistente:* continua hipótese futura; depende de backend seguro, custo, logs sem PII e revisão jurídica.
+
+---
+
+## Estado anterior do produto (2026-05-21 — Fase 80)
+
+### Bundle
+- Rota principal (`/`): 222 kB First Load JS
+- Admin (`/admin`): 204 kB First Load JS
+- TypeScript: zero erros
+- Build: Compiled successfully
 
 ### Entregues na Fase 80 (Conta & Dados — reorganização interna da aba Condomínio)
 
