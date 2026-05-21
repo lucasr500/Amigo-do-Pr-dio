@@ -6,7 +6,27 @@
 
 ---
 
-## Estado atual do produto (2026-05-21 — Fase 81)
+## Estado atual do produto (2026-05-21 — Fase 82)
+
+### Bundle
+- Rota principal (`/`): 222 kB First Load JS (margem 8 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS
+- TypeScript: zero erros
+- Build: Compiled successfully (inalterado — fase documental)
+
+### Entregues na Fase 82 (Documento técnico de IA futura — sem implementação)
+
+Fase exclusivamente documental. Nenhum arquivo de código, componente, lib, bundle ou runtime foi alterado.
+
+- **`docs/plano-futuro-ia-assistente.md` (novo — documento central):** registro técnico e estratégico consolidado sobre a possibilidade futura de IA no Assistente. 15 seções: resumo executivo, quando usar/não usar IA, arquitetura proposta, backend necessário, guardrails, prompt base (apenas documentação), dados permitidos/proibidos, logs e privacidade, estimativa de custo, critérios antes de implementar, estratégia de rollout, riscos e decisão atual.
+- **IA continua não implementada.** O Assistente permanece 100% determinístico com contexto local (Fase 81).
+- **Decisão registrada:** IA só será avaliada após telemetria ativa com dados reais, taxa de fallback real > 30%, backend seguro, política de privacidade, termos de uso e revisão jurídica prontos.
+- **GuidancePanel, saúde operacional, agenda, simuladores e alertas de prazos permanecem determinísticos** independentemente de qualquer IA futura.
+- **Documentos anteriores relacionados preservados:** `plano-futuro-ia-rag-contextual.md` (Fase 64), `plano-ia-rag-futuro.md` (Fase 34–36), `plano-tecnico-ia-rag-fase-36.md` (Fase 36) — o novo documento é o mais atualizado e deve ser consultado como referência primária.
+
+---
+
+## Estado anterior do produto (2026-05-21 — Fase 81)
 
 ### Bundle
 - Rota principal (`/`): 222 kB First Load JS (margem 8 kB — abaixo do limite de 230 kB)
