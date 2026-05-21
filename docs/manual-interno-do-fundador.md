@@ -6,7 +6,47 @@
 
 ---
 
-## Estado atual do produto (2026-05-20 — Fase 77)
+## Estado atual do produto (2026-05-21 — Fase 78)
+
+### Bundle
+- Rota principal (`/`): 221 kB First Load JS (margem 9 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues na Fase 78 (Ferramentas como central de ações por categorias)
+
+Reorganização da aba Ferramentas de layout flat para menu de categorias clicáveis. Nenhuma feature nova de produto. Sem IA, login, billing, backend, WhatsApp, nova aba, KB, guidance, schema de backup, simuladores, checklists ou comunicados alterados.
+
+- **Menu de categorias em `app/page.tsx`:** ao abrir Ferramentas, o usuário vê 5 cards em lista vertical (ícone + título + descrição + chevron): Rotina do síndico, Comunicados, Simuladores, Checklists, Explorar por tema. Nenhum componente fica aberto ao mesmo tempo.
+- **Navegação interna por `activeToolGroup`:** estado local `useState<ToolGroup | null>` em `app/page.tsx`. Ao clicar em um card, apenas o conteúdo daquele grupo é exibido. Botão discreto "← Voltar para ferramentas" retorna ao menu. Estado reseta para `null` ao sair da aba. Não persiste em localStorage. Sem query params, sem modal, sem nova rota.
+- **Link da Home preservado:** `handleNavigateToFerramentas("registro-rapido")` continua funcionando. O mapeamento `ANCHOR_TO_GROUP` garante que ao chegar via link, o grupo "Rotina do síndico" abre automaticamente e o scroll até `id="registro-rapido"` se mantém.
+- **Duplicidade visual eliminada:** cabeçalhos de seção externos ("Rotina do síndico", "Comunicados" etc.) removidos — o contexto já é dado pelo card clicado. ComunicadoPanel mantém seu cabeçalho interno ("Escolha um modelo").
+- **Copy atualizado:** subtítulo da aba no menu → "Registre ocorrências, gere comunicados, faça simulações e consulte checklists." Título principal: "Ferramentas". Em views internas, o subtítulo é suprimido.
+- **PainelOperacional mantido** dentro do grupo "Explorar por tema".
+- **Hipóteses futuras documentadas (não implementadas):**
+  - *Agenda do Prédio:* lista de eventos do condomínio (data, tipo, nota curta) com exibição na Home, entrada na Timeline e backup — sem grade mensal completa de início, sem ERP.
+  - *IA no Assistente:* fallback ancorado na KB, não substituto do GuidancePanel; depende de backend seguro, custo, logs sem PII e revisão jurídica; antes da IA, melhorar contexto local determinístico.
+  - *Condomínio → Conta:* aba poderá evoluir para "Conta" quando houver login, billing, suporte e termos — não implementar antes disso para evitar expectativa falsa.
+- **Bundle:** 221 kB (inalterado vs Fase 77). Margem 9 kB.
+
+### Diretriz comercial atual
+
+O Amigo do Prédio segue como produto pré-beta interno. Ainda não é vendável, não deve ser apresentado como beta para síndicos, não deve receber tráfego pago e não deve ser posicionado como SaaS pronto.
+
+Posicionamento correto nesta etapa: copiloto operacional leve para síndicos que precisam acompanhar prazos, organizar ações e decidir com mais clareza.
+
+O produto não é advogado virtual, consultoria jurídica, substituto da administradora, ERP condominial, ferramenta de compliance completo ou app B2B para administradoras.
+
+Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
+
+Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
+
+Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
+
+---
+
+## Estado anterior do produto (2026-05-20 — Fase 77)
 
 ### Bundle
 - Rota principal (`/`): 221 kB First Load JS (margem 9 kB — abaixo do limite de 230 kB)
@@ -24,20 +64,6 @@ Ciclo de controle interno e testabilidade. Nenhuma feature nova de produto adici
 - **Validação do Assistente (sem alteração de código):** `Response.tsx` inspecionado — o card principal não tem `max-height`, `overflow: hidden` ou qualquer constraint de altura. Texto da resposta principal (`<p>` com `text-[15px] leading-[1.7]`) e conteúdo contextual (próximo passo, base legal, dica, veja também) renderizam sem truncamento real. Nenhuma correção necessária.
 - **Smoke test:** seções 16 e 17 adicionadas ao `docs/smoke-test-interno.md` — roteiro do reset seguro (10 itens) e roteiro das 5 perguntas do Assistente com critérios detalhados.
 - **Bundle:** 221 kB (sem variação vs Fase 76B). Margem 9 kB.
-
-### Diretriz comercial atual
-
-O Amigo do Prédio segue como produto pré-beta interno. Ainda não é vendável, não deve ser apresentado como beta para síndicos, não deve receber tráfego pago e não deve ser posicionado como SaaS pronto.
-
-Posicionamento correto nesta etapa: copiloto operacional leve para síndicos que precisam acompanhar prazos, organizar ações e decidir com mais clareza.
-
-O produto não é advogado virtual, consultoria jurídica, substituto da administradora, ERP condominial, ferramenta de compliance completo ou app B2B para administradoras.
-
-Features seguem congeladas fora de entregas pequenas e justificadas. O trabalho permitido é reduzir risco, melhorar observabilidade, reforçar confiança e consolidar o ciclo existente: dúvida → ação → acompanhamento → histórico.
-
-Supabase é apenas telemetria interna opcional. Não é backend de persistência, não sincroniza dados do condomínio, não substitui localStorage e não deve receber PII.
-
-Critérios mínimos antes de cogitar venda: smoke test interno repetido sem bug crítico, telemetria interna ativa ou validada, termos/disclaimers revisados, backup confiável, evidência de retorno recorrente e suporte esperado documentado.
 
 ---
 

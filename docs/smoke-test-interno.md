@@ -35,11 +35,11 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Criar 6+ itens e verificar overflow.
 - [ ] Concluir item e verificar Timeline.
 
-## 5. Registro rápido (agora em Ferramentas → Rotina do síndico)
+## 5. Registro rápido (Ferramentas → Rotina do síndico, via link da Home)
 
 - [ ] Confirmar que na Home aparece atalho discreto “+ Registrar ocorrência” (não o formulário completo).
-- [ ] Clicar no atalho e confirmar que navega para Ferramentas, rolando até o Registro rápido.
-- [ ] Confirmar que Ferramentas exibe grupos: Rotina do síndico / Comunicados / Simuladores / Checklists.
+- [ ] Clicar no atalho e confirmar que navega para Ferramentas abrindo diretamente o grupo “Rotina do síndico”.
+- [ ] Confirmar que RegistroRapido está visível após a navegação (não o menu de categorias).
 - [ ] Registrar ocorrência de barulho com descrição curta.
 - [ ] Confirmar que não há linguagem de livro oficial, denúncia ou protocolo.
 - [ ] Marcar criação de próximo passo e confirmar chip “Ocorrência”.
@@ -79,16 +79,23 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Fazer pergunta fora do escopo.
 - [ ] Testar botão Voltar.
 
-## 8. Ferramentas
+## 8. Ferramentas — Central de Ações por Categorias (Fase 78)
 
-- [ ] Confirmar grupos visuais: Rotina do síndico / Comunicados / Simuladores / Checklists.
-- [ ] Confirmar que o subtítulo de Ferramentas diz "Ferramentas para o dia a dia do síndico: registrar, comunicar, simular e acompanhar."
-- [ ] Comunicado.
-- [ ] Checklist.
-- [ ] Confirmar que o ChecklistPanel exibe nota orientativa: "Checklists orientativos. Ajuste conforme a convenção, o regimento e a realidade do condomínio."
-- [ ] Multa.
-- [ ] Reajuste.
-- [ ] Confirmar que simuladores funcionam igual (lógica não alterada).
+- [ ] Ao abrir a aba Ferramentas, confirmar que aparece o menu de categorias (não todos os componentes abertos).
+- [ ] Confirmar subtítulo do menu: "Registre ocorrências, gere comunicados, faça simulações e consulte checklists."
+- [ ] Confirmar que o menu exibe exatamente 5 cards: Rotina do síndico / Comunicados / Simuladores / Checklists / Explorar por tema.
+- [ ] Confirmar que cada card tem ícone, título, descrição curta e chevron.
+- [ ] Clicar em "Rotina do síndico" → confirmar que RegistroRapido aparece e demais componentes estão ocultos.
+- [ ] Confirmar botão "← Voltar para ferramentas" discreto e funcional dentro de cada grupo.
+- [ ] Clicar em "Comunicados" → confirmar que apenas ComunicadoPanel aparece, sem duplicidade de cabeçalho.
+- [ ] Gerar e copiar um comunicado dentro do grupo Comunicados.
+- [ ] Clicar em "Simuladores" → confirmar que Simulador de Multa e Simulador de Reajuste aparecem juntos.
+- [ ] Confirmar que lógica dos simuladores está inalterada (cálculos corretos).
+- [ ] Clicar em "Checklists" → confirmar que ChecklistPanel aparece com nota orientativa.
+- [ ] Confirmar nota: "Checklists orientativos. Ajuste conforme a convenção, o regimento e a realidade do condomínio."
+- [ ] Clicar em "Explorar por tema" → confirmar PainelOperacional visível.
+- [ ] Confirmar que ao clicar Voltar o menu de categorias reaparece corretamente.
+- [ ] Confirmar que ao trocar de aba e voltar para Ferramentas, o menu aparece (não a última view interna).
 
 ## 9. Backup
 
@@ -226,7 +233,7 @@ Para cada pergunta abaixo, verificar:
 
 - [ ] Confirmar que a Home comunica acompanhamento operacional, não apenas chat.
 - [ ] Confirmar que Hub de Saúde Operacional responde "Como está meu prédio agora?" de forma interpretativa.
-- [ ] Confirmar que Ferramentas responde "O que posso fazer agora?" com grupos claros.
+- [ ] Confirmar que Ferramentas responde "O que posso fazer agora?" com menu de categorias limpo e navegável.
 - [ ] Confirmar que aba Condomínio ("Dados do prédio") responde "Quais dados sustentam o acompanhamento?".
 - [ ] Confirmar que Próximos Passos deixa claro o ciclo dúvida → ação → acompanhamento.
 - [ ] Confirmar que Revisão Mensal e Timeline explicam por que voltar ao app.

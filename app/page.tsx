@@ -40,6 +40,28 @@ type ToolAnchor =
   | "checklists"
   | "registro-rapido";
 
+type ToolGroup = "rotina" | "comunicados" | "simuladores" | "checklists" | "temas";
+
+const ANCHOR_TO_GROUP: Partial<Record<ToolAnchor, ToolGroup>> = {
+  "registro-rapido": "rotina",
+  comunicado: "comunicados",
+  "comunicado-infracao": "comunicados",
+  "comunicado-obra": "comunicados",
+  "comunicado-convocacao": "comunicados",
+  "comunicado-cobranca": "comunicados",
+  "simulador-multa": "simuladores",
+  "simulador-reajuste": "simuladores",
+  checklists: "checklists",
+};
+
+const TOOL_CATEGORIES: Array<{ id: ToolGroup; icon: string; title: string; description: string }> = [
+  { id: "rotina",      icon: "📋", title: "Rotina do síndico", description: "Registre acontecimentos e acompanhe próximos passos." },
+  { id: "comunicados", icon: "📢", title: "Comunicados",        description: "Modelos administrativos para avisos aos moradores." },
+  { id: "simuladores", icon: "🧮", title: "Simuladores",        description: "Cálculos simples para estimativas condominiais." },
+  { id: "checklists",  icon: "✅", title: "Checklists",         description: "Listas orientativas para assembleias, obras e manutenção." },
+  { id: "temas",       icon: "🔍", title: "Explorar por tema",  description: "Consulte orientações por assunto." },
+];
+
 // Carregamento sob demanda — só necessários quando a aba é ativada
 const ComunicadoPanel = dynamic(() => import("@/components/ComunicadoPanel"), { ssr: false });
 const SimuladorMulta = dynamic(() => import("@/components/SimuladorMulta"), { ssr: false });
@@ -73,6 +95,7 @@ export default function HomePage() {
   const [highlightToolAnchor, setHighlightToolAnchor] = useState<ToolAnchor | null>(null);
   const [pendingChecklistId, setPendingChecklistId] = useState<string | null>(null);
   const [focusRevisaoMensal, setFocusRevisaoMensal] = useState(false);
+  const [activeToolGroup, setActiveToolGroup] = useState<ToolGroup | null>(null);
   const [homeRefreshFeedback, setHomeRefreshFeedback] = useState("Atualizado agora");
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
@@ -102,6 +125,9 @@ export default function HomePage() {
     if (activeTab !== "ferramentas" || !pendingToolAnchor) return;
 
     const anchor = pendingToolAnchor;
+    const group = ANCHOR_TO_GROUP[anchor];
+    if (group) setActiveToolGroup(group);
+
     const scrollToAnchor = () => {
       const el = document.getElementById(anchor);
       if (!el) return false;
@@ -122,6 +148,10 @@ export default function HomePage() {
       window.clearTimeout(second);
     };
   }, [activeTab, pendingToolAnchor]);
+
+  useEffect(() => {
+    if (activeTab !== "ferramentas") setActiveToolGroup(null);
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab !== "condominio" || !focusRevisaoMensal) return;
@@ -405,72 +435,111 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── 3. FERRAMENTAS — utilities operacionais ────────────────── */}
+        {/* ── 3. FERRAMENTAS — central de ações por categorias ──────── */}
         {activeTab === "ferramentas" && (
           <div key="ferramentas" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
+            {/* Header — sempre visível */}
             <div className="px-5 pb-3 pt-1 sm:px-6">
               <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
                 Ferramentas
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                Ações práticas
+                Ferramentas
               </p>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                Ferramentas para o dia a dia do síndico: registrar, comunicar, simular e acompanhar.
-              </p>
+              {activeToolGroup === null && (
+                <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
+                  Registre ocorrências, gere comunicados, faça simulações e consulte checklists.
+                </p>
+              )}
             </div>
 
-            {/* ── Rotina do síndico ─────────────────────── */}
-            <div className="px-5 pb-1.5 sm:px-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
-                Rotina do síndico
-              </p>
-            </div>
-            <div id="registro-rapido">
-              <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
-            </div>
+            {/* Botão Voltar — visível apenas nas views internas */}
+            {activeToolGroup !== null && (
+              <div className="px-4 pb-3 pt-0 sm:px-5">
+                <button
+                  type="button"
+                  onClick={() => setActiveToolGroup(null)}
+                  className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-navy-400 transition-colors hover:bg-navy-100/70 hover:text-navy-600 active:scale-[0.97]"
+                >
+                  <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="text-[11.5px] font-medium">Voltar para ferramentas</span>
+                </button>
+              </div>
+            )}
 
-            {/* ── Comunicados ──────────────────────────── */}
-            <div className="px-5 pb-1.5 pt-3 sm:px-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
-                Comunicados
-              </p>
-            </div>
-            <ComunicadoPanel
-              targetAnchor={pendingToolAnchor}
-              highlightAnchor={highlightToolAnchor}
-            />
+            {/* ── Menu de categorias ─────────────────────────────────── */}
+            {activeToolGroup === null && (
+              <div className="px-5 pb-6 sm:px-6">
+                <div className="flex flex-col gap-3">
+                  {TOOL_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveToolGroup(cat.id)}
+                      className="flex items-center gap-4 rounded-xl border border-navy-100 bg-white px-4 py-4 text-left shadow-sm transition-all hover:border-navy-200 hover:shadow active:scale-[0.98]"
+                    >
+                      <span className="flex-shrink-0 text-[22px] leading-none" aria-hidden="true">
+                        {cat.icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13.5px] font-semibold text-navy-800">{cat.title}</p>
+                        <p className="mt-0.5 text-[11.5px] leading-snug text-navy-500">{cat.description}</p>
+                      </div>
+                      <svg className="h-4 w-4 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            {/* ── Simuladores ──────────────────────────── */}
-            <div className="px-5 pb-1.5 pt-3 sm:px-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
-                Simuladores
-              </p>
-            </div>
-            <SimuladorMulta
-              anchorId="simulador-multa"
-              highlighted={highlightToolAnchor === "simulador-multa"}
-            />
-            <SimuladorReajusteCota
-              anchorId="simulador-reajuste"
-              highlighted={highlightToolAnchor === "simulador-reajuste"}
-            />
+            {/* ── Rotina do síndico ─────────────────────────────────── */}
+            {activeToolGroup === "rotina" && (
+              <div id="registro-rapido">
+                <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
+              </div>
+            )}
 
-            {/* ── Checklists ───────────────────────────── */}
-            <div className="px-5 pb-1.5 pt-3 sm:px-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">
-                Checklists
-              </p>
-            </div>
-            <ChecklistPanel
-              anchorId="checklists"
-              highlighted={highlightToolAnchor === "checklists"}
-              initialOpenId={pendingChecklistId}
-              onInitialOpenConsumed={() => setPendingChecklistId(null)}
-            />
+            {/* ── Comunicados ──────────────────────────────────────── */}
+            {activeToolGroup === "comunicados" && (
+              <ComunicadoPanel
+                targetAnchor={pendingToolAnchor}
+                highlightAnchor={highlightToolAnchor}
+              />
+            )}
 
-            <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
+            {/* ── Simuladores ──────────────────────────────────────── */}
+            {activeToolGroup === "simuladores" && (
+              <>
+                <SimuladorMulta
+                  anchorId="simulador-multa"
+                  highlighted={highlightToolAnchor === "simulador-multa"}
+                />
+                <SimuladorReajusteCota
+                  anchorId="simulador-reajuste"
+                  highlighted={highlightToolAnchor === "simulador-reajuste"}
+                />
+              </>
+            )}
+
+            {/* ── Checklists ───────────────────────────────────────── */}
+            {activeToolGroup === "checklists" && (
+              <ChecklistPanel
+                anchorId="checklists"
+                highlighted={highlightToolAnchor === "checklists"}
+                initialOpenId={pendingChecklistId}
+                onInitialOpenConsumed={() => setPendingChecklistId(null)}
+              />
+            )}
+
+            {/* ── Explorar por tema ────────────────────────────────── */}
+            {activeToolGroup === "temas" && (
+              <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
+            )}
 
           </div>
         )}
