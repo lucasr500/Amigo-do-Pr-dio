@@ -508,3 +508,85 @@ Pré-condição: dados cadastrados (AVCB, seguro, mandato, pelo menos 1 pendênc
 - [ ] Confirmar que AgendaPredio em Ferramentas continua funcionando normalmente.
 - [ ] Confirmar que backup exporta e importa sem erro.
 - [ ] Confirmar que TypeScript zero erros e build limpo (/ ≤ 230 kB, /admin 204 kB).
+
+## 24. Fase 85 — Legibilidade Mobile do Assistente
+
+Objetivo: confirmar que as respostas do Assistente aparecem sem cursor residual, com separação visual clara entre resposta principal e blocos auxiliares, e com legibilidade confortável em respostas longas no mobile.
+
+Pré-condição: dados cadastrados (AVCB, seguro, mandato). App com cache limpo (hard reload no mobile).
+
+### Cenário 1 — Pergunta curta
+
+- [ ] Perguntar: "Posso multar morador por barulho?"
+- [ ] Confirmar que a resposta aparece imediatamente e completa.
+- [ ] Confirmar que não há cursor "|" visível após o texto.
+- [ ] Confirmar que não há nenhuma animação de digitação character-by-character.
+- [ ] Confirmar que os blocos auxiliares (Próximo passo, Base legal etc.) aparecem separados por uma linha divisória discreta.
+
+### Cenário 2 — Pergunta média
+
+- [ ] Perguntar: "Quando posso convocar assembleia extraordinária?"
+- [ ] Confirmar resposta imediata e completa.
+- [ ] Confirmar separação visual clara entre texto principal e blocos auxiliares.
+- [ ] Confirmar que a linha divisória (`border-t`) está visível entre o texto principal e o primeiro bloco auxiliar.
+- [ ] Confirmar que os blocos auxiliares têm espaçamento confortável entre si.
+
+### Cenário 3 — Pergunta longa sobre obra sem autorização
+
+- [ ] Perguntar: "Morador está fazendo obra sem autorização no apartamento. Quais são os passos?"
+- [ ] Confirmar que toda a resposta aparece completa sem corte visual.
+- [ ] Confirmar que não há scroll interno no card (a página inteira rola).
+- [ ] Confirmar que os blocos "Próximo passo", "Contexto do prédio" (se aplicável), "Base legal" e "Dica prática" aparecem abaixo da linha divisória, cada um com seu label em uppercase.
+- [ ] Confirmar que o botão "Salvar nos próximos passos" aparece funcional no bloco Próximo passo.
+- [ ] Confirmar que as action pills (Salvar, Copiar, WhatsApp, Refazer, Nova pergunta) aparecem após os blocos.
+
+### Cenário 4 — Pergunta longa sobre AVCB vencido
+
+- [ ] Cadastrar AVCB com data passada.
+- [ ] Perguntar: "O AVCB do prédio venceu. Quais são as consequências e o que devo fazer?"
+- [ ] Confirmar bloco "Contexto do prédio" aparece com menção ao AVCB cadastrado.
+- [ ] Confirmar que toda a resposta, incluindo os blocos auxiliares, é visível ao rolar a página.
+- [ ] Confirmar que o final da resposta (disclaimer jurídico) aparece sem estar cortado.
+
+### Cenário 5 — Pergunta fora da base (fallback)
+
+- [ ] Perguntar: "Como instalar câmera de segurança de forma legal?"
+- [ ] Confirmar que o fallback aparece imediatamente e completo.
+- [ ] Confirmar que os chips de categoria e sugestões contextuais aparecem normalmente.
+- [ ] Confirmar que não há cursor "|" no fallback.
+
+### Cenário 6 — Verificar ausência de cursor
+
+- [ ] Fazer qualquer pergunta que retorne resposta da KB.
+- [ ] Observar o momento em que a resposta aparece: não deve haver cursor piscante "|".
+- [ ] Confirmar que o texto aparece completo de uma vez, com fade-in suave.
+- [ ] Aguardar 3 segundos após a resposta aparecer e confirmar que o texto está estático (sem mais animação).
+
+### Cenário 7 — Verificar ausência de scroll interno
+
+- [ ] Fazer pergunta que gere resposta longa com todos os blocos: Próximo passo + Contexto + Base legal + Dica.
+- [ ] Tentar rolar dentro do card de resposta: não deve haver scroll independente dentro do card.
+- [ ] Confirmar que rolar a página move toda a tela normalmente.
+- [ ] Confirmar que não há barra de scroll lateral dentro do card.
+
+### Cenário 8 — Rolagem natural da página
+
+- [ ] Em viewport mobile (~390px), fazer pergunta com resposta longa.
+- [ ] Confirmar que a página rola suavemente para mostrar todos os blocos auxiliares.
+- [ ] Confirmar que o último elemento visível (action pills ou disclaimer) tem margem inferior confortável antes do BottomNav.
+- [ ] Confirmar que nenhum bloco fica cortado pelo BottomNav.
+
+### Cenário 9 — Blocos auxiliares completos
+
+- [ ] Confirmar que os blocos auxiliares aparecem com labels em uppercase (PRÓXIMO PASSO, CONTEXTO DO PRÉDIO, BASE LEGAL, DICA PRÁTICA).
+- [ ] Confirmar que cada bloco tem conteúdo completo e legível.
+- [ ] Confirmar que o espaçamento entre blocos é suficiente para distingui-los visualmente.
+- [ ] Confirmar que o disclaimer jurídico final aparece completo.
+
+### Cenário 10 — Resposta longa parece completa e acionável
+
+- [ ] Ao final de uma resposta longa, confirmar que o botão "Salvar nos próximos passos" está visível e funcional.
+- [ ] Confirmar que as action pills (Copiar, WhatsApp, Refazer) aparecem após todos os blocos.
+- [ ] Confirmar que a separação visual entre resposta principal e blocos auxiliares reforça a percepção de "resposta completa + camadas de contexto".
+- [ ] Confirmar que nenhuma resposta parece interrompida ou truncada.
+- [ ] Confirmar que TypeScript zero erros e build limpo (/ ≤ 230 kB, /admin 204 kB).

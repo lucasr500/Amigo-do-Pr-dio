@@ -6,9 +6,25 @@
 
 ---
 
-## Estado atual do produto (2026-05-22 — Fase 84)
+## Estado atual do produto (2026-05-22 — Fase 85)
 
 ### Bundle
+- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS (inalterado)
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues na Fase 85 (Legibilidade Mobile do Assistente)
+
+Fase cirúrgica de legibilidade: remove código morto do componente de resposta e adiciona separação visual clara entre a resposta principal e os blocos auxiliares, melhorando a leitura de respostas longas no mobile.
+
+- **`components/Response.tsx` — remoção de `isTyping` (código morto):** estado `const [isTyping, setIsTyping] = useState(false)` removido — sempre false após Fase 84. Removidos também os dois `setIsTyping(false)` do useEffect e as três condições `!isTyping &&` do JSX (linhas de conteúdo contextual, fallback e action pills). Nenhuma mudança visual — os blocos `!isDefault && entry`, `isDefault && (...)` e `!isLoading && (...)` continuam renderizando exatamente o mesmo conteúdo, apenas sem o guard inútil.
+- **`components/Response.tsx` — separação visual de respostas longas:** wrapper dos blocos auxiliares alterado de `mt-4 space-y-2.5` para `mt-5 border-t border-navy-100/60 pt-4 space-y-3`. O `border-t` cria uma linha divisória discreta entre o texto da resposta e os blocos auxiliares (Próximo passo, Contexto do prédio, Base legal, Dica prática), tornando explícito que são camadas de contexto, não continuação do texto. Espaçamento entre blocos aumentado de 10px para 12px (`space-y-2.5` → `space-y-3`). Section: `pb-6` → `pb-8` no mobile (unifica com sm — mais margem inferior). Action pills: `mt-2.5` → `mt-3`. Todos os blocos de conteúdo, lógica de contexto local, fallback, disclaimers, like, copiar, salvar próximo passo, favoritos e histórico preservados integralmente.
+- **Limites mantidos:** sem alteração de KB, motor de busca, Agenda, AgendaMensal, HomeCondominioHub, HomeAcaoHub, GuidancePanel, libs, simuladores, package.json, manifest. Sem IA, RAG, backend, login, billing, push, recorrência, nova aba ou nova rota.
+
+### Estado anterior do produto (2026-05-22 — Fase 84)
+
+### Bundle (Fase 84)
 - Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 204 kB First Load JS (inalterado)
 - TypeScript: zero erros

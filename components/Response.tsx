@@ -317,7 +317,6 @@ export default function Response({
   onSavePendencia,
 }: ResponseProps) {
   const [displayedText, setDisplayedText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const [copied, setCopied] = useState(false);
   const [liked, setLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -344,12 +343,10 @@ export default function Response({
   useEffect(() => {
     if (isLoading || !answer) {
       setDisplayedText("");
-      setIsTyping(false);
       return;
     }
 
     setDisplayedText(answer);
-    setIsTyping(false);
     setCopied(false);
     setLiked(entry ? isFavorited(entry.id) : false);
     setShowToast(false);
@@ -473,7 +470,7 @@ export default function Response({
     <>
       <section
         ref={containerRef}
-        className="px-5 pb-6 sm:px-6 sm:pb-8 animate-fade-in-up"
+        className="px-5 pb-8 sm:px-6 sm:pb-8 animate-fade-in-up"
         aria-live="polite"
       >
         {/* Pergunta do usuário */}
@@ -519,9 +516,9 @@ export default function Response({
                     {displayedText}
                   </p>
 
-                  {/* Conteúdo contextual — aparece após a digitação completa */}
-                  {!isTyping && !isDefault && entry && (
-                    <div className="mt-4 animate-fade-in space-y-2.5">
+                  {/* Blocos auxiliares — contexto, base legal, próximo passo */}
+                  {!isDefault && entry && (
+                    <div className="mt-5 border-t border-navy-100/60 pt-4 animate-fade-in space-y-3">
                       {/* Próximo passo — ação imediata antes do contexto jurídico */}
                       {CAT_TO_NEXTACTION[entry.categoria] && (
                         <div className="rounded-r-lg border-l-[2.5px] border-navy-500 bg-navy-100/40 py-2.5 pl-3 pr-3">
@@ -719,7 +716,7 @@ export default function Response({
                   )}
 
                   {/* Fallback — categorias navegáveis + sugestões contextuais */}
-                  {!isTyping && isDefault && (
+                  {isDefault && (
                     <div className="mt-4 animate-fade-in space-y-5">
                       {/* Chip de tema identificado */}
                       {detectedCategory && (
@@ -827,8 +824,8 @@ export default function Response({
             </div>
 
             {/* Ações rápidas — copiar e útil só para respostas encontradas */}
-            {!isTyping && !isLoading && (
-              <div className="mt-2.5 flex flex-wrap gap-1.5 animate-fade-in">
+            {!isLoading && (
+              <div className="mt-3 flex flex-wrap gap-1.5 animate-fade-in">
                 {!isDefault && (
                   <>
                     <ActionPill
