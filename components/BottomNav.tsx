@@ -6,7 +6,7 @@ const TABS: Array<{ id: AppTab; label: string }> = [
   { id: "inicio",      label: "Início" },
   { id: "assistente",  label: "Assistente" },
   { id: "ferramentas", label: "Ferramentas" },
-  { id: "condominio",  label: "Condomínio" },
+  { id: "condominio",  label: "Minha Conta" },
 ];
 
 function IconHome({ active }: { active: boolean }) {

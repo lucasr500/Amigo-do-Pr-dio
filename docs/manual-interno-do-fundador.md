@@ -6,7 +6,42 @@
 
 ---
 
-## Estado atual do produto (2026-05-21 — Fase 82)
+## Estado atual do produto (2026-05-22 — Fase 83)
+
+### Bundle
+- Rota principal (`/`): 224 kB First Load JS (margem 6 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS (inalterado)
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues na Fase 83 (Agenda Central e Home sem redundância)
+
+Agenda do Prédio promovida a coração do produto ao lado do Assistente. Home menos redundante, com hierarquia clara de blocos.
+
+- **`components/AgendaMensal.tsx` (novo):** calendário mensal compacto da Home. Grade de 7 colunas com dias do mês, destaque para hoje e dia selecionado, dots em dias com eventos. Ao tocar em um dia, lista itens abaixo; se não houver eventos, "Nada agendado para este dia." CTA "+ Agendar neste dia" navega para Ferramentas → Rotina do síndico → Agenda. Fontes de dados: eventos manuais de `getAgendaEvents()` (título truncado, tipo genérico, sem nota) + vencimentos automáticos calculados do `getMemoriaOperacional()` (AVCB, Seguro, Mandato, AGO, Dedetização, Caixa d'água, Elevador, Extintores, SPDA, Elétrica) com labels genéricos. Renderizado via `dynamic()` no chunk da Home. Sem IA, push, recorrência, Google Calendar, nova rota.
+- **`app/page.tsx` — AgendaMensal integrada:** importada com `dynamic()`. Posicionada entre `HomeCondominioHub` e `GuidancePanel` quando `hasCondominioData === true`. Hierarquia da Home com dados: HomeCondominioHub → AgendaMensal → GuidancePanel → HomeAcaoHub (enxugado).
+- **`components/HomeAcaoHub.tsx` — enxugado:** bloco "Próxima data" removido (coberto por AgendaMensal); CTA "Ver agenda →" removido; título "O que fazer agora" → "Próximos passos do prédio"; CTA "Perguntar ao Assistente →" adicionado com prop `onNavigateToAssistente`; prop `onNavigateToAgenda` removida. Revisão semanal, pendências (add/complete), CTA registrar ocorrência e telemetria preservados.
+- **`components/BottomNav.tsx`:** label "Condomínio" → "Minha Conta". `id: "condominio"`, `AppTab`, lógica interna e estrutura da aba inalterados. Preparação conceitual da área do cliente — sem login, billing, backend ou conta real.
+- **`components/QuickAccessCards.tsx` — temas com perguntas:** reorganizado para fluxo tema→pergunta→ação. Cards agora mostram título do tema e "Ver perguntas →". Ao clicar no card, exibe lista de 5 perguntas sugeridas (definidas em `THEME_QUESTIONS` inline — sem tocar lib/data.ts, KB ou motor). Ao clicar em uma pergunta, preenche o input normalmente (mesma lógica de `onSelect` anterior). Botão "← Temas" volta à grade. Comportamento colapsado preservado.
+- **Limites mantidos:** sem IA, RAG, backend, login real, push, recorrência, integração externa (Google Calendar, Apple Calendar), nova rota, nova aba, app store, OCR, upload, inadimplência por unidade, gestão financeira. lib/knowledge.json, lib/data.ts, lib/guidance.ts, motor de busca, simuladores, package.json, manifest inalterados.
+
+### Hierarquia da Home com dados (Fase 83)
+
+1. HomeCondominioHub — saúde operacional, índice, sinais
+2. AgendaMensal — calendário do mês, eventos, vencimentos
+3. GuidancePanel — alertas críticos e de atenção, prioridades
+4. HomeAcaoHub — próximos passos, revisão semanal, CTAs (Registrar + Assistente)
+5. ContextualInsight — condicional (apenas sem alerta crítico/pendente)
+6. HomeContextual — condicional
+7. DicaDoDia — condicional
+
+### "Minha Conta" — preparação
+
+BottomNav agora exibe "Minha Conta". A aba continua sendo `id: "condominio"` internamente. A área ainda não tem login, billing, conta real ou backend. É apenas um reposicionamento conceitual que prepara a linguagem para quando a área do cliente evoluir.
+
+---
+
+## Estado anterior do produto (2026-05-21 — Fase 82)
 
 ### Bundle
 - Rota principal (`/`): 222 kB First Load JS (margem 8 kB — abaixo do limite de 230 kB)

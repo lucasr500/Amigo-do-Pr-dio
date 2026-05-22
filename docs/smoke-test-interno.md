@@ -123,6 +123,70 @@ O produto segue em pré-beta interno, sem venda, tráfego pago ou uso externo ne
 - [ ] Confirmar eventos de ocorrência sem descrição, unidade/local, texto de mensagem ou data exata.
 - [ ] Confirmar eventos `weekly_review_viewed` e `weekly_review_completed` sem PII nem texto livre.
 
+## 22. Fase 83 — Agenda Central, Home sem redundância e Minha Conta
+
+### AgendaMensal na Home
+
+- [ ] Com dados cadastrados, abrir a aba Início e confirmar que `AgendaMensal` aparece entre `HomeCondominioHub` e `GuidancePanel`.
+- [ ] Confirmar título "Agenda do mês", mês e ano atuais, subtítulo "Compromissos, prazos e acompanhamentos do prédio."
+- [ ] Confirmar grade com 7 colunas (Dom a Sáb), dias do mês corretos.
+- [ ] Confirmar que hoje está destacado (fundo navy-100 ou navy-700 se selecionado).
+- [ ] Confirmar que dia selecionado padrão é hoje.
+- [ ] Tocar em um dia sem eventos — confirmar "Nada agendado para este dia."
+- [ ] Criar evento na Agenda (Ferramentas → Rotina → Agenda) para o dia de hoje. Voltar à Home. Confirmar dot no dia de hoje.
+- [ ] Tocar no dia — confirmar que o evento aparece como "Tipo · Título truncado" (sem nota).
+- [ ] Confirmar que a nota do evento NÃO aparece na Home.
+- [ ] Confirmar CTA "+ Agendar neste dia" navega para Ferramentas → Rotina do síndico com AgendaPredio visível.
+- [ ] Cadastrar AVCB com data no mês atual. Confirmar dot no dia do vencimento. Tocar no dia — confirmar item "AVCB" (label genérico).
+- [ ] Sem dados cadastrados, confirmar que AgendaMensal NÃO aparece (exibe Hero).
+- [ ] Confirmar que AgendaMensal NÃO exibe modal complexo, recorrência, integração externa ou push.
+
+### HomeAcaoHub enxugado
+
+- [ ] Confirmar título "Próximos passos do prédio" (não "O que fazer agora").
+- [ ] Confirmar que o bloco "Próxima data" / "Próximo na agenda" NÃO existe mais no HomeAcaoHub.
+- [ ] Confirmar que o CTA "Ver agenda →" NÃO existe mais no HomeAcaoHub.
+- [ ] Confirmar que CTA "+ Registrar ocorrência →" continua funcionando e navega para Ferramentas.
+- [ ] Confirmar que CTA "Perguntar ao Assistente →" navega para a aba Assistente.
+- [ ] Confirmar que revisão semanal, pendências (add/complete) e telemetria continuam funcionando.
+
+### BottomNav — Minha Conta
+
+- [ ] Confirmar que a quarta aba exibe "Minha Conta" (não "Condomínio").
+- [ ] Confirmar que a aba abre a mesma tela de antes (OnboardingProfile, MemoriaPanel, Timeline, etc.).
+- [ ] Confirmar que o título interno da aba ainda exibe "Conta & Dados" quando há dados (inalterado).
+- [ ] Confirmar que todas as seções da aba Minha Conta continuam funcionando.
+
+### Assistente — Temas com perguntas
+
+- [ ] Abrir aba Assistente, confirmar grade de temas com título do tema e "Ver perguntas →" em cada card.
+- [ ] Clicar em um tema (ex: "Multas e advertências") — confirmar que aparece lista de perguntas, não dispara query imediatamente.
+- [ ] Confirmar botão "← Temas" volta à grade sem erros.
+- [ ] Clicar em uma pergunta — confirmar que preenche o input (sem auto-submeter).
+- [ ] Confirmar que cada tema tem ao menos 4 perguntas listadas.
+- [ ] Confirmar que o fluxo colapsado ("Perguntar sobre outro tema") também funciona com a nova estrutura de temas.
+- [ ] Confirmar que o motor de busca, KB e lib/data.ts estão inalterados.
+
+### Hierarquia da Home com dados (Fase 83)
+
+- [ ] Confirmar ordem: HomeCondominioHub → AgendaMensal → GuidancePanel → HomeAcaoHub (enxugado) → Contextual/Dica.
+- [ ] Confirmar que AgendaMensal aparece ANTES do GuidancePanel.
+- [ ] Confirmar que GuidancePanel continua mostrando alertas detalhados com resolve actions.
+- [ ] Confirmar que não há bloco de "Próxima data" redundante na Home.
+- [ ] Confirmar que AgendaPredio continua disponível em Ferramentas → Rotina do síndico (inalterada).
+
+### Regressões (Fase 83)
+
+- [ ] Confirmar TypeScript zero erros (`npx tsc --noEmit`).
+- [ ] Confirmar build limpo (`npx next build`) com bundle / ≤ 230 kB.
+- [ ] Confirmar que Backup export/import continua funcionando (agenda incluída no backup v4).
+- [ ] Confirmar que GuidancePanel resolve actions (AVCB, Seguro, etc.) continuam funcionando.
+- [ ] Confirmar que link da Home "Registrar ocorrência" ainda navega corretamente para Ferramentas.
+- [ ] Confirmar que link de RevisaoMensal ainda abre aba Minha Conta e rola até seção correta.
+- [ ] Confirmar que AgendaPredio em Ferramentas não foi alterada.
+- [ ] Confirmar que HomeCondominioHub (saúde operacional) está inalterado.
+- [ ] Confirmar que lib/knowledge.json, lib/data.ts, lib/guidance.ts, motor de busca e simuladores estão inalterados.
+
 ## 13. Hubs da Home — HomeCondominioHub e HomeAcaoHub
 
 - [ ] Confirmar que HomeCondominioHub aparece no Início com dados cadastrados.

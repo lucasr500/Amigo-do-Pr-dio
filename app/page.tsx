@@ -78,6 +78,7 @@ const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajus
 // Aba Home — hubs principais
 const HomeCondominioHub = dynamic(() => import("@/components/HomeCondominioHub"), { ssr: false });
 const HomeAcaoHub = dynamic(() => import("@/components/HomeAcaoHub"), { ssr: false });
+const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
@@ -341,6 +342,13 @@ export default function HomePage() {
             )}
 
             {hasCondominioData && (
+              <AgendaMensal
+                refreshKey={refreshKey}
+                onNavigateToAgenda={handleNavigateToAgenda}
+              />
+            )}
+
+            {hasCondominioData && (
               <GuidancePanel
                 onAsk={handleSuggestionSelect}
                 onResolved={() => setRefreshKey((k) => k + 1)}
@@ -354,7 +362,7 @@ export default function HomePage() {
                 refreshKey={refreshKey}
                 onDoneReview={() => setRefreshKey((k) => k + 1)}
                 onNavigateToFerramentas={() => handleNavigateToFerramentas("registro-rapido")}
-                onNavigateToAgenda={handleNavigateToAgenda}
+                onNavigateToAssistente={() => navigateTab("assistente")}
               />
             )}
 

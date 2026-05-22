@@ -10,42 +10,14 @@ import {
   getOcorrencias,
   getPendenciasAbertas,
   getProfile,
-  getUpcomingAgendaEvents,
   getWeeklyReviewState,
   hasMemoriaOperacional,
   type Pendencia,
 } from "@/lib/session";
 import { buildGuidanceItems } from "@/lib/guidance";
-import { ate, urgencyVencimento, type UrgencyLevel } from "@/lib/urgency";
 import { trackEvent } from "@/lib/telemetry";
 
-// ── Helpers de data ───────────────────────────────────────────────────────────
-
-function addDays(iso: string, days: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function formatDays(daysRem: number): string {
-  const abs = Math.abs(daysRem);
-  const fmt = (n: number) => {
-    if (n === 0) return "hoje";
-    if (n === 1) return "1 dia";
-    if (n < 14) return `${n} dias`;
-    if (n < 60) return `${Math.round(n / 7)} sem`;
-    return `${Math.floor(n / 30)} meses`;
-  };
-  if (daysRem < 0) return `Vencido há ${fmt(abs)}`;
-  if (daysRem === 0) return "Vence hoje";
-  return `em ${fmt(daysRem)}`;
-}
-
-function urgencyTextColor(u: UrgencyLevel): string {
-  if (u === "vencido" || u === "hoje" || u === "urgente") return "text-terracotta-600";
-  if (u === "breve") return "text-amber-500";
-  return "text-navy-500";
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function isStale(createdAt: string): boolean {
   return Date.now() - new Date(createdAt).getTime() > 14 * 86_400_000;
@@ -53,13 +25,11 @@ function isStale(createdAt: string): boolean {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type NextDate = { label: string; daysRem: number; urgencyLevel: UrgencyLevel; fromAgenda?: boolean };
-
 type Props = {
   refreshKey?: number;
   onDoneReview?: () => void;
   onNavigateToFerramentas?: () => void;
-  onNavigateToAgenda?: () => void;
+  onNavigateToAssistente?: () => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -68,7 +38,7 @@ export default function HomeAcaoHub({
   refreshKey,
   onDoneReview,
   onNavigateToFerramentas,
-  onNavigateToAgenda,
+  onNavigateToAssistente,
 }: Props) {
   const [hydrated, setHydrated]             = useState(false);
   const [weekKey, setWeekKey]               = useState("");
@@ -79,7 +49,6 @@ export default function HomeAcaoHub({
   const [guidanceCount, setGuidanceCount]   = useState(0);
   const [pendencias, setPendencias]         = useState<Pendencia[]>([]);
   const [staleCount, setStaleCount]         = useState(0);
-  const [nextDate, setNextDate]             = useState<NextDate | null>(null);
   const [adding, setAdding]                 = useState(false);
   const [novoTitulo, setNovoTitulo]         = useState("");
   const inputRef  = useRef<HTMLInputElement>(null);
@@ -104,31 +73,6 @@ export default function HomeAcaoHub({
     );
     const useful  = open.length > 0 || stale.length > 0 || guidance.length > 0 || occs.length > 0;
 
-    // Próxima data mais urgente (datas monitoradas + agenda)
-    const dateRows: { label: string; iso: string; fromAgenda?: boolean }[] = [];
-    if (m.vencimentoAVCB)                               dateRows.push({ label: "AVCB",                iso: m.vencimentoAVCB });
-    if (m.vencimentoSeguro)                             dateRows.push({ label: "Seguro condominial",   iso: m.vencimentoSeguro });
-    if (m.fimMandatoSindico)                            dateRows.push({ label: "Mandato do síndico",   iso: m.fimMandatoSindico });
-    if (m.ultimaAGO)                                    dateRows.push({ label: "AGO",                  iso: addDays(m.ultimaAGO, 365) });
-    if (m.ultimaDedetizacao)                            dateRows.push({ label: "Dedetização",          iso: addDays(m.ultimaDedetizacao, 180) });
-    if (m.ultimaLimpezaCaixaDAgua)                      dateRows.push({ label: "Caixa d'água",         iso: addDays(m.ultimaLimpezaCaixaDAgua, 180) });
-    if (m.ultimaManutencaoElevador && profile?.hasElevador) dateRows.push({ label: "Elevador",         iso: addDays(m.ultimaManutencaoElevador, 30) });
-    if (m.ultimaInspecaoExtintores)                     dateRows.push({ label: "Extintores",           iso: addDays(m.ultimaInspecaoExtintores, 365) });
-    if (m.ultimaVistoriaSPDA)                           dateRows.push({ label: "SPDA",                 iso: addDays(m.ultimaVistoriaSPDA, 365) });
-    if (m.ultimaVistoriaEletrica)                       dateRows.push({ label: "Elétrica",             iso: addDays(m.ultimaVistoriaEletrica, 365) });
-
-    // Agenda: o próximo evento pendente compete com as datas monitoradas
-    const upcomingAgenda = getUpcomingAgendaEvents(90);
-    if (upcomingAgenda.length > 0) {
-      const next = upcomingAgenda[0];
-      dateRows.push({ label: next.title, iso: next.date, fromAgenda: true });
-    }
-
-    const validDates = dateRows
-      .map((r) => ({ label: r.label, daysRem: ate(r.iso), urgencyLevel: urgencyVencimento(r.iso), fromAgenda: r.fromAgenda }))
-      .filter((r) => r.urgencyLevel !== "ausente")
-      .sort((a, b) => a.daysRem - b.daysRem);
-
     setWeekKey(wk);
     setReviewedThisWeek(done);
     setHasUsefulSignal(useful);
@@ -136,7 +80,6 @@ export default function HomeAcaoHub({
     setGuidanceCount(guidance.length);
     setPendencias(open);
     setStaleCount(stale.length);
-    setNextDate(validDates[0] ?? null);
     setHydrated(true);
     setJustCompleted(false);
 
@@ -208,7 +151,7 @@ export default function HomeAcaoHub({
         {/* Cabeçalho do hub */}
         <div className="px-4 pb-2.5 pt-3.5">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">
-            O que fazer agora
+            Próximos passos do prédio
           </p>
         </div>
 
@@ -325,21 +268,6 @@ export default function HomeAcaoHub({
           )}
         </div>
 
-        {/* ── Próxima data / Próximo na agenda ─────────────────────── */}
-        {nextDate && (
-          <div className="border-t border-navy-50 px-4 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[12.5px] font-semibold text-navy-800">
-                {nextDate.fromAgenda ? "Próximo na agenda" : "Próxima data"}
-              </p>
-              <span className={`shrink-0 text-[11.5px] font-medium ${urgencyTextColor(nextDate.urgencyLevel)}`}>
-                {formatDays(nextDate.daysRem)}
-              </span>
-            </div>
-            <p className="mt-0.5 text-[12px] text-navy-500">{nextDate.label}</p>
-          </div>
-        )}
-
         {/* ── CTAs de navegação ─────────────────────────────────────── */}
         <div className="border-t border-navy-50 px-4 py-3 flex items-center gap-4 flex-wrap">
           <button
@@ -351,10 +279,10 @@ export default function HomeAcaoHub({
           </button>
           <button
             type="button"
-            onClick={onNavigateToAgenda}
+            onClick={onNavigateToAssistente}
             className="text-[12px] font-medium text-navy-400 transition-colors hover:text-navy-600"
           >
-            Ver agenda →
+            Perguntar ao Assistente →
           </button>
         </div>
 
