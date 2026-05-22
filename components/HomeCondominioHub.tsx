@@ -102,8 +102,11 @@ export default function HomeCondominioHub({ refreshKey }: Props) {
             </p>
           )}
 
-          <p className="mt-2.5 text-[10px] leading-relaxed text-navy-300">
-            Índice operacional baseado nos dados cadastrados no app.
+          <p className="mt-2.5 text-[10px] leading-relaxed text-navy-400">
+            Considera dados cadastrados, alertas ativos, próximos passos e revisão semanal.
+          </p>
+          <p className="mt-1 text-[10px] leading-relaxed text-navy-300">
+            Para melhorar: resolva alertas, conclua passos e mantenha os prazos atualizados.
           </p>
 
         </div>

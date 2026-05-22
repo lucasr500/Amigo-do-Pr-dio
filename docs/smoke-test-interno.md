@@ -425,3 +425,86 @@ Pré-condição geral: dados cadastrados em Dados do prédio (AVCB, seguro, mand
 - [ ] Confirmar que GuidancePanel, HomeAcaoHub e AgendaPredio continuam funcionando normalmente.
 - [ ] Confirmar que exportar e importar backup continuam sem erro.
 - [ ] Confirmar que TypeScript zero erros e build limpo (/ 222 kB, /admin 204 kB).
+
+## 23. Validação pós-Fase 84 — Assistente e Saúde Operacional
+
+Objetivo: verificar que as respostas do Assistente aparecem completas no mobile, que a Saúde Operacional é compreensível e que a Home com dados continua coerente. Confirmar que a Agenda Mensal não foi alterada.
+
+Pré-condição: dados cadastrados (AVCB, seguro, mandato, pelo menos 1 pendência aberta).
+
+### Cenário 1 — AVCB vencido
+
+- [ ] Cadastrar AVCB com data passada.
+- [ ] Perguntar no Assistente: "O AVCB do prédio venceu. O que devo fazer?"
+- [ ] Confirmar que a resposta completa aparece imediatamente (sem efeito de digitação character-by-character).
+- [ ] Confirmar que não há corte visual de texto no final da resposta.
+- [ ] Confirmar que os blocos "Próximo passo", "Contexto do prédio", "Base legal" e "Dica prática" aparecem abaixo da resposta principal.
+- [ ] Confirmar que a resposta não parece ter sido truncada.
+
+### Cenário 2 — Obra sem autorização
+
+- [ ] Perguntar: "Morador está fazendo obra sem autorização. Como proceder?"
+- [ ] Confirmar que a resposta aparece completa e imediatamente.
+- [ ] Confirmar que o bloco "Próximo passo" é exibido com ação concreta.
+- [ ] Confirmar ausência de cursor piscante após o texto da resposta.
+
+### Cenário 3 — Barulho
+
+- [ ] Perguntar: "Morador está fazendo barulho depois da meia-noite. O que fazer?"
+- [ ] Confirmar resposta completa e imediata da KB.
+- [ ] Confirmar bloco "Contexto do prédio" com sugestão de registrar como ocorrência.
+- [ ] Confirmar que o texto não aparece cortado em nenhum ponto.
+
+### Cenário 4 — Inadimplente no grupo
+
+- [ ] Perguntar: "Posso expor o nome do inadimplente no grupo do WhatsApp?"
+- [ ] Confirmar resposta completa e sem truncamento.
+- [ ] Confirmar disclaimer jurídico ao final.
+- [ ] Confirmar que toda a resposta está visível sem necessidade de ação extra do usuário.
+
+### Cenário 5 — Fallback fora da base
+
+- [ ] Perguntar algo completamente fora do escopo: "Qual é a previsão do tempo amanhã?"
+- [ ] Confirmar que o fallback aparece imediatamente e completo.
+- [ ] Confirmar que os chips de categoria aparecem corretamente abaixo.
+- [ ] Confirmar ausência de truncamento ou cursor.
+
+### Cenário 6 — Resposta longa em viewport mobile
+
+- [ ] Com app em viewport ~390px (iPhone padrão), perguntar: "Quais são os deveres do síndico segundo o Código Civil?"
+- [ ] Confirmar que a resposta aparece completa sem corte.
+- [ ] Confirmar que o scroll natural da página permite ver toda a resposta e os blocos auxiliares.
+- [ ] Confirmar que não há `overflow-hidden`, `max-height` restritivo ou clamp no card de resposta.
+
+### Cenário 7 — Saúde Operacional explica como melhorar
+
+- [ ] Acessar a Home com dados cadastrados.
+- [ ] Localizar o card de Saúde Operacional (porcentagem + barra + badge de status).
+- [ ] Confirmar que abaixo da frase diagnóstica aparece: "Considera dados cadastrados, alertas ativos, próximos passos e revisão semanal."
+- [ ] Confirmar que abaixo dessa linha aparece: "Para melhorar: resolva alertas, conclua passos e mantenha os prazos atualizados."
+- [ ] Confirmar que o card não aumentou excessivamente em altura.
+- [ ] Confirmar que a porcentagem, barra e badge de status continuam exibidos normalmente.
+- [ ] Confirmar que o cálculo do índice não foi alterado.
+
+### Cenário 8 — Home com dados continua clara
+
+- [ ] Confirmar hierarquia da Home com dados: HomeCondominioHub → AgendaMensal → GuidancePanel → HomeAcaoHub.
+- [ ] Confirmar que HomeAcaoHub exibe CTA "Perguntar ao Assistente →" e "+ Registrar ocorrência →".
+- [ ] Confirmar que os dois CTAs navegam corretamente (Assistente e Ferramentas → Rotina).
+- [ ] Confirmar que não há redundância entre os blocos (saúde, agenda, alertas, próximos passos com responsabilidades distintas).
+
+### Cenário 9 — AgendaMensal não foi alterada
+
+- [ ] Confirmar que a Agenda Mensal ainda exibe o calendário do mês corrente.
+- [ ] Confirmar que ao tocar em um dia com eventos, a lista aparece abaixo.
+- [ ] Confirmar que CTA "+ Agendar neste dia" navega para Ferramentas → Rotina do síndico → Agenda.
+- [ ] Confirmar que os vencimentos automáticos (AVCB, Seguro etc.) ainda aparecem no calendário quando há datas cadastradas.
+- [ ] Confirmar que `components/AgendaMensal.tsx` não foi modificado na Fase 84.
+
+### Cenário 10 — Regressões
+
+- [ ] Confirmar que QuickAccessCards (tema→perguntas→preenche input) continua funcionando normalmente.
+- [ ] Confirmar que GuidancePanel continua exibindo alertas e próximos passos corretamente.
+- [ ] Confirmar que AgendaPredio em Ferramentas continua funcionando normalmente.
+- [ ] Confirmar que backup exporta e importa sem erro.
+- [ ] Confirmar que TypeScript zero erros e build limpo (/ ≤ 230 kB, /admin 204 kB).

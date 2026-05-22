@@ -340,7 +340,7 @@ export default function Response({
   // Para o fallback com categoria detectada, exibe mensagem contextual em vez do texto genérico
   const answer = (isDefault && contextualFallback) ? contextualFallback : (answerResult?.text ?? "");
 
-  // Typewriter — cleanup garantido via retorno de clearInterval
+  // Exibe texto completo imediatamente — elimina percepção de truncamento no mobile
   useEffect(() => {
     if (isLoading || !answer) {
       setDisplayedText("");
@@ -348,24 +348,12 @@ export default function Response({
       return;
     }
 
-    setIsTyping(true);
-    setDisplayedText("");
+    setDisplayedText(answer);
+    setIsTyping(false);
     setCopied(false);
     setLiked(entry ? isFavorited(entry.id) : false);
     setShowToast(false);
     setSavedPendenciaId(null);
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < answer.length) {
-        setDisplayedText(answer.slice(0, i + 1));
-        i++;
-      } else {
-        setIsTyping(false);
-        clearInterval(interval);
-      }
-    }, 14);
-
-    return () => clearInterval(interval);
   }, [answer, isLoading]);
 
   // Scroll suave até a resposta quando ela aparece
@@ -524,17 +512,11 @@ export default function Response({
                 <>
                   {/* Texto da resposta principal */}
                   <p
-                    className={`text-[15px] leading-[1.7] sm:text-[15.5px] ${
+                    className={`animate-fade-in text-[15px] leading-[1.7] sm:text-[15.5px] ${
                       isDefault ? "text-navy-500" : "font-medium text-navy-900"
                     }`}
                   >
                     {displayedText}
-                    {isTyping && (
-                      <span
-                        className="ml-0.5 inline-block h-4 w-0.5 -translate-y-0.5 animate-blink bg-navy-800 align-middle"
-                        aria-hidden="true"
-                      />
-                    )}
                   </p>
 
                   {/* Conteúdo contextual — aparece após a digitação completa */}

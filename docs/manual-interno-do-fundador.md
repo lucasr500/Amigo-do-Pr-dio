@@ -6,9 +6,26 @@
 
 ---
 
-## Estado atual do produto (2026-05-22 — Fase 83)
+## Estado atual do produto (2026-05-22 — Fase 84)
 
 ### Bundle
+- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS (inalterado)
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues na Fase 84 (Confiabilidade do Assistente e Saúde Operacional acionável)
+
+Fase cirúrgica de confiabilidade: elimina percepção de truncamento no Assistente e torna o índice de Saúde Operacional compreensível para o usuário em uso normal com dados preenchidos.
+
+- **`components/Response.tsx` — exibição imediata:** substituído efeito typewriter character-by-character (setInterval 14ms/char) por exibição instantânea do texto completo com `animate-fade-in`. Elimina a percepção de resposta truncada no mobile, que ocorria quando o usuário observava durante a animação — padrões como "Sim. O|" eram o cursor de digitação, não corte real. Cursor piscante (`animate-blink`) removido do JSX. Todos os blocos auxiliares intactos: Próximo passo, Contexto do prédio, Base legal, Dica prática, Checklist operacional, CTA de comunicado, Aviso regional, Aviso de categoria sensível, disclaimer geral. Estado `isTyping` preservado (sempre false — condicionais `!isTyping` no JSX continuam válidas). Motor de busca, KB, GuidancePanel, lógica de contexto local inalterados.
+- **`components/HomeCondominioHub.tsx` — microcopy da Saúde Operacional:** duas linhas adicionadas abaixo da `diagnosticPhrase`: (1) "Considera dados cadastrados, alertas ativos, próximos passos e revisão semanal." — explica o que compõe o índice; (2) "Para melhorar: resolva alertas, conclua passos e mantenha os prazos atualizados." — orienta como subir a porcentagem. Cálculo do índice, barra, badge, porcentagem e `lib/health-score.ts` inalterados. Sem modal, tooltip complexo, novo sistema de gamificação ou promessa jurídica.
+- **`components/AgendaMensal.tsx`:** não alterado nesta fase.
+- **Limites mantidos:** sem IA, RAG, backend, login, billing, push, recorrência, integração externa, nova rota, nova aba. lib/knowledge.json, lib/data.ts, lib/guidance.ts, lib/session.ts, lib/health-score.ts, motor de busca, simuladores, package.json, manifest inalterados.
+
+### Estado anterior do produto (2026-05-22 — Fase 83)
+
+### Bundle (Fase 83)
 - Rota principal (`/`): 224 kB First Load JS (margem 6 kB — abaixo do limite de 230 kB)
 - Admin (`/admin`): 204 kB First Load JS (inalterado)
 - TypeScript: zero erros
