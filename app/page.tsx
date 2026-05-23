@@ -19,6 +19,7 @@ import {
   addPendencia,
   getPendenciasAbertas,
   getPendenciasConcluidas,
+  isFirstRun,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import FavoritesPanel from "@/components/FavoritesPanel";
@@ -81,6 +82,7 @@ const HomeAcaoHub = dynamic(() => import("@/components/HomeAcaoHub"), { ssr: fal
 const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
+const OnboardingFlow = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 // Insight contextual — só visível sem alertas ativos; insights.ts (~7 kB) fica fora do chunk inicial
 const ContextualInsight = dynamic(() => import("@/components/ContextualInsight"), { ssr: false });
@@ -101,6 +103,7 @@ export default function HomePage() {
   const [focusRevisaoMensal, setFocusRevisaoMensal] = useState(false);
   const [activeToolGroup, setActiveToolGroup] = useState<ToolGroup | null>(null);
   const [homeRefreshFeedback, setHomeRefreshFeedback] = useState("Atualizado agora");
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   useEffect(() => {
@@ -110,6 +113,7 @@ export default function HomePage() {
     const hasData = hasMemoriaOperacional() || hasProfile();
     setHasCondominioData(hasData);
     if (hasData) setHealthStatus(computeCondominioHealth().status);
+    if (isFirstRun()) setShowOnboarding(true);
     return startSessionTimer();
   }, []);
 
@@ -647,13 +651,31 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* ── Preferências futuras ──────────────────────────────── */}
+            {/* ── Conta e sincronização ─────────────────────────────── */}
             <section className="px-5 pb-8 sm:px-6">
               <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Preferências futuras</p>
-                <p className="text-[12.5px] leading-relaxed text-navy-400">
-                  No futuro, esta área poderá reunir conta, cor do app, notificações e opções de assinatura.
-                </p>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta</p>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[15px]">
+                    💾
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12.5px] font-medium text-navy-700">Dados salvos neste dispositivo</p>
+                    <p className="text-[11px] text-navy-400">Armazenamento local — sem conta necessária</p>
+                  </div>
+                </div>
+                <div className="rounded-[12px] border border-navy-100 bg-cream-100/40 px-3 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-[14px]">☁️</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-medium text-navy-600">Sincronização em nuvem</p>
+                      <p className="text-[11px] text-navy-400">Em breve — seus dados, em qualquer dispositivo</p>
+                    </div>
+                    <span className="flex-shrink-0 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-medium text-navy-500">
+                      Em breve
+                    </span>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -663,6 +685,15 @@ export default function HomePage() {
       </div>
 
       <BottomNav active={activeTab} onChange={navigateTab} />
+
+      {showOnboarding && (
+        <OnboardingFlow
+          onComplete={() => {
+            setShowOnboarding(false);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
     </div>
   );
 }

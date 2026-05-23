@@ -90,22 +90,23 @@ export type MemoriaOperacional = {
 
 // Chaves do localStorage — centralizadas para facilitar migração futura para backend
 const KEYS = {
-  QUERIES:            "amigo_queries",    // escrito por data.ts logQuery()
-  FAVORITES:          "amigo_favorites",
-  STATS:              "amigo_stats",
-  SHARES:             "amigo_shares",
-  CHECKLISTS:         "amigo_checklists",
-  CHECKLIST_EVENTS:   "amigo_checklist_events",
-  INTERACTIONS:       "amigo_interactions",
-  PROFILE:            "amigo_profile",
-  MEMORIA:            "amigo_memoria",
-  SESSION_META:       "amigo_session_meta",
-  RESOLUTION_EVENTS:  "amigo_resolution_events",
-  PENDENCIAS:         "amigo_pendencias",
-  OCORRENCIAS:        "amigo_ocorrencias",
-  AGENDA:             "amigo_agenda",
-  REVISAO_MENSAL_HOME:"amigo_revisao_mensal_home",
-  REVISAO_SEMANAL:    "amigo_revisao_semanal",
+  QUERIES:              "amigo_queries",    // escrito por data.ts logQuery()
+  FAVORITES:            "amigo_favorites",
+  STATS:                "amigo_stats",
+  SHARES:               "amigo_shares",
+  CHECKLISTS:           "amigo_checklists",
+  CHECKLIST_EVENTS:     "amigo_checklist_events",
+  INTERACTIONS:         "amigo_interactions",
+  PROFILE:              "amigo_profile",
+  MEMORIA:              "amigo_memoria",
+  SESSION_META:         "amigo_session_meta",
+  RESOLUTION_EVENTS:    "amigo_resolution_events",
+  PENDENCIAS:           "amigo_pendencias",
+  OCORRENCIAS:          "amigo_ocorrencias",
+  AGENDA:               "amigo_agenda",
+  REVISAO_MENSAL_HOME:  "amigo_revisao_mensal_home",
+  REVISAO_SEMANAL:      "amigo_revisao_semanal",
+  ONBOARDING_COMPLETE:  "amigo_onboarding_complete",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -279,6 +280,23 @@ export function clearProfile(): void {
 
 export function hasProfile(): boolean {
   return getProfile() !== null;
+}
+
+// ─── Onboarding de primeiro acesso ───────────────────────────────────────────
+// Detecta se o usuário está abrindo o app pela primeira vez (sem dados e sem
+// ter visto o fluxo). Usuários com dados existentes nunca são afetados.
+
+export function isFirstRun(): boolean {
+  if (typeof window === "undefined") return false;
+  // Já completou (ou pulou) o onboarding anteriormente
+  if (safeRead<boolean>(KEYS.ONBOARDING_COMPLETE, false)) return false;
+  // Usuário existente — já tem dados no dispositivo
+  if (hasProfile()) return false;
+  return true;
+}
+
+export function markFirstRunComplete(): void {
+  safeWrite(KEYS.ONBOARDING_COMPLETE, true);
 }
 
 // ─── Metadados de sessão ─────────────────────────────────────────────────────

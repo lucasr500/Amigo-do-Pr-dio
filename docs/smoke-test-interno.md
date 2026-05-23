@@ -509,6 +509,89 @@ Pré-condição: dados cadastrados (AVCB, seguro, mandato, pelo menos 1 pendênc
 - [ ] Confirmar que backup exporta e importa sem erro.
 - [ ] Confirmar que TypeScript zero erros e build limpo (/ ≤ 230 kB, /admin 204 kB).
 
+## 25. Fase 86 — Agenda Mensal v2: Ícones Operacionais
+
+Objetivo: confirmar que a Agenda Mensal exibe ícones visuais discretos na grade e na lista do dia, sem quebrar layout, sem poluir a Home e sem alterar qualquer outra feature.
+
+Pré-condição: dados cadastrados (AVCB, Seguro, Mandato com datas no mês corrente ou no próximo mês). Ao menos um evento manual na Agenda (Ferramentas → Rotina → Agenda) com data no mês corrente.
+
+### Cenário 1 — Mês vigente aparece corretamente
+
+- [ ] Abrir a Home com dados cadastrados.
+- [ ] Confirmar que o componente `AgendaMensal` aparece entre `HomeCondominioHub` e `GuidancePanel`.
+- [ ] Confirmar título "Agenda do mês", mês e ano atuais em português.
+- [ ] Confirmar subtítulo "Compromissos, prazos e acompanhamentos do prédio."
+- [ ] Confirmar grade 7 colunas (Dom a Sáb) com todos os dias do mês corrente.
+
+### Cenário 2 — Evento manual aparece com ícone
+
+- [ ] Criar evento manual do tipo "Manutenção" com data no mês atual via Ferramentas → Rotina → Agenda.
+- [ ] Voltar à Home.
+- [ ] Confirmar que o dia do evento tem ícone(s) abaixo do número (não mais o dot de 3px).
+- [ ] Confirmar que o ícone do tipo "Manutenção" é 🛠️.
+- [ ] Tocar no dia — confirmar que a lista exibe 🛠️ à esquerda + "Manutenção" em negrito + título do evento abaixo.
+- [ ] Confirmar que a nota do evento NÃO aparece na lista (apenas título truncado).
+
+### Cenário 3 — AVCB aparece com ícone específico
+
+- [ ] Cadastrar AVCB com data no mês atual.
+- [ ] Confirmar que o dia do vencimento tem ícone na grade.
+- [ ] Confirmar que o ícone do AVCB é 🧯.
+- [ ] Tocar no dia — confirmar item com 🧯 + "AVCB" + "Vencimento monitorado".
+
+### Cenário 4 — Seguro aparece com ícone específico
+
+- [ ] Cadastrar Seguro com data no mês atual.
+- [ ] Confirmar ícone 🛡️ na grade no dia do vencimento.
+- [ ] Tocar no dia — confirmar item com 🛡️ + "Seguro" + "Vencimento monitorado".
+
+### Cenário 5 — Mandato aparece com ícone específico
+
+- [ ] Cadastrar Mandato com data no mês atual.
+- [ ] Confirmar ícone 🗳️ na grade no dia do vencimento.
+- [ ] Tocar no dia — confirmar item com 🗳️ + "Mandato" + "Vencimento monitorado".
+
+### Cenário 6 — Múltiplos eventos no mesmo dia não quebram layout
+
+- [ ] Criar 3 ou mais eventos/vencimentos para o mesmo dia.
+- [ ] Confirmar que a célula exibe no máximo 2 ícones + "+N" para o excedente (ex: "+1").
+- [ ] Confirmar que a célula não aumenta de altura nem transborda a grade.
+- [ ] Confirmar que a grade permanece legível e alinhada em viewport mobile (375px e 320px).
+- [ ] Tocar no dia — confirmar que todos os eventos aparecem na lista abaixo da grade.
+
+### Cenário 7 — Clicar no dia mostra lista clara
+
+- [ ] Tocar em um dia com eventos mistos (sistema + manual).
+- [ ] Confirmar que cada item tem: ícone emoji à esquerda, label em negrito, subtítulo discreto.
+- [ ] Confirmar que "Vencimento monitorado" aparece apenas em entradas de sistema.
+- [ ] Confirmar que entradas manuais exibem o título truncado como subtítulo.
+- [ ] Confirmar que a lista tem espaçamento adequado entre itens (não colada, não espaçada demais).
+- [ ] Confirmar que não há modal, edição inline ou nova rota ao tocar em item da lista.
+
+### Cenário 8 — Botão "+ Agendar neste dia" continua funcionando
+
+- [ ] Com qualquer dia selecionado, confirmar que o botão "+ Agendar neste dia" aparece abaixo da lista.
+- [ ] Tocar no botão — confirmar que navega para Ferramentas → Rotina do síndico com AgendaPredio visível.
+- [ ] Confirmar que o formulário de novo evento na AgendaPredio não foi alterado.
+
+### Cenário 9 — Agenda permanece estética e não poluída
+
+- [ ] Confirmar que os ícones na grade são pequenos e discretos (não dominam o número do dia).
+- [ ] Confirmar que dias sem eventos permanecem limpos (sem ícone, sem ponto).
+- [ ] Confirmar legenda ao final do painel: "Ícones indicam vencimentos e eventos operacionais do prédio."
+- [ ] Confirmar que a legenda é texto simples, sem lista de ícones, sem cor chamativa.
+- [ ] Confirmar que o componente inteiro continua dentro do card arredondado com estética Navy/Cream.
+
+### Cenário 10 — Home não foi reestruturada
+
+- [ ] Confirmar que `HomeCondominioHub` aparece antes da `AgendaMensal`.
+- [ ] Confirmar que `GuidancePanel` aparece depois da `AgendaMensal`.
+- [ ] Confirmar que `HomeAcaoHub` aparece depois do `GuidancePanel`.
+- [ ] Confirmar que nenhum componente da Home foi removido, adicionado ou reordenado.
+- [ ] Confirmar que `AgendaPredio` em Ferramentas → Rotina do síndico está intacta e funcionando.
+- [ ] Confirmar que Assistente, Ferramentas, Minha Conta e BottomNav estão inalterados.
+- [ ] Confirmar TypeScript zero erros e build limpo (/ 223 kB, /admin 204 kB).
+
 ## 24. Fase 85 — Legibilidade Mobile do Assistente
 
 Objetivo: confirmar que as respostas do Assistente aparecem sem cursor residual, com separação visual clara entre resposta principal e blocos auxiliares, e com legibilidade confortável em respostas longas no mobile.
@@ -590,3 +673,89 @@ Pré-condição: dados cadastrados (AVCB, seguro, mandato). App com cache limpo 
 - [ ] Confirmar que a separação visual entre resposta principal e blocos auxiliares reforça a percepção de "resposta completa + camadas de contexto".
 - [ ] Confirmar que nenhuma resposta parece interrompida ou truncada.
 - [ ] Confirmar que TypeScript zero erros e build limpo (/ ≤ 230 kB, /admin 204 kB).
+
+## 26. Fases 87/88/89A — Onboarding, Conta e Stubs de Arquitetura
+
+Objetivo: confirmar que o overlay de onboarding funciona corretamente para novos usuários, não aparece para usuários existentes, e que a seção "Conta e sincronização" exibe o estado correto.
+
+Pré-condição: ter acesso ao console do browser para manipular `localStorage` conforme indicado.
+
+### Cenário 1 — Onboarding exibido para novo usuário
+
+- [ ] Limpar `localStorage` completamente (DevTools → Application → Clear storage).
+- [ ] Recarregar o app.
+- [ ] Confirmar que o overlay do OnboardingFlow aparece automaticamente sobre a Home.
+- [ ] Confirmar que o overlay tem fundo cream `#F7F1E8` com backdrop escuro semitransparente.
+- [ ] No mobile: confirmar que é um bottom sheet com `border-radius` no topo.
+- [ ] No desktop: confirmar que é um card centrado na tela.
+
+### Cenário 2 — Etapa 1: Boas-vindas
+
+- [ ] Confirmar título "Bem-vindo ao Amigo do Prédio" (ou equivalente) e subtítulo descritivo.
+- [ ] Confirmar botão "Começar" e link "Pular configuração".
+- [ ] Confirmar que os 4 dots de progresso aparecem abaixo — dot 1 ativo (pill largo), dots 2–4 menores.
+- [ ] Clicar "Pular configuração" — confirmar que o overlay fecha e a Home é exibida normalmente.
+- [ ] Reabrir o app (mesmo localStorage) — confirmar que o overlay NÃO aparece novamente.
+
+### Cenário 3 — Pular configuração grava a flag
+
+- [ ] Após pular, verificar no localStorage: `amigo_onboarding_complete` = `true`.
+- [ ] Verificar que `amigo_profile` NÃO foi criado (pular não salva perfil vazio).
+
+### Cenário 4 — Etapa 2: Dados do condomínio
+
+- [ ] Limpar localStorage novamente e recarregar.
+- [ ] No overlay, clicar "Começar".
+- [ ] Confirmar etapa 2 com campo "Nome do condomínio", chips "Síndico morador" / "Síndico profissional", chips "Sim" / "Não" para elevador.
+- [ ] Preencher nome e selecionar chips.
+- [ ] Confirmar dot 2 ativo e botão "Continuar" habilitado.
+- [ ] Clicar "Pular" — confirmar que avança para etapa 3 sem salvar dados.
+
+### Cenário 5 — Etapa 3: Datas de vencimento
+
+- [ ] Confirmar etapa 3 com inputs de data para AVCB, Seguro e Mandato.
+- [ ] Confirmar descrição abaixo de cada campo explicando o que é.
+- [ ] Preencher ao menos uma data.
+- [ ] Clicar "Continuar" — confirmar que avança para etapa 4.
+- [ ] Clicar "Pular etapa" — confirmar que avança para etapa 4 sem salvar datas.
+
+### Cenário 6 — Etapa 4: Resumo e conclusão
+
+- [ ] Confirmar etapa 4 com ícone de check e resumo dos dados preenchidos.
+- [ ] Confirmar badge "Dados salvos neste dispositivo".
+- [ ] Confirmar card neutro "Sincronização em nuvem — Em breve" com badge "Em breve".
+- [ ] Clicar "Ir para o app" — confirmar que o overlay fecha.
+- [ ] Confirmar que a Home atualiza (dados preenchidos aparecem se há perfil/memória).
+- [ ] Confirmar que `amigo_onboarding_complete` = `true` no localStorage.
+
+### Cenário 7 — Dados salvos após onboarding completo
+
+- [ ] Completar o onboarding preenchendo nome do condomínio (etapa 2) e datas (etapa 3).
+- [ ] Após fechar o overlay, ir para aba Condomínio.
+- [ ] Confirmar que o nome do condomínio está salvo no OnboardingProfile.
+- [ ] Confirmar que as datas de AVCB/Seguro/Mandato aparecem no MemoriaPanel.
+
+### Cenário 8 — Usuário existente não vê onboarding
+
+- [ ] Com dados já cadastrados e flag `amigo_onboarding_complete` presente, recarregar o app.
+- [ ] Confirmar que o overlay NÃO aparece.
+- [ ] Confirmar que a Home exibe normalmente: HomeCondominioHub, AgendaMensal, GuidancePanel.
+- [ ] Navegar entre abas — confirmar que nenhum overlay aparece em nenhuma aba.
+
+### Cenário 9 — Seção "Conta e sincronização" em Minha Conta
+
+- [ ] Abrir aba "Minha Conta" (aba Condomínio).
+- [ ] Rolar até o final da tela.
+- [ ] Confirmar seção "Conta" com ícone 💾 e texto "Dados salvos neste dispositivo".
+- [ ] Confirmar subtítulo "Armazenamento local — sem conta necessária".
+- [ ] Confirmar card aninhado com ☁️ "Sincronização em nuvem" + subtítulo "Em breve — seus dados, em qualquer dispositivo" + badge "Em breve".
+- [ ] Confirmar que nenhum botão de login, input de e-mail ou formulário aparece.
+- [ ] Confirmar que o card é puramente informativo e não tem ação clicável.
+
+### Cenário 10 — Regressões
+
+- [ ] Confirmar que todos os componentes da aba Condomínio continuam funcionando: OnboardingProfile, MemoriaPanel, TimelineOperacional, RevisaoMensal, BackupPanel.
+- [ ] Confirmar que exportar e importar backup continuam sem erro.
+- [ ] Confirmar que a Home com dados (HomeCondominioHub → AgendaMensal → GuidancePanel → HomeAcaoHub) continua íntegra.
+- [ ] Confirmar que Assistente, Ferramentas e BottomNav estão inalterados.
+- [ ] Confirmar TypeScript zero erros e build limpo (/ 224 kB, /admin 204 kB).

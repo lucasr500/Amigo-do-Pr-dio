@@ -6,7 +6,60 @@
 
 ---
 
-## Estado atual do produto (2026-05-22 — Fase 85)
+## Estado atual do produto (2026-05-23 — Fases 87/88/89A)
+
+### Bundle
+- Rota principal (`/`): 224 kB First Load JS (margem 6 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS (inalterado)
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues nas Fases 87/88/89A (Onboarding, Plano Supabase e Stubs de Arquitetura)
+
+Três fases complementares que introduzem o fluxo de onboarding de primeiro acesso, documentam o plano técnico de backend e preparam a arquitetura para sincronização futura — sem instalar SDKs, sem auth real e sem alterar package.json.
+
+**Fase 87 — Onboarding / Login UX**
+- **`lib/session.ts` — `KEYS.ONBOARDING_COMPLETE`:** nova chave `"amigo_onboarding_complete"` adicionada ao objeto `KEYS`. Centraliza o controle de estado do onboarding junto às demais chaves localStorage.
+- **`lib/session.ts` — `isFirstRun()` e `markFirstRunComplete()`:** `isFirstRun()` retorna `true` apenas se o usuário não tem flag de onboarding E não tem perfil — evita falsos positivos para usuários existentes. `markFirstRunComplete()` grava a flag no localStorage. Ambas exportadas. Safe em SSR (guard `typeof window === "undefined"`).
+- **`components/onboarding/OnboardingFlow.tsx` (novo):** overlay de 4 etapas renderizado como bottom sheet no mobile (`rounded-t-[28px]`) e card centrado no desktop (`sm:rounded-[28px]`). Fundo cream `#F7F1E8`, backdrop navy/55 com `backdrop-blur-sm`. Etapa 1: boas-vindas + "Começar" + "Pular configuração". Etapa 2: nome do condomínio, tipo de síndico (chips: morador/profissional), tem elevador (chips: Sim/Não). Etapa 3: datas de vencimento AVCB/Seguro/Mandato. Etapa 4: resumo dos dados preenchidos + badge "Dados salvos neste dispositivo" + card neutro "Sincronização em nuvem (em breve)". `finish()` chama `saveProfile()` + `saveMemoriaOperacional()` + `markFirstRunComplete()`. Sem dependências externas — usa apenas funções existentes de `lib/session.ts`.
+- **`app/page.tsx` — integração do OnboardingFlow:** `isFirstRun` importado de `@/lib/session`. `OnboardingFlow` carregado via `dynamic()` com `ssr: false`. Estado `showOnboarding` inicializado como `false`; primeiro `useEffect` detecta `isFirstRun()` e ativa o overlay. JSX do overlay posicionado antes de `<BottomNav>` (z-50, fixed, full-screen). `onComplete` fecha o overlay e chama `setRefreshKey` para atualizar a Home.
+- **`app/page.tsx` — seção "Conta e sincronização":** seção "Preferências futuras" renomeada para "Conta e sincronização". Exibe: ícone 💾 + "Dados salvos neste dispositivo" + card neutro com ☁️ "Sincronização em nuvem — Em breve". Design consistente com paleta Navy/Cream/Terracotta.
+
+**Fase 88 — Plano técnico Supabase/Backend**
+- **`docs/supabase-backend-plan.md` (novo):** documento completo de arquitetura cobrindo visão geral, objetivos, schema (`profiles` + `app_snapshots`), RLS, auth, sync snapshot-based (last-write-wins), integração com bundle (SDK lazy-loaded), privacidade/LGPD, checklist de produção e estratégia de rollback.
+- **`supabase/migrations/001_initial_schema.sql` (novo):** SQL executável para criar tabelas `profiles` e `app_snapshots` com triggers `updated_at`, índice único por usuário e todas as políticas RLS.
+
+**Fase 89A — Preparação arquitetural (stubs)**
+- **`lib/supabase/client.ts` (novo — stub):** `hasSupabaseConfig()` verifica variáveis de ambiente. `createSupabaseClient()` retorna `null` neste ciclo (SDK não instalado). Interface `SupabaseClientStub` tipifica o contrato futuro.
+- **`lib/auth/authClient.ts` (novo — stub):** tipos `AuthUser`, `AuthSession`, `AuthResult` definidos. Funções `signIn`, `signUp`, `signOut`, `getSession` exportadas como async stubs que retornam erros neutros. Sem dependência do SDK.
+- **`lib/sync/syncEngine.ts` (novo — stub):** tipos `SnapshotPayload`, `SyncResult` definidos. `buildSnapshot()` funcional — monta o objeto com `UserBackup` + `device_hint`. `uploadSnapshot()` e `downloadSnapshot()` como stubs que retornam `null`/erro neutro. Reutiliza o tipo `UserBackup` de `lib/session.ts`.
+- **Limites mantidos:** `@supabase/supabase-js` não instalado. `package.json`, lockfiles, manifest, `.env` inalterados. Nenhuma chamada de rede real. Nenhum login funcional. Nenhuma rota nova.
+
+---
+
+## Estado anterior do produto (2026-05-23 — Fase 86)
+
+### Bundle
+- Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
+- Admin (`/admin`): 204 kB First Load JS (inalterado)
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+### Entregues na Fase 86 (Agenda Mensal v2 — Ícones Operacionais)
+
+Fase visual e informativa: a Agenda Mensal da Home deixa de ser apenas uma grade com pontinhos e passa a comunicar visualmente a rotina do prédio com ícones operacionais discretos por tipo de evento e vencimento. Nenhuma lógica de dados, nenhuma estrutura da Home, nenhum componente externo foi alterado.
+
+- **`components/AgendaMensal.tsx` — `TYPE_ICONS`:** mapeamento de ícone por tipo de evento manual (`AgendaEventType`) — 13 tipos: assembleia 🧾, manutencao 🛠️, dedetizacao 🌿, caixa_agua 💧, extintores 🧯, vistoria 🔍, obra 🧱, cobranca 📌, reuniao 🧾, fornecedor 📌, comunicado 📢, retorno ↩️, outro 📍.
+- **`components/AgendaMensal.tsx` — `SYSTEM_ICONS`:** mapeamento de ícone por label de vencimento monitorado — 10 itens: AVCB 🧯, Seguro 🛡️, Mandato 🗳️, AGO 🧾, Dedetização 🌿, Caixa d'água 💧, Elevador ⬆️, Extintores 🧯, SPDA ⚡, Elétrica 💡. Fallback: 📅.
+- **`components/AgendaMensal.tsx` — tipos `SystemEntry` e `ManualEntry`:** campo `icon: string` adicionado a ambos. `buildSystemEntries()` popula o campo via `SYSTEM_ICONS`. `buildEventMap()` popula o campo para entradas manuais via `TYPE_ICONS`. Zero mudança na lógica de datas, filtros ou fontes de dados.
+- **`components/AgendaMensal.tsx` — indicadores na grade:** dot de 3px substituído por linha de ícones `text-[8px]` posicionada `absolute bottom-[2px]`, com até 2 ícones visíveis + `+N` para overflow (ex: `+1`). Cor do overflow adaptada ao estado do dia (white/70 em dia selecionado hoje, navy-400 nos demais). Altura da célula `h-[34px]` preservada. Grade mantida legível no mobile pequeno.
+- **`components/AgendaMensal.tsx` — lista do dia selecionado:** dot colorido substituído por emoji `text-[15px]` à esquerda com `flex items-start`. Layout de duas linhas: label em `font-medium text-navy-700` (negrito leve) + subtítulo `text-[11px] text-navy-400` ("Vencimento monitorado" para sistema; título truncado ou "Evento manual" para entradas manuais). Espaçamento entre itens aumentado para `space-y-2.5`. Botão "+ Agendar neste dia" e comportamento de navegação intocados.
+- **`components/AgendaMensal.tsx` — legenda compacta:** frase única abaixo da lista e do botão: "Ícones indicam vencimentos e eventos operacionais do prédio." — `text-[10px] text-navy-300`. Sem lista de ícones, sem poluição visual.
+- **Limites mantidos:** AgendaPredio, HomeCondominioHub, HomeAcaoHub, GuidancePanel, Response, app/page.tsx, lib/session.ts, lib/urgency.ts, lib/data.ts, lib/knowledge.json, package.json, manifest e backup schema inalterados. Sem IA, RAG, backend, login, billing, push, recorrência, nova aba ou nova rota.
+
+---
+
+## Estado anterior do produto (2026-05-22 — Fase 85)
 
 ### Bundle
 - Rota principal (`/`): 223 kB First Load JS (margem 7 kB — abaixo do limite de 230 kB)
