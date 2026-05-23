@@ -45,10 +45,10 @@ O Amigo do Prédio pode coletar, de forma anônima, os seguintes eventos de uso:
 | Categoria da pergunta identificada | Análise de uso da KB | Dados pessoais do síndico |
 | Contador de campos preenchidos (número) | Entender adoção de ferramentas | Conteúdo dos campos de texto |
 | Meses de atraso no simulador (número) | Entender perfil de uso | Valor da cota ou nome do devedor |
-| Identificador de sessão anônimo | Contar usuários únicos | IP, nome, e-mail ou qualquer dado identificável |
+| Identificador de sessão técnico (token local persistente, sem vínculo com nome, e-mail ou CPF) | Contar sessões únicas | IP, nome, e-mail ou qualquer dado identificável |
 | Duração da sessão (segundos) | Engajamento | Localização ou dispositivo |
 
-O texto das perguntas feitas ao Assistente é truncado em **80 caracteres** e não inclui dados pessoais de moradores.
+O conteúdo textual das perguntas feitas ao Assistente **não é enviado para a telemetria**. O sistema registra apenas metadados técnicos e operacionais: o comprimento da pergunta em número de caracteres, a categoria temática detectada (ex.: "obras", "assembleias"), o identificador interno da resposta sugerida na base de conhecimento e se houve ou não fallback. Nenhum texto livre digitado pelo usuário é transmitido ou armazenado nos servidores.
 
 Nenhum dado financeiro (valores de cota, débitos) é armazenado nos servidores.
 
