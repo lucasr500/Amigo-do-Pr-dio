@@ -26,6 +26,37 @@ const TYPE_LABELS: Record<AgendaEventType, string> = {
   outro: "Outro",
 };
 
+// ── Ícones por tipo de evento manual ──────────────────────────────────────────
+const TYPE_ICONS: Record<AgendaEventType, string> = {
+  assembleia: "🧾",
+  manutencao: "🛠️",
+  dedetizacao: "🌿",
+  caixa_agua: "💧",
+  extintores: "🧯",
+  vistoria:   "🔍",
+  obra:       "🧱",
+  cobranca:   "📌",
+  reuniao:    "🧾",
+  fornecedor: "📌",
+  comunicado: "📢",
+  retorno:    "↩️",
+  outro:      "📍",
+};
+
+// ── Ícones para vencimentos monitorados do sistema ────────────────────────────
+const SYSTEM_ICONS: Record<string, string> = {
+  "AVCB":          "🧯",
+  "Seguro":        "🛡️",
+  "Mandato":       "🗳️",
+  "AGO":           "🧾",
+  "Dedetização":   "🌿",
+  "Caixa d'água":  "💧",
+  "Elevador":      "⬆️",
+  "Extintores":    "🧯",
+  "SPDA":          "⚡",
+  "Elétrica":      "💡",
+};
+
 const WEEK_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 const MONTH_NAMES = [
@@ -38,13 +69,15 @@ const MONTH_NAMES = [
 type SystemEntry = {
   date: string;
   label: string;
+  icon: string;
   isSystem: true;
 };
 
 type ManualEntry = {
   date: string;
   label: string;
-  subLabel: string;  // título truncado, sem nota
+  subLabel: string;
+  icon: string;
   isSystem: false;
 };
 
@@ -69,17 +102,21 @@ function buildSystemEntries(): SystemEntry[] {
   const profile = getProfile();
   const result: SystemEntry[] = [];
 
-  if (m.vencimentoAVCB)              result.push({ date: m.vencimentoAVCB,                          label: "AVCB",       isSystem: true });
-  if (m.vencimentoSeguro)            result.push({ date: m.vencimentoSeguro,                         label: "Seguro",     isSystem: true });
-  if (m.fimMandatoSindico)           result.push({ date: m.fimMandatoSindico,                        label: "Mandato",    isSystem: true });
-  if (m.ultimaAGO)                   result.push({ date: addDays(m.ultimaAGO, 365),                  label: "AGO",        isSystem: true });
-  if (m.ultimaDedetizacao)           result.push({ date: addDays(m.ultimaDedetizacao, 180),           label: "Dedetização", isSystem: true });
-  if (m.ultimaLimpezaCaixaDAgua)     result.push({ date: addDays(m.ultimaLimpezaCaixaDAgua, 180),     label: "Caixa d'água", isSystem: true });
+  function add(date: string, label: string) {
+    result.push({ date, label, icon: SYSTEM_ICONS[label] ?? "📅", isSystem: true });
+  }
+
+  if (m.vencimentoAVCB)          add(m.vencimentoAVCB,                        "AVCB");
+  if (m.vencimentoSeguro)        add(m.vencimentoSeguro,                       "Seguro");
+  if (m.fimMandatoSindico)       add(m.fimMandatoSindico,                      "Mandato");
+  if (m.ultimaAGO)               add(addDays(m.ultimaAGO, 365),                "AGO");
+  if (m.ultimaDedetizacao)       add(addDays(m.ultimaDedetizacao, 180),         "Dedetização");
+  if (m.ultimaLimpezaCaixaDAgua) add(addDays(m.ultimaLimpezaCaixaDAgua, 180),   "Caixa d'água");
   if (m.ultimaManutencaoElevador && profile?.hasElevador)
-                                     result.push({ date: addDays(m.ultimaManutencaoElevador, 30),    label: "Elevador",   isSystem: true });
-  if (m.ultimaInspecaoExtintores)    result.push({ date: addDays(m.ultimaInspecaoExtintores, 365),   label: "Extintores", isSystem: true });
-  if (m.ultimaVistoriaSPDA)          result.push({ date: addDays(m.ultimaVistoriaSPDA, 365),         label: "SPDA",       isSystem: true });
-  if (m.ultimaVistoriaEletrica)      result.push({ date: addDays(m.ultimaVistoriaEletrica, 365),     label: "Elétrica",   isSystem: true });
+                                 add(addDays(m.ultimaManutencaoElevador, 30),  "Elevador");
+  if (m.ultimaInspecaoExtintores) add(addDays(m.ultimaInspecaoExtintores, 365), "Extintores");
+  if (m.ultimaVistoriaSPDA)      add(addDays(m.ultimaVistoriaSPDA, 365),        "SPDA");
+  if (m.ultimaVistoriaEletrica)  add(addDays(m.ultimaVistoriaEletrica, 365),    "Elétrica");
 
   return result;
 }
@@ -96,11 +133,11 @@ function buildEventMap(month: number, year: number): Map<number, DayEntry[]> {
 
   for (const e of manualEvents) {
     const day = parseInt(e.date.split("-")[2], 10);
-    const sub = truncateTitle(e.title);
     const entry: ManualEntry = {
       date: e.date,
       label: TYPE_LABELS[e.type] ?? "Item da agenda",
-      subLabel: sub,
+      subLabel: truncateTitle(e.title),
+      icon: TYPE_ICONS[e.type] ?? "📍",
       isSystem: false,
     };
     if (!map.has(day)) map.set(day, []);
@@ -202,14 +239,15 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
 
               const isToday    = day === todayDay;
               const isSelected = day === selectedDay;
-              const hasEvents  = eventMap.has(day);
+              const entries    = eventMap.get(day) ?? [];
+              const hasEvents  = entries.length > 0;
 
               return (
                 <button
                   key={day}
                   type="button"
                   onClick={() => setSelectedDay(day)}
-                  aria-label={`Dia ${day}${hasEvents ? ", tem eventos" : ""}`}
+                  aria-label={`Dia ${day}${hasEvents ? `, ${entries.length} evento${entries.length > 1 ? "s" : ""}` : ""}`}
                   aria-pressed={isSelected}
                   className={`relative flex h-[34px] w-full flex-col items-center justify-center rounded-lg text-[12.5px] font-medium transition-all active:scale-95 ${
                     isToday && isSelected
@@ -224,11 +262,24 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
                   {day}
                   {hasEvents && (
                     <span
-                      className={`absolute bottom-[3px] h-[3px] w-[3px] rounded-full ${
-                        isToday && isSelected ? "bg-white/70" : "bg-navy-400"
-                      }`}
+                      className="absolute bottom-[2px] flex items-center justify-center gap-[1px]"
                       aria-hidden="true"
-                    />
+                    >
+                      {entries.slice(0, 2).map((entry, i) => (
+                        <span key={i} className="text-[8px] leading-none">
+                          {entry.icon}
+                        </span>
+                      ))}
+                      {entries.length > 2 && (
+                        <span
+                          className={`text-[7px] font-semibold leading-none ${
+                            isToday && isSelected ? "text-white/70" : "text-navy-400"
+                          }`}
+                        >
+                          +{entries.length - 2}
+                        </span>
+                      )}
+                    </span>
                   )}
                 </button>
               );
@@ -238,7 +289,7 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
 
         {/* Detalhe do dia selecionado */}
         <div className="border-t border-navy-50 px-4 py-3">
-          <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-navy-300">
+          <p className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.09em] text-navy-300">
             {selectedDay === todayDay ? "Hoje" : `Dia ${selectedDay}`}
           </p>
 
@@ -247,22 +298,25 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
               Nada agendado para este dia.
             </p>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="space-y-2.5">
               {selectedEntries.map((entry, idx) => (
-                <li key={idx} className="flex items-center gap-2">
+                <li key={idx} className="flex items-start gap-2.5">
                   <span
-                    className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${
-                      entry.isSystem ? "bg-amber-400" : "bg-navy-300"
-                    }`}
+                    className="mt-px flex-shrink-0 text-[15px] leading-snug"
                     aria-hidden="true"
-                  />
-                  <p className="truncate text-[12.5px] text-navy-700">
-                    {entry.isSystem
-                      ? entry.label
-                      : entry.subLabel
-                      ? `${entry.label} · ${entry.subLabel}`
-                      : entry.label}
-                  </p>
+                  >
+                    {entry.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-medium leading-snug text-navy-700">
+                      {entry.label}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-navy-400">
+                      {entry.isSystem
+                        ? "Vencimento monitorado"
+                        : entry.subLabel || "Evento manual"}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -271,13 +325,17 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
           <button
             type="button"
             onClick={onNavigateToAgenda}
-            className="mt-2.5 inline-flex items-center gap-1 text-[11.5px] font-medium text-navy-400 transition-colors hover:text-navy-600 active:scale-[0.97]"
+            className="mt-3 inline-flex items-center gap-1 text-[11.5px] font-medium text-navy-400 transition-colors hover:text-navy-600 active:scale-[0.97]"
           >
             <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
             Agendar neste dia
           </button>
+
+          <p className="mt-2.5 text-[10px] leading-relaxed text-navy-300">
+            Ícones indicam vencimentos e eventos operacionais do prédio.
+          </p>
         </div>
 
       </div>
