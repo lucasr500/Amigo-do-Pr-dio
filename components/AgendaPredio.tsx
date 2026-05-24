@@ -57,12 +57,12 @@ function formatEventDate(iso: string): string {
 
 function urgencyClass(iso: string): string {
   const days = ate(iso);
-  if (isNaN(days)) return "text-zinc-500";
+  if (isNaN(days)) return "text-navy-400";
   if (days < 0) return "text-red-600 font-medium";
   if (days === 0) return "text-red-500 font-medium";
   if (days <= 7) return "text-orange-500 font-medium";
   if (days <= 30) return "text-yellow-600";
-  return "text-zinc-500";
+  return "text-navy-400";
 }
 
 function urgencyLabel(iso: string): string {

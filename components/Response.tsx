@@ -1025,12 +1025,18 @@ type ConfidenceBadgeProps = {
   label: string;
 };
 
-function ConfidenceBadge({ level }: ConfidenceBadgeProps) {
+function ConfidenceBadge({ level, label }: ConfidenceBadgeProps) {
   if (level === "none") return null;
 
   return (
-    <span className="rounded-full border border-navy-100 bg-navy-50 px-2 py-0.5 text-[10px] font-medium text-navy-500">
-      Resposta direta da base
+    <span
+      className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+        level === "high"
+          ? "border-navy-100 bg-navy-50 text-navy-500"
+          : "border-amber-200 bg-amber-50 text-amber-700"
+      }`}
+    >
+      {label}
     </span>
   );
 }

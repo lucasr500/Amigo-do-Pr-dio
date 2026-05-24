@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 
 const fraunces = localFont({
   src: "./fonts/fraunces.woff2",
@@ -62,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={`${fraunces.variable} ${interTight.variable}`}>
       <body className="bg-cream-50 font-sans text-navy-700 antialiased">
-        {children}
+        <AppErrorBoundary>{children}</AppErrorBoundary>
       </body>
     </html>
   );
