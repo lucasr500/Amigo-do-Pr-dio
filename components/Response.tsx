@@ -376,8 +376,9 @@ export default function Response({
 
   const handleCopy = async () => {
     if (!answer) return;
+    const disclaimer = "\n\n—\nOrientação informativa gerada pelo Amigo do Prédio. Não substitui análise da administradora, assessoria jurídica ou profissional responsável em casos específicos.";
     try {
-      await navigator.clipboard.writeText(answer);
+      await navigator.clipboard.writeText(answer + disclaimer);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { exportUserData, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, ImportResult } from "@/lib/session";
+import { exportUserData, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 type Props = {
@@ -20,18 +20,23 @@ export default function BackupPanel({ onImported }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
   const [storageSizeKB, setStorageSizeKB] = useState<number | null>(null);
+  const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [resetPhase, setResetPhase] = useState<ResetPhase>("idle");
   const [resetInput, setResetInput] = useState("");
 
   useEffect(() => {
     setStorageSizeKB(getStorageSizeKB());
+    setLastBackupAt(getLastBackupAt());
   }, []);
 
   const handleExport = () => {
-    const dateStr = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
     exportUserData();
+    recordBackupAt();
     void trackEvent("backup_exported");
+    setLastBackupAt(now.toISOString());
     setExportFeedback(`Backup exportado: amigo-do-predio-backup-${dateStr}.json`);
     setTimeout(() => setExportFeedback(null), 4000);
   };
@@ -104,6 +109,14 @@ export default function BackupPanel({ onImported }: Props) {
           <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
             Seus dados ficam salvos neste dispositivo. Enquanto não há login, o
             backup protege suas informações e permite restaurar em outro aparelho.
+          </p>
+          <p className="mt-2 text-[11px] leading-relaxed text-navy-400">
+            Exporte regularmente — especialmente antes de trocar de celular, limpar o navegador ou usar em outro dispositivo. O arquivo exportado é local; guarde em um lugar seguro (e-mail, nuvem ou galeria).
+          </p>
+          <p className="mt-2 text-[11px] text-navy-400">
+            {lastBackupAt
+              ? `Último backup: ${new Date(lastBackupAt).toLocaleDateString("pt-BR")} às ${new Date(lastBackupAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+              : "Nenhum backup exportado ainda."}
           </p>
         </div>
 

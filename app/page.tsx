@@ -686,6 +686,9 @@ export default function HomePage() {
                     <p className="text-[11px] leading-relaxed text-navy-500">
                       As informações do condomínio são salvas localmente neste aparelho e não são enviadas a terceiros. Use "Exportar dados" para fazer backup.
                     </p>
+                    <p className="mt-1.5 text-[10.5px] leading-relaxed text-navy-400">
+                      Evite inserir dados sensíveis desnecessários — como CPF, números de documento ou informações pessoais de moradores.
+                    </p>
                   </div>
                   <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
                     <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Telemetria de uso</p>
@@ -718,7 +721,7 @@ export default function HomePage() {
                     <span className="text-[14px]">☁️</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[12px] font-medium text-navy-600">Sincronização em nuvem</p>
-                      <p className="text-[11px] text-navy-400">Em breve — seus dados, em qualquer dispositivo</p>
+                      <p className="text-[11px] text-navy-400">Ainda não disponível. Nesta versão, use o backup manual para proteger seus dados.</p>
                     </div>
                     <span className="flex-shrink-0 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-medium text-navy-500">
                       Em breve

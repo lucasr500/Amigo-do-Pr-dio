@@ -308,6 +308,7 @@ export type SessionMeta = {
   previousOpenedAt: string | null;
   sessionCount: number;
   lastRevisaoMensalAt: string | null;
+  lastBackupAt?: string | null; // ISO — atualizado em cada exportação bem-sucedida
   sessionId: string;
 };
 
@@ -322,6 +323,7 @@ export function getSessionMeta(): SessionMeta {
     previousOpenedAt: stored.previousOpenedAt ?? null,
     sessionCount: stored.sessionCount ?? 0,
     lastRevisaoMensalAt: stored.lastRevisaoMensalAt ?? null,
+    lastBackupAt: stored.lastBackupAt ?? null,
     sessionId: stored.sessionId ?? generateSessionId(),
   };
 }
@@ -345,6 +347,15 @@ export function recordSessionOpen(): number | null {
 export function recordRevisaoMensal(): void {
   const meta = getSessionMeta();
   safeWrite(KEYS.SESSION_META, { ...meta, lastRevisaoMensalAt: new Date().toISOString() });
+}
+
+export function recordBackupAt(): void {
+  const meta = getSessionMeta();
+  safeWrite(KEYS.SESSION_META, { ...meta, lastBackupAt: new Date().toISOString() });
+}
+
+export function getLastBackupAt(): string | null {
+  return getSessionMeta().lastBackupAt ?? null;
 }
 
 export function getSessionId(): string {
