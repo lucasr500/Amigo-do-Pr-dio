@@ -64,7 +64,7 @@ export default function GuidancePreview({ onSetup }: Props) {
         {/* CTA */}
         <div className="mt-4 border-t border-navy-100/50 pt-3.5">
           <p className="text-[12px] leading-relaxed text-navy-500">
-            Cadastre AVCB, seguro e mandato em 2 minutos. O app avisa você antes que qualquer prazo vire urgência.
+            Esses alertas aparecem automaticamente quando você cadastra as datas essenciais do prédio.
           </p>
           {onSetup && (
             <button
@@ -72,7 +72,7 @@ export default function GuidancePreview({ onSetup }: Props) {
               onClick={onSetup}
               className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-full bg-navy-700 px-4 py-2 text-[12.5px] font-semibold text-cream-50 transition-all duration-200 hover:bg-navy-800 active:scale-[0.98]"
             >
-              Cadastrar as 3 datas
+              Ativar monitoramento de prazos
               <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path
                   d="M6 4l4 4-4 4"

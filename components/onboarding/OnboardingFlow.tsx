@@ -150,13 +150,10 @@ export default function OnboardingFlow({ onComplete }: Props) {
             Amigo do Prédio
           </p>
           <h2 className="mt-2 font-display text-[24px] font-semibold leading-snug text-navy-800">
-            Bem-vindo ao Amigo do Prédio.
+            Seu condomínio, sob controle.
           </h2>
           <p className="mt-3 text-[13.5px] leading-relaxed text-navy-600">
-            Organize a rotina do seu condomínio: vencimentos, pendências, comunicados e orientações práticas — tudo em um lugar só.
-          </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-navy-400">
-            Em 2 minutos o monitoramento está ativo.
+            Monitore prazos críticos, registre pendências e consulte orientações condominiais — tudo no celular, sem depender só da memória.
           </p>
         </div>
         <div className="flex items-center justify-between gap-4">
@@ -165,12 +162,12 @@ export default function OnboardingFlow({ onComplete }: Props) {
             onClick={() => setStep(2)}
             className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
-            Começar
+            Começar em 2 minutos
             <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
-          <SkipLink label="Pular configuração" />
+          <SkipLink label="Explorar primeiro" />
         </div>
       </Overlay>
     );
@@ -340,11 +337,11 @@ export default function OnboardingFlow({ onComplete }: Props) {
         <p className="text-[12px] font-medium text-navy-700">Dados salvos neste dispositivo</p>
       </div>
 
-      {/* CTA de conta — neutro, não funcional */}
+      {/* Instrução de backup */}
       <div className="mb-5 rounded-xl border border-navy-100/40 bg-white/60 px-3 py-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.10em] text-navy-300">Sincronização em nuvem</p>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-navy-400">
-          Em breve será possível criar uma conta para sincronizar os dados entre dispositivos. Por enquanto, use o backup local em Minha Conta.
+        <p className="text-[11.5px] leading-relaxed text-navy-500">
+          Seus dados ficam salvos neste dispositivo. Para se proteger ao trocar de celular ou limpar o navegador, use{" "}
+          <span className="font-medium text-navy-700">"Exportar dados"</span> na aba Conta.
         </p>
       </div>
 
