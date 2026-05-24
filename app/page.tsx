@@ -670,10 +670,33 @@ export default function HomePage() {
             {/* ── Suporte e termos ──────────────────────────────────── */}
             <section className="px-5 pb-3 pt-4 sm:px-6">
               <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
-                <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Suporte e termos</p>
-                <p className="text-[12.5px] leading-relaxed text-navy-500">
-                  Antes de qualquer versão comercial, esta área reunirá suporte, termos de uso e política de privacidade. Por enquanto, o app segue em pré-beta interno.
-                </p>
+                <div className="mb-3 flex items-center gap-2">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Suporte e termos</p>
+                  <span className="rounded-full bg-navy-100 px-2 py-0.5 text-[9.5px] font-semibold text-navy-500">Pré-beta</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+                    <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Ferramenta de apoio operacional</p>
+                    <p className="text-[11px] leading-relaxed text-navy-500">
+                      O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou outros profissionais especializados. As orientações têm caráter informativo.
+                    </p>
+                  </div>
+                  <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+                    <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Seus dados ficam no dispositivo</p>
+                    <p className="text-[11px] leading-relaxed text-navy-500">
+                      As informações do condomínio são salvas localmente neste aparelho e não são enviadas a terceiros. Use "Exportar dados" para fazer backup.
+                    </p>
+                  </div>
+                  <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+                    <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Telemetria de uso</p>
+                    <p className="text-[11px] leading-relaxed text-navy-500">
+                      Eventos técnicos anônimos (sem texto livre nem dados do condomínio) podem ser coletados para melhorar o produto. Não compartilhamos dados com terceiros para fins de marketing.
+                    </p>
+                  </div>
+                  <p className="px-0.5 pt-1 text-[10.5px] leading-relaxed text-navy-400">
+                    Versão preliminar para pré-beta. Termos de uso e política de privacidade completos serão publicados antes do lançamento público, após revisão jurídica.
+                  </p>
+                </div>
               </div>
             </section>
 

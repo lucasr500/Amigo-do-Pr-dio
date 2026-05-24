@@ -95,19 +95,19 @@ export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavig
   const prazosSubtitle = !hydrated
     ? "Carregando..."
     : prazosCount === 0
-    ? "Mantenha os prazos atualizados."
+    ? "Adicione AVCB, seguro ou manutenções para monitorar."
     : `${prazosCount} próximo${prazosCount > 1 ? "s" : ""} vencimento${prazosCount > 1 ? "s" : ""}`;
 
   const pendSubtitle = !hydrated
     ? "Carregando..."
     : pendCount === 0
-    ? "Nenhuma pendência crítica."
+    ? "Sem pendências críticas no momento."
     : `${pendCount} ${pendCount === 1 ? "item aguardando" : "itens aguardando"} ação`;
 
   const passosSubtitle = !hydrated
     ? "Carregando..."
     : passosCount === 0
-    ? "Defina o que fazer e mantenha o ritmo."
+    ? "Nenhum próximo passo. Crie um quando surgir uma demanda."
     : `${passosCount} passo${passosCount > 1 ? "s" : ""} aberto${passosCount > 1 ? "s" : ""}`;
 
   return (

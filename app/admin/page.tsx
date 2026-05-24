@@ -442,11 +442,18 @@ export default function AdminPage() {
     if (!authed) return;
     (async () => {
       if (telemetryEnabled) {
-        const events = await fetchRecentEvents(2000);
-        if (events.length > 0) {
-          setData(aggregateRemote(events));
-          setSource("remote");
-          return;
+        try {
+          const timeoutP = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("admin_timeout")), 8000)
+          );
+          const events = await Promise.race([fetchRecentEvents(2000), timeoutP]);
+          if (events.length > 0) {
+            setData(aggregateRemote(events));
+            setSource("remote");
+            return;
+          }
+        } catch {
+          // timeout ou falha — usa dados locais
         }
       }
       setData(aggregateLocal());

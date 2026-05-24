@@ -245,16 +245,27 @@ type Props = {
   onNavigateToTimeline?: () => void;
 };
 
+function hasMinimumHealthData(): boolean {
+  const m = getMemoriaOperacional();
+  return !!(
+    m.vencimentoAVCB || m.vencimentoSeguro || m.fimMandatoSindico ||
+    m.ultimaDedetizacao || m.ultimaLimpezaCaixaDAgua || m.ultimaManutencaoElevador ||
+    m.ultimaInspecaoExtintores || m.ultimaVistoriaSPDA || m.ultimaVistoriaEletrica || m.ultimaAGO
+  );
+}
+
 export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline }: Props) {
-  const [result, setResult]   = useState<HealthScoreResult | null>(null);
-  const [areas, setAreas]     = useState<MonitoredArea[]>([]);
-  const [records, setRecords] = useState<RecordItem[]>([]);
+  const [result, setResult]     = useState<HealthScoreResult | null>(null);
+  const [areas, setAreas]       = useState<MonitoredArea[]>([]);
+  const [records, setRecords]   = useState<RecordItem[]>([]);
+  const [hasData, setHasData]   = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const r       = computeHealthScore();
     const m       = getMemoriaOperacional();
     const profile = getProfile();
+    setHasData(hasMinimumHealthData());
     setResult(r);
     setAreas(computeAreas(r, m, profile));
     setRecords(buildLastRecords());
@@ -262,6 +273,62 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline }
   }, [refreshKey]);
 
   if (!hydrated || !result) return null;
+
+  if (!hasData) {
+    return (
+      <div className="flex w-full max-w-full flex-col overflow-x-hidden">
+        <div className="px-5 pb-2 pt-[calc(env(safe-area-inset-top,0px)+1.125rem)] sm:px-6">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="mb-3 inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-navy-400 transition-colors hover:bg-navy-100/70 hover:text-navy-600 active:scale-[0.97]"
+            >
+              <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[11.5px] font-medium">Voltar</span>
+            </button>
+          )}
+          <h1 className="font-display text-[28px] font-bold leading-tight text-navy-800">Saúde operacional</h1>
+          <p className="mt-1 text-[13px] leading-relaxed text-navy-500">A visão geral do seu condomínio.</p>
+        </div>
+
+        <section className="px-5 pb-4 sm:px-6">
+          <div className="flex flex-col items-center gap-4 rounded-[18px] border border-navy-100/70 bg-white px-5 py-8 shadow-card text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-navy-50">
+              <svg viewBox="0 0 32 32" className="h-8 w-8 text-navy-300" fill="none" aria-hidden="true">
+                <circle cx="16" cy="16" r="12" stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 3" />
+                <path d="M16 10v6M16 19v2" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[17px] font-bold text-navy-800">Configure seu prédio</p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
+                Adicione prazos — AVCB, seguro, mandato do síndico, manutenções — para ativar o índice de saúde operacional.
+              </p>
+            </div>
+            <span className="rounded-full border border-navy-100 bg-navy-50 px-4 py-1.5 text-[12px] font-semibold text-navy-500">
+              Aguardando dados
+            </span>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="mt-1 text-[12.5px] font-medium text-navy-500 underline underline-offset-2 transition-colors hover:text-navy-700"
+              >
+                Ir para Conta e configurar
+              </button>
+            )}
+          </div>
+        </section>
+
+        <p className="px-5 pb-8 text-[10.5px] leading-relaxed text-navy-300 sm:px-6">
+          Este índice é apenas operacional e depende dos dados cadastrados no app. Não representa avaliação jurídica ou de compliance.
+        </p>
+      </div>
+    );
+  }
 
   const ringColor    = RING_COLOR[result.statusKey];
   const statusTitle  = STATUS_TITLE[result.statusKey];

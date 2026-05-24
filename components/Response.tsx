@@ -842,7 +842,7 @@ export default function Response({
                     />
                     <ActionPill
                       icon="WA"
-                      label="WhatsApp"
+                      label="Compartilhar"
                       onClick={handleShare}
                     />
                   </>

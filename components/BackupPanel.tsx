@@ -268,18 +268,32 @@ export default function BackupPanel({ onImported }: Props) {
           )}
 
           {resetPhase === "confirming" && (
-            <div className="rounded-xl border border-terracotta-200 bg-terracotta-50/60 px-4 py-3.5">
-              <p className="mb-1 text-[12.5px] font-semibold text-terracotta-800">
-                Limpar dados do dispositivo
+            <div className="rounded-xl border border-terracotta-300 bg-terracotta-50/80 px-4 py-3.5">
+              <div className="mb-2 flex items-center gap-2">
+                <svg className="h-4 w-4 flex-shrink-0 text-terracotta-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                  <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                <p className="text-[12.5px] font-bold text-terracotta-800">
+                  Ação irreversível — todos os dados serão apagados
+                </p>
+              </div>
+              <p className="mb-2 text-[11.5px] leading-relaxed text-terracotta-700">
+                Serão removidos permanentemente deste dispositivo:
               </p>
-              <p className="mb-3 text-[11.5px] leading-relaxed text-terracotta-700">
-                Isso apagará os dados deste dispositivo. Exporte um backup antes se quiser guardar as informações.
+              <ul className="mb-3 space-y-0.5 pl-3">
+                {["Perfil e nome do condomínio", "Datas operacionais (AVCB, seguro, manutenções)", "Pendências e próximos passos", "Eventos da agenda", "Histórico de ocorrências"].map((item) => (
+                  <li key={item} className="text-[11px] text-terracotta-700 before:mr-1.5 before:content-['•']">{item}</li>
+                ))}
+              </ul>
+              <p className="mb-3 text-[11px] font-semibold text-terracotta-700">
+                Exporte um backup antes se quiser preservar os dados.
               </p>
               <input
                 type="text"
                 value={resetInput}
                 onChange={(e) => setResetInput(e.target.value)}
-                placeholder="Digite APAGAR para confirmar"
+                placeholder='Digite "APAGAR" para confirmar'
                 autoComplete="off"
                 className="mb-3 w-full rounded-xl border border-terracotta-200 bg-white px-3 py-1.5 text-[12.5px] text-navy-800 placeholder:text-navy-300 focus:border-terracotta-400 focus:outline-none"
               />
@@ -288,9 +302,9 @@ export default function BackupPanel({ onImported }: Props) {
                   type="button"
                   onClick={handleConfirmReset}
                   disabled={resetInput !== "APAGAR"}
-                  className="inline-flex items-center rounded-full bg-terracotta-600 px-3.5 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-terracotta-700 active:scale-[0.97] disabled:bg-navy-200 disabled:text-navy-400"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-terracotta-600 px-3.5 py-1.5 text-[11.5px] font-semibold text-white transition-all hover:bg-terracotta-700 active:scale-[0.97] disabled:bg-navy-200 disabled:text-navy-400"
                 >
-                  Apagar dados
+                  Apagar tudo
                 </button>
                 <button
                   type="button"

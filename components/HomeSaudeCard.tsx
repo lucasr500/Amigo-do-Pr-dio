@@ -6,6 +6,16 @@ import {
   type HealthStatusKey,
   type HealthScoreResult,
 } from "@/lib/health-score";
+import { getMemoriaOperacional } from "@/lib/session";
+
+function hasMinimumHealthData(): boolean {
+  const m = getMemoriaOperacional();
+  return !!(
+    m.vencimentoAVCB || m.vencimentoSeguro || m.fimMandatoSindico ||
+    m.ultimaDedetizacao || m.ultimaLimpezaCaixaDAgua || m.ultimaManutencaoElevador ||
+    m.ultimaInspecaoExtintores || m.ultimaVistoriaSPDA || m.ultimaVistoriaEletrica || m.ultimaAGO
+  );
+}
 
 const RING_COLOR: Record<HealthStatusKey, string> = {
   critico:         "#ef4444",
@@ -69,15 +79,50 @@ function RingIndicator({ pct, color }: { pct: number; color: string }) {
 type Props = { refreshKey?: number; onClick?: () => void };
 
 export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
-  const [result, setResult]   = useState<HealthScoreResult | null>(null);
+  const [result, setResult]     = useState<HealthScoreResult | null>(null);
+  const [hasData, setHasData]   = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    setHasData(hasMinimumHealthData());
     setResult(computeHealthScore());
     setHydrated(true);
   }, [refreshKey]);
 
   if (!hydrated || !result) return null;
+
+  const btnClass = `flex w-full items-center gap-3.5 rounded-[18px] border px-4 py-4 text-left shadow-card ${onClick ? "transition-all hover:shadow-card-md active:scale-[0.99]" : ""}`;
+
+  if (!hasData) {
+    return (
+      <section className="px-5 pb-3 sm:px-6">
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={!onClick}
+          className={`${btnClass} border-navy-100/60 bg-white`}
+        >
+          <div className="relative flex h-[58px] w-[58px] flex-shrink-0 items-center justify-center">
+            <svg className="absolute inset-0" viewBox="0 0 58 58" fill="none" aria-hidden="true">
+              <circle cx="29" cy="29" r={23} stroke="#e5e7eb" strokeWidth="5" />
+            </svg>
+            <span className="relative z-10 text-[16px] leading-none text-navy-300" aria-hidden="true">—</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-semibold leading-snug text-navy-800">
+              Saúde operacional
+            </p>
+            <p className="mt-0.5 text-[12px] leading-snug text-navy-400">
+              Adicione prazos para ativar o monitoramento.
+            </p>
+          </div>
+          <svg className="h-4 w-4 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      </section>
+    );
+  }
 
   const ringColor = RING_COLOR[result.statusKey];
   const cardBg    = CARD_BG[result.statusKey];
@@ -89,7 +134,7 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
         type="button"
         onClick={onClick}
         disabled={!onClick}
-        className={`flex w-full items-center gap-3.5 rounded-[18px] border px-4 py-4 text-left shadow-card ${cardBg} ${onClick ? "transition-all hover:shadow-card-md active:scale-[0.99]" : ""}`}
+        className={`${btnClass} ${cardBg}`}
       >
         <RingIndicator pct={result.percentage} color={ringColor} />
 
