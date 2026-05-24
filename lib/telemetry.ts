@@ -102,7 +102,8 @@ export type TelemetryEvent =
   | "urgency_banner_tap"
   | "profile_completion_cta_tap"
   | "assistant_response_feedback"
-  | "comunicado_followup_created";
+  | "comunicado_followup_created"
+  | "saude_action_cta_tap";
 
 type QueuedEvent = {
   event: string;

@@ -61,11 +61,11 @@ const ANCHOR_TO_GROUP: Partial<Record<ToolAnchor, ToolGroup>> = {
 };
 
 const TOOL_CATEGORIES: Array<{ id: ToolGroup; icon: string; title: string; description: string }> = [
-  { id: "rotina",      icon: "📋", title: "Rotina do síndico", description: "Registre acontecimentos, agenda eventos e acompanhe próximos passos." },
-  { id: "comunicados", icon: "📢", title: "Comunicados",        description: "Modelos administrativos para avisos aos moradores." },
-  { id: "simuladores", icon: "🧮", title: "Simuladores",        description: "Cálculos simples para estimativas condominiais." },
-  { id: "checklists",  icon: "✅", title: "Checklists",         description: "Listas orientativas para assembleias, obras e manutenção." },
-  { id: "temas",       icon: "🔍", title: "Explorar por tema",  description: "Consulte orientações por assunto." },
+  { id: "rotina",      icon: "📋", title: "Rotina do síndico", description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
+  { id: "comunicados", icon: "📢", title: "Comunicados",        description: "Gere avisos formais para moradores em segundos." },
+  { id: "simuladores", icon: "🧮", title: "Simuladores",        description: "Estime multas, juros e reajuste de cota condominial." },
+  { id: "checklists",  icon: "✅", title: "Checklists",         description: "Conferência guiada para assembleias, obras e manutenção." },
+  { id: "temas",       icon: "🔍", title: "Explorar por tema",  description: "Orientações práticas organizadas por tema de gestão." },
 ];
 
 // Carregamento sob demanda — só necessários quando a aba é ativada
@@ -162,6 +162,7 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [urgentItem, setUrgentItem] = useState<UrgentItem | null>(null);
   const [profileCompletion, setProfileCompletion] = useState(0);
+  const [condoName, setCondoName] = useState("");
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   useEffect(() => {
@@ -176,6 +177,7 @@ export default function HomePage() {
       const prof = getProfile();
       setUrgentItem(computeUrgentItem(m));
       setProfileCompletion(computeProfileCompletion(prof, m));
+      setCondoName(prof?.nomeCondominio ?? "");
     }
     if (isFirstRun()) setShowOnboarding(true);
     return startSessionTimer();
@@ -190,9 +192,11 @@ export default function HomePage() {
       const prof = getProfile();
       setUrgentItem(computeUrgentItem(m));
       setProfileCompletion(computeProfileCompletion(prof, m));
+      setCondoName(prof?.nomeCondominio ?? "");
     } else {
       setUrgentItem(null);
       setProfileCompletion(0);
+      setCondoName("");
     }
   }, [refreshKey]);
 
@@ -387,6 +391,7 @@ export default function HomePage() {
                 refreshKey={refreshKey}
                 onBack={backFromSubView}
                 onNavigateToTimeline={() => { backFromSubView(); navigateTab("condominio"); }}
+                onGoToCondominio={() => { backFromSubView(); navigateTab("condominio"); }}
               />
             )}
 
@@ -657,7 +662,7 @@ export default function HomePage() {
                 Ferramentas
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                Ferramentas
+                Ferramentas do síndico
               </p>
               {activeToolGroup === null && (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
@@ -771,7 +776,7 @@ export default function HomePage() {
                 Condomínio
               </p>
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-                {hasCondominioData ? "Conta & Dados" : "Ativar monitoramento"}
+                {condoName || (hasCondominioData ? "Meu prédio" : "Ativar monitoramento")}
               </p>
               {hasCondominioData ? (
                 <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">

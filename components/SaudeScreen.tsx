@@ -14,6 +14,7 @@ import {
   type MemoriaOperacional,
   type CondominioProfile,
 } from "@/lib/session";
+import { trackEvent } from "@/lib/telemetry";
 
 // ─── Status mappings ──────────────────────────────────────────────────────────
 
@@ -83,15 +84,6 @@ function RingLarge({ pct, color }: { pct: number; color: string }) {
     </div>
   );
 }
-
-// ─── Improvement action map ───────────────────────────────────────────────────
-
-const AREA_IMPROVEMENT: Record<string, string> = {
-  "Documentação": "Cadastre AVCB, seguro condominial e mandato do síndico em Minha Conta.",
-  "Prazos e vencimentos": "Verifique e resolva os alertas ativos no monitoramento do app.",
-  "Manutenções": "Registre datas de rotinas periódicas (dedetização, elevador, extintores) em Conta.",
-  "Fornecedores": "Cadastre a administradora e prestadores de serviço em Minha Conta.",
-};
 
 // ─── Monitored areas computation ──────────────────────────────────────────────
 
@@ -252,6 +244,7 @@ type Props = {
   refreshKey?: number;
   onBack?: () => void;
   onNavigateToTimeline?: () => void;
+  onGoToCondominio?: () => void;
 };
 
 function hasMinimumHealthData(): boolean {
@@ -263,7 +256,7 @@ function hasMinimumHealthData(): boolean {
   );
 }
 
-export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline }: Props) {
+export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio }: Props) {
   const [result, setResult]     = useState<HealthScoreResult | null>(null);
   const [areas, setAreas]       = useState<MonitoredArea[]>([]);
   const [records, setRecords]   = useState<RecordItem[]>([]);
@@ -394,6 +387,9 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline }
             <span className={`mt-3 inline-block rounded-full px-3 py-1 text-[11.5px] font-semibold ${badgeStyle}`}>
               {badgeLabel}
             </span>
+            <p className="mt-2 text-[11.5px] leading-relaxed text-navy-400">
+              {result.diagnosticPhrase}
+            </p>
           </div>
         </div>
       </section>
@@ -429,36 +425,46 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline }
       </section>
 
       {/* ── Para melhorar ──────────────────────────────────────────── */}
-      {(() => {
-        const items = areas
-          .filter((a) => a.status !== "ok")
-          .map((a) => AREA_IMPROVEMENT[a.label])
-          .filter((x): x is string => Boolean(x));
-        if (items.length === 0) return null;
-        return (
-          <section className="px-5 pb-4 sm:px-6">
-            <p className="mb-3 text-[14px] font-semibold text-navy-800">Para melhorar</p>
-            <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
-              {items.slice(0, 4).map((item, idx) => (
-                <div key={idx}>
-                  {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
-                  <div className="flex items-start gap-3 px-4 py-3.5">
-                    <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[10px] font-semibold text-navy-600">
-                      {idx + 1}
-                    </span>
-                    <p className="text-[13px] leading-snug text-navy-700">{item}</p>
-                  </div>
+      {result.suggestions.length > 0 && (
+        <section className="px-5 pb-4 sm:px-6">
+          <p className="mb-3 text-[14px] font-semibold text-navy-800">Para melhorar</p>
+          <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+            {result.suggestions.map((item, idx) => (
+              <div key={idx}>
+                {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
+                <div className="flex items-start gap-3 px-4 py-3.5">
+                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[10px] font-semibold text-navy-600">
+                    {idx + 1}
+                  </span>
+                  <p className="text-[13px] leading-snug text-navy-700">{item}</p>
                 </div>
-              ))}
-              <div className="border-t border-navy-50 px-4 py-3">
-                <p className="text-[10.5px] leading-relaxed text-navy-400">
-                  Este índice reflete apenas os dados cadastrados no app. Não representa certificação técnica, jurídica ou contábil do condomínio.
-                </p>
               </div>
+            ))}
+            {onGoToCondominio && (
+              <div className="border-t border-navy-50 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void trackEvent("saude_action_cta_tap", { status: result.statusKey });
+                    onGoToCondominio();
+                  }}
+                  className="flex w-full items-center justify-center gap-1.5 text-[12.5px] font-medium text-navy-600 transition-colors hover:text-navy-800 active:scale-[0.98]"
+                >
+                  Atualizar dados no Condomínio
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            <div className="border-t border-navy-50 px-4 py-3">
+              <p className="text-[10.5px] leading-relaxed text-navy-400">
+                Este índice reflete apenas os dados cadastrados no app. Não representa certificação técnica, jurídica ou contábil do condomínio.
+              </p>
             </div>
-          </section>
-        );
-      })()}
+          </div>
+        </section>
+      )}
 
       {/* ── Últimos registros ───────────────────────────────────────── */}
       <section className="px-5 pb-3 sm:px-6">
