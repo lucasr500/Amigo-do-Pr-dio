@@ -4,7 +4,6 @@ import { useState } from "react";
 import { TOPICS, Topic } from "@/lib/data";
 
 // ── Perguntas sugeridas por tema ──────────────────────────────────────────────
-// Definidas inline — não altera lib/data.ts, KB nem motor de busca.
 const THEME_QUESTIONS: Record<string, string[]> = {
   multas: [
     "Morador faz barulho toda noite. Posso multar?",
@@ -92,27 +91,103 @@ const THEME_QUESTIONS: Record<string, string[]> = {
   ],
 };
 
+// ── Grupos de categorias ──────────────────────────────────────────────────────
+
+type SubtopicChip = { label: string; topicId: string };
+type CategoryGroup = {
+  id: string;
+  title: string;
+  icon: string;
+  description: string;
+  subtopics: SubtopicChip[];
+};
+
+const CATEGORY_GROUPS: CategoryGroup[] = [
+  {
+    id: "rotina",
+    title: "Rotina e convivência",
+    icon: "🏠",
+    description: "Multas, barulho, áreas comuns e regras do dia a dia.",
+    subtopics: [
+      { label: "Multas", topicId: "multas" },
+      { label: "Barulho", topicId: "multas" },
+      { label: "Áreas comuns", topicId: "convencao" },
+      { label: "Convenção", topicId: "convencao" },
+    ],
+  },
+  {
+    id: "obras",
+    title: "Obras e manutenção",
+    icon: "🔧",
+    description: "Obras, reparos, responsabilidades e cuidados técnicos.",
+    subtopics: [
+      { label: "Obras", topicId: "obras" },
+      { label: "ART / RRT", topicId: "obras" },
+      { label: "Manutenções", topicId: "responsabilidade" },
+      { label: "Danos e reparos", topicId: "responsabilidade" },
+    ],
+  },
+  {
+    id: "gestao",
+    title: "Gestão e assembleias",
+    icon: "📊",
+    description: "Assembleias, decisões, rateios e organização administrativa.",
+    subtopics: [
+      { label: "Assembleias", topicId: "assembleias" },
+      { label: "Gestão", topicId: "gestao" },
+      { label: "Financeiro", topicId: "financeiro" },
+      { label: "Prestação de contas", topicId: "gestao" },
+    ],
+  },
+  {
+    id: "juridico",
+    title: "Jurídico e obrigações",
+    icon: "⚖️",
+    description: "Inadimplência, locação, funcionários e obrigações legais.",
+    subtopics: [
+      { label: "Inadimplência", topicId: "inadimplencia" },
+      { label: "Locação", topicId: "locacao" },
+      { label: "Funcionários", topicId: "funcionarios" },
+      { label: "LGPD", topicId: "lgpd" },
+      { label: "Trabalhista", topicId: "trabalhista" },
+    ],
+  },
+];
+
+// ── Componente principal ──────────────────────────────────────────────────────
+
 type QuickAccessCardsProps = {
   onSelect: (topic: Topic) => void;
   collapsed?: boolean;
 };
 
 export default function QuickAccessCards({ onSelect, collapsed = false }: QuickAccessCardsProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [expanded, setExpanded]               = useState(false);
+  const [selectedTopic, setSelectedTopic]     = useState<Topic | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
 
   const handleTopicClick = (topic: Topic) => {
     setSelectedTopic(topic);
   };
 
+  const handleSubtopicClick = (topicId: string) => {
+    const topic = TOPICS.find((t) => t.id === topicId);
+    if (topic) handleTopicClick(topic);
+  };
+
   const handleQuestionClick = (topic: Topic, question: string) => {
     setSelectedTopic(null);
+    setExpandedCategory(null);
     setExpanded(false);
     onSelect({ ...topic, examplePrompt: question });
   };
 
   const handleBack = () => {
     setSelectedTopic(null);
+  };
+
+  const handleCategoryToggle = (id: string | null) => {
+    setExpandedCategory(id);
   };
 
   // Lista de perguntas do tema selecionado
@@ -128,7 +203,7 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
           <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <span className="text-[11.5px] font-medium">Temas</span>
+          <span className="text-[11.5px] font-medium">Categorias</span>
         </button>
 
         <div className="mb-3 flex items-center gap-2">
@@ -155,7 +230,7 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
     );
   };
 
-  // Estado não-colapsado: grade de temas sempre visível
+  // Estado não-colapsado: grade de categorias sempre visível
   if (!collapsed) {
     return (
       <section className="px-5 pb-7 sm:px-6 sm:pb-8 animate-fade-in-up stagger-3">
@@ -167,7 +242,12 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
         {selectedTopic ? (
           renderQuestionList(selectedTopic)
         ) : (
-          <TopicGrid onSelect={handleTopicClick} />
+          <CategoryGrid
+            groups={CATEGORY_GROUPS}
+            expandedId={expandedCategory}
+            onToggle={handleCategoryToggle}
+            onSubtopicClick={handleSubtopicClick}
+          />
         )}
       </section>
     );
@@ -178,7 +258,13 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
       <button
         type="button"
-        onClick={() => { setExpanded((v) => !v); if (expanded) setSelectedTopic(null); }}
+        onClick={() => {
+          setExpanded((v) => !v);
+          if (expanded) {
+            setSelectedTopic(null);
+            setExpandedCategory(null);
+          }
+        }}
         className="flex min-h-11 w-full items-center justify-between rounded-xl border border-navy-100/70 bg-white/80 px-4 py-2.5 text-left transition-all duration-200 hover:bg-white active:scale-[0.99]"
         aria-expanded={expanded}
       >
@@ -200,7 +286,12 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
           {selectedTopic ? (
             renderQuestionList(selectedTopic)
           ) : (
-            <TopicGrid onSelect={handleTopicClick} />
+            <CategoryGrid
+              groups={CATEGORY_GROUPS}
+              expandedId={expandedCategory}
+              onToggle={handleCategoryToggle}
+              onSubtopicClick={handleSubtopicClick}
+            />
           )}
         </div>
       )}
@@ -208,38 +299,80 @@ export default function QuickAccessCards({ onSelect, collapsed = false }: QuickA
   );
 }
 
-// ── Grade de temas ─────────────────────────────────────────────────────────────
+// ── Grade de categorias ───────────────────────────────────────────────────────
 
-function TopicGrid({ onSelect }: { onSelect: (topic: Topic) => void }) {
+function CategoryGrid({
+  groups,
+  expandedId,
+  onToggle,
+  onSubtopicClick,
+}: {
+  groups: CategoryGroup[];
+  expandedId: string | null;
+  onToggle: (id: string | null) => void;
+  onSubtopicClick: (topicId: string) => void;
+}) {
   return (
-    <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-      {TOPICS.map((topic, idx) => (
-        <button
-          key={topic.id}
-          type="button"
-          onClick={() => onSelect(topic)}
-          style={{ animationDelay: `${0.05 + idx * 0.04}s` }}
-          className="group relative flex min-h-[136px] flex-col items-start gap-2 rounded-[18px] border border-cream-200/90 bg-white/92 p-3.5 text-left opacity-0 shadow-[0_1px_2px_rgba(31,49,71,0.03),0_12px_26px_-24px_rgba(31,49,71,0.28)] animate-fade-in-up transition-all duration-200 hover:-translate-y-0.5 hover:border-navy-100 hover:bg-white hover:shadow-[0_10px_28px_-22px_rgba(31,49,71,0.34)] active:scale-[0.98] sm:p-4"
-        >
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-cream-100 text-[15px] transition-colors duration-200 group-hover:bg-navy-50">
-            <span aria-hidden="true">{topic.icon}</span>
-          </div>
-          <span className="text-[12.5px] font-semibold leading-snug text-navy-800 sm:text-[13px]">
-            {topic.title}
-          </span>
-          <span className="text-[10.5px] text-navy-400">
-            Ver perguntas →
-          </span>
-          <svg
-            className="absolute right-3 top-3.5 h-3.5 w-3.5 text-navy-300 opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
+    <div className="space-y-2.5">
+      {groups.map((group) => {
+        const isExpanded = expandedId === group.id;
+        return (
+          <div
+            key={group.id}
+            className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card"
           >
-            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      ))}
+            <button
+              type="button"
+              onClick={() => onToggle(isExpanded ? null : group.id)}
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
+              aria-expanded={isExpanded}
+            >
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-cream-100 text-[16px]">
+                <span aria-hidden="true">{group.icon}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-semibold leading-snug text-navy-800">
+                  {group.title}
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-navy-400">
+                  {group.description}
+                </p>
+              </div>
+              <svg
+                className={`h-4 w-4 flex-shrink-0 text-navy-300 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 6l4 4 4-4"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {isExpanded && (
+              <div className="border-t border-navy-50 px-4 py-3">
+                <div className="flex flex-wrap gap-2">
+                  {group.subtopics.map((chip, chipIdx) => (
+                    <button
+                      key={chipIdx}
+                      type="button"
+                      onClick={() => onSubtopicClick(chip.topicId)}
+                      className="rounded-full border border-navy-100 bg-navy-50/60 px-3 py-1.5 text-[11.5px] font-medium text-navy-700 transition-all hover:border-navy-200 hover:bg-navy-100 active:scale-[0.97]"
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
