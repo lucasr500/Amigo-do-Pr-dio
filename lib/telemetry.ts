@@ -32,6 +32,21 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const ENABLED = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
+// Publishable keys (sb_publishable_...) are not JWTs — using them as Bearer tokens
+// causes preflight failures. Legacy anon keys (eyJ...) are JWTs and still work with Bearer.
+function buildSupabaseHeaders(options?: {
+  json?: boolean;
+  preferMinimal?: boolean;
+}): Record<string, string> {
+  const headers: Record<string, string> = { apikey: SUPABASE_KEY };
+  if (!SUPABASE_KEY.startsWith("sb_publishable_")) {
+    headers["Authorization"] = `Bearer ${SUPABASE_KEY}`;
+  }
+  if (options?.json) headers["Content-Type"] = "application/json";
+  if (options?.preferMinimal) headers["Prefer"] = "return=minimal";
+  return headers;
+}
+
 export type TelemetryEvent =
   | "session_open"
   | "session_duration"
@@ -105,18 +120,16 @@ async function flush(): Promise<void> {
   if (!ENABLED || queue.length === 0) return;
   const batch = queue.splice(0, queue.length);
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/events`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/events`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        Prefer: "return=minimal",
-      },
+      headers: buildSupabaseHeaders({ json: true, preferMinimal: true }),
       body: JSON.stringify(batch),
     });
+    if (!res.ok && process.env.NODE_ENV !== "production") {
+      console.warn("[telemetry] insert failed", res.status, res.statusText, "(insert)");
+    }
   } catch {
-    // Falha silenciosa — perda de dados aceitável; telemetria nunca bloqueia produto
+    // Silent fallback — telemetry never blocks product
   }
 }
 
@@ -185,14 +198,14 @@ export async function fetchRecentEvents(limit = 2000): Promise<RawEvent[]> {
   try {
     const res = await fetch(
       `${SUPABASE_URL}/rest/v1/events?select=event,properties,ts,session_id&order=ts.desc&limit=${limit}`,
-      {
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-        },
-      }
+      { headers: buildSupabaseHeaders() }
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[telemetry] read failed", res.status, res.statusText, "(read)");
+      }
+      return [];
+    }
     return (await res.json()) as RawEvent[];
   } catch {
     return [];

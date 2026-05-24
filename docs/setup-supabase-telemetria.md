@@ -95,7 +95,16 @@ No painel do projeto Supabase, ir em **Settings → API**:
 | Campo | Onde encontrar | Exemplo |
 |-------|----------------|---------|
 | Project URL | "Project URL" | `https://abcdefgh.supabase.co` |
-| anon key | "Project API keys → anon public" | `eyJhbGciOiJIUzI1NiIs...` |
+| anon key | "Project API keys → anon public" | `eyJhbGciOiJIUzI1NiIs...` ou `sb_publishable_...` |
+
+> **Sobre o formato da anon key:**
+> Projetos Supabase mais novos usam **publishable key** (`sb_publishable_...`) no lugar da antiga anon key JWT (`eyJ...`).
+> Ambos os formatos são suportados — usar o que aparecer em "anon public".
+> **Não usar a secret key** (`sb_secret_...` ou `service_role`); ela concede acesso irrestrito e nunca deve ir ao frontend.
+>
+> Internamente, `lib/telemetry.ts` envia a key via header `apikey`.
+> O header `Authorization: Bearer` é usado apenas com a chave legacy JWT; publishable keys não são JWTs
+> e não devem ser enviadas como Bearer token.
 
 ---
 
