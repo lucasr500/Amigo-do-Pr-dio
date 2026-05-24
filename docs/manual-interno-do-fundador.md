@@ -6,6 +6,34 @@
 
 ---
 
+## Estado atual do produto (2026-05-24 — Fases 90D/90E/90G — Telemetria validada)
+
+### Telemetria Supabase em produção
+
+Telemetria REST confirmada funcionando end-to-end:
+
+- POST `/rest/v1/events` retorna **201** em produção
+- Supabase SQL mostra eventos reais: `session_open`, `session_duration`
+- `/admin` exibe **"Fonte: Supabase (dados reais)"** — não mais localStorage
+- localStorage continua sendo o fallback quando Supabase não responde
+
+**Causa do problema resolvido:** typo de um caractere em `NEXT_PUBLIC_SUPABASE_URL` na Vercel (`...smjjh` em vez de `...smjih`). Gerava DNS NXDOMAIN global, mascarado como erro de CORS/preflight.
+
+**Correções aplicadas no código (`lib/telemetry.ts`):**
+- Removido `Authorization: Bearer` com publishable key (não é JWT — causava rejeição)
+- Removido header `Prefer: return=minimal` (aparecia no preflight como header extra)
+- Adicionado diagnóstico `console.warn` em development para `!res.ok`
+
+**Documentação:** `docs/setup-supabase-telemetria.md` tem nova seção "Troubleshooting" com ordem correta de diagnóstico e caso real documentado.
+
+### Bundle (Fases 90D/90E/90G)
+- Rota principal (`/`): 224 kB First Load JS
+- Admin (`/admin`): 204 kB First Load JS
+- TypeScript: zero erros
+- Build: Compiled successfully
+
+---
+
 ## Estado atual do produto (2026-05-23 — Fases 87/88/89A)
 
 ### Bundle

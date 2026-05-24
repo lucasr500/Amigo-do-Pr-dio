@@ -299,6 +299,109 @@ GROUP BY 1 ORDER BY 1 DESC;
 
 ---
 
+## Troubleshooting — telemetria não aparece no Supabase
+
+### Sintomas
+
+- Network mostra `events (failed)` ou `ERR_NAME_NOT_RESOLVED`
+- Console mostra `Could not resolve host`
+- `/admin` continua exibindo "Fonte: localStorage (dispositivo atual)"
+- Nenhum evento novo aparece no Supabase SQL Editor
+
+### Ordem correta de diagnóstico
+
+**a) Confirmar se o hostname resolve antes de investigar CORS ou RLS**
+
+Abrir o terminal e rodar:
+
+```
+nslookup PROJECT_REF.supabase.co
+nslookup PROJECT_REF.supabase.co 1.1.1.1
+nslookup PROJECT_REF.supabase.co 8.8.8.8
+```
+
+Se todos retornarem `Non-existent domain` (NXDOMAIN): **parar aqui**. Não investigar CORS, headers ou RLS antes de corrigir o hostname.
+
+**b) Copiar o Project Ref diretamente do painel Supabase**
+
+Ir em **Supabase → Project Settings → General → Reference ID** e copiar o valor exato com o botão de cópia — nunca digitar manualmente.
+
+**c) Verificar `NEXT_PUBLIC_SUPABASE_URL` na Vercel**
+
+O valor deve ser exatamente:
+```
+https://PROJECT_REF.supabase.co
+```
+
+Não deve terminar com `/rest/v1/` nem `/rest/v1/events`. O código monta o caminho REST automaticamente.
+
+**d) Verificar `NEXT_PUBLIC_SUPABASE_ANON_KEY` na Vercel**
+
+Usar a **anon public key** (começa com `eyJ...` ou `sb_publishable_...`).
+Nunca usar a **service role / secret key** (`sb_secret_...`) no frontend.
+
+**e) Redeployar sem cache na Vercel**
+
+Em **Deployments → Redeploy → desmarcar "Use existing Build Cache"**. Variáveis de ambiente são injetadas no bundle no momento do build.
+
+**f) Testar no browser após o deploy**
+
+Abrir o app com **Ctrl+F5**. No DevTools → Network → filtrar por `events`.
+Fazer uma pergunta no Assistente e aguardar ~7 s (batch flush).
+O request deve retornar **201** ou **200**.
+
+**g) Confirmar no Supabase SQL Editor**
+
+```sql
+SELECT event, properties, ts, session_id
+FROM events
+ORDER BY ts DESC
+LIMIT 10;
+```
+
+**h) Confirmar `/admin`**
+
+Deve exibir **"Fonte: Supabase (dados reais)"** em vez de localStorage.
+
+---
+
+### Caso real documentado — Fases 90D/90E/90G (2026-05-24)
+
+**Problema:** eventos não chegavam ao Supabase em produção. Network mostrava `events (failed) preflight`.
+
+**Investigação:**
+1. Fase 90D: removido `Authorization: Bearer` com publishable key (chave `sb_publishable_...` não é JWT).
+2. Fase 90E: removido header `Prefer: return=minimal` (aparecia em `Access-Control-Request-Headers` e podia causar rejeição no preflight).
+3. Fase 90G (diagnóstico final): `nslookup` revelou NXDOMAIN em todos os resolvers.
+
+**Causa raiz:** typo de um caractere em `NEXT_PUBLIC_SUPABASE_URL` na Vercel.
+
+| | Hostname |
+|---|---|
+| Incorreto (configurado na Vercel) | `cmnysqhkfjzcysssmj`**jj**`h.supabase.co` |
+| Correto (Project Settings → General) | `cmnysqhkfjzcysssmj`**i**`h.supabase.co` |
+
+**Efeito:** NXDOMAIN em todo resolver global. O browser reportava "failed preflight", induzindo investigação de CORS/headers que estava correta mas irrelevante — o host não existia.
+
+**Correção:** atualizar `NEXT_PUBLIC_SUPABASE_URL` na Vercel com o hostname correto e redeployar sem cache.
+
+**Resultado confirmado:** POST `/rest/v1/events` retornou 201. Supabase SQL mostrou `session_open` e `session_duration`. `/admin` passou a exibir "Fonte: Supabase (dados reais)".
+
+---
+
+### Limpeza opcional — remover eventos de teste
+
+Após validação, apagar eventos manuais de diagnóstico (opcional — manter se quiser histórico):
+
+```sql
+DELETE FROM events
+WHERE event = 'manual_test';
+```
+
+> Não executar se quiser preservar o histórico de diagnóstico como referência.
+
+---
+
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-20 (Fase 71)*
+*Versão: 2026-05-24 (Fase 90G)*
 *Executar Passo 5 (Vercel) antes de qualquer uso externo.*
