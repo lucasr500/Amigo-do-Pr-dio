@@ -34,16 +34,15 @@ const ENABLED = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 // Publishable keys (sb_publishable_...) are not JWTs — using them as Bearer tokens
 // causes preflight failures. Legacy anon keys (eyJ...) are JWTs and still work with Bearer.
+// Prefer: return=minimal is omitted intentionally — it triggers an extra CORS preflight header.
 function buildSupabaseHeaders(options?: {
   json?: boolean;
-  preferMinimal?: boolean;
 }): Record<string, string> {
   const headers: Record<string, string> = { apikey: SUPABASE_KEY };
   if (!SUPABASE_KEY.startsWith("sb_publishable_")) {
     headers["Authorization"] = `Bearer ${SUPABASE_KEY}`;
   }
   if (options?.json) headers["Content-Type"] = "application/json";
-  if (options?.preferMinimal) headers["Prefer"] = "return=minimal";
   return headers;
 }
 
@@ -122,7 +121,7 @@ async function flush(): Promise<void> {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/events`, {
       method: "POST",
-      headers: buildSupabaseHeaders({ json: true, preferMinimal: true }),
+      headers: buildSupabaseHeaders({ json: true }),
       body: JSON.stringify(batch),
     });
     if (!res.ok && process.env.NODE_ENV !== "production") {
