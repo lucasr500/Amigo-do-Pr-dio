@@ -417,6 +417,7 @@ export type Pendencia = {
   status: "aberta" | "concluida";
   createdAt: string;
   completedAt?: string;
+  dueDate?: string; // ISO yyyy-mm-dd — opcional, retrocompatível com pendências sem prazo
 };
 
 export function getPendencias(): Pendencia[] {
