@@ -73,9 +73,11 @@ function IconCheckbox() {
 type Props = {
   refreshKey?: number;
   onNavigateToAgenda?: () => void;
+  onNavigateToPendencias?: () => void;
+  onNavigateToPassos?: () => void;
 };
 
-export default function HomeQuickStats({ refreshKey, onNavigateToAgenda }: Props) {
+export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavigateToPendencias, onNavigateToPassos }: Props) {
   const [hydrated, setHydrated]         = useState(false);
   const [prazosCount, setPrazosCount]   = useState(0);
   const [pendCount, setPendCount]       = useState(0);
@@ -122,12 +124,14 @@ export default function HomeQuickStats({ refreshKey, onNavigateToAgenda }: Props
         title="Pendências"
         subtitle={pendSubtitle}
         badge={pendCount > 0 ? pendCount : undefined}
+        onClick={onNavigateToPendencias}
       />
       <HomeActionCard
         icon={<IconCheckbox />}
         title="Próximos passos"
         subtitle={passosSubtitle}
         badge={passosCount > 0 ? passosCount : undefined}
+        onClick={onNavigateToPassos}
       />
     </>
   );

@@ -81,6 +81,8 @@ const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: f
 const HomeAgendaCard = dynamic(() => import("@/components/HomeAgendaCard"), { ssr: false });
 const HomeQuickStats = dynamic(() => import("@/components/HomeQuickStats"), { ssr: false });
 const HomeSaudeCard = dynamic(() => import("@/components/HomeSaudeCard"), { ssr: false });
+const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), { ssr: false });
+const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const OnboardingFlow = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
@@ -103,6 +105,7 @@ export default function HomePage() {
   const [pendingChecklistId, setPendingChecklistId] = useState<string | null>(null);
   const [focusRevisaoMensal, setFocusRevisaoMensal] = useState(false);
   const [activeToolGroup, setActiveToolGroup] = useState<ToolGroup | null>(null);
+  const [subView, setSubView] = useState<"saude" | "pendencias" | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
@@ -232,7 +235,18 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       scrollByTab.current[activeTab] = window.scrollY;
     }
+    setSubView(null);
     setActiveTab(tab);
+  };
+
+  const navigateToSubView = (view: "saude" | "pendencias") => {
+    setSubView(view);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  };
+
+  const backFromSubView = () => {
+    setSubView(null);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
   };
 
   const handleSuggestionSelect = (q: string) => {
@@ -289,25 +303,52 @@ export default function HomePage() {
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
       <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
-        <Header refreshKey={refreshKey} activeTab={activeTab} />
+        {!(activeTab === "inicio" && subView) && (
+          <Header refreshKey={refreshKey} activeTab={activeTab} />
+        )}
 
         {/* ── 1. INÍCIO — painel operacional silencioso ──────────────── */}
         {activeTab === "inicio" && (
           <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
-            {hasCondominioData ? (
+            {/* Sub-view: Saúde Operacional */}
+            {subView === "saude" && (
+              <SaudeScreen
+                refreshKey={refreshKey}
+                onBack={backFromSubView}
+                onNavigateToTimeline={() => { backFromSubView(); navigateTab("condominio"); }}
+              />
+            )}
+
+            {/* Sub-view: Pendências */}
+            {subView === "pendencias" && (
+              <PendenciasScreen
+                refreshKey={refreshKey}
+                onBack={backFromSubView}
+              />
+            )}
+
+            {/* Conteúdo normal da Home */}
+            {!subView && hasCondominioData && (
               <>
                 <HomeAgendaCard
                   refreshKey={refreshKey}
                   onNavigate={() => navigateTab("agenda")}
                 />
-                <HomeSaudeCard refreshKey={refreshKey} />
+                <HomeSaudeCard
+                  refreshKey={refreshKey}
+                  onClick={() => navigateToSubView("saude")}
+                />
                 <HomeQuickStats
                   refreshKey={refreshKey}
                   onNavigateToAgenda={() => navigateTab("agenda")}
+                  onNavigateToPendencias={() => navigateToSubView("pendencias")}
+                  onNavigateToPassos={() => navigateToSubView("pendencias")}
                 />
               </>
-            ) : (
+            )}
+
+            {!subView && !hasCondominioData && (
               <>
                 <Hero
                   onSetup={handleScrollToMemoria}
@@ -318,7 +359,7 @@ export default function HomePage() {
               </>
             )}
 
-            {hasCondominioData && (
+            {!subView && hasCondominioData && (
               <GuidancePanel
                 onAsk={handleSuggestionSelect}
                 onResolved={() => setRefreshKey((k) => k + 1)}
@@ -327,7 +368,7 @@ export default function HomePage() {
               />
             )}
 
-            {hasCondominioData && (
+            {!subView && hasCondominioData && (
               <HomeAcaoHub
                 refreshKey={refreshKey}
                 onDoneReview={() => setRefreshKey((k) => k + 1)}
@@ -336,17 +377,17 @@ export default function HomePage() {
               />
             )}
 
-            {hasCondominioData &&
+            {!subView && hasCondominioData &&
               healthStatus !== "critico" &&
               healthStatus !== "pendente" && (
                 <ContextualInsight refreshKey={refreshKey} />
               )}
 
-            {healthStatus !== "critico" && healthStatus !== "pendente" && (
+            {!subView && healthStatus !== "critico" && healthStatus !== "pendente" && (
               <HomeContextual refreshKey={refreshKey} />
             )}
 
-            {hasCondominioData && healthStatus !== "critico" && (
+            {!subView && hasCondominioData && healthStatus !== "critico" && (
               <DicaDoDia
                 onAsk={handleSuggestionSelect}
                 compact={healthStatus === "pendente"}

@@ -66,9 +66,9 @@ function RingIndicator({ pct, color }: { pct: number; color: string }) {
   );
 }
 
-type Props = { refreshKey?: number };
+type Props = { refreshKey?: number; onClick?: () => void };
 
-export default function HomeSaudeCard({ refreshKey }: Props) {
+export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
   const [result, setResult]   = useState<HealthScoreResult | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
@@ -85,8 +85,11 @@ export default function HomeSaudeCard({ refreshKey }: Props) {
 
   return (
     <section className="px-5 pb-3 sm:px-6">
-      <div
-        className={`flex items-center gap-3.5 rounded-[18px] border px-4 py-4 shadow-card ${cardBg}`}
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!onClick}
+        className={`flex w-full items-center gap-3.5 rounded-[18px] border px-4 py-4 text-left shadow-card ${cardBg} ${onClick ? "transition-all hover:shadow-card-md active:scale-[0.99]" : ""}`}
       >
         <RingIndicator pct={result.percentage} color={ringColor} />
 
@@ -111,7 +114,7 @@ export default function HomeSaudeCard({ refreshKey }: Props) {
             strokeLinejoin="round"
           />
         </svg>
-      </div>
+      </button>
     </section>
   );
 }
