@@ -5,6 +5,7 @@ import {
   getPendencias,
   addPendencia,
   completePendencia,
+  deletePendencia,
   logInteraction,
   type Pendencia,
 } from "@/lib/session";
@@ -135,6 +136,7 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
   const [formCategoria, setFormCategoria] = useState("operacional");
   const [formDueDate,   setFormDueDate]   = useState("");
   const [formError,     setFormError]     = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     setAll(getPendencias());
@@ -178,6 +180,13 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
       origem: p?.origem ?? null,
       matched_id: p?.matchedId ?? null,
     });
+    setAll(getPendencias());
+  }
+
+  function handleDelete(id: string, hasDueDate: boolean) {
+    deletePendencia(id);
+    void trackEvent("pendencia_deleted_manual", { has_due_date: hasDueDate });
+    setConfirmDeleteId(null);
     setAll(getPendencias());
   }
 
@@ -444,6 +453,35 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
                         </span>
                       )}
                     </div>
+                    {p.origem === "manual" && activeTab !== "Concluídas" && (
+                      confirmDeleteId === p.id ? (
+                        <div className="mt-2.5 flex items-center gap-2 border-t border-navy-50 pt-2.5">
+                          <p className="flex-1 text-[11.5px] text-navy-600">Remover esta pendência?</p>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(p.id, !!p.dueDate)}
+                            className="rounded-full border border-terracotta-200 bg-terracotta-50 px-2.5 py-1 text-[11px] font-medium text-terracotta-600 transition-all hover:bg-terracotta-100 active:scale-95"
+                          >
+                            Remover
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="rounded-full border border-navy-100 bg-white px-2.5 py-1 text-[11px] text-navy-500 transition-all hover:bg-navy-50 active:scale-95"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteId(p.id)}
+                          className="mt-2 text-[11px] text-navy-400 transition-colors hover:text-terracotta-500"
+                        >
+                          Remover
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               </div>

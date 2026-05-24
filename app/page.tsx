@@ -720,7 +720,7 @@ export default function HomePage() {
                 <div id="registro-rapido">
                   <RegistroRapido onSaved={() => setRefreshKey((k) => k + 1)} />
                 </div>
-                <div id="agenda-predio" className="border-t border-zinc-100 pt-6">
+                <div id="agenda-predio" className="border-t border-navy-100 pt-6">
                   <AgendaPredio onSaved={() => setRefreshKey((k) => k + 1)} />
                 </div>
               </div>

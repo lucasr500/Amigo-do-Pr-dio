@@ -87,6 +87,7 @@ export type TelemetryEvent =
   | "pendencia_created_from_memoria"
   | "pendencia_completed"
   | "pendencia_completed_from_guidance_resolution"
+  | "pendencia_deleted_manual"
   | "revisao_mensal_surface_seen"
   | "revisao_mensal_opened_from_home"
   | "revisao_mensal_progress_viewed"
