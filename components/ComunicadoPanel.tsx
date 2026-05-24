@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getProfile } from "@/lib/session";
+import { getProfile, addPendencia } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { COMUNICADO_TEMPLATES, ComunicadoId } from "@/lib/comunicados";
 
@@ -24,6 +24,14 @@ const ANCHOR_TO_TEMPLATE: Partial<Record<ComunicadoAnchor, ComunicadoId>> = {
   "comunicado-cobranca": "cobranca",
 };
 
+const FOLLOWUP_TITLES: Record<ComunicadoId, string> = {
+  assembleia: "Acompanhar resultado da assembleia",
+  obra: "Acompanhar obra aprovada",
+  notificacao: "Acompanhar notificação enviada",
+  cobranca: "Acompanhar cobrança enviada",
+  geral: "Acompanhar comunicado enviado",
+};
+
 const TEMPLATE_TO_ANCHOR: Record<ComunicadoId, ComunicadoAnchor> = {
   assembleia: "comunicado-convocacao",
   obra: "comunicado-obra",
@@ -39,6 +47,8 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [condoName, setCondoName] = useState("");
+  const [wasCopied, setWasCopied] = useState(false);
+  const [followupCreated, setFollowupCreated] = useState(false);
 
   useEffect(() => {
     const profile = getProfile();
@@ -68,6 +78,8 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
     setValues({});
     setCopied(false);
     setCopyError(false);
+    setWasCopied(false);
+    setFollowupCreated(false);
     void trackEvent("comunicado_gerado", {
       tipo_comunicado: id,
       source: "ferramentas",
@@ -80,6 +92,8 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
     setValues({});
     setCopied(false);
     setCopyError(false);
+    setWasCopied(false);
+    setFollowupCreated(false);
   };
 
   const handleCopy = async () => {
@@ -88,6 +102,7 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
       await navigator.clipboard.writeText(preview);
       setCopied(true);
       setCopyError(false);
+      setWasCopied(true);
       void trackEvent("comunicado_copiado", {
         tipo_comunicado: selectedId ?? "",
         campos_preenchidos: filledCount,
@@ -321,6 +336,36 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
             </p>
           )}
         </div>
+
+        {/* CTA: criar próximo passo — aparece após o primeiro copiar */}
+        {wasCopied && (
+          <div className="border-t border-navy-50 px-4 py-3">
+            {!followupCreated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const titulo = FOLLOWUP_TITLES[selectedId!] ?? "Acompanhar comunicado enviado";
+                  addPendencia({ titulo, categoria: "comunicado", origem: "manual" });
+                  setFollowupCreated(true);
+                  void trackEvent("comunicado_followup_created", { template_type: selectedId ?? "" });
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-navy-200 py-2.5 text-[12.5px] font-medium text-navy-600 transition-colors hover:bg-navy-50 active:scale-[0.98]"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                Criar próximo passo de acompanhamento
+              </button>
+            ) : (
+              <div className="flex items-center justify-center gap-1.5 py-1">
+                <svg className="h-3.5 w-3.5 text-navy-500" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="text-[12px] text-navy-500">Próximo passo criado com sucesso.</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Disclaimer do modelo */}
         {template!.disclaimer && (

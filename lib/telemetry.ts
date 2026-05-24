@@ -98,7 +98,11 @@ export type TelemetryEvent =
   | "data_cleared"
   | "agenda_event_created"
   | "agenda_event_completed"
-  | "agenda_event_deleted";
+  | "agenda_event_deleted"
+  | "urgency_banner_tap"
+  | "profile_completion_cta_tap"
+  | "assistant_response_feedback"
+  | "comunicado_followup_created";
 
 type QueuedEvent = {
   event: string;

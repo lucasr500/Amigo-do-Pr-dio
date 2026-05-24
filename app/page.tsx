@@ -19,6 +19,10 @@ import {
   addPendencia,
   getPendenciasAbertas,
   isFirstRun,
+  getMemoriaOperacional,
+  getProfile,
+  type MemoriaOperacional,
+  type CondominioProfile,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import FavoritesPanel from "@/components/FavoritesPanel";
@@ -90,6 +94,55 @@ const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: f
 // Insight contextual — só visível sem alertas ativos; insights.ts (~7 kB) fica fora do chunk inicial
 const ContextualInsight = dynamic(() => import("@/components/ContextualInsight"), { ssr: false });
 
+// ── Urgency + profile completion helpers ───────────────────────────────────────
+
+type UrgentItem = {
+  type: "avcb" | "seguro" | "mandato";
+  label: string;
+  urgency: "expired" | "critical" | "warning";
+  daysLeft: number;
+};
+
+function _daysUntilDate(dateStr: string): number {
+  const t = new Date(`${dateStr}T00:00:00`);
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  return Math.ceil((t.getTime() - now.getTime()) / 86_400_000);
+}
+
+function computeUrgentItem(m: MemoriaOperacional): UrgentItem | null {
+  const candidates: UrgentItem[] = [];
+  const check = (dateStr: string | undefined, type: UrgentItem["type"], label: string) => {
+    if (!dateStr) return;
+    const d = _daysUntilDate(dateStr);
+    if (d > 30) return;
+    const urgency: UrgentItem["urgency"] = d < 0 ? "expired" : d <= 7 ? "critical" : "warning";
+    candidates.push({ type, label, urgency, daysLeft: d });
+  };
+  check(m.vencimentoAVCB, "avcb", "AVCB");
+  check(m.vencimentoSeguro, "seguro", "Seguro condominial");
+  check(m.fimMandatoSindico, "mandato", "Mandato do síndico");
+  if (candidates.length === 0) return null;
+  return candidates.sort((a, b) => a.daysLeft - b.daysLeft)[0];
+}
+
+function computeProfileCompletion(prof: CondominioProfile | null, m: MemoriaOperacional): number {
+  const filled = [
+    prof?.nomeCondominio,
+    prof?.hasElevador !== undefined ? "set" : "",
+    m.vencimentoAVCB,
+    m.vencimentoSeguro,
+    m.fimMandatoSindico,
+  ].filter(Boolean).length;
+  return Math.round((filled / 5) * 100);
+}
+
+function completionBucket(pct: number): string {
+  if (pct <= 25) return "0-25";
+  if (pct <= 50) return "26-50";
+  if (pct <= 75) return "51-75";
+  return "76-99";
+}
+
 export default function HomePage() {
   const [question, setQuestion] = useState("");
   const [submittedQuestion, setSubmittedQuestion] = useState("");
@@ -107,6 +160,8 @@ export default function HomePage() {
   const [activeToolGroup, setActiveToolGroup] = useState<ToolGroup | null>(null);
   const [subView, setSubView] = useState<"saude" | "pendencias" | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [urgentItem, setUrgentItem] = useState<UrgentItem | null>(null);
+  const [profileCompletion, setProfileCompletion] = useState(0);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   useEffect(() => {
@@ -115,7 +170,13 @@ export default function HomePage() {
     void trackEvent("session_open", { days_since_last: daysSince });
     const hasData = hasMemoriaOperacional() || hasProfile();
     setHasCondominioData(hasData);
-    if (hasData) setHealthStatus(computeCondominioHealth().status);
+    if (hasData) {
+      setHealthStatus(computeCondominioHealth().status);
+      const m = getMemoriaOperacional();
+      const prof = getProfile();
+      setUrgentItem(computeUrgentItem(m));
+      setProfileCompletion(computeProfileCompletion(prof, m));
+    }
     if (isFirstRun()) setShowOnboarding(true);
     return startSessionTimer();
   }, []);
@@ -123,7 +184,16 @@ export default function HomePage() {
   useEffect(() => {
     const hasData = hasMemoriaOperacional() || hasProfile();
     setHasCondominioData(hasData);
-    if (hasData) setHealthStatus(computeCondominioHealth().status);
+    if (hasData) {
+      setHealthStatus(computeCondominioHealth().status);
+      const m = getMemoriaOperacional();
+      const prof = getProfile();
+      setUrgentItem(computeUrgentItem(m));
+      setProfileCompletion(computeProfileCompletion(prof, m));
+    } else {
+      setUrgentItem(null);
+      setProfileCompletion(0);
+    }
   }, [refreshKey]);
 
   useEffect(() => {
@@ -326,6 +396,101 @@ export default function HomePage() {
                 refreshKey={refreshKey}
                 onBack={backFromSubView}
               />
+            )}
+
+            {/* UrgencyBanner — exibe apenas quando há documento crítico (≤30 dias ou vencido) */}
+            {!subView && hasCondominioData && urgentItem && (
+              <div className="mx-5 mb-3 sm:mx-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void trackEvent("urgency_banner_tap", {
+                      type: urgentItem.type,
+                      urgency: urgentItem.urgency,
+                    });
+                    navigateToSubView("saude");
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition-all active:scale-[0.99] ${
+                    urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
+                      ? "border-terracotta-200 bg-terracotta-50 hover:bg-terracotta-100/70"
+                      : "border-amber-200 bg-amber-50 hover:bg-amber-100/70"
+                  }`}
+                >
+                  <span className="text-[18px] leading-none" aria-hidden="true">
+                    {urgentItem.type === "avcb" ? "📋" : urgentItem.type === "seguro" ? "🛡️" : "🗳️"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
+                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
+                        ? "text-terracotta-700"
+                        : "text-amber-700"
+                    }`}>
+                      {urgentItem.urgency === "expired" ? "Vencido" : "Prazo próximo"}
+                    </p>
+                    <p className={`text-[13.5px] font-medium ${
+                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
+                        ? "text-terracotta-900"
+                        : "text-amber-900"
+                    }`}>
+                      {urgentItem.label}
+                      {" — "}
+                      {urgentItem.daysLeft < 0
+                        ? "vencido"
+                        : urgentItem.daysLeft === 0
+                        ? "vence hoje"
+                        : `vence em ${urgentItem.daysLeft} dia${urgentItem.daysLeft !== 1 ? "s" : ""}`}
+                    </p>
+                  </div>
+                  <svg
+                    className={`h-4 w-4 flex-shrink-0 ${
+                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
+                        ? "text-terracotta-400"
+                        : "text-amber-400"
+                    }`}
+                    viewBox="0 0 16 16" fill="none" aria-hidden="true"
+                  >
+                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            )}
+
+            {/* ProfileCompletionCard — esconde quando 100% completo */}
+            {!subView && hasCondominioData && profileCompletion < 100 && (
+              <div className="mx-5 mb-3 sm:mx-6">
+                <div className="overflow-hidden rounded-[14px] border border-navy-100/80 bg-white/80 px-4 py-3 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-navy-500">
+                        Perfil do condomínio
+                      </p>
+                      <p className="mt-0.5 text-[13px] text-navy-700">
+                        {profileCompletion > 0
+                          ? `${profileCompletion}% completo`
+                          : "Dados essenciais não cadastrados"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void trackEvent("profile_completion_cta_tap", {
+                          completion_bucket: completionBucket(profileCompletion),
+                        });
+                        navigateTab("condominio");
+                      }}
+                      className="flex-shrink-0 rounded-full border border-navy-200 bg-navy-50 px-3 py-1.5 text-[12px] font-medium text-navy-600 transition-colors hover:bg-navy-100 active:scale-95"
+                    >
+                      Completar
+                    </button>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-navy-100">
+                    <div
+                      className="h-full rounded-full bg-navy-500 transition-all"
+                      style={{ width: `${profileCompletion}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Conteúdo normal da Home */}

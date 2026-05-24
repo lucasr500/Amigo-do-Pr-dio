@@ -321,6 +321,7 @@ export default function Response({
   const [liked, setLiked] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [savedPendenciaId, setSavedPendenciaId] = useState<string | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState<"up" | "down" | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const localContextTrackedRef = useRef<string | null>(null);
 
@@ -351,6 +352,7 @@ export default function Response({
     setLiked(entry ? isFavorited(entry.id) : false);
     setShowToast(false);
     setSavedPendenciaId(null);
+    setFeedbackGiven(null);
   }, [answer, isLoading]);
 
   // Scroll suave até a resposta quando ela aparece
@@ -393,6 +395,17 @@ export default function Response({
     setTimeout(() => setShowToast(false), 2500);
     saveFavorite({ q: question, matchedId: entry.id, categoria: entry.categoria, resposta: entry.resposta });
     onFavorite?.();
+  };
+
+  const handleFeedback = (helpful: boolean) => {
+    setFeedbackGiven(helpful ? "up" : "down");
+    const tier = getConfidenceLabel(score, isDefault);
+    void trackEvent("assistant_response_feedback", {
+      helpful,
+      category: entry?.categoria ?? null,
+      confidence_tier: tier.level,
+      is_fallback: isDefault,
+    });
   };
 
   const handleShare = async () => {
@@ -853,6 +866,35 @@ export default function Response({
                   <div className="ml-auto">
                     <ActionPill icon="+" label="Nova pergunta" onClick={onNewQuestion} />
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* Feedback 👍 👎 */}
+            {!isLoading && (
+              <div className="mt-2.5 flex items-center gap-2.5 animate-fade-in">
+                {feedbackGiven === null ? (
+                  <>
+                    <span className="text-[11px] text-navy-400">Esta resposta ajudou?</span>
+                    <button
+                      type="button"
+                      onClick={() => handleFeedback(true)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-navy-100 bg-white text-[13px] transition-colors hover:border-navy-200 hover:bg-navy-50 active:scale-95"
+                      aria-label="Resposta útil"
+                    >
+                      👍
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleFeedback(false)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-navy-100 bg-white text-[13px] transition-colors hover:border-navy-200 hover:bg-navy-50 active:scale-95"
+                      aria-label="Resposta não útil"
+                    >
+                      👎
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-[11px] text-navy-500">Obrigado pelo feedback.</span>
                 )}
               </div>
             )}

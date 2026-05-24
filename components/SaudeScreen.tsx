@@ -84,6 +84,15 @@ function RingLarge({ pct, color }: { pct: number; color: string }) {
   );
 }
 
+// ─── Improvement action map ───────────────────────────────────────────────────
+
+const AREA_IMPROVEMENT: Record<string, string> = {
+  "Documentação": "Cadastre AVCB, seguro condominial e mandato do síndico em Minha Conta.",
+  "Prazos e vencimentos": "Verifique e resolva os alertas ativos no monitoramento do app.",
+  "Manutenções": "Registre datas de rotinas periódicas (dedetização, elevador, extintores) em Conta.",
+  "Fornecedores": "Cadastre a administradora e prestadores de serviço em Minha Conta.",
+};
+
 // ─── Monitored areas computation ──────────────────────────────────────────────
 
 type AreaStatus = "ok" | "partial" | "missing";
@@ -418,6 +427,38 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline }
           ))}
         </div>
       </section>
+
+      {/* ── Para melhorar ──────────────────────────────────────────── */}
+      {(() => {
+        const items = areas
+          .filter((a) => a.status !== "ok")
+          .map((a) => AREA_IMPROVEMENT[a.label])
+          .filter((x): x is string => Boolean(x));
+        if (items.length === 0) return null;
+        return (
+          <section className="px-5 pb-4 sm:px-6">
+            <p className="mb-3 text-[14px] font-semibold text-navy-800">Para melhorar</p>
+            <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+              {items.slice(0, 4).map((item, idx) => (
+                <div key={idx}>
+                  {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
+                  <div className="flex items-start gap-3 px-4 py-3.5">
+                    <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[10px] font-semibold text-navy-600">
+                      {idx + 1}
+                    </span>
+                    <p className="text-[13px] leading-snug text-navy-700">{item}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="border-t border-navy-50 px-4 py-3">
+                <p className="text-[10.5px] leading-relaxed text-navy-400">
+                  Este índice reflete apenas os dados cadastrados no app. Não representa certificação técnica, jurídica ou contábil do condomínio.
+                </p>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ── Últimos registros ───────────────────────────────────────── */}
       <section className="px-5 pb-3 sm:px-6">

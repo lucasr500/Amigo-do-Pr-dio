@@ -252,7 +252,9 @@ export default function OnboardingFlow({ onComplete }: Props) {
         <div className="space-y-3.5">
           <div>
             <p className="mb-1 text-[12px] font-medium text-navy-500">Vencimento do AVCB</p>
-            <p className="mb-1.5 text-[11px] text-navy-400">Auto de Vistoria do Corpo de Bombeiros</p>
+            <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
+              Auto de Vistoria do Corpo de Bombeiros — exigência legal. O app avisa quando o prazo se aproximar.
+            </p>
             <input
               type="date"
               value={memoria.vencimentoAVCB}
@@ -263,7 +265,9 @@ export default function OnboardingFlow({ onComplete }: Props) {
 
           <div>
             <p className="mb-1 text-[12px] font-medium text-navy-500">Vencimento do Seguro</p>
-            <p className="mb-1.5 text-[11px] text-navy-400">Seguro condominial obrigatório</p>
+            <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
+              Obrigatório por lei (Art. 13, Lei 4.591/64) — cobre incêndio, raio e explosão.
+            </p>
             <input
               type="date"
               value={memoria.vencimentoSeguro}
@@ -274,7 +278,9 @@ export default function OnboardingFlow({ onComplete }: Props) {
 
           <div>
             <p className="mb-1 text-[12px] font-medium text-navy-500">Fim do mandato do síndico</p>
-            <p className="mb-1.5 text-[11px] text-navy-400">Quando termina o mandato atual</p>
+            <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
+              O app avisa com antecedência para organizar a assembleia de eleição ou recondução.
+            </p>
             <input
               type="date"
               value={memoria.fimMandatoSindico}
@@ -338,10 +344,10 @@ export default function OnboardingFlow({ onComplete }: Props) {
       </div>
 
       {/* Instrução de backup */}
-      <div className="mb-5 rounded-xl border border-navy-100/40 bg-white/60 px-3 py-3">
-        <p className="text-[11.5px] leading-relaxed text-navy-500">
-          Seus dados ficam salvos neste dispositivo. Para se proteger ao trocar de celular ou limpar o navegador, use{" "}
-          <span className="font-medium text-navy-700">"Exportar dados"</span> na aba Conta.
+      <div className="mb-5 rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-3">
+        <p className="text-[11.5px] leading-relaxed text-navy-600">
+          <span className="font-semibold text-navy-700">Importante:</span> trocar de celular ou limpar o navegador apaga todos os dados. Use{" "}
+          <span className="font-medium text-navy-700">"Exportar dados"</span> na aba Conta para criar um backup.
         </p>
       </div>
 
