@@ -780,11 +780,11 @@ export default function HomePage() {
               </p>
               {hasCondominioData ? (
                 <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
-                  Dados do prédio, histórico, backup e preferências do app.
+                  Dados essenciais, rotina operacional e segurança dos registros.
                 </p>
               ) : (
                 <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                  Registre os dados do seu prédio para ativar vencimentos, rotinas e alertas de acompanhamento.
+                  Cadastre os dados essenciais para acompanhar prazos, pendências e saúde operacional.
                 </p>
               )}
             </div>
@@ -876,7 +876,7 @@ export default function HomePage() {
             {/* ── Conta e sincronização ─────────────────────────────── */}
             <section className="px-5 pb-8 sm:px-6">
               <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
-                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta</p>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Armazenamento</p>
                 <div className="flex items-center gap-3 mb-3">
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[15px]">
                     💾

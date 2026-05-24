@@ -319,7 +319,7 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
                 onClick={onBack}
                 className="mt-1 text-[12.5px] font-medium text-navy-500 underline underline-offset-2 transition-colors hover:text-navy-700"
               >
-                Ir para Conta e configurar
+                Ir para Meu prédio e configurar
               </button>
             )}
           </div>

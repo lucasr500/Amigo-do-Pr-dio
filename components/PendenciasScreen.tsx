@@ -249,7 +249,7 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
               Pendências
             </h1>
             <p className="mt-1 text-[13px] leading-relaxed text-navy-500">
-              O que precisa da sua atenção.
+              Alertas, próximos passos e tarefas que precisam de acompanhamento.
             </p>
           </div>
           <button
@@ -492,12 +492,13 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
 
       {/* ── Próximos passos ─────────────────────────────────────────── */}
       <section className="px-5 pb-8 sm:px-6">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-1.5 flex items-center justify-between">
           <p className="text-[14px] font-semibold text-navy-800">Próximos passos</p>
           <span className="text-[12px] text-navy-400">
             {proximosPassos.length > 0 ? `${proximosPassos.length} aberto${proximosPassos.length > 1 ? "s" : ""}` : ""}
           </span>
         </div>
+        <p className="mb-3 text-[12px] leading-snug text-navy-400">Tarefas criadas por você ou salvas a partir de uma orientação.</p>
 
         {proximosPassos.length === 0 ? (
           <div className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-4 shadow-card">

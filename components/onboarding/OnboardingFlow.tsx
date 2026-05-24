@@ -245,7 +245,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
         <div className="mt-4 mb-5">
           <p className="text-[13px] font-semibold text-navy-800">Datas importantes</p>
           <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-400">
-            Registre para ativar alertas automáticos. Pode preencher depois em Minha Conta.
+            Registre para ativar alertas automáticos. Pode preencher depois em Meu prédio.
           </p>
         </div>
 
@@ -347,7 +347,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
       <div className="mb-5 rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-3">
         <p className="text-[11.5px] leading-relaxed text-navy-600">
           <span className="font-semibold text-navy-700">Importante:</span> trocar de celular ou limpar o navegador apaga todos os dados. Use{" "}
-          <span className="font-medium text-navy-700">"Exportar dados"</span> na aba Conta para criar um backup.
+          <span className="font-medium text-navy-700">"Exportar dados"</span> na aba Meu prédio para criar um backup.
         </p>
       </div>
 

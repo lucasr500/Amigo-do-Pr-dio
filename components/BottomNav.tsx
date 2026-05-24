@@ -66,7 +66,7 @@ const LEFT_TABS: TabItem[] = [
 
 const RIGHT_TABS: TabItem[] = [
   { id: "assistente", label: "Assistente", Icon: IconChat },
-  { id: "condominio", label: "Conta",      Icon: IconAccount },
+  { id: "condominio", label: "Meu prédio", Icon: IconAccount },
 ];
 
 type Props = {
