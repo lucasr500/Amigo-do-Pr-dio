@@ -57,7 +57,7 @@ const SYSTEM_ICONS: Record<string, string> = {
   "Elétrica":      "💡",
 };
 
-const WEEK_DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 const MONTH_NAMES = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
@@ -185,7 +185,9 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
   const month = today.getMonth();
   const todayDay = today.getDate();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstWeekday = new Date(year, month, 1).getDay();
+  // Adjust for Mon-start: Sun (0) becomes 6, Mon (1) becomes 0, etc.
+  const rawFirstWeekday = new Date(year, month, 1).getDay();
+  const firstWeekday = (rawFirstWeekday + 6) % 7;
 
   // Grade: células vazias + dias do mês
   const cells: Array<number | null> = [
@@ -262,24 +264,11 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
                   {day}
                   {hasEvents && (
                     <span
-                      className="absolute bottom-[2px] flex items-center justify-center gap-[1px]"
+                      className={`absolute bottom-[2px] h-[5px] w-[5px] rounded-full ${
+                        isToday && isSelected ? "bg-white/80" : "bg-green-500"
+                      }`}
                       aria-hidden="true"
-                    >
-                      {entries.slice(0, 2).map((entry, i) => (
-                        <span key={i} className="text-[8px] leading-none">
-                          {entry.icon}
-                        </span>
-                      ))}
-                      {entries.length > 2 && (
-                        <span
-                          className={`text-[7px] font-semibold leading-none ${
-                            isToday && isSelected ? "text-white/70" : "text-navy-400"
-                          }`}
-                        >
-                          +{entries.length - 2}
-                        </span>
-                      )}
-                    </span>
+                    />
                   )}
                 </button>
               );

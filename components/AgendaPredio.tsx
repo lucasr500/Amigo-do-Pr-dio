@@ -176,204 +176,216 @@ export default function AgendaPredio({ onSaved }: Props) {
   const canSave = form.title.trim().length > 0 && form.date.length > 0;
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-800">Agenda do prédio</h3>
-          <p className="text-xs text-zinc-500 mt-0.5">Eventos e compromissos operacionais</p>
-        </div>
-        {!showForm && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="text-xs text-blue-600 hover:text-blue-700 font-medium px-3 py-1.5 rounded-lg border border-blue-200 hover:border-blue-300 bg-blue-50 hover:bg-blue-100 transition-colors"
-          >
-            + Novo evento
-          </button>
-        )}
-      </div>
+    <section className="px-5 pb-6 sm:px-6">
+      <div className="space-y-3">
 
-      {showForm && (
-        <div className="border border-zinc-200 rounded-xl p-4 bg-zinc-50 space-y-3">
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-600">Descrição</label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              placeholder="Ex: Revisão dos extintores"
-              maxLength={100}
-              className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
-            />
+        {/* Header */}
+        <div className="flex items-center justify-between pt-1">
+          <div>
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+              Eventos agendados
+            </p>
+            <p className="mt-0.5 text-[13.5px] font-semibold text-navy-800">
+              Agenda do prédio
+            </p>
           </div>
+          {!showForm && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-1 rounded-full border border-navy-200 bg-navy-50 px-3 py-1.5 text-[11.5px] font-medium text-navy-600 transition-colors hover:bg-navy-100 hover:text-navy-700"
+            >
+              + Novo evento
+            </button>
+          )}
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
+        {/* Form */}
+        {showForm && (
+          <div className="space-y-3 rounded-[14px] border border-navy-100 bg-navy-50/40 p-4">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-600">Data</label>
+              <label className="text-[11.5px] font-medium text-navy-600">Descrição</label>
               <input
-                type="date"
-                value={form.date}
-                min={today}
-                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="Ex: Revisão dos extintores"
+                maxLength={100}
+                className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none"
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[11.5px] font-medium text-navy-600">Data</label>
+                <input
+                  type="date"
+                  value={form.date}
+                  min={today}
+                  onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11.5px] font-medium text-navy-600">Tipo</label>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as AgendaEventType }))}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                >
+                  {(Object.keys(TYPE_LABELS) as AgendaEventType[]).map((t) => (
+                    <option key={t} value={t}>{TYPE_LABELS[t]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-1">
-              <label className="text-xs font-medium text-zinc-600">Tipo</label>
-              <select
-                value={form.type}
-                onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as AgendaEventType }))}
-                className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+              <label className="text-[11.5px] font-medium text-navy-600">Observação (opcional)</label>
+              <textarea
+                value={form.note}
+                onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
+                placeholder="Detalhes ou lembrete"
+                maxLength={300}
+                rows={2}
+                className="w-full resize-none rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none"
+              />
+            </div>
+
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.createStep}
+                onChange={(e) => setForm((f) => ({ ...f, createStep: e.target.checked }))}
+                className="rounded"
+              />
+              <span className="text-[11.5px] text-navy-600">Criar próximo passo vinculado</span>
+            </label>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={handleSave}
+                disabled={!canSave}
+                className="flex-1 rounded-xl bg-navy-700 py-2 text-[13px] font-semibold text-cream-50 transition-colors hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
               >
-                {(Object.keys(TYPE_LABELS) as AgendaEventType[]).map((t) => (
-                  <option key={t} value={t}>
-                    {TYPE_LABELS[t]}
-                  </option>
-                ))}
-              </select>
+                Salvar evento
+              </button>
+              <button
+                onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
+                className="rounded-xl border border-navy-100 bg-white px-4 py-2 text-[13px] text-navy-500 transition-colors hover:border-navy-200 hover:text-navy-700"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
+        )}
 
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-zinc-600">Observação (opcional)</label>
-            <textarea
-              value={form.note}
-              onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-              placeholder="Detalhes ou lembrete"
-              maxLength={300}
-              rows={2}
-              className="w-full text-sm border border-zinc-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white resize-none"
-            />
-          </div>
+        {/* Empty state */}
+        {pending.length === 0 && !showForm && (
+          <p className="py-4 text-center text-[12.5px] text-navy-400">
+            Nenhum evento agendado. Adicione datas importantes do prédio.
+          </p>
+        )}
 
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.createStep}
-              onChange={(e) => setForm((f) => ({ ...f, createStep: e.target.checked }))}
-              className="rounded"
-            />
-            <span className="text-xs text-zinc-600">Criar próximo passo vinculado</span>
-          </label>
+        {/* Pending events */}
+        {pending.length > 0 && (
+          <ul className="space-y-2">
+            {pending.map((e) => (
+              <li
+                key={e.id}
+                className="flex items-start justify-between gap-3 rounded-[14px] border border-navy-100 bg-white px-4 py-3"
+              >
+                <div className="flex min-w-0 items-start gap-2.5">
+                  <span className="mt-0.5 shrink-0 text-base">{TYPE_ICONS[e.type]}</span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-navy-800">{e.title}</p>
+                    <p className="mt-0.5 text-[11.5px] text-navy-500">
+                      {TYPE_LABELS[e.type]} ·{" "}
+                      <span className={urgencyClass(e.date)}>
+                        {formatEventDate(e.date)} ({urgencyLabel(e.date)})
+                      </span>
+                    </p>
+                    {e.note && (
+                      <p className="mt-1 line-clamp-2 text-[11px] text-navy-400">{e.note}</p>
+                    )}
+                  </div>
+                </div>
 
-          <div className="flex gap-2 pt-1">
-            <button
-              onClick={handleSave}
-              disabled={!canSave}
-              className="flex-1 text-sm font-medium bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-300 disabled:text-zinc-500 text-white rounded-lg py-2 transition-colors"
-            >
-              Salvar evento
-            </button>
-            <button
-              onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
-              className="text-sm text-zinc-500 hover:text-zinc-700 px-4 py-2 rounded-lg border border-zinc-200 hover:border-zinc-300 bg-white transition-colors"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {pending.length === 0 && !showForm && (
-        <p className="text-xs text-zinc-400 text-center py-4">
-          Nenhum evento agendado. Adicione datas importantes do prédio.
-        </p>
-      )}
-
-      {pending.length > 0 && (
-        <ul className="space-y-2">
-          {pending.map((e) => (
-            <li
-              key={e.id}
-              className="border border-zinc-200 rounded-xl px-4 py-3 bg-white flex items-start justify-between gap-3"
-            >
-              <div className="flex items-start gap-2 min-w-0">
-                <span className="text-base mt-0.5 shrink-0">{TYPE_ICONS[e.type]}</span>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-zinc-800 truncate">{e.title}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">
-                    {TYPE_LABELS[e.type]} ·{" "}
-                    <span className={urgencyClass(e.date)}>
-                      {formatEventDate(e.date)} ({urgencyLabel(e.date)})
-                    </span>
-                  </p>
-                  {e.note && (
-                    <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{e.note}</p>
+                <div className="flex shrink-0 flex-col gap-1">
+                  {confirmDeleteId === e.id ? (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleDelete(e.id)}
+                        className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[11.5px] font-medium text-red-600 hover:text-red-700"
+                      >
+                        Apagar
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-500 hover:text-navy-700"
+                      >
+                        Não
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleComplete(e.id, e.type)}
+                        className="rounded border border-green-200 bg-green-50 px-2 py-1 text-[11.5px] font-medium text-green-700 transition-colors hover:bg-green-100 hover:text-green-800"
+                      >
+                        Concluir
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(e.id)}
+                        className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-400 hover:text-navy-600"
+                      >
+                        Excluir
+                      </button>
+                    </>
                   )}
                 </div>
-              </div>
+              </li>
+            ))}
+          </ul>
+        )}
 
-              <div className="flex flex-col gap-1 shrink-0">
-                {confirmDeleteId === e.id ? (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => handleDelete(e.id)}
-                      className="text-xs text-red-600 font-medium hover:text-red-700 px-2 py-1 rounded border border-red-200 bg-red-50"
-                    >
-                      Apagar
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(null)}
-                      className="text-xs text-zinc-500 hover:text-zinc-700 px-2 py-1 rounded border border-zinc-200"
-                    >
-                      Não
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => handleComplete(e.id, e.type)}
-                      className="text-xs text-green-700 hover:text-green-800 font-medium px-2 py-1 rounded border border-green-200 bg-green-50 hover:bg-green-100 transition-colors"
-                    >
-                      Concluir
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteId(e.id)}
-                      className="text-xs text-zinc-400 hover:text-zinc-600 px-2 py-1 rounded border border-zinc-200"
-                    >
-                      Excluir
-                    </button>
-                  </>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+        {/* Completed toggle */}
+        {completed.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowCompleted((v) => !v)}
+              className="text-[11.5px] text-navy-400 hover:text-navy-600"
+            >
+              {showCompleted
+                ? "▾ Ocultar concluídos"
+                : `▸ Ver ${completed.length} concluído${completed.length > 1 ? "s" : ""}`}
+            </button>
 
-      {completed.length > 0 && (
-        <div className="mt-2">
-          <button
-            onClick={() => setShowCompleted((v) => !v)}
-            className="text-xs text-zinc-400 hover:text-zinc-600"
-          >
-            {showCompleted ? "▾ Ocultar concluídos" : `▸ Ver ${completed.length} concluído${completed.length > 1 ? "s" : ""}`}
-          </button>
+            {showCompleted && (
+              <ul className="mt-2 space-y-2">
+                {completed.map((e) => (
+                  <li
+                    key={e.id}
+                    className="flex items-start gap-2.5 rounded-[14px] border border-navy-50 bg-navy-50/30 px-4 py-3 opacity-60"
+                  >
+                    <span className="mt-0.5 shrink-0 text-base">{TYPE_ICONS[e.type]}</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] text-navy-400 line-through">{e.title}</p>
+                      <p className="mt-0.5 text-[11px] text-navy-400">
+                        {TYPE_LABELS[e.type]} · {formatEventDate(e.date)}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
-          {showCompleted && (
-            <ul className="space-y-2 mt-2">
-              {completed.map((e) => (
-                <li
-                  key={e.id}
-                  className="border border-zinc-100 rounded-xl px-4 py-3 bg-zinc-50 flex items-start gap-2 opacity-60"
-                >
-                  <span className="text-base mt-0.5 shrink-0">{TYPE_ICONS[e.type]}</span>
-                  <div className="min-w-0">
-                    <p className="text-sm text-zinc-500 line-through truncate">{e.title}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">
-                      {TYPE_LABELS[e.type]} · {formatEventDate(e.date)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+        <p className="pt-1 text-[10.5px] leading-relaxed text-navy-300">
+          Agenda operacional. Confirme prazos formais com documentos e profissionais responsáveis.
+        </p>
 
-      <p className="text-xs text-zinc-400 pt-1">
-        Agenda operacional. Confirme prazos formais com documentos, prestadores ou profissionais responsáveis.
-      </p>
+      </div>
     </section>
   );
 }

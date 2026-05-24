@@ -18,7 +18,6 @@ import {
   CondominioHealthStatus,
   addPendencia,
   getPendenciasAbertas,
-  getPendenciasConcluidas,
   isFirstRun,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
@@ -76,10 +75,12 @@ const BackupPanel = dynamic(() => import("@/components/BackupPanel"), { ssr: fal
 const RegistroRapido = dynamic(() => import("@/components/RegistroRapido"), { ssr: false });
 const AgendaPredio = dynamic(() => import("@/components/AgendaPredio"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
-// Aba Home — hubs principais
-const HomeCondominioHub = dynamic(() => import("@/components/HomeCondominioHub"), { ssr: false });
+// Aba Home — cards principais
 const HomeAcaoHub = dynamic(() => import("@/components/HomeAcaoHub"), { ssr: false });
 const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
+const HomeAgendaCard = dynamic(() => import("@/components/HomeAgendaCard"), { ssr: false });
+const HomeQuickStats = dynamic(() => import("@/components/HomeQuickStats"), { ssr: false });
+const HomeSaudeCard = dynamic(() => import("@/components/HomeSaudeCard"), { ssr: false });
 // Aba Condomínio — leem localStorage via useEffect; retornam null antes de hidratar
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const OnboardingFlow = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
@@ -102,7 +103,6 @@ export default function HomePage() {
   const [pendingChecklistId, setPendingChecklistId] = useState<string | null>(null);
   const [focusRevisaoMensal, setFocusRevisaoMensal] = useState(false);
   const [activeToolGroup, setActiveToolGroup] = useState<ToolGroup | null>(null);
-  const [homeRefreshFeedback, setHomeRefreshFeedback] = useState("Atualizado agora");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
@@ -285,70 +285,37 @@ export default function HomePage() {
     navigateTab("condominio");
   };
 
-  const handleHomeRefresh = () => {
-    const completedMonthCount = getPendenciasConcluidas().filter((p) => {
-      if (!p.completedAt) return false;
-      const completedAt = new Date(p.completedAt);
-      const now = new Date();
-      return completedAt.getFullYear() === now.getFullYear() && completedAt.getMonth() === now.getMonth();
-    }).length;
-    const hasData = hasMemoriaOperacional() || hasProfile();
-    void trackEvent("home_refreshed_manual", {
-      pending_count: getPendenciasAbertas().length,
-      completed_month_count: completedMonthCount,
-      has_guidance: healthStatus === "critico" || healthStatus === "pendente" || healthStatus === "atencao",
-      has_memoria: hasData,
-    });
-    setRefreshKey((k) => k + 1);
-    setHomeRefreshFeedback("Dados atualizados");
-    window.setTimeout(() => setHomeRefreshFeedback("Atualizado agora"), 1800);
-  };
-
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
       <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
-        <Header refreshKey={refreshKey} />
+        <Header refreshKey={refreshKey} activeTab={activeTab} />
 
         {/* ── 1. INÍCIO — painel operacional silencioso ──────────────── */}
         {activeTab === "inicio" && (
           <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
-            {hasCondominioData && (
-              <div className="flex items-center justify-between px-5 pb-2 pt-1 sm:px-6">
-                <p className="text-[11px] font-medium text-navy-400">
-                  {homeRefreshFeedback}
-                </p>
-                <button
-                  type="button"
-                  onClick={handleHomeRefresh}
-                  className="inline-flex min-h-8 items-center gap-1 rounded-full px-2 text-[11.5px] font-medium text-navy-400 transition-colors hover:bg-navy-50 hover:text-navy-600 active:scale-[0.97]"
-                >
-                  Atualizar
-                </button>
-              </div>
-            )}
-
             {hasCondominioData ? (
-              <HomeCondominioHub refreshKey={refreshKey} />
+              <>
+                <HomeAgendaCard
+                  refreshKey={refreshKey}
+                  onNavigate={() => navigateTab("agenda")}
+                />
+                <HomeSaudeCard refreshKey={refreshKey} />
+                <HomeQuickStats
+                  refreshKey={refreshKey}
+                  onNavigateToAgenda={() => navigateTab("agenda")}
+                />
+              </>
             ) : (
-              <Hero
-                onSetup={handleScrollToMemoria}
-                onAssistente={() => setActiveTab("assistente")}
-                onSuggestionSelect={handleSuggestionSelect}
-              />
-            )}
-
-            {/* Preview de valor — visível apenas no estado sem dados */}
-            {!hasCondominioData && (
-              <GuidancePreview onSetup={handleScrollToMemoria} />
-            )}
-
-            {hasCondominioData && (
-              <AgendaMensal
-                refreshKey={refreshKey}
-                onNavigateToAgenda={handleNavigateToAgenda}
-              />
+              <>
+                <Hero
+                  onSetup={handleScrollToMemoria}
+                  onAssistente={() => setActiveTab("assistente")}
+                  onSuggestionSelect={handleSuggestionSelect}
+                />
+                <GuidancePreview onSetup={handleScrollToMemoria} />
+              </>
             )}
 
             {hasCondominioData && (
