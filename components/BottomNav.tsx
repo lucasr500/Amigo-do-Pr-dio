@@ -1,13 +1,6 @@
 "use client";
 
-export type AppTab = "inicio" | "assistente" | "ferramentas" | "condominio";
-
-const TABS: Array<{ id: AppTab; label: string }> = [
-  { id: "inicio",      label: "Início" },
-  { id: "assistente",  label: "Assistente" },
-  { id: "ferramentas", label: "Ferramentas" },
-  { id: "condominio",  label: "Minha Conta" },
-];
+export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio";
 
 function IconHome({ active }: { active: boolean }) {
   return (
@@ -15,10 +8,20 @@ function IconHome({ active }: { active: boolean }) {
       <path
         d="M3 9.5L10 3.5L17 9.5V17H12.5V12.5H7.5V17H3V9.5Z"
         stroke="currentColor"
-        strokeWidth={active ? 2 : 1.5}
+        strokeWidth={active ? 2.2 : 1.5}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
+    </svg>
+  );
+}
+
+function IconCalendar({ active }: { active: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <rect x="3" y="4.5" width="14" height="12.5" rx="2" stroke="currentColor" strokeWidth={active ? 2.2 : 1.5} strokeLinejoin="round" />
+      <path d="M3 8.5h14" stroke="currentColor" strokeWidth={active ? 2.2 : 1.5} strokeLinecap="round" />
+      <path d="M7 3v3M13 3v3" stroke="currentColor" strokeWidth={active ? 2.2 : 1.5} strokeLinecap="round" />
     </svg>
   );
 }
@@ -29,46 +32,42 @@ function IconChat({ active }: { active: boolean }) {
       <path
         d="M3.5 4.5h13a1 1 0 011 1v7a1 1 0 01-1 1H12l-3.5 3V13.5H3.5a1 1 0 01-1-1v-7a1 1 0 011-1z"
         stroke="currentColor"
-        strokeWidth={active ? 2 : 1.5}
+        strokeWidth={active ? 2.2 : 1.5}
         strokeLinejoin="round"
       />
     </svg>
   );
 }
 
-function IconGrid({ active }: { active: boolean }) {
-  const w = active ? 2 : 1.5;
+function IconAccount({ active }: { active: boolean }) {
   return (
     <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
-      <rect x="3"    y="3"    width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth={w} />
-      <rect x="11.5" y="3"    width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth={w} />
-      <rect x="3"    y="11.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth={w} />
-      <rect x="11.5" y="11.5" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth={w} />
-    </svg>
-  );
-}
-
-function IconBuilding({ active }: { active: boolean }) {
-  return (
-    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <circle cx="10" cy="7" r="3" stroke="currentColor" strokeWidth={active ? 2.2 : 1.5} />
       <path
-        d="M4 17.5V7L10 3.5L16 7V17.5H12.5V13H7.5V17.5H4Z"
+        d="M3.5 17c0-3.038 2.91-5.5 6.5-5.5s6.5 2.462 6.5 5.5"
         stroke="currentColor"
-        strokeWidth={active ? 2 : 1.5}
-        strokeLinejoin="round"
+        strokeWidth={active ? 2.2 : 1.5}
         strokeLinecap="round"
       />
-      <rect x="8.5" y="8.5" width="3" height="3" rx="0.5" stroke="currentColor" strokeWidth={1} />
     </svg>
   );
 }
 
-const ICONS: Record<AppTab, (props: { active: boolean }) => React.JSX.Element> = {
-  inicio:      IconHome,
-  assistente:  IconChat,
-  ferramentas: IconGrid,
-  condominio:  IconBuilding,
+type TabItem = {
+  id: AppTab;
+  label: string;
+  Icon: (props: { active: boolean }) => React.JSX.Element;
 };
+
+const LEFT_TABS: TabItem[] = [
+  { id: "inicio",     label: "Início",     Icon: IconHome },
+  { id: "agenda",     label: "Agenda",     Icon: IconCalendar },
+];
+
+const RIGHT_TABS: TabItem[] = [
+  { id: "assistente", label: "Assistente", Icon: IconChat },
+  { id: "condominio", label: "Conta",      Icon: IconAccount },
+];
 
 type Props = {
   active: AppTab;
@@ -76,6 +75,8 @@ type Props = {
 };
 
 export default function BottomNav({ active, onChange }: Props) {
+  const plusActive = active === "ferramentas";
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50"
@@ -84,13 +85,14 @@ export default function BottomNav({ active, onChange }: Props) {
     >
       <div className="mx-auto max-w-[440px]">
         <div
-          className="border-t border-cream-200/80 bg-[#fffaf1]/[0.96] shadow-[0_-10px_30px_-26px_rgba(31,49,71,0.45)] backdrop-blur-xl"
-          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 7px)" }}
+          className="border-t border-gray-100 bg-white shadow-nav"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6px)" }}
         >
-          <div className="flex items-center px-1">
-            {TABS.map((tab) => {
+          <div className="flex items-stretch px-1 pt-1">
+
+            {/* Left tabs */}
+            {LEFT_TABS.map((tab) => {
               const isActive = active === tab.id;
-              const Icon = ICONS[tab.id];
               return (
                 <button
                   key={tab.id}
@@ -98,23 +100,62 @@ export default function BottomNav({ active, onChange }: Props) {
                   role="tab"
                   aria-selected={isActive}
                   onClick={() => onChange(tab.id)}
-                  className={`flex min-h-[64px] flex-1 flex-col items-center justify-center gap-1.5 rounded-2xl px-1 transition-all duration-150 active:scale-[0.97] ${
-                    isActive ? "text-navy-800" : "text-navy-400 hover:text-navy-600"
+                  className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 transition-colors duration-150 active:scale-[0.96] ${
+                    isActive ? "text-navy-700" : "text-gray-400 hover:text-gray-500"
                   }`}
                 >
-                  <span className={isActive ? "rounded-full bg-navy-50 px-3 py-1 text-navy-800" : "px-3 py-1"}>
-                    <Icon active={isActive} />
-                  </span>
-                  <span
-                    className={`text-[10.5px] font-semibold leading-none ${
-                      isActive ? "text-navy-800" : "text-navy-400"
-                    }`}
-                  >
+                  <tab.Icon active={isActive} />
+                  <span className={`text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
                     {tab.label}
                   </span>
                 </button>
               );
             })}
+
+            {/* Center "+" action button */}
+            <div className="flex flex-1 flex-col items-center justify-start pt-0" style={{ marginTop: "-10px" }}>
+              <button
+                type="button"
+                aria-label="Registrar / Ferramentas"
+                aria-selected={plusActive}
+                onClick={() => onChange("ferramentas")}
+                className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-all duration-150 active:scale-[0.93] ${
+                  plusActive
+                    ? "bg-navy-800 shadow-elevated"
+                    : "bg-navy-700 shadow-card-md"
+                }`}
+              >
+                <svg viewBox="0 0 20 20" className="h-[22px] w-[22px] text-white" fill="none" aria-hidden="true">
+                  <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
+                </svg>
+              </button>
+              <span className={`mt-1.5 text-[10px] font-semibold leading-none ${plusActive ? "text-navy-700" : "text-gray-400"}`}>
+                Registrar
+              </span>
+            </div>
+
+            {/* Right tabs */}
+            {RIGHT_TABS.map((tab) => {
+              const isActive = active === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => onChange(tab.id)}
+                  className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 transition-colors duration-150 active:scale-[0.96] ${
+                    isActive ? "text-navy-700" : "text-gray-400 hover:text-gray-500"
+                  }`}
+                >
+                  <tab.Icon active={isActive} />
+                  <span className={`text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            })}
+
           </div>
         </div>
       </div>

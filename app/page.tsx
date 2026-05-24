@@ -272,8 +272,7 @@ export default function HomePage() {
   };
 
   const handleNavigateToAgenda = () => {
-    setPendingToolAnchor("agenda-predio");
-    navigateTab("ferramentas");
+    navigateTab("agenda");
   };
 
   // Chamado pela bridge do OnboardingProfile: expande MemoriaPanel automaticamente
@@ -390,7 +389,26 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── 2. ASSISTENTE — ferramenta premium de consulta ─────────── */}
+        {/* ── 2. AGENDA — calendário e eventos do prédio ────────────── */}
+        {activeTab === "agenda" && (
+          <div key="agenda" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
+            <div className="px-5 pb-2 pt-1 sm:px-6">
+              <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
+                Agenda
+              </p>
+              <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
+                Agenda do prédio
+              </p>
+              <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
+                Vencimentos, manutenções e compromissos do condomínio.
+              </p>
+            </div>
+            <AgendaMensal refreshKey={refreshKey} onNavigateToAgenda={() => {}} />
+            <AgendaPredio onSaved={() => setRefreshKey((k) => k + 1)} />
+          </div>
+        )}
+
+        {/* ── 3. ASSISTENTE — ferramenta premium de consulta ─────────── */}
         {activeTab === "assistente" && (
           <div key="assistente" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
@@ -456,7 +474,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── 3. FERRAMENTAS — central de ações por categorias ──────── */}
+        {/* ── 4. FERRAMENTAS — central de ações por categorias ──────── */}
         {activeTab === "ferramentas" && (
           <div key="ferramentas" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
@@ -570,7 +588,7 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── 4. CONDOMÍNIO — memória e dados do prédio ─────────────── */}
+        {/* ── 5. CONDOMÍNIO — memória e dados do prédio ─────────────── */}
         {activeTab === "condominio" && (
           <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
