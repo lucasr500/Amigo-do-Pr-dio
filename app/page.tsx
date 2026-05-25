@@ -80,7 +80,6 @@ const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajus
 // Aba Home — cards principais
 const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
 const HomeAgendaCard = dynamic(() => import("@/components/HomeAgendaCard"), { ssr: false });
-const HomeQuickStats = dynamic(() => import("@/components/HomeQuickStats"), { ssr: false });
 const HomeSaudeCard = dynamic(() => import("@/components/HomeSaudeCard"), { ssr: false });
 const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), { ssr: false });
 const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), { ssr: false });
@@ -448,10 +447,6 @@ export default function HomePage() {
                   onResolved={() => setRefreshKey((k) => k + 1)}
                   onPendenciaSaved={() => setRefreshKey((k) => k + 1)}
                   refreshKey={refreshKey}
-                />
-                <HomeQuickStats
-                  refreshKey={refreshKey}
-                  onNavigateToPendencias={() => navigateToSubView("pendencias")}
                 />
               </>
             )}
