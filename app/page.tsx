@@ -80,7 +80,6 @@ const RegistroRapido = dynamic(() => import("@/components/RegistroRapido"), { ss
 const AgendaPredio = dynamic(() => import("@/components/AgendaPredio"), { ssr: false });
 const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajusteCota"), { ssr: false });
 // Aba Home — cards principais
-const HomeAcaoHub = dynamic(() => import("@/components/HomeAcaoHub"), { ssr: false });
 const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
 const HomeAgendaCard = dynamic(() => import("@/components/HomeAgendaCard"), { ssr: false });
 const HomeQuickStats = dynamic(() => import("@/components/HomeQuickStats"), { ssr: false });
@@ -160,7 +159,6 @@ export default function HomePage() {
   const [activeToolGroup, setActiveToolGroup] = useState<ToolGroup | null>(null);
   const [subView, setSubView] = useState<"saude" | "pendencias" | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [urgentItem, setUrgentItem] = useState<UrgentItem | null>(null);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [condoName, setCondoName] = useState("");
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
@@ -175,7 +173,6 @@ export default function HomePage() {
       setHealthStatus(computeCondominioHealth().status);
       const m = getMemoriaOperacional();
       const prof = getProfile();
-      setUrgentItem(computeUrgentItem(m));
       setProfileCompletion(computeProfileCompletion(prof, m));
       setCondoName(prof?.nomeCondominio ?? "");
     }
@@ -190,11 +187,9 @@ export default function HomePage() {
       setHealthStatus(computeCondominioHealth().status);
       const m = getMemoriaOperacional();
       const prof = getProfile();
-      setUrgentItem(computeUrgentItem(m));
       setProfileCompletion(computeProfileCompletion(prof, m));
       setCondoName(prof?.nomeCondominio ?? "");
     } else {
-      setUrgentItem(null);
       setProfileCompletion(0);
       setCondoName("");
     }
@@ -403,70 +398,6 @@ export default function HomePage() {
               />
             )}
 
-            {/* UrgencyBanner — exibe apenas quando há documento crítico (≤30 dias ou vencido) */}
-            {!subView && hasCondominioData && urgentItem && (
-              <div className="mx-5 mb-3 sm:mx-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void trackEvent("urgency_banner_tap", {
-                      type: urgentItem.type,
-                      urgency: urgentItem.urgency,
-                    });
-                    navigateToSubView("saude");
-                  }}
-                  className={`flex w-full items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition-all active:scale-[0.99] ${
-                    urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
-                      ? "border-terracotta-200 bg-terracotta-50 hover:bg-terracotta-100/70"
-                      : "border-amber-200 bg-amber-50 hover:bg-amber-100/70"
-                  }`}
-                >
-                  <span className="text-[18px] leading-none" aria-hidden="true">
-                    {urgentItem.type === "avcb" ? "📋" : urgentItem.type === "seguro" ? "🛡️" : "🗳️"}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-[11px] font-semibold uppercase tracking-[0.08em] ${
-                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
-                        ? "text-terracotta-700"
-                        : "text-amber-700"
-                    }`}>
-                      {urgentItem.urgency === "expired" ? "Vencido" : "Prazo próximo"}
-                    </p>
-                    <p className={`text-[13.5px] font-medium ${
-                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
-                        ? "text-terracotta-900"
-                        : "text-amber-900"
-                    }`}>
-                      {urgentItem.label}
-                      {" — "}
-                      {urgentItem.daysLeft < 0
-                        ? "vencido"
-                        : urgentItem.daysLeft === 0
-                        ? "vence hoje"
-                        : `vence em ${urgentItem.daysLeft} dia${urgentItem.daysLeft !== 1 ? "s" : ""}`}
-                    </p>
-                    <p className={`mt-0.5 text-[11px] font-medium ${
-                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
-                        ? "text-terracotta-600"
-                        : "text-amber-600"
-                    }`}>
-                      Ver saúde operacional →
-                    </p>
-                  </div>
-                  <svg
-                    className={`h-4 w-4 flex-shrink-0 ${
-                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
-                        ? "text-terracotta-400"
-                        : "text-amber-400"
-                    }`}
-                    viewBox="0 0 16 16" fill="none" aria-hidden="true"
-                  >
-                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            )}
-
             {/* ProfileCompletionCard — esconde quando 100% completo */}
             {!subView && hasCondominioData && profileCompletion < 100 && (
               <div className="mx-5 mb-3 sm:mx-6">
@@ -508,13 +439,13 @@ export default function HomePage() {
             {/* Conteúdo normal da Home */}
             {!subView && hasCondominioData && (
               <>
-                <HomeAgendaCard
-                  refreshKey={refreshKey}
-                  onNavigate={() => navigateTab("agenda")}
-                />
                 <HomeSaudeCard
                   refreshKey={refreshKey}
                   onClick={() => navigateToSubView("saude")}
+                />
+                <HomeAgendaCard
+                  refreshKey={refreshKey}
+                  onNavigate={() => navigateTab("agenda")}
                 />
                 <GuidancePanel
                   onAsk={handleSuggestionSelect}
@@ -524,7 +455,6 @@ export default function HomePage() {
                 />
                 <HomeQuickStats
                   refreshKey={refreshKey}
-                  onNavigateToAgenda={() => navigateTab("agenda")}
                   onNavigateToPendencias={() => navigateToSubView("pendencias")}
                 />
               </>
@@ -539,15 +469,6 @@ export default function HomePage() {
                 />
                 <GuidancePreview onSetup={handleScrollToMemoria} />
               </>
-            )}
-
-            {!subView && hasCondominioData && (
-              <HomeAcaoHub
-                refreshKey={refreshKey}
-                onDoneReview={() => setRefreshKey((k) => k + 1)}
-                onNavigateToFerramentas={() => handleNavigateToFerramentas("registro-rapido")}
-                onNavigateToAssistente={() => navigateTab("assistente")}
-              />
             )}
 
             {!subView && hasCondominioData &&
