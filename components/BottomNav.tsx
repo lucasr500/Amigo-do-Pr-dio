@@ -105,7 +105,7 @@ export default function BottomNav({ active, onChange }: Props) {
                   }`}
                 >
                   <tab.Icon active={isActive} />
-                  <span className={`text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
+                  <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
                     {tab.label}
                   </span>
                 </button>
@@ -129,7 +129,7 @@ export default function BottomNav({ active, onChange }: Props) {
                   <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
                 </svg>
               </button>
-              <span className={`mt-1.5 text-[10px] font-semibold leading-none ${plusActive ? "text-navy-700" : "text-gray-400"}`}>
+              <span className={`mt-1.5 whitespace-nowrap text-[10px] font-semibold leading-none ${plusActive ? "text-navy-700" : "text-gray-400"}`}>
                 Ações
               </span>
             </div>
@@ -149,7 +149,7 @@ export default function BottomNav({ active, onChange }: Props) {
                   }`}
                 >
                   <tab.Icon active={isActive} />
-                  <span className={`text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
+                  <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
                     {tab.label}
                   </span>
                 </button>

@@ -872,10 +872,10 @@ export default function Response({
 
             {/* Feedback 👍 👎 */}
             {!isLoading && (
-              <div className="mt-2.5 flex items-center gap-2.5 animate-fade-in">
+              <div className="mt-2.5 flex flex-wrap items-center gap-2.5 animate-fade-in">
                 {feedbackGiven === null ? (
                   <>
-                    <span className="text-[11px] text-navy-400">Esta resposta ajudou?</span>
+                    <span className="whitespace-nowrap text-[11px] text-navy-400">Esta resposta ajudou?</span>
                     <button
                       type="button"
                       onClick={() => handleFeedback(true)}

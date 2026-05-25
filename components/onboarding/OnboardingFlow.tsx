@@ -253,7 +253,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
           <div>
             <p className="mb-1 text-[12px] font-medium text-navy-500">Vencimento do AVCB</p>
             <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
-              Auto de Vistoria do Corpo de Bombeiros — exigência legal. O app avisa quando o prazo se aproximar.
+              Exigência legal para o condomínio. O app avisa quando o prazo se aproximar.
             </p>
             <input
               type="date"
@@ -266,7 +266,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
           <div>
             <p className="mb-1 text-[12px] font-medium text-navy-500">Vencimento do Seguro</p>
             <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
-              Obrigatório por lei (Art. 13, Lei 4.591/64) — cobre incêndio, raio e explosão.
+              Obrigatório por lei. Cobre incêndio, raio e explosão.
             </p>
             <input
               type="date"
