@@ -39,10 +39,12 @@ const MEMORIA_MAP: Partial<
 };
 
 const CHECKLIST_LABELS: Record<string, string> = {
-  assembleia:    "Checklist Assembleia concluído",
-  admissao:      "Checklist Admissão concluído",
-  manutencao:    "Checklist Manutenção concluído",
-  "sindico-novo": "Checklist Síndico novo concluído",
+  assembleia:             "Checklist Assembleia concluído",
+  admissao:               "Checklist Admissão concluído",
+  manutencao:             "Checklist Manutenção concluído",
+  "sindico-novo":         "Checklist Síndico novo concluído",
+  "ago":                  "Checklist AGO concluído",
+  "encerramento-mandato": "Checklist Encerramento de mandato concluído",
 };
 
 const OCORRENCIA_LABELS: Record<OcorrenciaTipo, string> = {

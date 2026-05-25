@@ -74,6 +74,10 @@ body {
   background: #8badc9;
 }
 
+/* Barra de rolagem horizontal oculta */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Foco acessível */
 :focus-visible {
   outline: 2px solid var(--brand-terracotta);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   computeHealthScore,
   type HealthScoreResult,
@@ -245,6 +245,9 @@ type Props = {
   onBack?: () => void;
   onNavigateToTimeline?: () => void;
   onGoToCondominio?: () => void;
+  onGoToPendencias?: () => void;
+  onGoToAgenda?: () => void;
+  onGoToRevisao?: () => void;
 };
 
 function hasMinimumHealthData(): boolean {
@@ -256,12 +259,14 @@ function hasMinimumHealthData(): boolean {
   );
 }
 
-export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio }: Props) {
+export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio, onGoToPendencias, onGoToAgenda, onGoToRevisao }: Props) {
   const [result, setResult]     = useState<HealthScoreResult | null>(null);
   const [areas, setAreas]       = useState<MonitoredArea[]>([]);
   const [records, setRecords]   = useState<RecordItem[]>([]);
   const [hasData, setHasData]   = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
+  const toggleCalc = useCallback(() => setShowCalc((v) => !v), []);
 
   useEffect(() => {
     const r       = computeHealthScore();
@@ -355,26 +360,25 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
             <span className="text-[11.5px] font-medium">Voltar</span>
           </button>
         )}
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-[28px] font-bold leading-tight text-navy-800">
-              Saúde operacional
-            </h1>
-            <p className="mt-1 text-[13px] leading-relaxed text-navy-500">
-              A visão geral do seu condomínio.
-            </p>
-          </div>
-          <button
-            type="button"
-            aria-label="Notificações"
-            className="ml-3 mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-navy-300 transition-colors hover:bg-navy-50 hover:text-navy-500"
-          >
-            <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" aria-hidden="true">
-              <path d="M10 2.5A5.5 5.5 0 004.5 8v2.5L3 12.5h14L15.5 10.5V8A5.5 5.5 0 0010 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-              <path d="M8 15.5a2 2 0 004 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-          </button>
+        <div className="min-w-0">
+          <h1 className="font-display text-[28px] font-bold leading-tight text-navy-800">
+            Saúde operacional
+          </h1>
+          <p className="mt-1 text-[13px] leading-relaxed text-navy-500">
+            A visão geral do seu condomínio.
+          </p>
         </div>
+      </div>
+
+      {/* ── Disclaimer antes do score ────────────────────────────── */}
+      <div className="mx-5 mb-3 flex items-start gap-2.5 rounded-[14px] border border-amber-100 bg-amber-50/60 px-3.5 py-3 sm:mx-6">
+        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 6v4M8 12v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M7.15 2.5L1.5 12.5a1 1 0 00.85 1.5h11.3a1 1 0 00.85-1.5L8.85 2.5a1 1 0 00-1.7 0z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+        </svg>
+        <p className="text-[11px] leading-relaxed text-amber-800">
+          Este índice reflete os dados cadastrados no app. <strong>Não representa certificação técnica, jurídica ou de compliance</strong> do condomínio.
+        </p>
       </div>
 
       {/* ── Card principal de status ────────────────────────────────── */}
@@ -424,10 +428,60 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         </div>
       </section>
 
+      {/* ── Como é calculada ────────────────────────────────────────── */}
+      <section className="px-5 pb-4 sm:px-6">
+        <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+          <button
+            type="button"
+            onClick={toggleCalc}
+            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
+          >
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-[15px]" aria-hidden="true">ℹ️</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-semibold text-navy-800">Como a pontuação é calculada</p>
+              <p className="mt-0.5 text-[11.5px] text-navy-400">Entenda o que influencia o índice</p>
+            </div>
+            <svg
+              className={`h-4 w-4 flex-shrink-0 text-navy-300 transition-transform ${showCalc ? "rotate-90" : ""}`}
+              viewBox="0 0 16 16" fill="none" aria-hidden="true"
+            >
+              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {showCalc && (
+            <div className="border-t border-navy-50 px-4 pb-4 pt-3">
+              <p className="mb-3 text-[12.5px] leading-relaxed text-navy-500">
+                O índice reflete o nível de controle operacional com base nos dados que você cadastrou. Cinco fatores são avaliados:
+              </p>
+              <ul className="space-y-2.5">
+                {([
+                  { icon: "🛡️", label: "Documentação essencial", desc: "AVCB, seguro obrigatório e mandato do síndico cadastrados" },
+                  { icon: "📅", label: "Prazos e alertas", desc: "Vencimentos próximos ou itens críticos detectados" },
+                  { icon: "📌", label: "Próximos passos", desc: "Pendências abertas ou antigas sem resolução" },
+                  { icon: "🏢", label: "Perfil do prédio", desc: "Dados de contratos, fornecedores e estrutura informados" },
+                  { icon: "🔧", label: "Rotinas de manutenção", desc: "Serviços recorrentes registrados (elevador, extintores etc.)" },
+                ] as const).map(({ icon, label, desc }) => (
+                  <li key={label} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 flex-shrink-0 text-[14px]" aria-hidden="true">{icon}</span>
+                    <div>
+                      <p className="text-[12.5px] font-medium text-navy-700">{label}</p>
+                      <p className="text-[11px] text-navy-400">{desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-[10.5px] leading-relaxed text-navy-400">
+                A pontuação sobe conforme você cadastra dados, resolve alertas e conclui pendências. Não representa certificação técnica, jurídica ou contábil.
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* ── Para melhorar ──────────────────────────────────────────── */}
       {result.suggestions.length > 0 && (
         <section className="px-5 pb-4 sm:px-6">
-          <p className="mb-3 text-[14px] font-semibold text-navy-800">Para melhorar</p>
+          <p className="mb-3 text-[14px] font-semibold text-navy-800">Pontos de atenção</p>
           <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
             {result.suggestions.map((item, idx) => (
               <div key={idx}>
@@ -440,28 +494,49 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
                 </div>
               </div>
             ))}
-            {onGoToCondominio && (
-              <div className="border-t border-navy-50 px-4 py-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    void trackEvent("saude_action_cta_tap", { status: result.statusKey });
-                    onGoToCondominio();
-                  }}
-                  className="flex w-full items-center justify-center gap-1.5 text-[12.5px] font-medium text-navy-600 transition-colors hover:text-navy-800 active:scale-[0.98]"
-                >
-                  Atualizar dados no Condomínio
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-            )}
-            <div className="border-t border-navy-50 px-4 py-3">
-              <p className="text-[10.5px] leading-relaxed text-navy-400">
-                Este índice reflete apenas os dados cadastrados no app. Não representa certificação técnica, jurídica ou contábil do condomínio.
-              </p>
-            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Ações práticas ──────────────────────────────────────────── */}
+      {(onGoToPendencias || onGoToAgenda || onGoToRevisao || onGoToCondominio) && (
+        <section className="px-5 pb-4 sm:px-6">
+          <p className="mb-3 text-[14px] font-semibold text-navy-800">Ações práticas</p>
+          <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+            {([
+              onGoToPendencias && { fn: onGoToPendencias, icon: "📌", label: "Ver pendências", sub: "Revisar tarefas em aberto e vencidas", eventKey: "pendencias" },
+              onGoToAgenda     && { fn: onGoToAgenda,     icon: "📅", label: "Abrir agenda",   sub: "Ver próximas datas e manutenções",  eventKey: "agenda" },
+              onGoToRevisao    && { fn: onGoToRevisao,    icon: "✓",  label: "Revisão mensal", sub: "Avaliar a rotina operacional do prédio", eventKey: "revisao" },
+              onGoToCondominio && { fn: onGoToCondominio, icon: "🏢", label: "Atualizar dados", sub: "Completar dados do perfil do prédio", eventKey: "condominio" },
+            ] as const).filter(Boolean).map((action, idx) => {
+              const a = action as { fn: () => void; icon: string; label: string; sub: string; eventKey: string };
+              return (
+                <div key={a.label}>
+                  {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void trackEvent("saude_action_cta_tap", { status: result.statusKey, action: a.eventKey });
+                      a.fn();
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
+                  >
+                    <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[15px] ${
+                      a.eventKey === "pendencias" ? "bg-amber-50" :
+                      a.eventKey === "agenda"     ? "bg-blue-50" :
+                      a.eventKey === "revisao"    ? "bg-green-50" : "bg-navy-50"
+                    }`} aria-hidden="true">{a.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold text-navy-800">{a.label}</p>
+                      <p className="mt-0.5 text-[11.5px] text-navy-400">{a.sub}</p>
+                    </div>
+                    <svg className="h-4 w-4 flex-shrink-0 text-navy-200" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -510,9 +585,7 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         )}
       </section>
 
-      <p className="px-5 pb-8 text-[10.5px] leading-relaxed text-navy-300 sm:px-6">
-        Este índice é apenas operacional e depende dos dados cadastrados no app. Não representa avaliação jurídica ou de compliance.
-      </p>
+      <div className="pb-8" />
 
     </div>
   );

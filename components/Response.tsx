@@ -515,6 +515,12 @@ export default function Response({
               )}
             </div>
 
+            {!isLoading && (
+              <p className="mb-2 text-[10.5px] leading-relaxed text-navy-400">
+                Orientação informativa — consulte profissional habilitado para decisões específicas.
+              </p>
+            )}
+
             {/* Card principal */}
             <div className="rounded-[20px] rounded-tl-md border border-cream-200/90 bg-white/94 px-4 py-3.5 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_28px_-24px_rgba(31,49,71,0.28)]">
               {isLoading ? (
@@ -748,7 +754,7 @@ export default function Response({
                       {/* Chips de categoria */}
                       <div>
                         <p className="mb-2 text-[12.5px] leading-relaxed text-navy-500">
-                          Tente reformular com outras palavras, ou escolha um tema abaixo:
+                          Nenhuma orientação exata encontrada — experimente reformular ou explore um tema próximo:
                         </p>
                         <p className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-navy-400">
                           Pergunte sobre
@@ -818,18 +824,32 @@ export default function Response({
                         </div>
                       )}
 
-                      <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
-                        <InfoIcon className="text-navy-300" />
-                        <div>
-                          <p className="text-[13px] leading-relaxed text-navy-400">
-                            Não encontrei uma orientação específica para essa situação na base atual. Use a resposta como ponto de partida e, se envolver risco jurídico, financeiro, trabalhista ou técnico, confirme com profissional habilitado.
-                          </p>
-                          <ul className="mt-2 space-y-1 text-[12px] text-navy-400">
-                            <li>· Reformule a pergunta com outras palavras</li>
-                            <li>· Registre a situação como ocorrência no app</li>
-                            <li>· Crie um próximo passo para acompanhar</li>
-                          </ul>
+                      <div className="border-t border-navy-100/80 pt-3">
+                        <div className="flex items-start gap-2">
+                          <InfoIcon className="text-navy-300" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] leading-relaxed text-navy-400">
+                              Use este conteúdo como ponto de partida. Se a situação envolve risco jurídico, financeiro, trabalhista ou técnico, confirme com profissional habilitado.
+                            </p>
+                            <ul className="mt-2 space-y-1 text-[12px] text-navy-400">
+                              <li>· Reformule a pergunta com outras palavras</li>
+                              <li>· Registre a situação como ocorrência no app</li>
+                              <li>· Crie um próximo passo para acompanhar</li>
+                            </ul>
+                          </div>
                         </div>
+                        {onNavigateToFerramentas && (
+                          <button
+                            type="button"
+                            onClick={() => onNavigateToFerramentas()}
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-navy-100 bg-white px-3.5 py-1.5 text-[12px] font-medium text-navy-600 shadow-sm transition-all hover:border-navy-200 hover:bg-navy-50 active:scale-95"
+                          >
+                            Ferramentas e simuladores
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

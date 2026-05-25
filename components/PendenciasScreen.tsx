@@ -72,20 +72,24 @@ function formatDateShort(iso: string): string {
 
 // ─── Due date badge ───────────────────────────────────────────────────────────
 
-type DueBadge = { label: string; style: string };
+type DueBadge = { label: string; style: string; overdue: boolean };
 
 function getDueBadge(dueDate: string): DueBadge {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  // Use noon to avoid DST/timezone edge cases
   const due = new Date(dueDate + "T12:00:00");
   const diffDays = Math.round((due.getTime() - today.getTime()) / 86400000);
 
-  if (diffDays < 0)   return { label: "Atrasada",        style: "bg-terracotta-50 text-terracotta-600 ring-1 ring-terracotta-200/60" };
-  if (diffDays === 0) return { label: "Vence hoje",       style: "bg-terracotta-50 text-terracotta-600 ring-1 ring-terracotta-200/60" };
-  if (diffDays === 1) return { label: "Vence amanhã",     style: "bg-amber-50 text-amber-600 ring-1 ring-amber-200/60" };
-  if (diffDays <= 7)  return { label: `Em ${diffDays} dias`, style: "bg-amber-50 text-amber-600 ring-1 ring-amber-200/60" };
-  return { label: formatDateShort(dueDate), style: "bg-navy-50 text-navy-400 ring-1 ring-navy-100/60" };
+  const overdueStyle = "bg-terracotta-50 text-terracotta-600 ring-1 ring-terracotta-200/60";
+  const urgentStyle  = "bg-amber-50 text-amber-600 ring-1 ring-amber-200/60";
+  const neutralStyle = "bg-navy-50 text-navy-400 ring-1 ring-navy-100/60";
+
+  if (diffDays === -1) return { label: "Vencida ontem",                        style: overdueStyle, overdue: true };
+  if (diffDays < 0)   return { label: `Vencida há ${Math.abs(diffDays)} dias`, style: overdueStyle, overdue: true };
+  if (diffDays === 0) return { label: "Vence hoje",                            style: overdueStyle, overdue: false };
+  if (diffDays === 1) return { label: "Vence amanhã",                          style: urgentStyle,  overdue: false };
+  if (diffDays <= 7)  return { label: `Em ${diffDays} dias`,                   style: urgentStyle,  overdue: false };
+  return { label: formatDateShort(dueDate), style: neutralStyle, overdue: false };
 }
 
 // ─── Sorting by urgency ───────────────────────────────────────────────────────
@@ -112,30 +116,33 @@ const FORM_CATEGORIES = [
   { label: "Jurídico",     value: "juridico" },
 ];
 
-// ─── Tabs ─────────────────────────────────────────────────────────────────────
+// ─── Filters ──────────────────────────────────────────────────────────────────
 
-const TABS = ["Abertas", "Requer ação", "Concluídas"] as const;
-type TabKey = (typeof TABS)[number];
+const FILTERS = ["Todas", "Vencidas", "Esta semana", "Sem prazo", "Concluídas"] as const;
+type FilterKey = (typeof FILTERS)[number];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 type Props = {
   refreshKey?: number;
   onBack?: () => void;
-  initialTab?: TabKey;
+  initialTab?: string;
 };
 
-export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abertas" }: Props) {
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  const [all, setAll]             = useState<Pendencia[]>([]);
-  const [hydrated, setHydrated]   = useState(false);
+export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Props) {
+  const initialFilter: FilterKey =
+    initialTab === "Concluídas" ? "Concluídas" : "Todas";
+
+  const [activeFilter, setActiveFilter] = useState<FilterKey>(initialFilter);
+  const [all, setAll]                   = useState<Pendencia[]>([]);
+  const [hydrated, setHydrated]         = useState(false);
 
   // Form state
-  const [showForm,      setShowForm]      = useState(false);
-  const [formTitulo,    setFormTitulo]    = useState("");
-  const [formCategoria, setFormCategoria] = useState("operacional");
-  const [formDueDate,   setFormDueDate]   = useState("");
-  const [formError,     setFormError]     = useState("");
+  const [showForm,        setShowForm]        = useState(false);
+  const [formTitulo,      setFormTitulo]      = useState("");
+  const [formCategoria,   setFormCategoria]   = useState("operacional");
+  const [formDueDate,     setFormDueDate]     = useState("");
+  const [formError,       setFormError]       = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -145,39 +152,46 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
 
   if (!hydrated) return null;
 
-  const abertas      = all.filter((p) => p.status === "aberta");
-  const requerAcao   = abertas.filter(
-    (p) => p.origem && ["guidance", "response", "memoria", "ocorrencia"].includes(p.origem)
-  );
-  const concluidas   = all
+  const abertas = all.filter((p) => p.status === "aberta");
+  const concluidas = all
     .filter((p) => p.status === "concluida")
     .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))
     .slice(0, 12);
 
-  const proximosPassos = abertas
-    .filter((p) => !p.origem || ["manual", "agenda", "revisao"].includes(p.origem))
-    .slice(0, 6);
+  const todayStr    = new Date().toISOString().slice(0, 10);
+  const nextWeekStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
 
-  const abertasSorted = sortByUrgency(abertas);
+  const vencidas   = abertas.filter((p) => !!p.dueDate && p.dueDate < todayStr);
+  const estaSemana = abertas.filter((p) => !!p.dueDate && p.dueDate >= todayStr && p.dueDate <= nextWeekStr);
+  const semPrazo   = abertas.filter((p) => !p.dueDate);
 
-  const displayItems: Pendencia[] =
-    activeTab === "Abertas"      ? abertasSorted :
-    activeTab === "Requer ação"  ? requerAcao :
-                                   concluidas;
-
-  const tabCounts: Record<TabKey, number> = {
-    Abertas:       abertas.length,
-    "Requer ação": requerAcao.length,
-    Concluídas:    concluidas.length,
+  const filterCounts: Record<FilterKey, number> = {
+    Todas:          abertas.length,
+    Vencidas:       vencidas.length,
+    "Esta semana":  estaSemana.length,
+    "Sem prazo":    semPrazo.length,
+    Concluídas:     concluidas.length,
   };
+
+  function getDisplayItems(): Pendencia[] {
+    switch (activeFilter) {
+      case "Todas":        return sortByUrgency(abertas);
+      case "Vencidas":     return sortByUrgency(vencidas);
+      case "Esta semana":  return sortByUrgency(estaSemana);
+      case "Sem prazo":    return semPrazo;
+      case "Concluídas":   return concluidas;
+    }
+  }
+
+  const displayItems = getDisplayItems();
 
   function handleComplete(id: string) {
     const p = all.find((x) => x.id === id);
     completePendencia(id);
     logInteraction("pendencia-concluida", id);
     void trackEvent("pendencia_completed", {
-      categoria: p?.categoria ?? null,
-      origem: p?.origem ?? null,
+      categoria:  p?.categoria ?? null,
+      origem:     p?.origem ?? null,
       matched_id: p?.matchedId ?? null,
     });
     setAll(getPendencias());
@@ -223,8 +237,10 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
 
   function openForm() {
     setShowForm(true);
-    setActiveTab("Abertas");
+    setActiveFilter("Todas");
   }
+
+  const isOverdueView = activeFilter !== "Concluídas";
 
   return (
     <div className="flex w-full max-w-full flex-col overflow-x-hidden">
@@ -265,36 +281,46 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
         </div>
       </div>
 
-      {/* ── Tabs ────────────────────────────────────────────────────── */}
-      <div className="px-5 pb-4 sm:px-6">
-        <div className="flex gap-1 rounded-[14px] bg-navy-50/80 p-1">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 rounded-[10px] py-2 text-[12px] font-medium transition-all active:scale-[0.97] ${
-                activeTab === tab
-                  ? "bg-navy-700 text-white shadow-sm"
-                  : "text-navy-500 hover:text-navy-700"
-              }`}
-            >
-              {tab}
-              {tabCounts[tab] > 0 && activeTab !== tab && (
-                <span className="ml-1 text-[10px] opacity-70">({tabCounts[tab]})</span>
-              )}
-            </button>
-          ))}
+      {/* ── Filter chips ─────────────────────────────────────────────── */}
+      <div className="pb-3">
+        <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-5 pb-0.5 sm:px-6">
+          {FILTERS.map((filter) => {
+            const count   = filterCounts[filter];
+            const isActive = activeFilter === filter;
+            const isAlert  = filter === "Vencidas" && count > 0 && !isActive;
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveFilter(filter)}
+                className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium transition-all active:scale-[0.97] ${
+                  isActive
+                    ? filter === "Vencidas" && count > 0
+                      ? "bg-terracotta-600 text-white shadow-sm"
+                      : "bg-navy-700 text-white shadow-sm"
+                    : isAlert
+                    ? "border border-terracotta-200 bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100"
+                    : "border border-navy-100 bg-white text-navy-600 hover:bg-navy-50"
+                }`}
+              >
+                {filter}
+                {count > 0 && (
+                  <span className={`ml-1 text-[10px] ${isActive ? "opacity-70" : "opacity-55"}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* ── Formulário inline ───────────────────────────────────────── */}
-      {showForm && activeTab === "Abertas" && (
+      {showForm && activeFilter !== "Concluídas" && (
         <div className="px-5 pb-4 sm:px-6">
           <div className="rounded-[18px] border border-navy-200/60 bg-white px-4 py-4 shadow-[0_2px_12px_-4px_rgba(35,75,99,0.14)]">
             <p className="mb-3 text-[12.5px] font-semibold text-navy-800">Nova pendência</p>
 
-            {/* Título */}
             <div className="mb-3">
               <label className="mb-1 block text-[11.5px] font-medium text-navy-500">
                 Título <span className="text-terracotta-500">*</span>
@@ -313,11 +339,8 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
               )}
             </div>
 
-            {/* Categoria */}
             <div className="mb-3">
-              <label className="mb-1.5 block text-[11.5px] font-medium text-navy-500">
-                Categoria
-              </label>
+              <label className="mb-1.5 block text-[11.5px] font-medium text-navy-500">Categoria</label>
               <div className="flex flex-wrap gap-1.5">
                 {FORM_CATEGORIES.map((cat) => (
                   <button
@@ -336,7 +359,6 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
               </div>
             </div>
 
-            {/* Prazo */}
             <div className="mb-4">
               <label className="mb-1 block text-[11.5px] font-medium text-navy-500">
                 Prazo <span className="font-normal text-navy-300">(opcional)</span>
@@ -349,7 +371,6 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
               />
             </div>
 
-            {/* Botões */}
             <div className="flex gap-2">
               <button
                 type="button"
@@ -370,14 +391,14 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
         </div>
       )}
 
-      {/* ── Pendências list ─────────────────────────────────────────── */}
-      <div className="space-y-3 px-5 pb-4 sm:px-6">
+      {/* ── Lista de pendências ──────────────────────────────────────── */}
+      <div className="space-y-3 px-5 pb-8 sm:px-6">
         {displayItems.length === 0 ? (
           <div className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-6 shadow-card">
-            {activeTab === "Abertas" && (
+            {activeFilter === "Todas" && (
               <div className="text-center">
                 <p className="text-[13px] font-semibold text-navy-700">Nenhuma pendência aberta.</p>
-                <p className="mt-1.5 max-w-[280px] mx-auto text-[12px] leading-relaxed text-navy-400">
+                <p className="mt-1.5 mx-auto max-w-[280px] text-[12px] leading-relaxed text-navy-400">
                   Quando surgir algo para acompanhar, crie uma pendência e mantenha o controle por aqui.
                 </p>
                 <button
@@ -392,18 +413,34 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
                 </button>
               </div>
             )}
-            {activeTab === "Requer ação" && (
+            {activeFilter === "Vencidas" && (
               <div className="text-center">
-                <p className="text-[13px] font-semibold text-navy-700">Nada exigindo ação agora.</p>
-                <p className="mt-1.5 max-w-[280px] mx-auto text-[12px] leading-relaxed text-navy-400">
-                  Pendências vindas do Assistente, prazos ou alertas aparecem aqui quando precisarem de acompanhamento.
+                <p className="text-[13px] font-semibold text-green-700">Nenhuma pendência vencida.</p>
+                <p className="mt-1.5 mx-auto max-w-[280px] text-[12px] leading-relaxed text-navy-400">
+                  Tudo em dia. Continue acompanhando os prazos por aqui.
                 </p>
               </div>
             )}
-            {activeTab === "Concluídas" && (
+            {activeFilter === "Esta semana" && (
+              <div className="text-center">
+                <p className="text-[13px] font-semibold text-navy-700">Nada vencendo esta semana.</p>
+                <p className="mt-1.5 mx-auto max-w-[280px] text-[12px] leading-relaxed text-navy-400">
+                  Nenhuma pendência com prazo nos próximos 7 dias.
+                </p>
+              </div>
+            )}
+            {activeFilter === "Sem prazo" && (
+              <div className="text-center">
+                <p className="text-[13px] font-semibold text-navy-700">Nenhuma pendência sem prazo.</p>
+                <p className="mt-1.5 mx-auto max-w-[280px] text-[12px] leading-relaxed text-navy-400">
+                  Todas as pendências abertas têm data definida.
+                </p>
+              </div>
+            )}
+            {activeFilter === "Concluídas" && (
               <div className="text-center">
                 <p className="text-[13px] font-semibold text-navy-700">Nenhuma pendência concluída ainda.</p>
-                <p className="mt-1.5 max-w-[280px] mx-auto text-[12px] leading-relaxed text-navy-400">
+                <p className="mt-1.5 mx-auto max-w-[280px] text-[12px] leading-relaxed text-navy-400">
                   Ao finalizar uma tarefa, ela aparece aqui como histórico operacional.
                 </p>
               </div>
@@ -411,77 +448,99 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
           </div>
         ) : (
           displayItems.map((p) => {
-            const priority = getPriority(p);
-            const icon     = getIcon(p);
-            const subtitle = getSubtitle(p);
-            const dateStr  =
-              activeTab === "Concluídas"
+            const priority  = getPriority(p);
+            const icon      = getIcon(p);
+            const subtitle  = getSubtitle(p);
+            const dueBadge  = p.dueDate ? getDueBadge(p.dueDate) : null;
+            const cardOverdue = isOverdueView && (dueBadge?.overdue ?? false);
+
+            const dateStr =
+              activeFilter === "Concluídas"
                 ? formatDateFull(p.completedAt ?? p.createdAt)
                 : formatDateFull(p.createdAt);
-            const dueBadge = p.dueDate ? getDueBadge(p.dueDate) : null;
 
             return (
               <div
                 key={p.id}
-                className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-4 shadow-card"
+                className={`overflow-hidden rounded-[18px] border shadow-card transition-colors ${
+                  cardOverdue
+                    ? "border-terracotta-200 border-l-4 border-l-terracotta-500 bg-terracotta-50/20"
+                    : "border-navy-100/70 bg-white"
+                }`}
               >
-                <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[18px]">
-                    {icon}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-[13.5px] font-semibold leading-snug text-navy-800">
-                        {p.titulo}
-                      </p>
-                      {priority && (
-                        <span
-                          className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${PRIORITY_STYLE[priority]}`}
-                        >
-                          {priority}
+                <div className="px-4 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-[18px] ${cardOverdue ? "bg-terracotta-100/60" : "bg-navy-50"}`}>
+                      {icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-[13.5px] font-semibold leading-snug text-navy-800">
+                          {p.titulo}
+                        </p>
+                        {priority && (
+                          <span className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${PRIORITY_STYLE[priority]}`}>
+                            {priority}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-[11.5px] text-navy-400">{subtitle}</p>
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-full bg-navy-50 px-2.5 py-0.5 text-[11px] font-medium text-navy-400">
+                          {dateStr}
                         </span>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-[11.5px] text-navy-400">{subtitle}</p>
-                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                      <span className="rounded-full bg-green-50 px-2.5 py-0.5 text-[11px] font-medium text-green-600">
-                        {dateStr}
-                      </span>
-                      {dueBadge && (
-                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${dueBadge.style}`}>
-                          {dueBadge.label}
-                        </span>
-                      )}
-                    </div>
-                    {p.origem === "manual" && activeTab !== "Concluídas" && (
-                      confirmDeleteId === p.id ? (
-                        <div className="mt-2.5 flex items-center gap-2 border-t border-navy-50 pt-2.5">
-                          <p className="flex-1 text-[11.5px] text-navy-600">Remover esta pendência?</p>
+                        {dueBadge && (
+                          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${dueBadge.style}`}>
+                            {dueBadge.label}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ações — apenas para pendências não concluídas */}
+                      {activeFilter !== "Concluídas" && (
+                        <div className="mt-2.5 flex flex-wrap items-center gap-3 border-t border-navy-50 pt-2.5">
                           <button
                             type="button"
-                            onClick={() => handleDelete(p.id, !!p.dueDate)}
-                            className="rounded-full border border-terracotta-200 bg-terracotta-50 px-2.5 py-1 text-[11px] font-medium text-terracotta-600 transition-all hover:bg-terracotta-100 active:scale-95"
+                            onClick={() => handleComplete(p.id)}
+                            className="inline-flex items-center gap-1 text-[11.5px] font-medium text-navy-500 transition-colors hover:text-green-600 active:scale-95"
                           >
-                            Remover
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                              <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            Concluir
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="rounded-full border border-navy-100 bg-white px-2.5 py-1 text-[11px] text-navy-500 transition-all hover:bg-navy-50 active:scale-95"
-                          >
-                            Cancelar
-                          </button>
+                          {p.origem === "manual" && (
+                            confirmDeleteId === p.id ? (
+                              <>
+                                <span className="text-[11.5px] text-navy-400">Remover?</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(p.id, !!p.dueDate)}
+                                  className="text-[11px] font-medium text-terracotta-600 transition-colors hover:text-terracotta-700 active:scale-95"
+                                >
+                                  Confirmar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setConfirmDeleteId(null)}
+                                  className="text-[11px] text-navy-400 transition-colors hover:text-navy-600 active:scale-95"
+                                >
+                                  Cancelar
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(p.id)}
+                                className="text-[11px] text-navy-400 transition-colors hover:text-terracotta-500 active:scale-95"
+                              >
+                                Remover
+                              </button>
+                            )
+                          )}
                         </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteId(p.id)}
-                          className="mt-2 text-[11px] text-navy-400 transition-colors hover:text-terracotta-500"
-                        >
-                          Remover
-                        </button>
-                      )
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -489,66 +548,6 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab = "Abe
           })
         )}
       </div>
-
-      {/* ── Próximos passos ─────────────────────────────────────────── */}
-      <section className="px-5 pb-8 sm:px-6">
-        <div className="mb-1.5 flex items-center justify-between">
-          <p className="text-[14px] font-semibold text-navy-800">Próximos passos</p>
-          <span className="text-[12px] text-navy-400">
-            {proximosPassos.length > 0 ? `${proximosPassos.length} aberto${proximosPassos.length > 1 ? "s" : ""}` : ""}
-          </span>
-        </div>
-        <p className="mb-3 text-[12px] leading-snug text-navy-400">Tarefas criadas por você ou salvas a partir de uma orientação.</p>
-
-        {proximosPassos.length === 0 ? (
-          <div className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-4 shadow-card">
-            <p className="text-[12.5px] text-navy-400">
-              Defina o que fazer e mantenha o ritmo.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
-            {proximosPassos.map((p, idx) => {
-              const badge = p.dueDate ? getDueBadge(p.dueDate) : null;
-              return (
-                <div key={p.id}>
-                  {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
-                  <div className="flex items-center gap-3 px-4 py-3.5">
-                    <button
-                      type="button"
-                      onClick={() => handleComplete(p.id)}
-                      aria-label="Marcar como concluído"
-                      className="group flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 border-navy-200 transition-all hover:border-green-400 hover:bg-green-50 active:scale-90"
-                    >
-                      <svg
-                        viewBox="0 0 10 10"
-                        className="h-2.5 w-2.5 text-transparent transition-colors group-hover:text-green-500"
-                        fill="none"
-                        aria-hidden="true"
-                      >
-                        <path d="M2 5l2 2.5L8 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                    <p className="min-w-0 flex-1 truncate text-[13px] text-navy-700">{p.titulo}</p>
-                    <div className="flex flex-shrink-0 items-center gap-1.5">
-                      {badge ? (
-                        <span className={`rounded-full px-2 py-0.5 text-[10.5px] font-medium ${badge.style}`}>
-                          {badge.label}
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-navy-400">{formatDateShort(p.createdAt)}</span>
-                      )}
-                      <svg className="h-4 w-4 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                        <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
 
     </div>
   );

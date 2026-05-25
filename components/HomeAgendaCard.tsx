@@ -5,6 +5,7 @@ import {
   getAgendaEvents,
   getMemoriaOperacional,
   getProfile,
+  type AgendaEvent,
 } from "@/lib/session";
 
 const WEEK_LABELS = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"];
@@ -14,15 +15,22 @@ const MONTH_NAMES_PT = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
+const EVENT_TYPE_ICONS: Record<string, string> = {
+  assembleia: "👥", manutencao: "🔧", dedetizacao: "🐛", caixa_agua: "💧",
+  extintores: "🧯", vistoria: "🔍", obra: "🏗️", cobranca: "💰",
+  reuniao: "🤝", fornecedor: "🛠️", comunicado: "📢", retorno: "📞", outro: "📅",
+};
+
+const WEEKDAYS_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+
 function addDaysToISO(iso: string, days: number): string {
   const d = new Date(iso + "T00:00:00");
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
 
-// Returns the 7-day Mon→Sun week containing `today`.
 function getWeekDays(today: Date): Date[] {
-  const dow = today.getDay(); // 0 = Sun
+  const dow = today.getDay();
   const offset = dow === 0 ? -6 : 1 - dow;
   const monday = new Date(today);
   monday.setDate(today.getDate() + offset);
@@ -58,14 +66,33 @@ function buildEventDateSet(): Set<string> {
   return set;
 }
 
+function getUpcoming7Days(todayISO: string): AgendaEvent[] {
+  const limitISO = addDaysToISO(todayISO, 6);
+  return getAgendaEvents()
+    .filter((e) => !e.completedAt && e.date >= todayISO && e.date <= limitISO)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 4);
+}
+
+function formatEventDate(isoDate: string, todayISO: string): string {
+  const tomorrowISO = addDaysToISO(todayISO, 1);
+  if (isoDate === todayISO)     return "Hoje";
+  if (isoDate === tomorrowISO)  return "Amanhã";
+  const d = new Date(isoDate + "T00:00:00");
+  const wd = WEEKDAYS_SHORT[d.getDay()];
+  const dd = d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  return `${wd} · ${dd}`;
+}
+
 type Props = {
   refreshKey?: number;
   onNavigate?: () => void;
 };
 
 export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
-  const [hydrated, setHydrated] = useState(false);
-  const [eventDates, setEventDates] = useState<Set<string>>(new Set());
+  const [hydrated, setHydrated]         = useState(false);
+  const [eventDates, setEventDates]     = useState<Set<string>>(new Set());
+  const [upcoming, setUpcoming]         = useState<AgendaEvent[]>([]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -74,7 +101,9 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
 
   useEffect(() => {
     setEventDates(buildEventDateSet());
+    setUpcoming(getUpcoming7Days(todayISO));
     setHydrated(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   return (
@@ -118,7 +147,7 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
         </button>
 
         {/* Week strip */}
-        <div className="border-t border-navy-50 px-2 pb-4 pt-2.5">
+        <div className="border-t border-navy-50 px-2 pb-3 pt-2.5">
           <div className="grid grid-cols-7">
             {WEEK_LABELS.map((label, i) => (
               <div
@@ -156,6 +185,34 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
             })}
           </div>
         </div>
+
+        {/* Upcoming events list — only when events exist */}
+        {hydrated && upcoming.length > 0 && (
+          <div className="border-t border-navy-50 pb-1">
+            {upcoming.map((event, idx) => (
+              <div key={event.id}>
+                {idx > 0 && <div className="mx-4 border-t border-navy-50/80" />}
+                <button
+                  type="button"
+                  onClick={onNavigate}
+                  className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
+                >
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]">
+                    {EVENT_TYPE_ICONS[event.type] ?? "📅"}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-medium text-navy-800">{event.title}</p>
+                  </div>
+                  <span className={`flex-shrink-0 text-[11px] font-medium ${
+                    event.date === todayISO ? "text-terracotta-600" : "text-navy-400"
+                  }`}>
+                    {formatEventDate(event.date, todayISO)}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
       </div>
     </section>

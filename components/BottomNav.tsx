@@ -72,9 +72,10 @@ const RIGHT_TABS: TabItem[] = [
 type Props = {
   active: AppTab;
   onChange: (tab: AppTab) => void;
+  urgentCount?: number;
 };
 
-export default function BottomNav({ active, onChange }: Props) {
+export default function BottomNav({ active, onChange, urgentCount }: Props) {
   const plusActive = active === "ferramentas";
 
   return (
@@ -93,6 +94,7 @@ export default function BottomNav({ active, onChange }: Props) {
             {/* Left tabs */}
             {LEFT_TABS.map((tab) => {
               const isActive = active === tab.id;
+              const badgeCount = tab.id === "inicio" && (urgentCount ?? 0) > 0 ? urgentCount : 0;
               return (
                 <button
                   key={tab.id}
@@ -104,7 +106,14 @@ export default function BottomNav({ active, onChange }: Props) {
                     isActive ? "text-navy-700" : "text-gray-400 hover:text-gray-500"
                   }`}
                 >
-                  <tab.Icon active={isActive} />
+                  <div className="relative">
+                    <tab.Icon active={isActive} />
+                    {!!badgeCount && (
+                      <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta-600 px-0.5 text-[9px] font-bold leading-none text-white">
+                        {badgeCount > 9 ? "9+" : badgeCount}
+                      </span>
+                    )}
+                  </div>
                   <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
                     {tab.label}
                   </span>

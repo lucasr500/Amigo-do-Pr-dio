@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { exportUserData, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
+import { exportUserData, getUserBackupJson, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 type Props = {
@@ -24,6 +24,7 @@ export default function BackupPanel({ onImported }: Props) {
   const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [resetPhase, setResetPhase] = useState<ResetPhase>("idle");
   const [resetInput, setResetInput] = useState("");
+  const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
     setStorageSizeKB(getStorageSizeKB());
@@ -79,6 +80,31 @@ export default function BackupPanel({ onImported }: Props) {
     }
   };
 
+  const handleWebShare = async () => {
+    if (typeof navigator === "undefined") return;
+    setSharing(true);
+    try {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const fileName = `amigo-do-predio-backup-${dateStr}.json`;
+      const json = getUserBackupJson();
+      const file = new File([json], fileName, { type: "application/json" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Backup — Amigo do Prédio" });
+        recordBackupAt();
+        setLastBackupAt(new Date().toISOString());
+        void trackEvent("backup_shared_via_web_share");
+      } else if (navigator.share) {
+        await navigator.share({ title: "Amigo do Prédio — Backup", text: "Backup do condomínio exportado pelo Amigo do Prédio." });
+      }
+    } catch (err) {
+      if ((err as DOMException)?.name !== "AbortError") {
+        // Compartilhamento indisponível — silencioso
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const handleReset = () => {
     setImportState({ phase: "idle" });
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -124,6 +150,38 @@ export default function BackupPanel({ onImported }: Props) {
 
         <div className="px-5 py-3.5 space-y-3">
 
+          {/* Alerta de backup desatualizado */}
+          {(() => {
+            if (!lastBackupAt) {
+              return (
+                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-3">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                    <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <p className="text-[11.5px] leading-relaxed text-amber-800">
+                    <strong>Nenhum backup exportado ainda.</strong> Exporte agora para proteger os dados do condomínio.
+                  </p>
+                </div>
+              );
+            }
+            const days = Math.floor((Date.now() - new Date(lastBackupAt).getTime()) / 86400000);
+            if (days >= 14) {
+              return (
+                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-3">
+                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                    <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <p className="text-[11.5px] leading-relaxed text-amber-800">
+                    Último backup há <strong>{days} dias</strong> — exporte uma cópia atualizada.
+                  </p>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {/* Exportar */}
           <button
             type="button"
@@ -153,6 +211,34 @@ export default function BackupPanel({ onImported }: Props) {
               </svg>
               <p className="break-all text-[11.5px] text-navy-600">{exportFeedback}</p>
             </div>
+          )}
+
+          {/* Compartilhar via Web Share API — apenas em dispositivos compatíveis */}
+          {typeof navigator !== "undefined" && !!navigator.share && (
+            <button
+              type="button"
+              onClick={handleWebShare}
+              disabled={sharing}
+              className="flex w-full items-center gap-3 rounded-xl border border-navy-100 bg-white px-4 py-2.5 text-left transition-colors hover:bg-navy-50/60 active:bg-navy-50 disabled:opacity-60"
+            >
+              <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50">
+                <svg className="h-3.5 w-3.5 text-navy-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="4" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="4" cy="8" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M5.5 7L10.5 5M5.5 9L10.5 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[12.5px] font-medium text-navy-800">
+                  {sharing ? "Compartilhando…" : "Compartilhar backup"}
+                </p>
+                <p className="text-[11px] text-navy-400">Enviar arquivo via WhatsApp, e-mail ou nuvem</p>
+              </div>
+              <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           )}
 
           {/* Importar — idle */}

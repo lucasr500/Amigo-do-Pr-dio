@@ -38,6 +38,7 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
   const [reforcoReserva, setReforcoReserva] = useState("0");
   const [cotaAtual, setCotaAtual] = useState("");
   const [resultado, setResultado] = useState<Resultado | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const arrNum = parseNum(arrecadacao);
   const despNum = parseNum(despesa);
@@ -76,7 +77,29 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
     });
   };
 
-  const resetResultado = () => setResultado(null);
+  const resetResultado = () => { setResultado(null); setCopied(false); };
+
+  const handleCopyResultado = async (r: Resultado) => {
+    const texto = [
+      "Simulador de reajuste de cota — Amigo do Prédio",
+      "",
+      `Arrecadação bruta: R$ ${fmt(r.arrecadacaoBruta)}`,
+      `Arrecadação líquida estimada: R$ ${fmt(r.arrecadacaoLiquida)}`,
+      `Despesa projetada: R$ ${fmt(r.despesaProjetada)}`,
+      `Balanço: ${r.balanco >= 0 ? "+" : ""}R$ ${fmt(r.balanco)}`,
+      `Reajuste mínimo estimado: ${r.reajusteMinimo > 0 ? "+" + fmtPct(r.reajusteMinimo) + "%" : "Sem necessidade"}`,
+      ...(r.novaCota !== null ? [`Nova cota estimada: R$ ${fmt(r.novaCota)}`] : []),
+      "",
+      "Simulação estimativa. Não substitui previsão orçamentária oficial. Reajuste deve ser aprovado em assembleia.",
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Clipboard indisponível
+    }
+  };
 
   return (
     <section
@@ -269,6 +292,26 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
               Verifique extratos, balancetes e demonstrativos reais antes de qualquer decisão. Eventual reajuste deve
               observar a convenção condominial e ser aprovado em assembleia.
             </p>
+
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => handleCopyResultado(resultado)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] font-medium transition-all ${
+                  copied
+                    ? "border-navy-200 bg-navy-100 text-navy-600"
+                    : "border-navy-100 bg-white text-navy-500 hover:border-navy-200 hover:bg-navy-50"
+                }`}
+              >
+                <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  {copied
+                    ? <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    : <><rect x="5" y="3" width="8" height="10" rx="1.2" stroke="currentColor" strokeWidth="1.4" /><path d="M3 5v8a1.2 1.2 0 001.2 1.2H11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></>
+                  }
+                </svg>
+                {copied ? "Copiado!" : "Copiar resultado"}
+              </button>
+            </div>
           </div>
         )}
       </div>

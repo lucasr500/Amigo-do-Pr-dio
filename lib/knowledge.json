@@ -7132,6 +7132,144 @@
         "conflito",
         "graduacao"
       ]
+    },
+    {
+      "id": "notificacao-whatsapp-validade",
+      "categoria": "multas",
+      "pergunta": "Uma notificação de infração enviada pelo WhatsApp tem validade?",
+      "resposta": "O WhatsApp pode ser um canal de comunicação informal, mas não é suficiente como notificação formal para fins de multa ou cobrança. Para ter validade jurídica, a notificação deve ser enviada por meio que comprove o recebimento: carta registrada com AR, entrega presencial com protocolo assinado, ou plataforma do condomínio que registre a leitura. O envio via WhatsApp pode complementar a notificação formal, mas nunca a substitui.",
+      "contexto": "O Código Civil exige que a penalidade siga o procedimento previsto na convenção. Sem comprovação de recebimento, o infrator pode contestar a notificação e invalidar a multa.",
+      "dica": "Envie pelo WhatsApp como aviso complementar, mas formalize sempre por carta com AR ou protocolo. Guarde o comprovante.",
+      "keywords": [
+        "whatsapp",
+        "notificacao",
+        "comunicado",
+        "infração",
+        "infracao",
+        "multa",
+        "advertencia",
+        "prova",
+        "comprovante",
+        "digital",
+        "mensagem",
+        "validade"
+      ]
+    },
+    {
+      "id": "entrega-mandato-documentos",
+      "categoria": "gestao",
+      "pergunta": "O que o síndico deve entregar ao final do mandato?",
+      "resposta": "Ao encerrar o mandato, o síndico deve entregar ao sucessor: (1) pasta com atas das assembleias do período; (2) contratos vigentes (administradora, seguro, elevador, outros); (3) CNPJ do condomínio e documentos bancários; (4) livros contábeis e balancetes do período; (5) cadastro de funcionários e escala; (6) lista de inadimplentes e acordos em aberto; (7) documentos técnicos (AVCB, alvarás, laudos); (8) chaves e acessos. A entrega deve ser documentada em ata ou termo assinado por ambos.",
+      "contexto": "O síndico é mandatário do condomínio (art. 1.348 do Código Civil). A ausência de prestação de contas ou recusa na entrega de documentos pode caracterizar descumprimento de mandato e gerar responsabilidade civil.",
+      "dica": "Elabore um inventário de todos os itens entregues e obtenha assinatura de quem recebeu. Digitalize os documentos antes de entregar os originais.",
+      "keywords": [
+        "entrega",
+        "mandato",
+        "documentos",
+        "prestação de contas",
+        "prestacao",
+        "encerramento",
+        "síndico",
+        "sindico",
+        "sainte",
+        "sucessor",
+        "pasta",
+        "contratos",
+        "CNPJ",
+        "gestão"
+      ]
+    },
+    {
+      "id": "cota-extra-como-aprovar",
+      "categoria": "financeiro",
+      "pergunta": "Como aprovar uma cota extra emergencial no condomínio?",
+      "resposta": "Uma cota extra (taxa extraordinária) pode ser aprovada em assembleia por maioria simples dos presentes, salvo se a convenção exigir quórum diferente. Em situações de emergência genuína (risco à vida ou à estrutura), o síndico pode contratar o serviço antes da assembleia, mas deve convocar reunião o mais breve possível para ratificar a decisão e aprovar o rateio. O rateio segue as frações ideais ou a convenção. É obrigatório prestar contas do valor arrecadado e do uso dos recursos.",
+      "contexto": "O Código Civil autoriza o síndico a tomar providências urgentes sem assembleia prévia, mas exige prestação de contas posterior (art. 1.348, VIII). A cobrança deve ser discriminada no boleto ou comunicado formal.",
+      "dica": "Convoque a assembleia com prazo máximo de 30 dias após a emergência. Guarde todos os orçamentos, notas fiscais e contratos do serviço executado.",
+      "keywords": [
+        "cota extra",
+        "taxa extra",
+        "extraordinaria",
+        "extraordinário",
+        "emergência",
+        "emergencia",
+        "rateio",
+        "aprovação",
+        "aprovacao",
+        "assembleia",
+        "obras",
+        "fundo",
+        "arrecadação"
+      ]
+    },
+    {
+      "id": "locatario-voto-assembleia",
+      "categoria": "assembleias",
+      "pergunta": "O inquilino pode votar na assembleia do condomínio?",
+      "resposta": "O inquilino (locatário) pode votar em assembleias que tratarem de assuntos de interesse direto do uso das áreas comuns e do seu cotidiano — como aprovação do regimento interno ou eleição do síndico, se houver previsão na convenção. Porém, o direito de voto em matérias financeiras (aprovação de contas, cota extra, obras estruturais) pertence ao proprietário (condômino). A Lei do Inquilinato (Lei 8.245/91, art. 83) permite que o inquilino compareça e vote, mas apenas nas matérias que lhe forem autorizadas pelo proprietário ou pela convenção.",
+      "contexto": "O condômino (proprietário) é o titular do voto nas assembleias. O locatário pode votar se receber procuração do proprietário ou se a convenção expressamente o autorizar em determinadas matérias.",
+      "dica": "Solicite sempre procuração por escrito quando um inquilino pretender votar em nome do proprietário. Guarde o documento com a ata.",
+      "keywords": [
+        "inquilino",
+        "locatario",
+        "locador",
+        "aluguel",
+        "voto",
+        "votar",
+        "assembleia",
+        "procuração",
+        "procuracao",
+        "proprietário",
+        "condômino",
+        "participar"
+      ]
+    },
+    {
+      "id": "telhado-responsabilidade-vazamento",
+      "categoria": "manutencao",
+      "pergunta": "Quem é responsável pelo telhado e por vazamentos na cobertura?",
+      "resposta": "O telhado e a cobertura são áreas comuns do condomínio, e sua manutenção é responsabilidade do condomínio como um todo, independentemente de quem use a cobertura. Eventuais vazamentos originados no telhado que causem danos a unidades devem ser reparados pelo condomínio. Se a cobertura estiver em uso exclusivo de uma unidade de cobertura (duplex ou terraço privativo), a convenção pode atribuir a manutenção preventiva ao proprietário, mas a responsabilidade por vícios estruturais permanece do condomínio.",
+      "contexto": "Art. 1.336 e 1.348 do Código Civil. As partes de uso comum são de responsabilidade coletiva. A omissão do síndico em realizar manutenção preventiva pode gerar responsabilidade civil por danos às unidades.",
+      "dica": "Faça inspeção anual do telhado por empresa especializada e guarde o laudo. Se houver cobertura privativa, especifique claramente na convenção o limite entre manutenção do condômino e responsabilidade do condomínio.",
+      "keywords": [
+        "telhado",
+        "cobertura",
+        "vazamento",
+        "infiltração",
+        "infiltracao",
+        "área comum",
+        "manutenção",
+        "manutencao",
+        "responsabilidade",
+        "conserto",
+        "reparo",
+        "terraço",
+        "duplex"
+      ]
+    },
+    {
+      "id": "rateio-obra-extraordinaria",
+      "categoria": "financeiro",
+      "pergunta": "Como funciona o rateio de uma obra extraordinária no condomínio?",
+      "resposta": "O rateio de obras extraordinárias segue as frações ideais de cada unidade, salvo se a convenção estabelecer outro critério. O valor pode ser cobrado de uma só vez ou parcelado conforme deliberado em assembleia. A aprovação da obra e do rateio deve constar em ata com clareza: valor total, forma de pagamento e prazo. Obras de simples manutenção (obrigação do síndico) não precisam de assembleia, mas obras de melhoria ou benfeitorias que aumentem o patrimônio comum exigem aprovação, com quórum de maioria simples ou qualificado conforme a convenção.",
+      "contexto": "O Código Civil distingue obras de conservação (responsabilidade do síndico, art. 1.341) das obras inovadoras (precisam de aprovação). A distinção prática: conservação = manter o que existe; benfeitoria = melhorar ou alterar.",
+      "dica": "Obtenha pelo menos três orçamentos antes de apresentar a obra em assembleia. Inclua na pauta o valor aprovado, o fornecedor e o cronograma de pagamento.",
+      "keywords": [
+        "obra",
+        "rateio",
+        "extraordinária",
+        "extraordinario",
+        "fração ideal",
+        "fracao",
+        "taxa extra",
+        "cota extra",
+        "aprovação",
+        "aprovacao",
+        "benfeitoria",
+        "conservação",
+        "conserto",
+        "reforma"
+      ]
     }
   ]
 }

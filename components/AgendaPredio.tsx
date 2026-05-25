@@ -67,11 +67,13 @@ function urgencyTextClass(iso: string): string {
 
 function urgencyLabel(iso: string): string {
   const days = ate(iso);
-  if (isNaN(days)) return "";
-  if (days < 0) return `Vencido há ${Math.abs(days)}d`;
-  if (days === 0) return "hoje";
-  if (days === 1) return "amanhã";
-  return `em ${days}d`;
+  if (isNaN(days)) return formatEventDate(iso);
+  if (days === -1) return "Vencido ontem";
+  if (days < 0)   return `Vencido há ${Math.abs(days)} dias`;
+  if (days === 0)  return "Hoje";
+  if (days === 1)  return "Amanhã";
+  if (days <= 30)  return `Em ${days} dias`;
+  return formatEventDate(iso);
 }
 
 type FormState = {
@@ -211,11 +213,9 @@ export default function AgendaPredio({ onSaved }: Props) {
           <span className="mt-0.5 shrink-0 text-base">{TYPE_ICONS[e.type]}</span>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium text-navy-800">{e.title}</p>
-            <p className="mt-0.5 text-[11.5px] text-navy-500">
-              {TYPE_LABELS[e.type]} ·{" "}
-              <span className={urgencyTextClass(e.date)}>
-                {formatEventDate(e.date)} ({urgencyLabel(e.date)})
-              </span>
+            <p className="mt-0.5 text-[11.5px]">
+              <span className={urgencyTextClass(e.date)}>{urgencyLabel(e.date)}</span>
+              <span className="text-navy-400"> · {TYPE_LABELS[e.type]}</span>
             </p>
             {e.note && (
               <p className="mt-1 line-clamp-2 text-[11px] text-navy-400">{e.note}</p>
@@ -277,9 +277,12 @@ export default function AgendaPredio({ onSaved }: Props) {
           {!showForm && (
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-1 rounded-full border border-navy-200 bg-navy-50 px-3 py-1.5 text-[11.5px] font-medium text-navy-600 transition-colors hover:bg-navy-100 hover:text-navy-700"
+              className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-semibold text-cream-50 transition-all hover:bg-navy-800 active:scale-[0.97]"
             >
-              + Novo evento
+              <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              Novo evento
             </button>
           )}
         </div>

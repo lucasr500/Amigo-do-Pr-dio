@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getProfile, addPendencia } from "@/lib/session";
+import {
+  getProfile,
+  addPendencia,
+  getComunicadoHistory,
+  addComunicadoHistory,
+  type ComunicadoHistoryEntry,
+} from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { COMUNICADO_TEMPLATES, ComunicadoId } from "@/lib/comunicados";
 
@@ -364,6 +370,21 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
                 <p className="text-[12px] text-navy-500">Próximo passo criado com sucesso.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Aviso contextual para templates sensíveis */}
+        {(selectedId === "notificacao" || selectedId === "cobranca" || selectedId === "obra" || selectedId === "assembleia") && (
+          <div className="border-t border-amber-100 px-4 py-3">
+            <div className="flex items-start gap-2">
+              <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 6v3.5M8 11.5v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                <path d="M7.15 2.5L1.5 12a1 1 0 00.85 1.5h11.3a1 1 0 00.85-1.5L8.85 2.5a1 1 0 00-1.7 0z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+              </svg>
+              <p className="text-[10.5px] leading-relaxed text-amber-700">
+                Antes de enviar, confira se o texto está alinhado à convenção do condomínio e às decisões tomadas em assembleia, quando aplicável. Revise sempre o comunicado final.
+              </p>
+            </div>
           </div>
         )}
 

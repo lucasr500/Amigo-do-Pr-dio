@@ -78,7 +78,24 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
     };
   }, []);
 
-  if (!hydrated || items.length === 0) return null;
+  if (!hydrated) return null;
+
+  if (items.length === 0) {
+    if (!hasMemoriaOperacional()) return null;
+    return (
+      <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
+        <div className="flex items-center gap-3 rounded-[22px] border border-green-100 bg-white/90 px-5 py-4 shadow-card-md">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-[15px]" aria-hidden="true">
+            ✓
+          </span>
+          <div>
+            <p className="text-[12.5px] font-semibold text-navy-800">Tudo em ordem</p>
+            <p className="mt-0.5 text-[11.5px] leading-snug text-navy-500">Nenhum alerta operacional ativo no momento.</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const INITIAL_LIMIT = 3;
   const hasCritico = items.some((i) => i.priority === "critico");

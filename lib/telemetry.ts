@@ -104,7 +104,8 @@ export type TelemetryEvent =
   | "profile_completion_cta_tap"
   | "assistant_response_feedback"
   | "comunicado_followup_created"
-  | "saude_action_cta_tap";
+  | "saude_action_cta_tap"
+  | "backup_shared_via_web_share";
 
 type QueuedEvent = {
   event: string;

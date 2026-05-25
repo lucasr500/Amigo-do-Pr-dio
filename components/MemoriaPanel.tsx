@@ -427,7 +427,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
         <div className="mt-2 border-t border-navy-50 pt-3">
           {saved ? (
             <div className="animate-fade-in">
-              <p className="mb-1 text-[12.5px] font-semibold text-navy-700">✓ Memória atualizada</p>
+              <p className="mb-1 text-[12.5px] font-semibold text-navy-700">✓ Dados atualizados</p>
               {savedSummary.length > 0 && (
                 <div className="flex flex-col gap-0.5">
                   {savedSummary.map((line) => (

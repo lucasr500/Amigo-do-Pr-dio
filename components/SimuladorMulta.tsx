@@ -27,6 +27,7 @@ export default function SimuladorMulta({ anchorId = "simulador-multa", highlight
   const [taxaJuros, setTaxaJuros] = useState("1");
   const [taxaMulta, setTaxaMulta] = useState("2");
   const [resultado, setResultado] = useState<ResultRow[] | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const cotaNum = Math.max(0, parseFloat(cota.replace(",", ".")) || 0);
   const mesesNum = Math.max(1, Math.min(SLIDER_MAX, parseInt(meses, 10) || 1));
@@ -53,6 +54,34 @@ export default function SimuladorMulta({ anchorId = "simulador-multa", highlight
 
   const resetResultado = () => {
     setResultado(null);
+    setCopied(false);
+  };
+
+  const handleCopyResultado = async (rows: ResultRow[]) => {
+    const last = rows[rows.length - 1];
+    const linhas = rows.length > 1
+      ? rows.map((r) => `  ${r.mes} ${r.mes === 1 ? "mês" : "meses"}: R$ ${fmt(r.total)}`).join("\n")
+      : "";
+    const texto = [
+      "Simulador de multa e juros — Amigo do Prédio",
+      "",
+      `Cota: R$ ${fmt(cotaNum)} | Meses: ${mesesNum} | Juros: ${taxaJuros}% a.m. | Multa: ${taxaMulta}%`,
+      "",
+      `Estimativa total (${mesesNum} ${mesesNum === 1 ? "mês" : "meses"}): R$ ${fmt(last.total)}`,
+      `  Cota acumulada: R$ ${fmt(cotaNum * mesesNum)}`,
+      `  Multa: R$ ${fmt(last.multa)}`,
+      `  Juros: R$ ${fmt(last.juros)}`,
+      ...(linhas ? ["", "Evolução mês a mês:", linhas] : []),
+      "",
+      "Cálculo estimativo. Verifique na convenção e com a administradora os critérios exatos.",
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // Clipboard indisponível
+    }
   };
 
   const ultimo = resultado ? resultado[resultado.length - 1] : null;
@@ -226,6 +255,26 @@ export default function SimuladorMulta({ anchorId = "simulador-multa", highlight
               na convenção, com a administradora e no boleto os critérios exatos (multa por
               parcela, correção monetária e outros encargos aplicáveis).
             </p>
+
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => handleCopyResultado(resultado)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] font-medium transition-all ${
+                  copied
+                    ? "border-navy-200 bg-navy-100 text-navy-600"
+                    : "border-navy-100 bg-white text-navy-500 hover:border-navy-200 hover:bg-navy-50"
+                }`}
+              >
+                <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  {copied
+                    ? <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    : <><rect x="5" y="3" width="8" height="10" rx="1.2" stroke="currentColor" strokeWidth="1.4" /><path d="M3 5v8a1.2 1.2 0 001.2 1.2H11" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></>
+                  }
+                </svg>
+                {copied ? "Copiado!" : "Copiar resultado"}
+              </button>
+            </div>
           </div>
         )}
       </div>

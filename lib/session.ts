@@ -105,8 +105,9 @@ const KEYS = {
   OCORRENCIAS:          "amigo_ocorrencias",
   AGENDA:               "amigo_agenda",
   REVISAO_MENSAL_HOME:  "amigo_revisao_mensal_home",
-  REVISAO_SEMANAL:      "amigo_revisao_semanal",
-  ONBOARDING_COMPLETE:  "amigo_onboarding_complete",
+  REVISAO_SEMANAL:       "amigo_revisao_semanal",
+  ONBOARDING_COMPLETE:   "amigo_onboarding_complete",
+  COMUNICADO_HISTORY:    "amigo_comunicado_history",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1014,6 +1015,22 @@ export function exportUserData(): void {
   }
 }
 
+export function getUserBackupJson(): string {
+  const payload: UserBackup = {
+    version: "4",
+    app: "amigo-do-predio",
+    exportedAt: new Date().toISOString(),
+    profile: getProfile(),
+    memoria: getMemoriaOperacional(),
+    favorites: getFavorites(),
+    checklists: getChecklistStorage(),
+    pendencias: getPendencias(),
+    ocorrencias: getOcorrencias(),
+    agenda: getAgendaEvents(),
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
 // Valida o backup sem escrever no localStorage — usado para mostrar preview antes da confirmação.
 // Aceita v1 (sem pendências), v2 (com pendências) e v3 (com ocorrências).
 export function parseAndValidateUserData(jsonString: string): ImportResult {
@@ -1325,6 +1342,30 @@ export function exportTelemetry(): void {
   } catch {
     // Download indisponível no ambiente
   }
+}
+
+// ─── Histórico de comunicados gerados ────────────────────────────────────────
+
+export type ComunicadoHistoryEntry = {
+  id: string;
+  templateId: string;
+  templateTitle: string;
+  templateIcon: string;
+  preview: string; // texto completo gerado no momento da cópia
+  copiedAt: string; // ISO
+};
+
+export function getComunicadoHistory(): ComunicadoHistoryEntry[] {
+  return safeRead<ComunicadoHistoryEntry[]>(KEYS.COMUNICADO_HISTORY, []);
+}
+
+export function addComunicadoHistory(entry: Omit<ComunicadoHistoryEntry, "id">): void {
+  const all = getComunicadoHistory();
+  all.push({
+    ...entry,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+  });
+  safeWrite(KEYS.COMUNICADO_HISTORY, all.slice(-10));
 }
 
 // ─── Estatísticas de uso ──────────────────────────────────────────────────────
