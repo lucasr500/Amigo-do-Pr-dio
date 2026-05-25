@@ -55,13 +55,13 @@ function formatEventDate(iso: string): string {
   return `${d} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
-function urgencyClass(iso: string): string {
+function urgencyTextClass(iso: string): string {
   const days = ate(iso);
   if (isNaN(days)) return "text-navy-400";
-  if (days < 0) return "text-red-600 font-medium";
-  if (days === 0) return "text-red-500 font-medium";
-  if (days <= 7) return "text-orange-500 font-medium";
-  if (days <= 30) return "text-yellow-600";
+  if (days < 0) return "text-terracotta-700 font-medium";
+  if (days === 0) return "text-amber-700 font-medium";
+  if (days <= 7) return "text-orange-600 font-medium";
+  if (days <= 30) return "text-yellow-700";
   return "text-navy-400";
 }
 
@@ -173,17 +173,102 @@ export default function AgendaPredio({ onSaved }: Props) {
     .filter((e) => !!e.completedAt)
     .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""));
 
+  // Buckets de urgência
+  const overdue: AgendaEvent[] = [];
+  const todayEvts: AgendaEvent[] = [];
+  const next7: AgendaEvent[] = [];
+  const next30: AgendaEvent[] = [];
+  const later: AgendaEvent[] = [];
+  for (const e of pending) {
+    const d = ate(e.date);
+    if (isNaN(d) || d > 30) later.push(e);
+    else if (d < 0) overdue.push(e);
+    else if (d === 0) todayEvts.push(e);
+    else if (d <= 7) next7.push(e);
+    else next30.push(e);
+  }
+
+  // Summary strip
+  const summaryParts: string[] = [];
+  if (overdue.length > 0)
+    summaryParts.push(`${overdue.length} vencido${overdue.length > 1 ? "s" : ""}`);
+  const iminent = todayEvts.length + next7.length;
+  if (iminent > 0)
+    summaryParts.push(`${iminent} nos próximos 7 dias`);
+  const futureCount = next30.length + later.length;
+  if (futureCount > 0)
+    summaryParts.push(`${futureCount} futur${futureCount !== 1 ? "os" : "o"}`);
+
   const canSave = form.title.trim().length > 0 && form.date.length > 0;
+
+  function renderEventCard(e: AgendaEvent, cardClass: string) {
+    return (
+      <li
+        key={e.id}
+        className={`flex items-start justify-between gap-3 rounded-[14px] border px-4 py-3 ${cardClass}`}
+      >
+        <div className="flex min-w-0 items-start gap-2.5">
+          <span className="mt-0.5 shrink-0 text-base">{TYPE_ICONS[e.type]}</span>
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-medium text-navy-800">{e.title}</p>
+            <p className="mt-0.5 text-[11.5px] text-navy-500">
+              {TYPE_LABELS[e.type]} ·{" "}
+              <span className={urgencyTextClass(e.date)}>
+                {formatEventDate(e.date)} ({urgencyLabel(e.date)})
+              </span>
+            </p>
+            {e.note && (
+              <p className="mt-1 line-clamp-2 text-[11px] text-navy-400">{e.note}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-1">
+          {confirmDeleteId === e.id ? (
+            <div className="flex gap-1">
+              <button
+                onClick={() => handleDelete(e.id)}
+                className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[11.5px] font-medium text-red-600 hover:text-red-700"
+              >
+                Apagar
+              </button>
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-500 hover:text-navy-700"
+              >
+                Não
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => handleComplete(e.id, e.type)}
+                className="rounded border border-green-200 bg-green-50 px-2 py-1 text-[11.5px] font-medium text-green-700 transition-colors hover:bg-green-100 hover:text-green-800"
+              >
+                Concluir
+              </button>
+              <button
+                onClick={() => setConfirmDeleteId(e.id)}
+                className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-400 hover:text-navy-600"
+              >
+                Excluir
+              </button>
+            </>
+          )}
+        </div>
+      </li>
+    );
+  }
 
   return (
     <section className="px-5 pb-6 sm:px-6">
-      <div className="space-y-3">
+      <div className="space-y-4">
 
         {/* Header */}
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-start justify-between pt-1">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-              Eventos agendados
+              Agenda operacional
             </p>
             <p className="mt-0.5 text-[13.5px] font-semibold text-navy-800">
               Agenda do prédio
@@ -198,6 +283,13 @@ export default function AgendaPredio({ onSaved }: Props) {
             </button>
           )}
         </div>
+
+        {/* Summary strip — só quando há pelo menos 2 buckets com eventos */}
+        {summaryParts.length >= 2 && (
+          <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-2.5">
+            <p className="text-[11.5px] text-navy-500">{summaryParts.join(" · ")}</p>
+          </div>
+        )}
 
         {/* Form */}
         {showForm && (
@@ -286,69 +378,87 @@ export default function AgendaPredio({ onSaved }: Props) {
           </p>
         )}
 
-        {/* Pending events */}
+        {/* Eventos agrupados por status */}
         {pending.length > 0 && (
-          <ul className="space-y-2">
-            {pending.map((e) => (
-              <li
-                key={e.id}
-                className="flex items-start justify-between gap-3 rounded-[14px] border border-navy-100 bg-white px-4 py-3"
-              >
-                <div className="flex min-w-0 items-start gap-2.5">
-                  <span className="mt-0.5 shrink-0 text-base">{TYPE_ICONS[e.type]}</span>
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] font-medium text-navy-800">{e.title}</p>
-                    <p className="mt-0.5 text-[11.5px] text-navy-500">
-                      {TYPE_LABELS[e.type]} ·{" "}
-                      <span className={urgencyClass(e.date)}>
-                        {formatEventDate(e.date)} ({urgencyLabel(e.date)})
-                      </span>
-                    </p>
-                    {e.note && (
-                      <p className="mt-1 line-clamp-2 text-[11px] text-navy-400">{e.note}</p>
-                    )}
-                  </div>
-                </div>
+          <div className="space-y-5">
 
-                <div className="flex shrink-0 flex-col gap-1">
-                  {confirmDeleteId === e.id ? (
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => handleDelete(e.id)}
-                        className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[11.5px] font-medium text-red-600 hover:text-red-700"
-                      >
-                        Apagar
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(null)}
-                        className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-500 hover:text-navy-700"
-                      >
-                        Não
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => handleComplete(e.id, e.type)}
-                        className="rounded border border-green-200 bg-green-50 px-2 py-1 text-[11.5px] font-medium text-green-700 transition-colors hover:bg-green-100 hover:text-green-800"
-                      >
-                        Concluir
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(e.id)}
-                        className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-400 hover:text-navy-600"
-                      >
-                        Excluir
-                      </button>
-                    </>
-                  )}
+            {/* Vencidos */}
+            {overdue.length > 0 && (
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-terracotta-700">
+                    Vencidos
+                  </p>
+                  <span className="rounded-full bg-terracotta-100 px-1.5 py-0.5 text-[10px] font-semibold text-terracotta-700">
+                    {overdue.length}
+                  </span>
                 </div>
-              </li>
-            ))}
-          </ul>
+                <p className="mb-2 text-[11px] text-navy-400">
+                  Eventos vencidos continuam visíveis até serem concluídos ou atualizados.
+                </p>
+                <ul className="space-y-2">
+                  {overdue.map((e) => renderEventCard(e, "border-terracotta-200 bg-terracotta-50/30"))}
+                </ul>
+              </div>
+            )}
+
+            {/* Hoje */}
+            {todayEvts.length > 0 && (
+              <div>
+                <div className="mb-2 flex items-center gap-2">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-amber-700">
+                    Hoje
+                  </p>
+                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {todayEvts.length}
+                  </span>
+                </div>
+                <ul className="space-y-2">
+                  {todayEvts.map((e) => renderEventCard(e, "border-amber-200 bg-amber-50/20"))}
+                </ul>
+              </div>
+            )}
+
+            {/* Próximos 7 dias */}
+            {next7.length > 0 && (
+              <div>
+                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-500">
+                  Próximos 7 dias
+                </p>
+                <ul className="space-y-2">
+                  {next7.map((e) => renderEventCard(e, "border-navy-100 bg-white"))}
+                </ul>
+              </div>
+            )}
+
+            {/* Próximos 30 dias */}
+            {next30.length > 0 && (
+              <div>
+                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+                  Próximos 30 dias
+                </p>
+                <ul className="space-y-2">
+                  {next30.map((e) => renderEventCard(e, "border-navy-100 bg-white"))}
+                </ul>
+              </div>
+            )}
+
+            {/* Mais adiante */}
+            {later.length > 0 && (
+              <div>
+                <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+                  Mais adiante
+                </p>
+                <ul className="space-y-2">
+                  {later.map((e) => renderEventCard(e, "border-navy-100 bg-white"))}
+                </ul>
+              </div>
+            )}
+
+          </div>
         )}
 
-        {/* Completed toggle */}
+        {/* Concluídos */}
         {completed.length > 0 && (
           <div>
             <button
