@@ -26,7 +26,7 @@ export default function GuidancePreview({ onSetup }: Props) {
 
         {/* Item mockado 1 — crítico */}
         <div className="flex items-start gap-3">
-          <div className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-terracota-500" />
+          <div className="mt-[7px] h-2 w-2 shrink-0 rounded-full bg-terracotta-500" />
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold leading-snug text-navy-800">
               AVCB vence em 23 dias
@@ -39,7 +39,7 @@ export default function GuidancePreview({ onSetup }: Props) {
                 Ver orientação
               </span>
               <span className="inline-flex select-none items-center rounded-full px-2.5 py-1 text-[11px] text-navy-400">
-                Salvar nos próximos passos
+                Salvar em Pendências
               </span>
             </div>
           </div>
