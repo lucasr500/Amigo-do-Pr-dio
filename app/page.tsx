@@ -516,11 +516,16 @@ export default function HomePage() {
                   refreshKey={refreshKey}
                   onClick={() => navigateToSubView("saude")}
                 />
+                <GuidancePanel
+                  onAsk={handleSuggestionSelect}
+                  onResolved={() => setRefreshKey((k) => k + 1)}
+                  onPendenciaSaved={() => setRefreshKey((k) => k + 1)}
+                  refreshKey={refreshKey}
+                />
                 <HomeQuickStats
                   refreshKey={refreshKey}
                   onNavigateToAgenda={() => navigateTab("agenda")}
                   onNavigateToPendencias={() => navigateToSubView("pendencias")}
-                  onNavigateToPassos={() => navigateToSubView("pendencias")}
                 />
               </>
             )}
@@ -534,15 +539,6 @@ export default function HomePage() {
                 />
                 <GuidancePreview onSetup={handleScrollToMemoria} />
               </>
-            )}
-
-            {!subView && hasCondominioData && (
-              <GuidancePanel
-                onAsk={handleSuggestionSelect}
-                onResolved={() => setRefreshKey((k) => k + 1)}
-                onPendenciaSaved={() => setRefreshKey((k) => k + 1)}
-                refreshKey={refreshKey}
-              />
             )}
 
             {!subView && hasCondominioData && (

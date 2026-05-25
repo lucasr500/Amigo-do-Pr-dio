@@ -61,34 +61,22 @@ function IconClipboard() {
   );
 }
 
-function IconCheckbox() {
-  return (
-    <svg viewBox="0 0 20 20" className="h-5 w-5 text-navy-600" fill="none" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="13" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 type Props = {
   refreshKey?: number;
   onNavigateToAgenda?: () => void;
   onNavigateToPendencias?: () => void;
-  onNavigateToPassos?: () => void;
 };
 
-export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavigateToPendencias, onNavigateToPassos }: Props) {
+export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavigateToPendencias }: Props) {
   const [hydrated, setHydrated]         = useState(false);
   const [prazosCount, setPrazosCount]   = useState(0);
   const [pendCount, setPendCount]       = useState(0);
-  const [passosCount, setPassosCount]   = useState(0);
 
   useEffect(() => {
     const all = getPendenciasAbertas();
     const systemOrigins = new Set(["guidance", "response", "memoria", "ocorrencia"]);
     setPrazosCount(countUpcomingPrazos());
     setPendCount(all.filter((p) => p.origem && systemOrigins.has(p.origem)).length);
-    setPassosCount(all.filter((p) => !p.origem || p.origem === "manual" || p.origem === "agenda" || p.origem === "revisao").length);
     setHydrated(true);
   }, [refreshKey]);
 
@@ -103,12 +91,6 @@ export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavig
     : pendCount === 0
     ? "Sem pendências críticas no momento."
     : `${pendCount} ${pendCount === 1 ? "item aguardando" : "itens aguardando"} ação`;
-
-  const passosSubtitle = !hydrated
-    ? "Carregando..."
-    : passosCount === 0
-    ? "Nenhum próximo passo. Crie um quando surgir uma demanda."
-    : `${passosCount} passo${passosCount > 1 ? "s" : ""} aberto${passosCount > 1 ? "s" : ""}`;
 
   return (
     <>
@@ -125,13 +107,6 @@ export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavig
         subtitle={pendSubtitle}
         badge={pendCount > 0 ? pendCount : undefined}
         onClick={onNavigateToPendencias}
-      />
-      <HomeActionCard
-        icon={<IconCheckbox />}
-        title="Próximos passos"
-        subtitle={passosSubtitle}
-        badge={passosCount > 0 ? passosCount : undefined}
-        onClick={onNavigateToPassos}
       />
     </>
   );
