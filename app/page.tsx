@@ -529,6 +529,9 @@ export default function HomePage() {
 
             {!submittedQuestion && !isLoading && (
               <>
+                <p className="px-5 pb-3 text-[11px] leading-relaxed text-navy-400 sm:px-6">
+                  As orientações têm caráter informativo. Para decisões específicas, consulte administradora, assessoria jurídica ou profissional responsável.
+                </p>
                 <QuickAccessCards onSelect={handleTopicSelect} collapsed={false} />
                 <HistoryPanel onSelect={handleSuggestionSelect} refreshKey={refreshKey} />
                 <FavoritesPanel onSelect={handleSuggestionSelect} refreshKey={refreshKey} />
@@ -765,9 +768,23 @@ export default function HomePage() {
                       Eventos técnicos anônimos (sem texto livre nem dados do condomínio) podem ser coletados para melhorar o produto. Não compartilhamos dados com terceiros para fins de marketing.
                     </p>
                   </div>
-                  <p className="px-0.5 pt-1 text-[10.5px] leading-relaxed text-navy-400">
-                    Versão preliminar para pré-beta. Termos de uso e política de privacidade completos serão publicados antes do lançamento público, após revisão jurídica.
-                  </p>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 pt-1">
+                    <a
+                      href="/termos"
+                      className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600"
+                    >
+                      Termos de uso
+                    </a>
+                    <a
+                      href="/privacidade"
+                      className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600"
+                    >
+                      Política de privacidade
+                    </a>
+                    <p className="w-full text-[10px] leading-relaxed text-navy-300">
+                      Versão preliminar — aguardando revisão jurídica antes do lançamento público.
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>
