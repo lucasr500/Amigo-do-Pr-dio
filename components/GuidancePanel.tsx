@@ -84,10 +84,10 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
   const hasCritico = items.some((i) => i.priority === "critico");
   const hasMixedPriorities = hasCritico && items.some((i) => i.priority === "atencao");
   const title = hasMixedPriorities
-    ? "Prioridades do condomínio"
+    ? "Pendências prioritárias"
     : hasCritico
-    ? "O que requer ação agora"
-    : "O que merece atenção";
+    ? "O que exige ação agora"
+    : "Alertas do prédio";
 
   const criticalItems = items.filter((i) => i.priority === "critico");
   const hasCriticalOverflow = criticalItems.length > INITIAL_LIMIT;
@@ -202,12 +202,12 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
-      <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/90 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_16px_34px_-26px_rgba(31,49,71,0.32)]">
+      <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/90 shadow-card-md">
 
         {/* Cabeçalho */}
         <div className="px-5 pt-5 pb-4">
           <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
-            Prioridades
+            Pendências
           </p>
           <p className="mt-0.5 text-[13.5px] font-semibold text-navy-800">
             {title}
@@ -340,7 +340,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                               )}
                             </div>
 
-                            {/* Salvar nos próximos passos — ação terciária discreta */}
+                            {/* Salvar em Pendências — ação terciária discreta */}
                             <div className="mt-2">
                               <button
                                 type="button"
@@ -352,7 +352,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                                     : "text-navy-500 hover:bg-navy-200/60 hover:text-navy-700"
                                 }`}
                               >
-                                {savedGuidanceIds.has(item.id) ? "Salvo ✓" : "Salvar nos próximos passos"}
+                                {savedGuidanceIds.has(item.id) ? "Salvo ✓" : "Salvar em Pendências"}
                               </button>
                             </div>
                           </>
@@ -455,16 +455,6 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
           </div>
         )}
 
-        {/* Rodapé — só quando há mais de 1 item e sem expansão ativa */}
-        {visibleItems.length > 1 && expandedId === null && (
-          <div className="border-t border-navy-50 px-5 py-2.5">
-            <p className="text-[10.5px] text-navy-400">
-              {hasMixedPriorities
-                ? "Foque no urgente — os demais podem aguardar"
-                : "O app prioriza o que exige atenção primeiro"}
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );

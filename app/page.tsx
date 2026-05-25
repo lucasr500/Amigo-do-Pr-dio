@@ -27,8 +27,6 @@ import {
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import FavoritesPanel from "@/components/FavoritesPanel";
 import HistoryPanel from "@/components/HistoryPanel";
-import DicaDoDia from "@/components/DicaDoDia";
-import HomeContextual from "@/components/HomeContextual";
 import GuidancePanel from "@/components/GuidancePanel";
 import GuidancePreview from "@/components/GuidancePreview";
 import BottomNav, { AppTab } from "@/components/BottomNav";
@@ -90,8 +88,6 @@ const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), 
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const OnboardingFlow = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
-// Insight contextual — só visível sem alertas ativos; insights.ts (~7 kB) fica fora do chunk inicial
-const ContextualInsight = dynamic(() => import("@/components/ContextualInsight"), { ssr: false });
 
 // ── Urgency + profile completion helpers ───────────────────────────────────────
 
@@ -471,22 +467,6 @@ export default function HomePage() {
               </>
             )}
 
-            {!subView && hasCondominioData &&
-              healthStatus !== "critico" &&
-              healthStatus !== "pendente" && (
-                <ContextualInsight refreshKey={refreshKey} />
-              )}
-
-            {!subView && healthStatus !== "critico" && healthStatus !== "pendente" && (
-              <HomeContextual refreshKey={refreshKey} />
-            )}
-
-            {!subView && hasCondominioData && healthStatus !== "critico" && (
-              <DicaDoDia
-                onAsk={handleSuggestionSelect}
-                compact={healthStatus === "pendente"}
-              />
-            )}
 
           </div>
         )}

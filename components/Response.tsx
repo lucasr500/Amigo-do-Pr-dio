@@ -565,7 +565,7 @@ export default function Response({
                                     : "text-navy-500 hover:bg-navy-200/60 hover:text-navy-700"
                                 }`}
                               >
-                                {savedPendenciaId === entry.id ? "Salvo ✓" : "Salvar nos próximos passos"}
+                                {savedPendenciaId === entry.id ? "Salvo ✓" : "Salvar em Pendências"}
                               </button>
                             </div>
                           )}
