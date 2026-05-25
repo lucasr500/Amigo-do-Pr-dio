@@ -7,14 +7,6 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-function Placeholder({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded bg-amber-100 px-1 font-medium text-amber-700">
-      {children}
-    </span>
-  );
-}
-
 export default function TermosPage() {
   return (
     <div className="min-h-screen bg-[#F7F1E8]">
@@ -33,21 +25,12 @@ export default function TermosPage() {
 
       <main className="mx-auto max-w-[640px] px-5 py-6">
 
-        {/* Banner de rascunho */}
+        {/* Banner pré-beta */}
         <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-          <p className="text-[12.5px] font-semibold text-amber-800">Versão preliminar — rascunho pré-beta</p>
+          <p className="text-[12.5px] font-semibold text-amber-800">Versão preliminar — pré-beta, uso experimental</p>
           <p className="mt-1 text-[11.5px] leading-relaxed text-amber-700">
-            Este documento está em rascunho e aguarda revisão jurídica e preenchimento dos campos marcados em destaque antes de ser publicado como versão definitiva. Não tem valor jurídico como publicado.
+            Este documento está em vigor para a fase pré-beta do Amigo do Prédio e será revisado por profissional jurídico antes do lançamento público. Não substitui termos de uso de um produto comercial definitivo.
           </p>
-        </div>
-
-        {/* Campos faltantes */}
-        <div className="mb-6 rounded-xl border border-navy-100 bg-white px-4 py-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-navy-500">Campos que o fundador precisa preencher</p>
-          <ul className="space-y-1 text-[12px] text-navy-600">
-            <li>• Data de última atualização</li>
-            <li>• E-mail de contato (Seção 9)</li>
-          </ul>
         </div>
 
         <div className="space-y-6 text-navy-700">
@@ -57,15 +40,21 @@ export default function TermosPage() {
               Termos de Uso
             </h1>
             <p className="mt-1 text-[12px] text-navy-400">
-              Última atualização: <Placeholder>[data a preencher]</Placeholder>
+              Última atualização: 25/05/2026
             </p>
           </div>
 
           {/* Seção 1 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">1. Sobre o Serviço</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">1. Sobre o Projeto</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              O <strong>Amigo do Prédio</strong> é um aplicativo web de orientação condominial desenvolvido para auxiliar síndicos na gestão do dia a dia do condomínio. O serviço oferece:
+              O <strong>Amigo do Prédio</strong> é um projeto digital em fase pré-beta, atualmente sem pessoa jurídica constituída específica para sua operação. Nesta etapa, o contato oficial do projeto é feito pelo e-mail{" "}
+              <a href="mailto:oamigodopredio@gmail.com" className="font-medium text-navy-700 underline underline-offset-2">
+                oamigodopredio@gmail.com
+              </a>.
+            </p>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-navy-600">
+              O serviço oferece:
             </p>
             <ul className="mt-2 space-y-1 pl-4 text-[13px] leading-relaxed text-navy-600">
               <li>• Assistente de perguntas e respostas sobre legislação condominial (Lei 4.591/64, Lei 10.406/02 — Código Civil, e normas relacionadas);</li>
@@ -76,12 +65,26 @@ export default function TermosPage() {
 
           {/* Seção 2 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">2. Natureza Informativa — Não é Assessoria Jurídica</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">2. Fase Pré-Beta — Acesso Gratuito e Experimental</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              As orientações fornecidas pelo Amigo do Prédio têm <strong>caráter exclusivamente informativo e educativo</strong>. O serviço:
+              O acesso ao Amigo do Prédio é <strong>gratuito e experimental</strong> nesta fase. Não há cobrança, assinatura ou plano pago vigente.
             </p>
             <ul className="mt-2 space-y-1.5 pl-4 text-[13px] leading-relaxed text-navy-600">
-              <li>• <strong>Não substitui</strong> a assessoria de advogado, administradora de condomínios, contador ou outros profissionais especializados;</li>
+              <li>• O serviço pode ser modificado, restrito ou descontinuado sem aviso prévio durante a fase pré-beta;</li>
+              <li>• Não há garantia de disponibilidade contínua ou de manutenção da funcionalidade atual;</li>
+              <li>• O uso é aceito no estado em que o produto se encontra (<em>as is</em>);</li>
+              <li>• O acesso antecipado pode ser encerrado ou convertido em produto com cobrança futuramente — nesse caso, os usuários serão informados com antecedência.</li>
+            </ul>
+          </section>
+
+          {/* Seção 3 */}
+          <section>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">3. Natureza Informativa — Não é Assessoria Jurídica</h2>
+            <p className="text-[13.5px] leading-relaxed text-navy-600">
+              As orientações fornecidas pelo Amigo do Prédio têm <strong>caráter exclusivamente informativo e operacional</strong>. O serviço:
+            </p>
+            <ul className="mt-2 space-y-1.5 pl-4 text-[13px] leading-relaxed text-navy-600">
+              <li>• <strong>Não substitui</strong> a assessoria de advogado, administradora de condomínios, contador, engenheiro ou outros profissionais habilitados;</li>
               <li>• <strong>Não garante</strong> a precisão, completude ou atualização das informações diante de alterações legislativas;</li>
               <li>• <strong>Não é responsável</strong> por decisões tomadas com base nas orientações fornecidas;</li>
               <li>• <strong>Não representa</strong> aconselhamento jurídico, contábil ou trabalhista específico ao caso concreto.</li>
@@ -91,11 +94,11 @@ export default function TermosPage() {
             </p>
           </section>
 
-          {/* Seção 3 */}
+          {/* Seção 4 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">3. Simulações Financeiras</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">4. Simulações Financeiras</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              O simulador de multas e juros do Amigo do Prédio fornece <strong>estimativas</strong> baseadas nas taxas informadas pelo usuário. Os valores calculados:
+              O simulador de multas e juros fornece <strong>estimativas</strong> baseadas nas taxas informadas pelo usuário. Os valores calculados:
             </p>
             <ul className="mt-2 space-y-1 pl-4 text-[13px] leading-relaxed text-navy-600">
               <li>• São estimativas para fins de planejamento;</li>
@@ -105,17 +108,32 @@ export default function TermosPage() {
             </ul>
           </section>
 
-          {/* Seção 4 */}
+          {/* Seção 5 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">4. Informações Trabalhistas — Limitação Regional</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">5. Informações Trabalhistas — Limitação Regional</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
               Parte das orientações trabalhistas é baseada na <strong>Convenção Coletiva de Trabalho (CCT) SECOVI-Rio</strong> (Rio de Janeiro). Síndicos em outros estados devem consultar a CCT aplicável à sua localidade, pois salários mínimos, benefícios e condições de trabalho variam por região e convenção sindical.
             </p>
           </section>
 
-          {/* Seção 5 */}
+          {/* Seção 6 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">5. Uso Aceito</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">6. Dados no Dispositivo e Backup</h2>
+            <p className="text-[13.5px] leading-relaxed text-navy-600">
+              As informações do condomínio registradas no aplicativo ficam armazenadas <strong>apenas no dispositivo do usuário</strong> (localStorage do navegador). O fundador do projeto não tem acesso a esses dados.
+            </p>
+            <ul className="mt-2 space-y-1.5 pl-4 text-[13px] leading-relaxed text-navy-600">
+              <li>• Não há sincronização em nuvem nesta fase;</li>
+              <li>• Não há conta ou login — os dados estão vinculados ao navegador e dispositivo utilizados;</li>
+              <li>• Limpar o navegador, trocar de aparelho ou usar modo privado pode apagar os dados permanentemente;</li>
+              <li>• O backup dos dados é responsabilidade do usuário, utilizando a função "Exportar dados" disponível no app;</li>
+              <li>• O projeto não se responsabiliza por perda de dados decorrente das situações acima.</li>
+            </ul>
+          </section>
+
+          {/* Seção 7 */}
+          <section>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">7. Uso Aceito</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
               O Amigo do Prédio é destinado a síndicos profissionais e voluntários, membros de conselhos fiscais e consultivos, administradoras de condomínios e profissionais do setor condominial.
             </p>
@@ -124,36 +142,30 @@ export default function TermosPage() {
             </p>
           </section>
 
-          {/* Seção 6 */}
+          {/* Seção 8 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">6. Disponibilidade</h2>
-            <p className="text-[13.5px] leading-relaxed text-navy-600">
-              O serviço é oferecido em regime de "melhor esforço" (best effort). Podem ocorrer interrupções para manutenção, atualizações ou por motivos técnicos. O Amigo do Prédio não se responsabiliza por prejuízos decorrentes de indisponibilidade temporária.
-            </p>
-          </section>
-
-          {/* Seção 7 */}
-          <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">7. Propriedade Intelectual</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">8. Propriedade Intelectual</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
               O conteúdo do Amigo do Prédio — incluindo textos de orientação, design, código e estrutura — é de propriedade do desenvolvedor. A legislação condominial citada é de domínio público.
             </p>
           </section>
 
-          {/* Seção 8 */}
+          {/* Seção 9 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">8. Alterações nos Termos</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">9. Alterações nos Termos</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Estes termos podem ser atualizados. Alterações significativas serão comunicadas aos usuários da beta antes de publicação pública.
+              Estes termos podem ser atualizados a qualquer momento durante a fase pré-beta. Alterações significativas serão comunicadas pelo e-mail de contato do projeto ou por aviso dentro do aplicativo.
             </p>
           </section>
 
-          {/* Seção 9 */}
+          {/* Seção 10 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">9. Contato</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">10. Contato</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Para dúvidas sobre estes termos:{" "}
-              <Placeholder>[e-mail de contato a definir]</Placeholder>
+              Para dúvidas, sugestões ou problemas relacionados a estes termos:{" "}
+              <a href="mailto:oamigodopredio@gmail.com" className="font-medium text-navy-700 underline underline-offset-2">
+                oamigodopredio@gmail.com
+              </a>
             </p>
           </section>
 
