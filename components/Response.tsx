@@ -850,7 +850,7 @@ export default function Response({
                     />
                     <ActionPill
                       icon={copied ? "✓" : "□"}
-                      label={copied ? "Copiado!" : "Copiar"}
+                      label={copied ? "Copiado!" : "Copiar orientação"}
                       onClick={handleCopy}
                       active={copied}
                     />
@@ -879,18 +879,18 @@ export default function Response({
                     <button
                       type="button"
                       onClick={() => handleFeedback(true)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-navy-100 bg-white text-[13px] transition-colors hover:border-navy-200 hover:bg-navy-50 active:scale-95"
+                      className="inline-flex items-center gap-1 rounded-full border border-navy-100 bg-white px-2.5 py-1 text-[11px] font-medium text-navy-500 transition-colors hover:border-navy-200 hover:bg-navy-50 active:scale-95"
                       aria-label="Resposta útil"
                     >
-                      👍
+                      <span className="text-[12px]">👍</span> Ajudou
                     </button>
                     <button
                       type="button"
                       onClick={() => handleFeedback(false)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-navy-100 bg-white text-[13px] transition-colors hover:border-navy-200 hover:bg-navy-50 active:scale-95"
+                      className="inline-flex items-center gap-1 rounded-full border border-navy-100 bg-white px-2.5 py-1 text-[11px] font-medium text-navy-500 transition-colors hover:border-navy-200 hover:bg-navy-50 active:scale-95"
                       aria-label="Resposta não útil"
                     >
-                      👎
+                      <span className="text-[12px]">👎</span> Não ajudou
                     </button>
                   </>
                 ) : (

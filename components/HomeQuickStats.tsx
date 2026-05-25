@@ -114,7 +114,7 @@ export default function HomeQuickStats({ refreshKey, onNavigateToAgenda, onNavig
     <>
       <HomeActionCard
         icon={<IconClock />}
-        title="Prazos importantes"
+        title="Agenda e prazos"
         subtitle={prazosSubtitle}
         badge={prazosCount > 0 ? prazosCount : undefined}
         onClick={onNavigateToAgenda}

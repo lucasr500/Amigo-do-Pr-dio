@@ -68,7 +68,7 @@ function urgencyClass(iso: string): string {
 function urgencyLabel(iso: string): string {
   const days = ate(iso);
   if (isNaN(days)) return "";
-  if (days < 0) return `${Math.abs(days)}d atrás`;
+  if (days < 0) return `Vencido há ${Math.abs(days)}d`;
   if (days === 0) return "hoje";
   if (days === 1) return "amanhã";
   return `em ${days}d`;

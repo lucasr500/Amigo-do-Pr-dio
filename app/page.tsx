@@ -445,6 +445,13 @@ export default function HomePage() {
                         ? "vence hoje"
                         : `vence em ${urgentItem.daysLeft} dia${urgentItem.daysLeft !== 1 ? "s" : ""}`}
                     </p>
+                    <p className={`mt-0.5 text-[11px] font-medium ${
+                      urgentItem.urgency === "expired" || urgentItem.urgency === "critical"
+                        ? "text-terracotta-600"
+                        : "text-amber-600"
+                    }`}>
+                      Ver saúde operacional →
+                    </p>
                   </div>
                   <svg
                     className={`h-4 w-4 flex-shrink-0 ${

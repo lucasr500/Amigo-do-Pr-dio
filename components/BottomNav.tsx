@@ -116,7 +116,7 @@ export default function BottomNav({ active, onChange }: Props) {
             <div className="flex flex-1 flex-col items-center justify-start pt-0" style={{ marginTop: "-10px" }}>
               <button
                 type="button"
-                aria-label="Registrar / Ferramentas"
+                aria-label="Ações do síndico"
                 aria-selected={plusActive}
                 onClick={() => onChange("ferramentas")}
                 className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-all duration-150 active:scale-[0.93] ${
@@ -130,7 +130,7 @@ export default function BottomNav({ active, onChange }: Props) {
                 </svg>
               </button>
               <span className={`mt-1.5 text-[10px] font-semibold leading-none ${plusActive ? "text-navy-700" : "text-gray-400"}`}>
-                Registrar
+                Ações
               </span>
             </div>
 
