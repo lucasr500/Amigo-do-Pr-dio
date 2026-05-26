@@ -23,8 +23,8 @@ import {
   type CondominioProfile,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
-import FavoritesPanel from "@/components/FavoritesPanel";
-import HistoryPanel from "@/components/HistoryPanel";
+const FavoritesPanel = dynamic(() => import("@/components/FavoritesPanel"), { ssr: false });
+const HistoryPanel = dynamic(() => import("@/components/HistoryPanel"), { ssr: false });
 import GuidancePanel from "@/components/GuidancePanel";
 import GuidancePreview from "@/components/GuidancePreview";
 import BottomNav, { AppTab } from "@/components/BottomNav";
