@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getAgendaEvents,
   addAgendaEvent,
@@ -102,10 +102,17 @@ export default function AgendaPredio({ onSaved }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setEvents(getAgendaEvents());
   }, []);
+
+  useEffect(() => {
+    if (showForm) {
+      setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 50);
+    }
+  }, [showForm]);
 
   function reload() {
     setEvents(getAgendaEvents());
@@ -227,12 +234,14 @@ export default function AgendaPredio({ onSaved }: Props) {
           {confirmDeleteId === e.id ? (
             <div className="flex gap-1">
               <button
+                type="button"
                 onClick={() => handleDelete(e.id)}
                 className="rounded border border-red-200 bg-red-50 px-2 py-1 text-[11.5px] font-medium text-red-600 hover:text-red-700"
               >
                 Apagar
               </button>
               <button
+                type="button"
                 onClick={() => setConfirmDeleteId(null)}
                 className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-500 hover:text-navy-700"
               >
@@ -242,12 +251,14 @@ export default function AgendaPredio({ onSaved }: Props) {
           ) : (
             <>
               <button
+                type="button"
                 onClick={() => handleComplete(e.id, e.type)}
                 className="rounded border border-green-200 bg-green-50 px-2 py-1 text-[11.5px] font-medium text-green-700 transition-colors hover:bg-green-100 hover:text-green-800"
               >
                 Concluir
               </button>
               <button
+                type="button"
                 onClick={() => setConfirmDeleteId(e.id)}
                 className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-400 hover:text-navy-600"
               >
@@ -276,6 +287,7 @@ export default function AgendaPredio({ onSaved }: Props) {
           </div>
           {!showForm && (
             <button
+              type="button"
               onClick={() => setShowForm(true)}
               className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-semibold text-cream-50 transition-all hover:bg-navy-800 active:scale-[0.97]"
             >
@@ -296,7 +308,7 @@ export default function AgendaPredio({ onSaved }: Props) {
 
         {/* Form */}
         {showForm && (
-          <div className="space-y-3 rounded-[14px] border border-navy-100 bg-navy-50/40 p-4">
+          <div ref={formRef} className="space-y-3 rounded-[14px] border border-navy-100 bg-navy-50/40 p-4">
             <div className="space-y-1">
               <label className="text-[11.5px] font-medium text-navy-600">Descrição</label>
               <input
@@ -358,6 +370,7 @@ export default function AgendaPredio({ onSaved }: Props) {
 
             <div className="flex gap-2 pt-1">
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={!canSave}
                 className="flex-1 rounded-xl bg-navy-700 py-2 text-[13px] font-semibold text-cream-50 transition-colors hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
@@ -365,6 +378,7 @@ export default function AgendaPredio({ onSaved }: Props) {
                 Salvar evento
               </button>
               <button
+                type="button"
                 onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
                 className="rounded-xl border border-navy-100 bg-white px-4 py-2 text-[13px] text-navy-500 transition-colors hover:border-navy-200 hover:text-navy-700"
               >
@@ -465,6 +479,7 @@ export default function AgendaPredio({ onSaved }: Props) {
         {completed.length > 0 && (
           <div>
             <button
+              type="button"
               onClick={() => setShowCompleted((v) => !v)}
               className="text-[11.5px] text-navy-400 hover:text-navy-600"
             >
