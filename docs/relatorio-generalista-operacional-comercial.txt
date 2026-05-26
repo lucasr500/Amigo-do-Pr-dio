@@ -1,0 +1,1325 @@
+================================================================================
+AMIGO DO PREDIO
+RELATORIO GENERALISTA OPERACIONAL E COMERCIAL
+================================================================================
+Versao: 2026-05-24
+Baseado no estado atual do produto pos-UI-4 e pos-PB-1.
+Documento interno — uso exclusivo do fundador.
+================================================================================
+
+
+================================================================================
+1. VISAO GERAL DO PRODUTO
+================================================================================
+
+O Amigo do Predio e uma central operacional mobile-first para sindicos. Nao e
+um chatbot. Nao e um ERP. Nao e um assistente virtual generico.
+
+E um copiloto operacional: um app que organiza a rotina do condominio, monitora
+prazos criticos, registra pendencias, acompanha execucao e orienta o sindico
+em decisoes cotidianas — tudo a partir de uma base de conhecimento condominial
+curada, sem alucinacao e sem backend obrigatorio.
+
+PROBLEMA QUE RESOLVE
+
+O sindico morador — perfil mais comum no Brasil — administra um ativo que pode
+valer dezenas de milhoes de reais, tem responsabilidade juridica real sobre
+contratos, obras, funcionarios e seguranca, e faz isso sem treinamento, sem
+suporte adequado e frequentemente sem remuneracao. O resultado e previsivel:
+prazos esquecidos, decisoes improvisadas, pendencias acumuladas, desgaste
+emocional. Um AVCB vencido pode gerar embargo do predio. Uma demissao errada
+pode gerar passivo trabalhista de meses. Uma assembleia convocada incorretamente
+pode ser anulada.
+
+O produto age exatamente nesse gap: entre o improviso atual do sindico e o
+custo real de nao ter orientacao correta.
+
+TESE CENTRAL
+
+A tese nao e "IA para condominio". A tese e mais simples e mais robusta:
+o sindico nao precisa de inteligencia artificial sofisticada. Ele precisa de
+organizacao, orientacao confiavel e lembretes antes que o problema vire urgencia.
+O Amigo do Predio entrega isso — com motor deterministico, base curada, interface
+premium e zero alucinacao.
+
+PARA QUEM FOI CRIADO
+
+Primario:     Sindico morador, eleito em assembleia, sem formacao especifica,
+              35-60 anos, usa smartphone, tem pouco tempo e muita responsabilidade.
+
+Secundario:   Sindico profissional, gerencia multiplos condominios, precisa de
+              agilidade e padronizacao de processos.
+
+Indireto:     Administradoras de condominio — canal B2B futuro, nao prioridade atual.
+
+POR QUE TEM POTENCIAL
+
+Brasil tem aproximadamente 180.000 condominios. O setor ainda opera com WhatsApp,
+planilha e improviso como principais ferramentas de gestao. Softwares existentes
+sao ERPs pesados voltados para administradoras, nao para o sindico individual.
+O Amigo do Predio ocupa um espaco nao disputado: ferramenta leve, mobile-first,
+especifica para condominio, com orientacao curada e interface premium.
+
+ESTAGIO ATUAL
+
+MVP funcional completo em fase de lapidacao interna. Produto pre-beta — ainda
+nao exposto a usuarios externos. Validacao conduzida internamente pelo fundador,
+que atua na area condominial e conhece as dores reais do contexto.
+
+Interface premium pos-UI-4. Base de conhecimento com 316 entradas em 16
+categorias. Motor de busca deterministico com 87% de recall e zero falhas
+criticas. Telemetria Supabase ativa. Build 224 kB.
+
+Sem login real, sem sync, sem billing, sem IA/RAG, sem WhatsApp Business.
+Esses sao proximos passos, nao lacunas criticas no estagio atual.
+
+
+================================================================================
+2. ESTADO ATUAL DO PRODUTO
+================================================================================
+
+PRONTO
+------
+Home operacional
+  - Header com saudacao contextual
+  - HomeAgendaCard: calendario mensal com icones por tipo de evento
+  - HomeSaudeCard: ring SVG clicavel, percentual, status qualitativo
+  - HomeQuickStats: 3 cards (Prazos, Pendencias, Proximos Passos) com badges
+  - GuidancePreview: estado vazio com exemplos mockados de monitoramento
+  - Animacoes fade-in-up com stagger
+
+Agenda
+  - Criacao de eventos com 13 tipos operacionais
+  - Lista ordenada por urgencia com cores por status
+  - Historico de concluidos colapavel
+  - Calendario visual na Home integrado
+
+Saude Operacional (SaudeScreen)
+  - Ring SVG de 108px com percentual real
+  - 5 niveis de status: Critico / Atencao / Em evolucao / Bem acompanhado / Tudo em ordem
+  - 4 areas monitoradas: Documentacao, Prazos, Manutencoes, Fornecedores
+  - Ultimos registros (agenda + pendencias concluidas)
+  - Score calculado por 6 fatores, normalizado 0-100%
+
+Pendencias (PendenciasScreen)
+  - 3 abas: Abertas, Em andamento, Concluidas
+  - Cards com icone por categoria, titulo, data e badge de prioridade
+  - Secao "Proximos Passos" com checklist visual e animacao de conclusao
+  - Integracao com telemetria e refresh de estado
+
+Assistente
+  - 4 macro-categorias com accordion e chips de subtema
+  - Motor deterministico em 4 camadas
+  - 316 entradas KB, 16 categorias
+  - 280+ sinonimos para linguagem natural
+  - Resposta com blocos: Proximo passo, Contexto local, Base legal, Veja tambem, CTA
+  - Fallback contextual honesto com categoria detectada
+  - Score de confianca exibido ao usuario
+  - Historico de 200 perguntas, favoritos
+
+Ferramentas
+  - 4 grupos: Rotina, Comunicados, Simuladores, Checklists
+  - Gerador de 4 modelos de comunicado
+  - SimuladorMulta e SimuladorReajusteCota
+  - 4 checklists operacionais com persistencia
+  - Registro rapido de ocorrencias (9 tipos)
+
+Conta / Dados Locais
+  - OnboardingProfile: nome, tipo de sindico, elevador
+  - MemoriaPanel com "Essenciais" (AVCB, Seguro, Mandato) + dots de progresso
+  - TimelineOperacional sem PII
+  - RevisaoMensal com checklist
+  - BackupPanel v4: export/import JSON, reset com confirmacao "APAGAR"
+
+Onboarding
+  - 4 etapas em overlay (bottom sheet mobile / card desktop)
+  - Permite pular etapas
+  - Deteccao de isFirstRun() correta para novo usuario
+
+Admin / Painel Fundador (/admin)
+  - Leitura real do Supabase (POST 201 confirmado)
+  - Exibe sessoes, queries, fallback rate, top queries, habit tier
+  - Auditoria de motor: 83 perguntas, 87% recall, 0 falha critica
+
+Telemetria
+  - 47 tipos de evento cobrindo todo o ciclo do produto
+  - Zero PII — sem texto livre, sem dados do condominio
+  - Batching de 8 eventos / 7s, fallback silencioso
+  - Supabase REST (sem SDK) — dependencia externa zero
+
+LocalStorage
+  - 18 chaves amigo_*, unica base de dados do app
+  - Backup v4 retrocompativel com v1/v2/v3
+  - safeRead/safeWrite em lib/session.ts como unica interface
+
+PARCIALMENTE PRONTO
+-------------------
+Tela Conta (aba visual)
+  - Funcional, mas nao atingiu nivel visual premium das demais telas
+  - BackupPanel precisa de instrucao de uso mais clara e visivel
+  - Onboarding nao menciona backup — risco de perda de dados do usuario
+
+Disclaimers juridicos
+  - Presentes em todas as respostas e categorias sensiveis
+  - Linguagem precisa de revisao para garantir que nenhuma frase usa certeza
+    absoluta sem ressalva — especialmente em trabalhista, financeiro e cobranca
+
+Base de conhecimento — categorias sub-representadas
+  - LGPD: 6 entradas (ideal: 15+)
+  - Financeiro: 14 entradas (ideal: 20+)
+  - Inadimplencia: 14 entradas (ideal: 20+)
+  - Locacao: 10 entradas (ideal: 16+)
+
+Painel /admin
+  - Funcional para uso interno
+  - Insights e visualizacoes podem ser enriquecidos com dados reais de uso
+
+PENDENTE
+--------
+Revisao juridica formal dos Termos de Uso e Politica de Privacidade
+  - Rascunhos existem, nao foram revisados por advogado
+  - Bloqueador critico antes de qualquer exposicao externa
+
+Smoke test fisico em dispositivo real (iOS e Android)
+  - Testado em desktop/DevTools, nao em dispositivo fisico
+  - Comportamentos de safe area, scroll e PWA podem variar
+
+Canal de feedback ativo
+  - Nao existe ainda — necessario antes de qualquer convite externo futuro
+
+Instrucao de backup no onboarding
+  - Etapa 4 nao menciona backup — sindico pode perder dados sem saber que ha protecao
+
+NAO FAZER AGORA
+---------------
+Auth / login real
+Sync em nuvem
+IA/RAG ou embeddings
+WhatsApp Business API
+Billing / paywall
+Landing page publica
+Multi-condominio
+Painel de administradora
+Notificacoes push reais
+Trafego pago
+Apresentacao a investidores externos
+
+
+================================================================================
+3. EXPERIENCIA DO USUARIO
+================================================================================
+
+PRIMEIRA IMPRESSAO
+
+Positiva. O produto passou por transformacao visual deliberada nas fases UI-1 a
+UI-4. A paleta Navy #234B63 / Cream #F7F1E8 / Terracotta #C97852 comunica
+profissionalismo sem agressividade. Cards com rounded-18px e sombra difusa,
+animacoes fade-in-up com stagger — sensacao de app nativo premium, nao de MVP
+bruto.
+
+Para um sindico de 50 anos avaliando o produto pela primeira vez, o design e
+proxy de confiabilidade. O app precisa parecer que foi feito com cuidado para
+gerar confianca nas orientacoes. Esse nivel foi atingido.
+
+CLAREZA DA HOME
+
+Boa. A hierarquia esta clara: saudacao → calendario do mes → saude operacional
+→ prazos/pendencias/proximos passos. O sindico consegue escanear a Home e
+entender o estado do condominio rapidamente.
+
+Estado sem dados: GuidancePreview mostra exemplos mockados de monitoramento
+(AVCB + Mandato com badge "Exemplo") — comunica o valor antes do cadastro.
+
+Ponto de melhoria: o botao de entrada para o monitoramento poderia ser mais
+chamativo no estado vazio.
+
+FLUXO DE NAVEGACAO
+
+Bottom Navigation com 5 abas fixas (Inicio, Agenda, Assistente, Ferramentas,
+Conta) e subviews de Saude Operacional e Pendencias a partir da Home.
+
+O risco e confusao entre Agenda, Saude e Pendencias — tres conceitos que se
+sobrepeem parcialmente na mente do usuario. O teste interno atual ja permite
+identificar se os labels sao suficientemente distintos.
+
+UTILIDADE DA AGENDA
+
+Alta quando usada. O sindico pode registrar assembleia, manutencao, dedetizacao,
+obra, cobrancar, etc. com 13 tipos de evento. Calendario mensal visual na Home
+com icones por tipo.
+
+Fraqueza: depende de preenchimento ativo. Sem dados, entrega pouco.
+
+UTILIDADE DA SAUDE OPERACIONAL
+
+Alto potencial, ainda nao totalmente provado. O ring SVG com percentual e visual
+forte e comunica controle. Os 5 niveis de status sao legíveis. A tela precisa de
+dados cadastrados para entregar valor real — o score de 0% para usuario novo pode
+confundir se nao houver instrucao de contexto adequada.
+
+UTILIDADE DAS PENDENCIAS
+
+Boa estrutura. 3 abas (Abertas / Em andamento / Concluidas) refletem o fluxo
+real de gestao de tarefas. O checklist de Proximos Passos com animacao de
+conclusao e satisfatorio operacionalmente.
+
+Fraqueza: o usuario precisa criar pendencias para o ciclo funcionar. Sem dados,
+a tela fica vazia e nao comunica valor.
+
+VALOR DO ASSISTENTE
+
+Alto, com ressalva. 316 entradas curadas, 87% recall, fallback honesto com
+categoria detectada. O Assistente e o diferencial tecnico mais solido do produto.
+
+O risco e o usuario percebe-lo apenas como chatbot e ignorar as demais telas.
+A reorganizacao em 4 macro-categorias com accordion (UI-4) ajudou a tornar o
+Assistente mais organizado e menos intimidador.
+
+CLAREZA DA CONTA
+
+Funcional, mas visualmente abaixo das demais telas. O usuario entende onde seus
+dados estao (badge "Dados salvos neste dispositivo"), mas o BackupPanel poderia
+ser mais explicito sobre o que e, para que serve e como usar.
+
+SEGURANCA PERCEBIDA
+
+Adequada para o estagio atual. Zero dado enviado ao servidor (exceto telemetria
+sem PII). Badge "Dados salvos neste dispositivo" esta presente. Disclaimers em
+todas as respostas do Assistente.
+
+O risco e o usuario nao entender que os dados ficam apenas no dispositivo — e
+potencialmente perder tudo ao trocar de celular ou limpar o navegador.
+
+CONFIANCA
+
+O produto transmite confianca no design. A base curada com disclaimers e mais
+confiavel que uma IA generativa sem guardrails. O score de confianca visivel no
+Assistente ("Resposta confiavel" / "Pode variar" / "Base ainda nao cobre") e
+um diferencial honesto.
+
+VALIDACAO INTERNA ATUAL
+
+A validacao interna frequente pelo fundador — que atua na area condominial e
+conhece as dores reais de sindicos — e relevante e suficiente para este momento.
+O fundador consegue identificar, a partir de simulacoes de fluxos reais, onde
+o produto atrapalha, onde entrega valor e o que precisa ser corrigido antes
+de qualquer exposicao externa.
+
+
+================================================================================
+4. OPERACAO DO SINDICO
+================================================================================
+
+COMO O APP PODE SER USADO NA ROTINA REAL
+
+Exemplo 1 — Manha do Sindico
+  07h30 — Abre o app. Home mostra o calendario do mes e a saude operacional.
+  Vê badge vermelho em "Prazos" — AVCB vence em 23 dias.
+  Clica no card de Prazos. Ve o alerta de AVCB com orientacao de proximos passos.
+  Cria uma pendencia "Renovar AVCB" e um proximo passo "Ligar para o CBMRJ".
+  Tempo: 3 minutos.
+
+Exemplo 2 — Situacao de Conflito
+  Morador do 302 faz barulho toda noite. Sindico nao sabe se pode multar.
+  Abre o Assistente. Digita "Morador faz barulho toda noite posso multar".
+  Recebe: procedimento correto (advertencia antes da multa), base legal, modelo
+  de comunicado sugerido, CTA para o gerador de comunicado.
+  Gera o comunicado de advertencia personalizado. Tempo: 5 minutos.
+
+Exemplo 3 — Revisao Operacional Semanal
+  Abre Home. HomeSaudeCard mostra score 62% ("Em evolucao").
+  Clica — ve que a area de Documentacao esta amarela (Seguro com vencimento
+  proximo) e a area de Manutencoes esta vermelha (elevador sem registro).
+  Cria proximos passos para cada item. Conclui a revisao semanal.
+  Acompanha na timeline que 4 acoes foram registradas esta semana. Tempo: 8 min.
+
+Exemplo 4 — Comunicado de Obra
+  Obra autorizada no apartamento 104 vai comecar segunda. Sindico precisa de
+  comunicado para os moradores. Abre Ferramentas → Comunicados → Obra.
+  Preenche nome do condominio, datas, unidade. Copia o texto gerado.
+  Cola no WhatsApp do grupo do predio. Tempo: 2 minutos.
+
+QUAIS ROTINAS O APP JA AJUDA
+
+  - Monitoramento de prazos criticos (AVCB, Seguro, Mandato, AGO)
+  - Monitoramento de rotinas operacionais (elevador, extintores, etc.)
+  - Resposta a duvidas cotidianas (316 temas cobertos)
+  - Geracao de comunicados (4 modelos)
+  - Registro de ocorrencias (9 tipos)
+  - Criacao e acompanhamento de pendencias
+  - Revisao mensal estruturada
+  - Historico operacional do predio
+  - Calculo de multas e reajuste de cota
+  - Checklists operacionais (4 listas)
+
+QUAIS ROTINAS AINDA NAO COBRE
+
+  - Gestao financeira (orcamento, DRE, prestacao de contas)
+  - Gestao de funcionarios com controle de ponto
+  - Integracao com documentos fisicos (ata, convencao, regimento)
+  - Comunicacao direta com moradores (sem WhatsApp Business)
+  - Notificacoes push e lembretes automaticos no celular
+  - Multi-condominio (sindico profissional com varios predios)
+
+QUAIS ROTINAS DEPENDEM DE DADOS PREENCHIDOS
+
+  Quase todo o valor do produto depende de dados preenchidos:
+  - Score de saude precisa de AVCB, Seguro e Mandato cadastrados
+  - Alertas de prazo precisam das datas operacionais
+  - Calendario precisa de eventos criados
+  - Pendencias precisam ser criadas manualmente
+  - Timeline depende de acoes realizadas
+
+Isso significa que o produto exige ativacao. Um sindico que abriu o app, nao
+preencheu nada e fechou nao recebeu valor real. A qualidade do onboarding e
+critica para garantir que o sindico preenche os dados minimos.
+
+SIMULACOES INTERNAS QUE O FUNDADOR PODE CONTINUAR FAZENDO
+
+  - Simular usuario novo (limpar localStorage) e percorrer todo o onboarding
+  - Preencher AVCB com data proxima e verificar se o alerta aparece corretamente
+  - Testar as 5 perguntas mais comuns de sindico no Assistente
+  - Registrar uma ocorrencia e criar pendencia vinculada
+  - Gerar um comunicado de cada tipo
+  - Executar backup, apagar dados, restaurar
+  - Verificar o /admin com dados de uma sessao real
+
+
+================================================================================
+5. VALOR COMERCIAL
+================================================================================
+
+VALOR PARA SINDICO MORADOR
+  Valor imediato:   Monitoramento de prazos criticos, orientacao rapida em
+                    situacoes cotidianas, geracao de comunicados.
+  Valor futuro:     Sync em nuvem, RAG com convencao do condominio, notificacoes.
+  Ainda nao provado: Retencao apos o primeiro uso, disposicao de pagar.
+
+VALOR PARA SINDICO PROFISSIONAL
+  Valor imediato:   Agilidade operacional, padronizacao de comunicados,
+                    base de orientacao sempre disponivel.
+  Valor futuro:     Multi-condominio, painel comparativo entre predios.
+  Ainda nao provado: Adocao sem multi-condominio (limitacao real para este perfil).
+
+VALOR PARA ADMINISTRADORA
+  Valor imediato:   Zero — produto nao tem painel de administradora ainda.
+  Valor futuro:     Ferramenta white-label para oferecer a sindicos clientes,
+                    reducao de chamadas de suporte basico.
+  Ainda nao provado: Disposicao de pagar, resistencia vs. parceria.
+
+VALOR PARA CONDOMINIO PEQUENO/MEDIO (15-80 unidades)
+  Valor imediato:   O produto foi desenhado exatamente para este perfil.
+                    Condominio neste porte raramente tem ERP ou assistencia
+                    tecnica especializada. O app resolve o gap.
+
+VALOR PARA CONSULTOR CONDOMINIAL
+  Valor imediato:   Ferramenta de orientacao para uso proprio durante consultorias.
+  Valor futuro:     Canal de distribuicao — consultores podem recomendar o produto.
+
+RESUMO
+
+  VALOR IMEDIATO
+    - Monitoramento de prazos (AVCB, Seguro, Mandato, AGO, rotinas)
+    - 316 orientacoes curadas com 87% de recall
+    - Geracao de comunicados em 2 minutos
+    - Registro de ocorrencias e pendencias
+    - Score de saude operacional como visao sintetica
+    - Interface premium que gera confianca
+
+  VALOR FUTURO
+    - Sync em nuvem (dados seguros em qualquer dispositivo)
+    - RAG com convencao do condominio (respostas personalizadas)
+    - Notificacoes push de prazos
+    - Multi-condominio
+    - Billing e modelo de receita
+
+  VALOR AINDA NAO PROVADO
+    - Retencao real de um sindico em uso continuo
+    - Disposicao de pagar e ticket aceitavel
+    - NPS com usuarios externos
+    - Comportamento real de um sindico pouco digital com o onboarding atual
+
+
+================================================================================
+6. DIFERENCIAIS DO PRODUTO
+================================================================================
+
+DIFERENCIAIS FORTES HOJE
+
+1. Foco especifico em condominio
+   O motor tem domain anchor gate que rejeita perguntas fora do escopo.
+   Nao e chatbot generico nem ERP horizontal. Escopo deliberado e controlado.
+   STATUS: forte. Ja implementado e testado.
+
+2. Base curada 100% deterministica
+   316 entradas, 16 categorias, 87% recall em auditoria de 83 perguntas, 0 falha
+   critica. Zero alucinacao — cada resposta vem de entrada humana revisada.
+   STATUS: forte. Diferencial defensavel contra IA generativa sem guardrails.
+
+3. Linguagem do sindico
+   "Morador faz barulho toda noite posso multar" — nao "quais as implicacoes
+   juridicas da perturbacao do sossego". Motor entende a linguagem natural do
+   sindico nao-tecnico.
+   STATUS: forte. 280+ sinonimos documentados.
+
+4. Rotina operacional integrada
+   Agenda + Pendencias + Saude + Assistente + Ferramentas em experiencia unica.
+   Nao e chatbot isolado. E central operacional.
+   STATUS: forte. Ciclo completo implementado.
+
+5. Mobile-first PWA sem app store
+   Instalacao em segundos, funciona offline, sem fricao de download, sem conta
+   Apple/Google necessaria para instalar.
+   STATUS: forte. Vantagem real de distribuicao.
+
+6. Design premium
+   Interface no nivel SaaS premium — a transformacao das fases UI-1 a UI-4 foi
+   deliberada e bem executada. O app nao parece MVP bruto.
+   STATUS: forte. Benchmark visual atingido.
+
+7. Telemetria ativa desde cedo
+   Dados reais de uso (sessoes, queries, fallback, adocao) antes mesmo de ter
+   usuarios externos. Vantagem competitiva de aprendizado.
+   STATUS: funcional. POST 201 confirmado. Dados sao do fundador ainda.
+
+8. Documentacao forte do produto
+   90+ fases documentadas, guia editorial, roadmap tecnico, plano de backend,
+   protocolo de smoke test. Produto com historico rastreavel.
+   STATUS: forte. Diferencial operacional interno.
+
+9. Conhecimento do fundador na area condominial
+   O fundador atua na area condominial e conhece as dores reais de sindicos.
+   Isso acelera validacao, evita features que ninguem pediu e garante que a
+   linguagem do produto ressoa com o publico real.
+   STATUS: forte. Diferencial intransferivel.
+
+DIFERENCIAIS QUE SAO PROMESSA (AINDA NAO PROVADOS)
+
+10. Score de saude operacional
+    Visual forte. Conceito util. Mas o valor real so sera comprovado quando
+    um sindico real usar e confirmar que o numero faz sentido para ele.
+    STATUS: promessa. Implementado, nao validado externamente.
+
+11. Contexto local no Assistente
+    Resposta considera dados do condominio cadastrados — AVCB proximo, elevador
+    sem manutencao. Diferencial de personalizacao sem IA.
+    STATUS: promessa. Implementado, nao validado com usuario real.
+
+12. RAG com convencao do condominio (futuro)
+    Proposta de valor unica: respostas baseadas na convencao especifica do predio.
+    Dificil de copiar. Mas exige Fase 3 inteira de backend + IA + juridico.
+    STATUS: promessa futura. Plano documentado.
+
+
+================================================================================
+7. LIMITACOES ATUAIS
+================================================================================
+
+1. SEM LOGIN REAL
+   Dados do condominio ficam presos no dispositivo do usuario. Se o sindico
+   trocar de celular, usar aba anonima ou limpar o navegador, perde tudo.
+   O backup manual mitiga mas nao elimina o risco.
+
+2. SEM SYNC MULTI-DISPOSITIVO
+   Sindico nao pode usar o mesmo condominio no celular e no tablet simultaneamente.
+   Limitacao real para sindico profissional com equipe.
+
+3. SEM NOTIFICACOES PUSH
+   O app nao avisa o sindico fora do app. O AVCB pode estar vencendo e o sindico
+   so vai saber se abrir o app. Dependencia de habito de abertura.
+
+4. SEM IA/RAG
+   Motor deterministico nao responde perguntas fora das 316 entradas.
+   Fallback e honesto ("Base ainda nao cobre") mas pode frustrar em uso real.
+   Perguntas muito especificas (convenção do condominio, caso concreto com datas)
+   saem do escopo.
+
+5. SEM WHATSAPP REAL
+   O canal principal do sindico nao esta integrado. Comunicados sao gerados mas
+   precisam ser copiados manualmente.
+
+6. SEM BILLING
+   Produto totalmente gratuito. Sem modelo de receita ativo. Sem prova de
+   disposicao de pagar.
+
+7. TERMOS E POLITICA EM RASCUNHO
+   Documentos juridicos existem como rascunho mas nao foram revisados por
+   advogado. Sem isso, qualquer exposicao externa cria risco juridico real
+   para o fundador.
+
+8. LOCALSTORAGE COMO BASE
+   Scalabilidade limitada. Risco de overflow em uso intenso (BackupPanel mostra
+   tamanho em KB com alerta). Corpo tecnicamente inadequado para escala, mas
+   correto para o estagio atual.
+
+9. BASE DE CONHECIMENTO REGIONAL
+   Dados trabalhistas baseados na CCT SECOVI-Rio. Sindicos de outros estados
+   precisam verificar a CCT local. Documentado nos termos como limitacao, mas
+   ainda e um gap real para usuarios fora do Rio.
+
+10. PRODUTO NAO VALIDADO COM USUARIOS EXTERNOS
+    Zero usuarios reais. Toda validacao e interna. Isso e uma decisao estrategica
+    consciente — nao um erro — mas e uma limitacao de evidencia.
+    O proximo aprendizado substantivo vira de sindicos reais usando o produto.
+
+11. ADMIN AINDA EM MATURACAO
+    Painel /admin funcional, mas insights sao de sessoes internas. Ainda nao
+    existe dado real de uso externo para alimentar aprendizado.
+
+12. CONTA NAO ATINGIU NIVEL VISUAL PREMIUM
+    A aba Conta esta funcionalmente completa mas abaixo do nivel visual das
+    demais telas. Isso cria inconsistencia de experiencia.
+
+
+================================================================================
+8. RISCOS
+================================================================================
+
+RISCOS OPERACIONAIS
+-------------------
+
+Risco: Sindico nao preenche dados no onboarding
+O que pode acontecer: App entrega valor zero sem AVCB/Seguro/Mandato cadastrados.
+                      Score de saude fica em zero. Alertas nao aparecem.
+Por que importa:      Retencao depende de ativacao. Sem ativacao, nao ha retorno.
+Como mitigar:         Tornar o valor do monitoramento mais explicito no onboarding.
+                      Instrucao de como o score sobe. GuidancePreview ja ajuda.
+
+Risco: Perda de dados por localStorage
+O que pode acontecer: Sindico troca de celular ou limpa o navegador e perde dados.
+Por que importa:      Experiencia negativa severa — pode gerar desconfianca irreversivel.
+Como mitigar:         Instrucao de backup no onboarding (ainda pendente).
+                      Proximo passo: mencionar o backup na Etapa 4 do onboarding.
+
+Risco: Sindico usa o app uma vez e nao volta
+O que pode acontecer: Taxa de retorno baixa. Produto nao cria habito.
+Por que importa:      Sem retencao, nao ha produto. Sem produto, nao ha negocio.
+Como mitigar:         Monitoramento de prazos cria gatilho recorrente automatico.
+                      Revisao semanal e mensal criam ritual de uso.
+                      Mas so sera provado com dados reais.
+
+RISCOS TECNICOS
+---------------
+
+Risco: Bug visual grave em dispositivo fisico
+O que pode acontecer: Safe area do iPhone, scroll em tela especifica, PWA install
+                      prompt — comportamentos que DevTools nao replicam fielmente.
+Por que importa:      Primeiro uso em celular real pode travar o sindico.
+Como mitigar:         Smoke test fisico iOS e Android (pendente — bloqueador real).
+
+Risco: Bundle acima de 230 kB
+O que pode acontecer: Performance mobile degradada. Next.js avisa no build.
+Por que importa:      Sindico em rede ruim pode ter carregamento lento.
+Como mitigar:         Limite monitorado a cada fase. Atualmente 224 kB. Margem 6 kB.
+                      Disciplina de lazy-load mantida.
+
+Risco: Motor deterministico nao cobre pergunta real
+O que pode acontecer: Taxa de fallback alta em uso real. Sindico frustrado.
+Por que importa:      Se o Assistente nao responde as perguntas reais do sindico,
+                      o diferencial principal do produto nao se sustenta.
+Como mitigar:         Expandir KB antes de beta (especialmente LGPD e financeiro).
+                      Monitorar fallback rate no /admin com dados reais futuros.
+
+Risco: Dados corrompidos no localStorage
+O que pode acontecer: Chave amigo_* com JSON invalido — app pode crashar.
+Por que importa:      Pode acontecer em importacao de backup mal formatado.
+Como mitigar:         safeRead ja tem tratamento de erro. Reset seguro implementado.
+                      Protocolo de smoke test cobre Estado 5 (dados corrompidos).
+
+RISCOS COMERCIAIS
+-----------------
+
+Risco: Sindico nao percebe diferenca do produto vs. ChatGPT
+O que pode acontecer: Comparacao direta com IA generativa gratuita.
+Por que importa:      Justificacao de preco fica mais dificil.
+Como mitigar:         Posicionamento correto: determinismo, curadoria, zero
+                      alucinacao, integrado com rotina (agenda, pendencias, saude).
+                      ChatGPT nao monitora o AVCB do seu predio.
+
+Risco: Churn alto porque sindico perde o cargo
+O que pode acontecer: Sindico e substituido em assembleia. Cancela o app.
+Por que importa:      Churn estrutural do setor — mandato de 2 anos.
+Como mitigar:         Produto util para o cargo, nao para a pessoa. Novo sindico
+                      pode herdar o condominio configurado.
+
+Risco: Administradora ve o produto como ameaca
+O que pode acontecer: Administradora orienta sindico a nao usar.
+Por que importa:      Distribuidores hostis podem bloquear crescimento.
+Como mitigar:         Posicionamento como ferramenta complementar, nao substituta.
+                      No longo prazo, parceria e melhor que confronto.
+
+RISCOS JURIDICOS
+----------------
+
+Risco: Interpretacao OAB como exercicio ilegal da advocacia
+O que pode acontecer: Entidade questiona que o produto presta consultoria juridica.
+Por que importa:      Pode exigir reformulacao do produto ou acao judicial.
+Como mitigar:         Disclaimers em todas as respostas. Linguagem condicional.
+                      Posicionamento como "orientacao informativa" — analogia com
+                      manual pratico bem escrito. Revisao juridica antes de qualquer
+                      exposicao externa.
+
+Risco: Sindico toma decisao grave com base em resposta imprecisa
+O que pode acontecer: Demite funcionario errado, aplica multa indevida, convoca
+                      assembleia irregularmente — e atribui ao produto.
+Por que importa:      Dano ao usuario e risco de responsabilizacao do fundador.
+Como mitigar:         Disclaimers presentes. Fallback honesto. Score de confianca
+                      visivel. Linguagem condicional. Mas revisao juridica dos
+                      termos e essencial antes de qualquer beta externo.
+
+Risco: LGPD em dados condominiais
+O que pode acontecer: Dados de moradores (inadimplentes, funcionarios) no
+                      localStorage do sindico sao dados pessoais de terceiros.
+Por que importa:      Quando produto evoluir para sync remoto, sera necessario
+                      LGPD compliance completo.
+Como mitigar:         No estagio atual (dados locais, sem PII na telemetria) o
+                      risco e baixo. Documentado na politica de privacidade futura.
+
+RISCOS DE UX
+------------
+
+Risco: Confusao entre Agenda, Saude e Pendencias
+O que pode acontecer: Sindico nao sabe qual tela usar para qual situacao.
+Por que importa:      Fragmentacao de fluxo = produto menos util.
+Como mitigar:         Labels claros. Home como ponto de entrada unico.
+                      Validar atraves de smoke test com novo usuario.
+
+Risco: Tela Conta visualmente inconsistente
+O que pode acontecer: Queda de qualidade percebida na unica tela nao refinada.
+Por que importa:      Inconsistencia gera desconfianca.
+Como mitigar:         Polimento visual da tela Conta (identificado como pendencia).
+
+
+================================================================================
+9. PERFIS DE USUARIOS IDEAIS
+================================================================================
+
+RANKING PARA BETA FUTURO (quando o fundador autorizar exposicao externa)
+
+1. SINDICO OPERACIONAL / RESOLVEDOR DE PROBLEMAS
+   Perfil:          Sindico ativo, tem problema concreto agora (inadimplencia,
+                    obra, assembleia pendente), 35-55 anos, usa smartphone bem.
+   Aderencia:       Alta. Problema ativo = motivacao real para usar o Assistente.
+   Risco:           Baixo. Perfil mais ativo = mais feedback de qualidade.
+   Abordagem:       Direto ao ponto — "te ajudo com esse problema especifico".
+   Mensagem ideal:  "Tem problema no predio agora? Teste o Assistente."
+   Quando expor:    Primeiro a ser convidado, quando o fundador decidir.
+
+2. SINDICO MORADOR MINIMAMENTE DIGITAL
+   Perfil:          Eleito em assembleia, usa WhatsApp e Google Maps, 40-60 anos.
+                    Nao e tecnico, mas nao tem medo de tecnologia.
+   Aderencia:       Alta para o perfil principal do produto.
+   Risco:           Medio. Pode nao concluir o onboarding sem instrucao adicional.
+   Abordagem:       Sessao assistida de 20-30 minutos.
+   Mensagem ideal:  "Instala como se fosse um app normal. Comeca em 2 minutos."
+   Quando expor:    Segundo ciclo do beta futuro.
+
+3. SINDICO PROFISSIONAL ABERTO A TECNOLOGIA
+   Perfil:          Gerencia 5-15 condominios, ja usa CRM ou planilha, 30-50 anos.
+   Aderencia:       Media. Produto atual e mono-condominio — limitacao real.
+   Risco:           Medio. Pode frustar pela ausencia de multi-condominio.
+   Abordagem:       Honestidade sobre o estagio. "Monocondominio por ora."
+   Mensagem ideal:  "Para um condominio especifico que voce quer padronizar."
+   Quando expor:    Segunda rodada, com expectativas gerenciadas.
+
+4. SINDICO JURIDICO / CUIDADOSO
+   Perfil:          Advogado ou contador que assumiu o cargo. Criterioso.
+                    Vai questionar a base legal de cada resposta.
+   Aderencia:       Media. Aprecia disclaimers e linguagem condicional.
+   Risco:           Alto. Pode rejeitar respostas por considerar incompletas.
+   Abordagem:       Mostrar o motor deterministico e a curadoria. Nao prometer.
+   Mensagem ideal:  "Base curada, nao IA generativa. Orientacao, nao parecer."
+   Quando expor:    Terceira rodada, apos ajustes de linguagem.
+
+5. SINDICO IDOSO / POUCO DIGITAL
+   Perfil:          60+ anos, usa smartphone basico, pode ter dificuldade com PWA.
+   Aderencia:       Baixa sem onboarding assistido.
+   Risco:           Alto. Frustacao tecnologica pode gerar rejeicao do produto.
+   Abordagem:       Sessao guiada obrigatoria. Nao expor sozinho.
+   Mensagem ideal:  Nao disponivel ate o produto ter versao mais guiada.
+   Quando expor:    Somente apos validar experiencia com perfis 1-3.
+
+IMPORTANTE:
+Esses perfis sao uteis para planejamento futuro do beta externo, nao para
+recrutamento imediato. A decisao de quando expor o produto cabe ao fundador,
+condicionada a maturidade visual, juridica e operacional do produto.
+
+
+================================================================================
+10. PRONTIDAO PARA BETA
+================================================================================
+
+1. Pronto para continuar validacao interna pelo fundador?
+   RESPOSTA: SIM
+   O produto esta funcional, estavel e premium o suficiente para validacao
+   interna frequente. O fundador conhece o contexto condominial e consegue
+   identificar atritos reais nas simulacoes de rotina.
+
+2. Pronto para smoke tests controlados internos?
+   RESPOSTA: SIM
+   O protocolo de smoke test esta documentado (protocolo-smoke-test-estados-
+   do-usuario.md). O fundador pode executar em diferentes estados de usuario
+   (novo, dados minimos, dados robustos, recorrente) de forma estruturada.
+
+3. Pronto para beta fechado externo com sindicos reais?
+   RESPOSTA: NAO AINDA
+   Bloqueadores ainda existem: smoke test fisico pendente, revisao juridica dos
+   termos pendente, canal de feedback nao existe, instrucao de backup ausente
+   no onboarding, tela Conta abaixo do nivel visual das demais.
+   Nao e prioridade imediata — e etapa futura condicionada a decisao do fundador.
+
+4. Pronto para venda?
+   RESPOSTA: NAO
+   Sem billing, sem termos definitivos, sem regressao D7 comprovada, sem prova
+   de retencao. Venda antes de retencao e queimar dinheiro e credibilidade.
+
+5. Pronto para trafego pago?
+   RESPOSTA: NAO
+   Trafego pago sem proof of retention e CAC sem retorno. O produto precisa
+   primeiro provar que retorna usuarios antes de pagar para trazer mais.
+
+6. Pronto para administradora?
+   RESPOSTA: NAO
+   Produto atual e mono-condominio, sem painel administrativo, sem multi-conta.
+   Administradora so faz sentido na Fase 5+ do roadmap.
+
+7. Pronto para sindico idoso?
+   RESPOSTA: NAO
+   Onboarding atual nao foi testado com usuario pouco digital. Risco de frustacao
+   que pode criar impressao negativa irreversivel.
+
+8. Pronto para sindico operacional (perfil 1)?
+   RESPOSTA: PARCIALMENTE
+   Produto tem o valor correto para esse perfil. Mas smoke test fisico pendente
+   e termos nao revisados sao barreiras reais antes de qualquer convite.
+
+
+================================================================================
+11. O QUE FALTA ANTES DE QUALQUER BETA EXTERNO
+================================================================================
+
+(CHECKLIST PRE-BETA — preparacao para beta futuro, nao execucao imediata)
+
+[ ] Smoke test pós-PB-1 em dispositivo fisico Android (Chrome)
+      — Percorrer todas as telas do checklist publicado em plano-pre-beta.md
+      — Verificar safe area, scroll, BottomNav em celular real
+
+[ ] Smoke test pos-PB-1 em dispositivo fisico iOS (Safari)
+      — Verificar home indicator, PWA install prompt, comportamento de scroll
+
+[ ] Validacao do /admin com dados reais
+      — Confirmar que eventos de uma sessao de teste aparecem no Supabase
+      — Verificar recall real do motor se houver dados suficientes
+
+[ ] Teste com localStorage limpo (Estado 1 — usuario novo)
+      — Garantir que onboarding funciona do zero
+      — GuidancePreview aparece corretamente
+      — Score de saude mostra estado neutro, nao vermelho
+
+[ ] Revisao dos termos minimos por advogado externo
+      — Rascunho existe em docs/rascunho-termos-de-uso.md
+      — Bloqueador duro antes de qualquer convite a sindico externo
+
+[ ] Polimento visual da tela Conta
+      — Alinhar ao nivel premium das demais telas
+      — BackupPanel com instrucao de uso clara e visivel
+
+[ ] Adicionar instrucao de backup no onboarding
+      — Etapa 4 deve mencionar onde encontrar o backup e para que serve
+
+[ ] Canal de feedback ativo
+      — WhatsApp pessoal ou formulario — deve existir antes do primeiro convite
+
+[ ] Roteiro de convite escrito
+      — Mensagem clara sobre o que e o produto, o que se espera do testador
+      — Tom correto: produto em refinamento, feedback e o objetivo
+
+[ ] Expansao de KB nas categorias criticas
+      — LGPD: 6 -> 15+ entradas
+      — Financeiro: 14 -> 20+ entradas
+      — Inadimplencia: 14 -> 20+ entradas
+
+[ ] Selecao futura de 3 a 5 sindicos (quando decidido)
+      — Perfil ideal: sindico morador, 35-60 anos, condominio 15-80 unidades
+      — Do relacionamento proximo do fundador
+      — Com problema ativo no condominio (garante motivacao real)
+
+[ ] Formulario de feedback estruturado
+      — 5-7 perguntas: clareza, utilidade, retorno, NPS, o que mudaria
+      — Disponivel para envio apos 7 dias de uso
+
+[ ] Revisao final do Assistente
+      — Releitura das categorias sensiveis (trabalhista, financeiro, lgpd)
+      — Garantir linguagem condicional em todas as respostas criticas
+
+[ ] Validacao interna adicional pelo fundador
+      — Continuar simulacoes de rotina condominial real antes de expor
+
+LEMBRETE: isso prepara um beta externo futuro. Nao e execucao imediata.
+A decisao de quando convidar sindicos externos cabe exclusivamente ao fundador.
+
+
+================================================================================
+12. O QUE NAO FAZER AGORA
+================================================================================
+
+1. NAO ATIVAR AUTH/SYNC AINDA
+   Por que e tentador:  Stubs prontos parecem "so ligar".
+   Por que nao fazer:   Sem retencao comprovada, o backend e custo e complexidade
+                        sem retorno. Auth real exige termos definitivos e revisao
+                        de LGPD. A complexidade tecnica nao foi testada em producao.
+                        Prioridade: apenas apos validar retencao D30.
+
+2. NAO CRIAR RAG/IA AGORA
+   Por que e tentador:  Parece o proximo passo natural de um Assistente.
+   Por que nao fazer:   Taxa de fallback real ainda nao foi medida com usuarios
+                        externos. KB editorial resolve 80% dos gaps. RAG exige
+                        backend seguro, custos de embedding, guardrails juridicos
+                        e revisao de toda a arquitetura de resposta.
+                        Prioridade: apenas apos Fase D (backend) confirmada.
+
+3. NAO INTEGRAR WHATSAPP BUSINESS
+   Por que e tentador:  E onde o sindico ja esta.
+   Por que nao fazer:   E a Fase 4 do roadmap. Requer aprovacao Meta Verified
+                        Business, custo por conversa, gestao de estado por
+                        conversa. Meses de trabalho para feature que nao foi
+                        validada como prioritaria.
+
+4. NAO VENDER PUBLICAMENTE
+   Por que e tentador:  Produto parece pronto visualmente.
+   Por que nao fazer:   Um bug grave em publico corroi confianca de forma
+                        irreversivel. Sem retencao provada, escala e risco.
+                        Sem termos revisados, exposicao e risco juridico real.
+
+5. NAO FAZER TRAFEGO PAGO
+   Por que e tentador:  Forma rapida de trazer usuarios.
+   Por que nao fazer:   Trafego pago sem retencao comprovada e desperdicar
+                        dinheiro. CAC alto para produto sem MRR e caminho
+                        para queimar recursos antes de aprender o que funciona.
+
+6. NAO CRIAR BILLING AGORA
+   Por que e tentador:  Receita valida o produto.
+   Por que nao fazer:   Billing exige decisao de planos, suporte, chargeback,
+                        cancelamento — overhead operacional sem base de usuarios.
+                        Prioridade: apenas apos retencao D30 > 10% comprovada.
+
+7. NAO ESCALAR PARA ADMINISTRADORAS
+   Por que e tentador:  Ticket maior, base de usuarios pronta.
+   Por que nao fazer:   Exige multi-condominio, painel admin, integracao —
+                        produto diferente do atual. Ciclo de venda corporativo
+                        longo. Prioridade: apenas na Fase 5+.
+
+8. NAO RECRUTAR SINDICOS EXTERNOS ANTES DA DECISAO DO FUNDADOR
+   Por que e tentador:  Parece que o produto esta pronto.
+   Por que nao fazer:   Smoke test fisico nao foi feito. Termos nao foram
+                        revisados. Exposicao prematura cria impressao errada
+                        e compromete relacionamentos valiosos para o beta real.
+                        A decisao de expor e exclusivamente do fundador.
+
+9. NAO ADICIONAR FEATURES DEMAIS
+   Por que e tentador:  Sempre tem mais coisa para melhorar.
+   Por que nao fazer:   Overbuilding sem dados de usuario e aposta cega.
+                        O produto ja tem mais valor do que foi testado.
+                        Mais feature = mais superficie de bug = mais complexidade.
+
+10. NAO TROCAR A TESE DO PRODUTO
+    Por que e tentador: "E se fosse um dashboard?", "E se tivesse IA?".
+    Por que nao fazer:  A tese de copiloto operacional deterministico e
+                        defensavel, diferenciada e tecnicamente solida.
+                        Mudar a tese antes de validar a original e comecar
+                        do zero sem dados.
+
+11. NAO ABANDONAR O FOCO OPERACIONAL
+    Por que e tentador: Assistente parece ser o diferencial mais visivel.
+    Por que nao fazer:  O produto e central operacional. O Assistente e uma
+                        camada. Agenda, Saude, Pendencias e o que transforma
+                        um uso pontual em habito recorrente.
+
+
+================================================================================
+13. CAMINHO COMERCIAL POSSIVEL
+================================================================================
+
+FASE 1 — VALIDACAO INTERNA CONTINUA (agora)
+  Objetivo:       Maturar o produto sem exposicao externa.
+  Acoes:          Smoke tests pessoais frequentes em diferentes estados de usuario.
+                  Corrigi pontos de atrito identificados nas simulacoes.
+                  Expandir KB nas categorias sub-representadas.
+                  Continuar documentando evolucao.
+  Metricas:       Zero bug critico em smoke test. Recall >= 87%.
+                  Score de saude funcionando corretamente para dados simulados.
+
+FASE 2 — POLIMENTO PRE-BETA (proximas semanas)
+  Objetivo:       Eliminar bloqueadores antes de qualquer convite externo.
+  Acoes:          Smoke test fisico (iOS + Android). Revisao juridica dos termos.
+                  Polimento da tela Conta. Instrucao de backup no onboarding.
+                  Canal de feedback ativo. Roteiro de convite escrito.
+                  Expansao de KB (LGPD, Financeiro, Inadimplencia).
+  Metricas:       Todos os itens do checklist da Secao 11 marcados.
+
+FASE 3 — BETA FECHADO FUTURO (quando fundador autorizar)
+  Objetivo:       Aprender com sindicos reais em ambiente controlado.
+  Quem:           3 a 5 sindicos do relacionamento proximo do fundador.
+  Como:           Link direto + mensagem de convite + formulario de feedback.
+                  Uma sessao assistida de 20-30 min por tester.
+  O que observar: Onde trava, o que ignora, se volta espontaneamente.
+  Metricas:       Retorno D7 > 20%. NPS > 30. Taxa de fallback real.
+  Duracao:        2 semanas ativas + analise.
+
+FASE 4 — AJUSTES COM BASE EM USO REAL
+  Objetivo:       Corrigir os 3-5 problemas de jornada mais recorrentes.
+  Acoes:          Corrigir atritos (nao adicionar features).
+                  Expandir KB com perguntas reais que geraram fallback.
+                  Ajustar copy com base no feedback qualitativo.
+  Criterio:       Nao escalar sem retencao D7 > 20% confirmada.
+
+FASE 5 — OFERTA PILOTO
+  Objetivo:       Validar disposicao de pagar.
+  Acoes:          Landing page simples com proposta de valor e CTA.
+                  Oferta de fundador: R$19-29/mes para os primeiros.
+                  Lista de espera com email capture.
+                  Billing (Stripe ou equivalente).
+  Criterio:       Apenas apos retencao D30 > 10% comprovada.
+
+FASE 6 — VENDA INICIAL B2C
+  Objetivo:       Primeiros R$500-5.000 de MRR.
+  Acoes:          Plano unico ou dois planos maximos.
+                  Post de lancamento com prova social dos beta testers.
+                  Instagram educativo em paralelo (3-5 posts/semana).
+  Criterio:       Billing funcionando. Termos definitivos. Pelo menos 1 estudo
+                  de caso documentado com consentimento.
+
+FASE 7 — CONVERSA COM ADMINISTRADORAS
+  Objetivo:       Explorar canal B2B2C.
+  Acoes:          Pitch para 2-3 administradoras conhecidas.
+                  Proposta de licenca por condominio gerenciado.
+  Criterio:       Produto com multi-condominio implementado. MRR > R$5.000.
+                  Reputacao estabelecida no B2C antes de negociar B2B.
+
+COMO ABORDAR OS PRIMEIROS SINDICOS FUTURAMENTE
+
+  Contexto de relacionamento — nao abordagem fria. O fundador conhece sindicos
+  que vao entender o que o produto quer ser, tolerar imperfeicoes e dar
+  feedback honesto.
+
+  Framing correto: "Estou desenvolvendo uma ferramenta para sindicos.
+  Voce usaria por 2 semanas e me daria feedback?"
+  Nao vender. Nao pedir dinheiro. Pedir uso e opiniao.
+
+QUANDO FALAR DE PRECO
+
+  Somente depois de pelo menos 7 dias de uso espontaneo. Perguntar sobre preco
+  na primeira semana contamina o feedback qualitativo e cria pressao prematura.
+
+QUANDO CRIAR LANDING PAGE
+
+  Apos a Fase 4 (ajustes pos-beta). A landing page deve ter prova social —
+  frases reais de beta testers, nao marketing generico.
+
+QUANDO PENSAR EM ADMINISTRADORAS
+
+  Apenas apos MRR > R$5.000 e produto com multi-condominio. Administradoras
+  exigem ciclo de venda longo e customizacoes — nao e caminho para o inicio.
+
+POR QUE NAO ANTECIPAR A VENDA
+
+  Escalar sem retencao e jogar dinheiro fora. Um sindico que usa 1 vez e nao
+  volta — e pagou — e pior do que um usuario gratuito que nao usa. A reputacao
+  de produto "que nao entrega" e mais danosa do que crescer devagar.
+
+
+================================================================================
+14. POSSIVEIS PLANOS E PRECOS
+================================================================================
+
+(HIPOTESES FUTURAS — nao sao decisoes. Tudo condicionado a validacao real.)
+
+PLANO GRATUITO LIMITADO
+  Publico:         Sindico que quer experimentar antes de pagar.
+  Preco:           R$0
+  Funcionalidades: Assistente com X queries/mes, monitoramento de 3 datas,
+                   sem ferramentas premium, sem backup ilimitado.
+  Risco:           Limite frustrante pode gerar churn antes da conversao.
+  Quando faz sentido: Apos validar que o produto retorna usuarios. Freemium
+                   e aquisicao cara se os usuarios gratuitos nao convertem.
+
+PLANO SINDICO ESSENCIAL
+  Publico:         Sindico morador individual.
+  Preco:           R$29-39/mes
+  Funcionalidades: Todas as funcionalidades atuais do MVP. Backup ilimitado.
+                   Assistente sem limite de queries.
+  Risco:           Percepcao de valor precisa ser validada com sindicos reais.
+                   Pode ser alto demais para sindico voluntario sem remuneracao.
+  Quando faz sentido: A partir da Fase 5 (billing implementado).
+
+PLANO SINDICO PREMIUM (com RAG)
+  Publico:         Sindico que quer respostas especificas da convencao do predio.
+  Preco:           R$69-99/mes
+  Funcionalidades: Essencial + upload da convencao/regimento + respostas
+                   contextualizadas ao documento do proprio condominio.
+  Risco:           Exige Fase 3 inteira (RAG, backend, juridico).
+  Quando faz sentido: 12-18 meses de desenvolvimento.
+
+PLANO CONDOMINIO PRO
+  Publico:         Condominio com conselho consultivo ativo.
+  Preco:           R$99-149/mes
+  Funcionalidades: Premium + multiplos perfis (sindico + conselheiros).
+  Risco:           Exige auth + permissoes por perfil (Fase D+).
+  Quando faz sentido: 18-24 meses.
+
+PLANO ADMINISTRADORA
+  Publico:         Empresa que gerencia 20-100 condominios.
+  Preco:           R$500-2.000/mes
+  Funcionalidades: Multi-condominio + painel admin + relatorios por predio.
+  Risco:           Exige Fase 5 completa. Ciclo de venda longo.
+  Quando faz sentido: Apenas apos MRR > R$5.000 no B2C.
+
+PLANO WHITE LABEL FUTURO
+  Publico:         Administradora grande (50+ condominios) que quer marca propria.
+  Preco:           R$2.000-5.000/mes
+  Funcionalidades: Administradora + marca customizada + subdominio.
+  Risco:           Exige infra de white-label, suporte mais complexo.
+  Quando faz sentido: Fase 5 avancada, pos-validacao B2B.
+
+NOTA SOBRE PRECIFICACAO:
+Esses valores sao hipoteses baseadas no mercado de SaaS brasileiro para PMEs.
+Nao foram validados com usuarios reais. O modelo certo de precificacao so
+sera encontrado depois de perguntar ao sindico "voce pagaria?" — e de observar
+o comportamento de uso, nao apenas a declaracao de intencao.
+
+
+================================================================================
+15. ANALISE HONESTA DO PRODUTO
+================================================================================
+
+O QUE ESTA BOM DE VERDADE
+
+Interface premium — o produto atingiu o nivel visual esperado. A paleta Navy/
+Cream/Terracotta, os cards com sombra difusa, as animacoes — tudo comunica
+profissionalismo. Um sindico que abre o app pela primeira vez ve um produto
+que parece serio.
+
+Motor deterministico — 87% de recall, zero falha critica em auditoria de 83
+perguntas. Para um produto pre-beta sem IA, isso e robusto. A base curada de
+316 entradas e um ativo real com esforco editorial acumulado.
+
+Ciclo operacional completo — a sequencia duvida → orientacao → acao → pendencia
+→ revisao → historico existe e funciona. Muitos produtos de nicho nao chegam a
+fechar esse ciclo.
+
+Foco mantido — em 90+ fases, o produto nao se desviou da tese. Nao virou ERP,
+nao virou chatbot generico, nao promete IA sem guardrails. Disciplina de foco
+e rara e valiosa.
+
+Telemetria sem PII — decisao tecnica e etica correta. Zero dado sensivel enviado
+ao servidor. Viabiliza compliance sem risco regulatorio.
+
+O QUE PARECE BOM MAS AINDA PRECISA PROVAR VALOR
+
+Score de saude operacional — visual forte, conceito solido. Mas o valor real
+so sera comprovado quando um sindico real confirmar que "62%" significa algo
+para ele — e que ele age com base nisso.
+
+Contexto local no Assistente — a resposta mencionar dados do proprio condominio
+e um diferencial real. Mas nao sabemos se o sindico percebe isso como valioso
+ou apenas como texto a mais.
+
+Fluxo de onboarding — parece fluido internamente. Mas um sindico de 50 anos
+sem treinamento pode travar exatamente no ponto que parece obvio para o fundador.
+
+QUE ESTA FRAGIL
+
+Tela Conta — unica tela abaixo do nivel visual das demais. Cria inconsistencia.
+
+Instrucao de backup — sem mencao no onboarding, o sindico pode perder todos
+os dados ao trocar de celular sem saber que tinha essa protecao.
+
+LGPD com apenas 6 entradas — tema crescente e recorrente. Em qualquer beta
+real, essa categoria vai ter fallback alto.
+
+QUE PODE VIRAR DIFERENCIAL REAL
+
+RAG com convencao do condominio — "respondes com base na minha convencao
+especifica" e uma proposta de valor unica e dificil de copiar. Requer Fase 3,
+mas e o diferencial mais defensavel a longo prazo.
+
+Telemetria como aprendizado — o fundador tera dados reais de comportamento
+de uso antes de qualquer concorrente que lancou sem isso. Vantagem real.
+
+Conhecimento do fundador na area — produto feito por quem conhece o dominio
+real evita os erros classicos de produto feito por quem so pesquisou o mercado.
+
+QUE PODE VIRAR ARMADILHA
+
+Dependencia de preenchimento manual — se o sindico nao preencher os dados,
+o produto entrega pouco. O gatilho de retorno (alertas de prazo) so funciona
+com dados. Produto que depende de onboarding perfeito para entregar valor e
+fragil.
+
+Motor deterministico sem cobertura suficiente — se a taxa de fallback real
+for acima de 25%, o sindico vai achar que o app nao serve para o problema dele.
+Expandir a KB antes e menos arriscado do que descobrir isso em beta.
+
+Overbuilding — o risco maior e o fundador continuar adicionando features sem
+dados de usuario real. Cada feature adicionada sem validacao e uma aposta cega.
+
+O QUE PRECISA SER PROTEGIDO NA VISAO DO PRODUTO
+
+A tese de que "o sindico nao precisa de IA — precisa de organizacao, orientacao
+correta e lembretes antes que o problema vire urgencia" precisa ser protegida
+contra a pressao externa de "por que nao tem IA?", "por que nao tem WhatsApp?"
+
+O posicionamento de orientacao, nao consultoria, precisa ser mantido em cada
+comunicado, cada resposta e cada versao dos termos.
+
+O foco no sindico individual, nao na administradora, precisa ser mantido
+ate que o B2C esteja validado.
+
+
+================================================================================
+16. PROXIMAS 10 ACOES RECOMENDADAS
+================================================================================
+
+ORDEM POR IMPACTO E URGENCIA
+
+1. SMOKE TEST FISICO (iOS + Android)
+   Objetivo:       Confirmar que o produto funciona corretamente em celular real.
+   Motivo:         DevTools nao replica comportamentos de safe area, scroll e PWA.
+   Resultado:      Lista de bugs visuais ou funcionais encontrados em dispositivo
+                   real. Zero surpresa no primeiro contato de um sindico real.
+   Prioridade:     Critica — bloqueador para qualquer exposicao externa futura.
+
+2. REVISAO JURIDICA DOS TERMOS (envio para advogado)
+   Objetivo:       Protecao legal do fundador antes de qualquer beta externo.
+   Motivo:         Rascunho existe mas nao foi validado. Um sindico que tomar
+                   decisao errada com base no app pode responsabilizar o produto.
+   Resultado:      Termos revisados. Posicionamento confirmado como seguro.
+   Prioridade:     Critica — bloqueador duro para qualquer convite externo.
+
+3. ADICIONAR INSTRUCAO DE BACKUP NO ONBOARDING
+   Objetivo:       Reduzir risco de perda de dados pelo usuario.
+   Motivo:         Etapa 4 do onboarding nao menciona backup. Sindico que nao
+                   sabe que ha backup pode perder tudo ao trocar de celular.
+   Resultado:      Onboarding menciona onde o backup esta e por que usar.
+   Prioridade:     Alta — mudanca simples com impacto direto na segurança do usuario.
+
+4. POLIMENTO VISUAL DA TELA CONTA
+   Objetivo:       Eliminar inconsistencia visual entre Conta e demais telas.
+   Motivo:         Tela Conta e a unica abaixo do nivel premium. Inconsistencia
+                   gera desconfianca.
+   Resultado:      Todas as telas no mesmo nivel visual. BackupPanel mais claro.
+   Prioridade:     Alta — impacto na percepcao de qualidade do produto.
+
+5. EXPANSAO DA BASE DE CONHECIMENTO — LGPD (6 -> 15+)
+   Objetivo:       Reduzir fallback rate em tema crescente e recorrente.
+   Motivo:         Com apenas 6 entradas, qualquer variacao de pergunta sobre
+                   cameras, WhatsApp ou dados de moradores cai em fallback.
+                   E o tema mais consultado por sindicos modernos.
+   Resultado:      Cobertura adequada antes de qualquer exposicao externa.
+   Prioridade:     Alta — risco de frustacao no primeiro uso real.
+
+6. EXPANSAO DA BASE — FINANCEIRO E INADIMPLENCIA (14 -> 20+ cada)
+   Objetivo:       Cobrir os dois temas mais consultados em situacao de crise.
+   Motivo:         Sindico com inadimplente ativo e o usuario mais motivado
+                   a testar o Assistente — e exatamente onde o fallback dói mais.
+   Resultado:      Cobertura minima nos temas de maior uso potencial.
+   Prioridade:     Alta — executar em paralelo com item 5.
+
+7. SMOKE TESTS INTERNOS CONTINUOS DO FUNDADOR
+   Objetivo:       Manter validacao interna frequente com estados distintos.
+   Motivo:         O fundador e o unico usuario do produto e conhece o dominio.
+                   Simular fluxos reais de sindico (novo condominio, problema ativo,
+                   rotina mensal) identifica atritos que nenhum codigo revela.
+   Resultado:      Lista de atritos corridos por prioridade.
+   Prioridade:     Alta — acoes continuadas, nao pontuais.
+
+8. REVISAR LINGUAGEM JURIDICA NAS CATEGORIAS SENSIVEIS DO ASSISTENTE
+   Objetivo:       Garantir que nenhuma frase usa certeza absoluta sem ressalva.
+   Motivo:         Categorias trabalhista, financeiro e lgpd sao as que mais
+                   podem gerar responsabilizacao se a linguagem for imprecisa.
+   Resultado:      Nenhuma resposta diz "voce pode" ou "e proibido" sem condicional.
+   Prioridade:     Media-Alta — deve ser feito antes de revisao juridica externa.
+
+9. CRIAR CANAL DE FEEDBACK ATIVO
+   Objetivo:       Ter estrutura para receber feedback quando o fundador decidir
+                   convidar o primeiro sindico externo.
+   Motivo:         Sem canal ativo, feedback informal se perde. Dados de uso
+                   qualitativo sao irreproduziveis.
+   Resultado:      Numero de WhatsApp ou formulario testado e funcional.
+   Prioridade:     Media — necessario antes de qualquer convite, nao urgente agora.
+
+10. PREPARAR ROTEIRO DE CONVITE PARA BETA FUTURO
+    Objetivo:       Ter o texto de convite pronto quando o fundador decidir.
+    Motivo:         O framing do convite define as expectativas do beta tester.
+                    Framing errado gera feedback de produto errado.
+    Resultado:      Texto de convite, instrucao de uso, formulario de feedback
+                    prontos — aguardando apenas a decisao de quando usar.
+    Prioridade:     Media — preparacao estrategica, nao urgencia imediata.
+
+
+================================================================================
+17. VEREDITO FINAL
+================================================================================
+
+NOTA GERAL ATUAL
+
+7.5 / 10
+
+O produto esta genuinamente avancado para validacao interna. Interface premium
+atingida. Motor deterministico solido. Ciclo operacional completo. Telemetria
+ativa. A nota nao e maior porque zero dados de usuarios reais existem — e isso
+e a unica lacuna que nenhum codigo preenche.
+
+TESE MAIS FORTE
+
+"O sindico nao precisa de IA sofisticada. Precisa de organizacao, orientacao
+confiavel e lembretes antes que o problema vire urgencia."
+
+Essa tese e diferenciada do mercado, tecnicamente executavel, juridicamente
+mais segura do que IA generativa, e diretamente acionavel com o produto
+atual. E tambem resistente ao argumento de "mas o ChatGPT faz isso" — porque
+o ChatGPT nao monitora o AVCB do seu predio, nao organiza suas pendencias e
+nao gera comunicados com base em uma base curada condominial.
+
+MAIOR RISCO
+
+Continuar iterando em features sem dados de usuario real.
+
+O produto tem 90+ fases de desenvolvimento, mais valor do que foi testado.
+O proximo aprendizado nao virá do codigo — vira de um sindico real usando
+o produto pela primeira vez e mostrando onde trava, o que ignora e se volta.
+
+Cada semana de overbuilding sem dados e uma aposta cega. O produto ja passou
+do ponto em que mais feature acrescenta mais valor.
+
+PROXIMO PASSO
+
+Consolidar a validacao interna, executar o smoke test fisico, enviar os termos
+para revisao juridica, expandir as lacunas criticas da KB e preparar o produto
+para um beta fechado futuro — quando o fundador decidir que o produto esta
+pronto para ser visto pela primeira vez por olhos que nao sejam os seus.
+
+O ritmo correto nao e apressar o beta. E garantir que quando o primeiro sindico
+externo usar o produto, o que ele ver vai impressionar — e nao vai travar.
+
+RECOMENDACAO FINAL
+
+Proteja a tese. Discipline as features. Execute o polimento pendente.
+Valide internamente com frequencia. Prepare o beta futuro sem pressa de executa-lo.
+
+O produto que o primeiro sindico externo ver deve ser um produto que impressiona
+desde o primeiro uso — sem a percepcao de "ainda estamos melhorando". Esse
+nivel esta proximo. Nao e hora de apressar. E hora de finalizar o que falta.
+
+Quando o produto estiver pronto — e apenas o fundador sabe quando isso e —
+o beta externo sera natural, nao forcado.
+
+
+================================================================================
+FIM DO RELATORIO
+================================================================================
+Amigo do Predio — Relatorio Generalista Operacional e Comercial
+Versao: 2026-05-24 (pos-UI-4 + pos-PB-1)
+Documento interno — uso exclusivo do fundador.
+Nao distribuir sem revisao e autorizacao expressa.
+================================================================================
