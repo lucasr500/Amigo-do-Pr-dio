@@ -150,10 +150,10 @@ export default function OnboardingFlow({ onComplete }: Props) {
             Amigo do Prédio
           </p>
           <h2 className="mt-2 font-display text-[24px] font-semibold leading-snug text-navy-800">
-            Seu condomínio, sob controle.
+            Veja o que exige atenção no seu prédio.
           </h2>
           <p className="mt-3 text-[13.5px] leading-relaxed text-navy-600">
-            Monitore prazos críticos, registre pendências e consulte orientações condominiais — tudo no celular, sem depender só da memória.
+            Cadastre as datas essenciais e o app organiza alertas, pendências e saúde operacional — sem depender só da memória.
           </p>
         </div>
         <div className="flex items-center justify-between gap-4">
@@ -162,7 +162,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
             onClick={() => setStep(2)}
             className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
-            Começar em 2 minutos
+            Configurar alertas do prédio
             <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -243,9 +243,9 @@ export default function OnboardingFlow({ onComplete }: Props) {
       <Overlay>
         <ProgressDots />
         <div className="mt-4 mb-5">
-          <p className="text-[13px] font-semibold text-navy-800">Datas importantes</p>
+          <p className="text-[13px] font-semibold text-navy-800">Datas essenciais do prédio</p>
           <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-400">
-            Registre para ativar alertas automáticos. Pode preencher depois em Meu prédio.
+            Preencha pelo menos uma data para ver seu primeiro alerta operacional. Pode completar depois em Meu prédio.
           </p>
         </div>
 
@@ -325,13 +325,17 @@ export default function OnboardingFlow({ onComplete }: Props) {
           </svg>
         </div>
         <p className="text-[13px] font-semibold text-navy-800">
-          {hasName || filledDates > 0 ? "Tudo configurado." : "Pronto para começar."}
+          {filledDates > 0 ? "Monitoramento ativado." : (hasName ? "Tudo configurado." : "Pronto para explorar.")}
         </p>
         <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
-          {hasName && <span>{profile.nomeCondominio.trim()} · </span>}
-          {filledDates > 0
-            ? `${filledDates} data${filledDates > 1 ? "s" : ""} registrada${filledDates > 1 ? "s" : ""}.`
-            : "Dados mínimos configurados."}
+          {filledDates > 0 ? (
+            <>
+              {hasName && <span>{profile.nomeCondominio.trim()} · </span>}
+              O app já pode calcular a saúde operacional e destacar prazos que exigem atenção.
+            </>
+          ) : (
+            "Os alertas do prédio aparecem quando as datas essenciais forem cadastradas. Você pode fazer isso a qualquer momento em Meu prédio."
+          )}
         </p>
       </div>
 
@@ -356,7 +360,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
         onClick={finish}
         className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
       >
-        Ir para o app
+        {filledDates > 0 ? "Ir para meu painel" : "Explorar mesmo assim"}
         <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

@@ -417,8 +417,8 @@ export default function HomePage() {
                       </p>
                       <p className="mt-0.5 text-[13px] text-navy-700">
                         {profileCompletion > 0
-                          ? `${profileCompletion}% completo`
-                          : "Dados essenciais não cadastrados"}
+                          ? "Complete os dados essenciais para ativar os alertas do prédio."
+                          : "Dados ausentes — os alertas do prédio ficam inativos."}
                       </p>
                     </div>
                     <button
@@ -431,7 +431,7 @@ export default function HomePage() {
                       }}
                       className="flex-shrink-0 rounded-full border border-navy-200 bg-navy-50 px-3 py-1.5 text-[12px] font-medium text-navy-600 transition-colors hover:bg-navy-100 active:scale-95"
                     >
-                      Completar
+                      Completar dados
                     </button>
                   </div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-navy-100">

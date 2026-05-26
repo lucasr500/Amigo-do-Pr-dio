@@ -25,10 +25,10 @@ export default function Hero({ onSetup, onAssistente }: Props) {
         </div>
 
         <h2 className="max-w-[330px] font-display text-[28px] font-semibold leading-[1.08] text-cream-50 sm:text-[32px]">
-          Seu condomínio sob controle.
+          Seu prédio precisa de memória.
         </h2>
         <p className="mt-3 max-w-[350px] text-[14px] leading-relaxed text-cream-100/82">
-          Comece cadastrando os dados essenciais do condomínio para ativar prazos, pendências e saúde operacional.
+          Registre AVCB, seguro e mandato para ativar alertas, pendências e saúde operacional. Gratuito, sem conta.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -38,7 +38,7 @@ export default function Hero({ onSetup, onAssistente }: Props) {
               onClick={onSetup}
               className="inline-flex min-h-10 items-center gap-2 rounded-full bg-cream-100 px-4 py-2 text-[13px] font-semibold text-navy-800 shadow-sm transition-all duration-200 hover:bg-cream-50 active:scale-[0.98]"
             >
-              Configurar meu prédio
+              Ativar monitoramento
               <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
