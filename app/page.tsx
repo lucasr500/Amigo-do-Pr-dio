@@ -18,6 +18,7 @@ import {
   getPendenciasAbertas,
   isFirstRun,
   getMemoriaOperacional,
+  getMemoriaAssistida,
   getProfile,
   type MemoriaOperacional,
   type CondominioProfile,
@@ -136,12 +137,13 @@ function computeUrgentItem(m: MemoriaOperacional): UrgentItem | null {
 }
 
 function computeProfileCompletion(prof: CondominioProfile | null, m: MemoriaOperacional): number {
+  const a = getMemoriaAssistida();
   const filled = [
     prof?.nomeCondominio,
     prof?.hasElevador !== undefined ? "set" : "",
-    m.vencimentoAVCB,
-    m.vencimentoSeguro,
-    m.fimMandatoSindico,
+    m.vencimentoAVCB || a.avcb?.value || (a.avcb?.status === "to_discover" ? "known" : ""),
+    m.vencimentoSeguro || a.seguro?.value || (a.seguro?.status === "to_discover" ? "known" : ""),
+    m.fimMandatoSindico || a.mandato?.value || (a.mandato?.status === "to_discover" ? "known" : ""),
   ].filter(Boolean).length;
   return Math.round((filled / 5) * 100);
 }
@@ -447,9 +449,11 @@ export default function HomePage() {
                         Perfil do condomínio
                       </p>
                       <p className="mt-0.5 text-[13px] text-navy-700">
-                        {profileCompletion > 0
-                          ? "Complete os dados essenciais para ativar os alertas do prédio."
-                          : "Dados ausentes — os alertas do prédio ficam inativos."}
+                        {profileCompletion >= 60
+                          ? "Quase lá. Adicione as informações que faltam."
+                          : profileCompletion > 0
+                          ? "Continue preenchendo para ativar todos os alertas."
+                          : "Adicione prazos e perfil para ativar o monitoramento."}
                       </p>
                     </div>
                     <button

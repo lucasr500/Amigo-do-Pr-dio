@@ -4,11 +4,14 @@ import { useState } from "react";
 import {
   saveProfile,
   saveMemoriaOperacional,
+  saveMemoriaAssistida,
+  getMemoriaAssistida,
   markFirstRunComplete,
   saveImplantacaoMode,
   addPendencia,
   type CondominioProfile,
   type MemoriaOperacional,
+  type MemoriaAssistida,
   type ImplantacaoMode,
 } from "@/lib/session";
 
@@ -26,6 +29,12 @@ type MemoriaDraft = {
   vencimentoAVCB: string;
   vencimentoSeguro: string;
   fimMandatoSindico: string;
+};
+
+type NaoSeiDraft = {
+  vencimentoAVCB: boolean;
+  vencimentoSeguro: boolean;
+  fimMandatoSindico: boolean;
 };
 
 type Props = {
@@ -92,6 +101,11 @@ export default function OnboardingFlow({ onComplete }: Props) {
     vencimentoSeguro: "",
     fimMandatoSindico: "",
   });
+  const [naoSei, setNaoSei] = useState<NaoSeiDraft>({
+    vencimentoAVCB: false,
+    vencimentoSeguro: false,
+    fimMandatoSindico: false,
+  });
 
   const selectMode = (mode: ImplantacaoMode) => {
     setImplantacaoMode(mode);
@@ -110,6 +124,28 @@ export default function OnboardingFlow({ onComplete }: Props) {
     if (memoria.vencimentoSeguro) memoriaPayload.vencimentoSeguro = memoria.vencimentoSeguro;
     if (memoria.fimMandatoSindico) memoriaPayload.fimMandatoSindico = memoria.fimMandatoSindico;
     if (Object.keys(memoriaPayload).length > 0) saveMemoriaOperacional(memoriaPayload);
+
+    // Também persiste em MemoriaAssistida para que health score e notificações
+    // vejam os dados pelo caminho assistido (status="filled" ou "to_discover").
+    const now = new Date().toISOString();
+    const existing = getMemoriaAssistida();
+    const assistidaPayload: MemoriaAssistida = { ...existing };
+    if (memoria.vencimentoAVCB) {
+      assistidaPayload.avcb = { value: memoria.vencimentoAVCB, precision: "exact", status: "filled", updatedAt: now };
+    } else if (naoSei.vencimentoAVCB) {
+      assistidaPayload.avcb = { precision: "unknown", status: "to_discover", updatedAt: now };
+    }
+    if (memoria.vencimentoSeguro) {
+      assistidaPayload.seguro = { value: memoria.vencimentoSeguro, precision: "exact", status: "filled", updatedAt: now };
+    } else if (naoSei.vencimentoSeguro) {
+      assistidaPayload.seguro = { precision: "unknown", status: "to_discover", updatedAt: now };
+    }
+    if (memoria.fimMandatoSindico) {
+      assistidaPayload.mandato = { value: memoria.fimMandatoSindico, precision: "exact", status: "filled", updatedAt: now };
+    } else if (naoSei.fimMandatoSindico) {
+      assistidaPayload.mandato = { precision: "unknown", status: "to_discover", updatedAt: now };
+    }
+    saveMemoriaAssistida(assistidaPayload);
 
     if (implantacaoMode) saveImplantacaoMode(implantacaoMode);
     if (implantacaoMode === "new_sindico") gerarPendenciasNovoSindico();
@@ -368,62 +404,100 @@ export default function OnboardingFlow({ onComplete }: Props) {
 
   if (step === 3) {
     const isNewSindico = implantacaoMode === "new_sindico";
+    const filledNow = countFilledDates(memoria);
+
+    const toggleNaoSei = (field: keyof NaoSeiDraft) => {
+      setNaoSei((prev) => ({ ...prev, [field]: !prev[field] }));
+      // Limpa o valor da data ao marcar "não sei"
+      if (!naoSei[field]) setMemoria((m) => ({ ...m, [field]: "" }));
+    };
+
+    type DateFieldProps = {
+      field: keyof NaoSeiDraft & keyof MemoriaDraft;
+      label: string;
+      hint: string;
+      confirmLabel: string;
+    };
+
+    const DateField = ({ field, label, hint, confirmLabel }: DateFieldProps) => {
+      const filled = !!memoria[field];
+      const unknown = naoSei[field];
+      return (
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <p className="text-[12px] font-medium text-navy-500">{label}</p>
+            <button
+              type="button"
+              onClick={() => toggleNaoSei(field)}
+              className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-medium ring-1 transition-all active:scale-95 ${
+                unknown
+                  ? "bg-navy-100 text-navy-700 ring-navy-200"
+                  : "bg-white text-navy-400 ring-navy-150 hover:ring-navy-300"
+              }`}
+            >
+              {unknown ? "Informar data" : "Não sei"}
+            </button>
+          </div>
+          {unknown ? (
+            <div className="flex items-center gap-2 rounded-xl border border-navy-100 bg-navy-50/60 px-3 py-2.5">
+              <span className="text-[11px] text-navy-500">Anotado. O app vai te lembrar de descobrir esta data.</span>
+            </div>
+          ) : (
+            <>
+              <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">{hint}</p>
+              <input
+                type="date"
+                value={memoria[field]}
+                onChange={(e) => setMemoria((m) => ({ ...m, [field]: e.target.value }))}
+                className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+              />
+              {filled && (
+                <p className="mt-1 text-[10.5px] font-medium text-emerald-600">
+                  ✓ {confirmLabel}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      );
+    };
+
     return (
       <Overlay>
         <ProgressDots />
-        <div className="mt-4 mb-5">
-          <p className="text-[13px] font-semibold text-navy-800">Datas essenciais do prédio</p>
+        <div className="mt-4 mb-4">
+          <div className="flex items-baseline justify-between">
+            <p className="text-[13px] font-semibold text-navy-800">Datas essenciais do prédio</p>
+            {filledNow > 0 && (
+              <span className="text-[10.5px] font-medium text-emerald-600">{filledNow} de 3 ativado{filledNow > 1 ? "s" : ""}</span>
+            )}
+          </div>
           <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-400">
             {isNewSindico
-              ? "Preencha o que já sabe. Para o que não sabe ainda — não tem problema, o app vai te lembrar de descobrir."
-              : "Preencha pelo menos uma data para ver seu primeiro alerta operacional. Pode completar depois em Meu prédio."}
+              ? "Preencha o que já sabe. Clique em “Não sei” para o que não tiver agora."
+              : "Cadastre pelo menos uma data para ativar os alertas. Complete o resto depois, em Meu prédio."}
           </p>
         </div>
 
         <div className="space-y-3.5">
-          <div>
-            <p className="mb-1 text-[12px] font-medium text-navy-500">Vencimento do AVCB</p>
-            <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
-              Exigência legal para o condomínio. O app avisa quando o prazo se aproximar.
-            </p>
-            <input
-              type="date"
-              value={memoria.vencimentoAVCB}
-              onChange={(e) => setMemoria((m) => ({ ...m, vencimentoAVCB: e.target.value }))}
-              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            />
-            {isNewSindico && !memoria.vencimentoAVCB && (
-              <p className="mt-1 text-[10.5px] text-navy-400">
-                Não sabe? Deixe em branco — o plano de implantação já inclui uma tarefa para descobrir.
-              </p>
-            )}
-          </div>
-
-          <div>
-            <p className="mb-1 text-[12px] font-medium text-navy-500">Vencimento do Seguro</p>
-            <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
-              Obrigatório por lei. Cobre incêndio, raio e explosão.
-            </p>
-            <input
-              type="date"
-              value={memoria.vencimentoSeguro}
-              onChange={(e) => setMemoria((m) => ({ ...m, vencimentoSeguro: e.target.value }))}
-              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            />
-          </div>
-
-          <div>
-            <p className="mb-1 text-[12px] font-medium text-navy-500">Fim do mandato do síndico</p>
-            <p className="mb-1.5 text-[11px] leading-relaxed text-navy-400">
-              O app avisa com antecedência para organizar a assembleia de eleição ou recondução.
-            </p>
-            <input
-              type="date"
-              value={memoria.fimMandatoSindico}
-              onChange={(e) => setMemoria((m) => ({ ...m, fimMandatoSindico: e.target.value }))}
-              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            />
-          </div>
+          <DateField
+            field="vencimentoAVCB"
+            label="Vencimento do AVCB"
+            hint="Exigência legal. O app avisa quando o prazo se aproximar."
+            confirmLabel="Monitoramento de AVCB ativado"
+          />
+          <DateField
+            field="vencimentoSeguro"
+            label="Vencimento do Seguro predial"
+            hint="Obrigatório por lei. Cobre incêndio, raio e explosão."
+            confirmLabel="Monitoramento do seguro ativado"
+          />
+          <DateField
+            field="fimMandatoSindico"
+            label="Fim do mandato do síndico"
+            hint="O app avisa para organizar a assembleia com antecedência."
+            confirmLabel="Monitoramento de mandato ativado"
+          />
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-4">
@@ -432,15 +506,17 @@ export default function OnboardingFlow({ onComplete }: Props) {
             onClick={() => setStep(4)}
             className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
-            Continuar
+            {filledNow > 0 ? "Continuar" : "Continuar assim mesmo"}
           </button>
-          <button
-            type="button"
-            onClick={() => setStep(4)}
-            className="text-[11.5px] text-navy-400 transition-colors hover:text-navy-600"
-          >
-            Pular etapa
-          </button>
+          {filledNow === 0 && !Object.values(naoSei).some(Boolean) && (
+            <button
+              type="button"
+              onClick={() => setStep(4)}
+              className="text-[11.5px] text-navy-400 transition-colors hover:text-navy-600"
+            >
+              Pular
+            </button>
+          )}
         </div>
       </Overlay>
     );
@@ -499,13 +575,6 @@ export default function OnboardingFlow({ onComplete }: Props) {
         <p className="text-[12px] font-medium text-navy-700">Dados salvos neste dispositivo</p>
       </div>
 
-      <div className="mb-5 rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-3">
-        <p className="text-[11.5px] leading-relaxed text-navy-600">
-          <span className="font-semibold text-navy-700">Importante:</span> trocar de celular ou limpar o navegador apaga todos os dados. Use{" "}
-          <span className="font-medium text-navy-700">&ldquo;Exportar dados&rdquo;</span> na aba Meu prédio para criar um backup.
-        </p>
-      </div>
-
       <button
         type="button"
         onClick={finish}
@@ -516,6 +585,11 @@ export default function OnboardingFlow({ onComplete }: Props) {
           <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
+
+      <p className="mt-3 text-center text-[10.5px] text-navy-400">
+        Para preservar os dados ao trocar de dispositivo, use{" "}
+        <span className="font-medium text-navy-500">&ldquo;Exportar dados&rdquo;</span> em Meu prédio.
+      </p>
     </Overlay>
   );
 }
