@@ -97,12 +97,10 @@ const FuncionariosPanel = dynamic(() => import("@/components/FuncionariosPanel")
 const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
 const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
 // Aba Ferramentas — painéis de planejamento e decisão
-const PlanoAcaoPanel = dynamic(() => import("@/components/PlanoAcaoPanel"), { ssr: false });
 const CommandCenterPanel = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
 const HomePriorityStrip = dynamic(() => import("@/components/HomePriorityStrip"), { ssr: false });
 const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
-const AccountModal = dynamic(() => import("@/components/AccountModal"), { ssr: false });
 const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 
@@ -176,7 +174,6 @@ export default function HomePage() {
   const [condoName, setCondoName] = useState("");
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [showAccountModal, setShowAccountModal] = useState(false);
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
@@ -851,12 +848,6 @@ export default function HomePage() {
             />
 
             {/* ── Histórico operacional ─────────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Histórico operacional</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Registros de ações, assembleias e revisões.</p>
-              </div>
-            )}
             <TimelineOperacional refreshKey={refreshKey} />
             <div id="revisao-mensal" className="scroll-mt-3">
               <RevisaoMensal
@@ -960,10 +951,6 @@ export default function HomePage() {
             setRefreshKey((k) => k + 1);
           }}
         />
-      )}
-
-      {showAccountModal && (
-        <AccountModal onClose={() => setShowAccountModal(false)} />
       )}
 
       {showNotificationCenter && (

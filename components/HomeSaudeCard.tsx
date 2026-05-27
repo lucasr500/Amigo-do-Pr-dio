@@ -69,7 +69,14 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
     setHydrated(true);
   }, [refreshKey]);
 
-  if (!hydrated || !result) return null;
+  if (!hydrated) {
+    return (
+      <section className="px-5 pb-3 sm:px-6">
+        <div className="h-[82px] animate-pulse rounded-[18px] bg-navy-50/80" />
+      </section>
+    );
+  }
+  if (!result) return null;
 
   const btnClass = `flex w-full items-center gap-3.5 rounded-[18px] border px-4 py-4 text-left shadow-card ${onClick ? "transition-all hover:shadow-card-md active:scale-[0.99]" : ""}`;
 

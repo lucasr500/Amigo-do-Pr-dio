@@ -21,10 +21,23 @@ function getGreeting(): string {
 
 export default function Header({ refreshKey, activeTab, unreadNotifications = 0, onNotificationsClick }: Props) {
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(true);
 
   useEffect(() => {
     setNomeCondominio(getProfile()?.nomeCondominio ?? null);
   }, [refreshKey]);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // ── Saudação premium — tela Início ──────────────────────────────────────────
   if (activeTab === "inicio") {
@@ -41,6 +54,12 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
             <p className="mt-1.5 max-w-[280px] truncate text-[13px] leading-relaxed text-navy-500">
               {nomeCondominio ?? "Aqui está o que acontece no seu condomínio."}
             </p>
+            {!isOnline && (
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-medium text-amber-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                Sem conexão — dados locais
+              </span>
+            )}
           </div>
 
           <button
@@ -86,9 +105,16 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
           <h1 className="font-display text-[17px] font-semibold text-navy-800">
             Amigo do Prédio
           </h1>
-          <p className="max-w-[200px] truncate text-[11px] text-navy-400 transition-all duration-300">
-            {nomeCondominio ?? "Central operacional"}
-          </p>
+          {!isOnline ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+              Offline
+            </span>
+          ) : (
+            <p className="max-w-[200px] truncate text-[11px] text-navy-400 transition-all duration-300">
+              {nomeCondominio ?? "Central operacional"}
+            </p>
+          )}
         </div>
       </div>
     </header>

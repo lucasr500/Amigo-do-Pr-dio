@@ -51,10 +51,8 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
     setHydrated(true);
   }, [refreshKey]);
 
-  if (!hydrated || !data) return null;
-
-  // Não exibir o strip se não há dados e não há ações urgentes
-  if (data.riskLevel === "sem-dados") return null;
+  if (!hydrated) return <div className="mx-5 h-[58px] animate-pulse rounded-[16px] bg-navy-50/80 sm:mx-6" />;
+  if (!data || data.riskLevel === "sem-dados") return null;
 
   const topAction = data.topPriority;
   const hasUrgent = data.urgentActions.length > 0;

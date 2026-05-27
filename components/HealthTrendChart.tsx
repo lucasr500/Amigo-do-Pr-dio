@@ -50,7 +50,13 @@ export default function HealthTrendChart({ days = 30, width = 280, height = 56 }
     setStats(getHealthHistoryStats());
   }, [days]);
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <div className="flex items-center justify-center h-14 rounded-xl bg-navy-50 text-[11px] text-navy-400">
+        Nenhum dado ainda — o gráfico aparece após alguns dias de uso.
+      </div>
+    );
+  }
 
   const PAD = { top: 4, bottom: 4, left: 2, right: 2 };
   const chartW = width - PAD.left - PAD.right;

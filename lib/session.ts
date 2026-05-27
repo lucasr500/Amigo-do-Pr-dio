@@ -195,12 +195,16 @@ function safeWrite(key: string, value: unknown): void {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (e) {
     if (e instanceof DOMException) {
-      // Quota exceeded: tenta liberar espaço removendo histórico de queries
-      try {
-        localStorage.removeItem(KEYS.QUERIES);
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch {
-        // Se ainda falha, ignora silenciosamente
+      // Quota exceeded: libera espaço em ordem de prioridade crescente e retenta
+      const candidates = [KEYS.QUERIES, KEYS.AUDIT_LOG, KEYS.HEALTH_HISTORY];
+      for (const candidate of candidates) {
+        try {
+          localStorage.removeItem(candidate);
+          localStorage.setItem(key, JSON.stringify(value));
+          return;
+        } catch {
+          // ainda sem espaço — tenta o próximo candidato
+        }
       }
     }
   }
@@ -1399,7 +1403,7 @@ export function getUserBackupJson(): string {
 }
 
 // Valida o backup sem escrever no localStorage — usado para mostrar preview antes da confirmação.
-// Aceita v1 (sem pendências), v2 (com pendências) e v3 (com ocorrências).
+// Aceita v1–v5 (versões acumulativas com funcionalidades adicionais).
 export function parseAndValidateUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
