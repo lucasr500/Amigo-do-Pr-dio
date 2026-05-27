@@ -428,6 +428,7 @@ export default function HomePage() {
                 onGoToPendencias={() => navigateToSubView("pendencias")}
                 onGoToAgenda={() => navigateTab("agenda")}
                 onGoToRevisao={handleOpenRevisaoMensal}
+                onAskQuestion={(q) => { backFromSubView(); handleSuggestionSelect(q); }}
               />
             )}
 

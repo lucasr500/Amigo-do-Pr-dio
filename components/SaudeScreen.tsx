@@ -215,6 +215,13 @@ function AreaIcon({ status }: { status: AreaStatus }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+// KB questions surfaced based on health status
+const KB_QUESTIONS_BY_STATUS: Partial<Record<HealthStatusKey, string[]>> = {
+  critico:      ["O AVCB está vencido — qual o risco imediato?", "Quais riscos críticos o síndico não pode ignorar?", "O síndico pode ser responsabilizado penalmente?"],
+  atencao:      ["Como fazer uma revisão mensal do condomínio?", "O seguro predial é obrigatório?", "Como organizar a documentação do condomínio?"],
+  "em-evolucao": ["Quais documentos o síndico deve ter em dia?", "Como fazer uma prestação de contas transparente?"],
+};
+
 type Props = {
   refreshKey?: number;
   onBack?: () => void;
@@ -223,13 +230,14 @@ type Props = {
   onGoToPendencias?: () => void;
   onGoToAgenda?: () => void;
   onGoToRevisao?: () => void;
+  onAskQuestion?: (q: string) => void;
 };
 
 function hasMinimumHealthData(): boolean {
   return checkMinHealth(getMemoriaOperacional());
 }
 
-export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio, onGoToPendencias, onGoToAgenda, onGoToRevisao }: Props) {
+export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio, onGoToPendencias, onGoToAgenda, onGoToRevisao, onAskQuestion }: Props) {
   const [result, setResult]     = useState<HealthScoreResult | null>(null);
   const [areas, setAreas]       = useState<MonitoredArea[]>([]);
   const [records, setRecords]   = useState<RecordItem[]>([]);
@@ -565,6 +573,34 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
           </div>
         )}
       </section>
+
+      {/* ── Pergunte ao assistente ──────────────────────────────────── */}
+      {onAskQuestion && KB_QUESTIONS_BY_STATUS[result.statusKey] && (
+        <section className="px-5 pb-4 sm:px-6">
+          <p className="mb-3 text-[14px] font-semibold text-navy-800">Pergunte ao assistente</p>
+          <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+            {KB_QUESTIONS_BY_STATUS[result.statusKey]!.map((q, idx) => (
+              <div key={q}>
+                {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
+                <button
+                  type="button"
+                  onClick={() => {
+                    void trackEvent("saude_kb_question_tap", { question: q, status: result.statusKey });
+                    onAskQuestion(q);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
+                >
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]" aria-hidden="true">?</span>
+                  <p className="min-w-0 flex-1 text-[12.5px] leading-snug text-navy-700">{q}</p>
+                  <svg className="h-4 w-4 flex-shrink-0 text-navy-200" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="pb-8" />
 

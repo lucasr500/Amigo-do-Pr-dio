@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { AnswerResult, KnowledgeEntry, ConfidenceLevel } from "@/lib/data";
+import type { AnswerResult, KnowledgeEntry, ConfidenceLevel, RiscoNivel } from "@/lib/data";
 import { TOPICS, getConfidenceLabel, getRelatedEntries } from "@/lib/data";
 import {
   saveFavorite,
@@ -256,10 +256,17 @@ const CATEGORIA_ICONS: Record<string, string> = {
   cobranca: "💳",
 };
 
+// Categorias do KB que têm decisões correspondentes na biblioteca do síndico
+const CATS_WITH_DECISOES = new Set([
+  "gestao", "trabalhista", "financeiro", "assembleias",
+  "manutencao", "juridico", "multas", "inadimplencia",
+  "convencao", "responsabilidade",
+]);
+
 // Mensagens fixas exibidas em sequência durante o carregamento
 const LOADING_MESSAGES = [
-  "Consultando a base...",
-  "Preparando a orientação...",
+  "Consultando a base de orientações...",
+  "Preparando a resposta...",
 ];
 
 function openWhatsAppShare(url: string, isStandalone: boolean) {
@@ -511,6 +518,7 @@ export default function Response({
                 <>
                   <span className="text-[10.5px] text-navy-400">respondeu</span>
                   <ConfidenceBadge level={confidence.level} label={confidence.label} />
+                  {entry?.riscoNivel && <RiscoBadge nivel={entry.riscoNivel} />}
                 </>
               )}
             </div>
@@ -725,6 +733,21 @@ export default function Response({
                         </div>
                       )}
 
+                      {/* Cross-link: decisões do síndico (para entradas críticas ou categorias com decisões) */}
+                      {(entry.riscoNivel === "critico" || entry.riscoNivel === "relevante") && CATS_WITH_DECISOES.has(entry.categoria) && (
+                        <div className="rounded-r-lg border-l-[2.5px] border-navy-300 bg-navy-50/60 py-2.5 pl-3 pr-3">
+                          <div className="mb-1 flex items-center gap-1.5">
+                            <span className="text-[11px]" aria-hidden="true">⚖️</span>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
+                              Biblioteca de decisões
+                            </p>
+                          </div>
+                          <p className="text-[12.5px] leading-relaxed text-navy-600">
+                            Esta situação tem orientação prática detalhada na seção <strong>Decisões do Síndico</strong>, disponível na aba Condomínio.
+                          </p>
+                        </div>
+                      )}
+
                       {/* Aviso jurídico */}
                       <div className="flex items-start gap-2 border-t border-navy-100/80 pt-3">
                         <InfoIcon className="text-navy-400" />
@@ -754,7 +777,7 @@ export default function Response({
                       {/* Chips de categoria */}
                       <div>
                         <p className="mb-2 text-[12.5px] leading-relaxed text-navy-500">
-                          Nenhuma orientação exata encontrada — experimente reformular ou explore um tema próximo:
+                          Não encontrei uma orientação exata para essa pergunta. Tente reformular ou explore um tema próximo:
                         </p>
                         <p className="mb-2.5 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-navy-400">
                           Pergunte sobre
@@ -1037,6 +1060,22 @@ function LightbulbIcon() {
       />
       <path d="M4.5 9.5h3M5 11h2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
     </svg>
+  );
+}
+
+const RISCO_CONFIG: Record<RiscoNivel, { label: string; className: string }> = {
+  baixo:     { label: "Baixo impacto",      className: "border-green-200 bg-green-50 text-green-700" },
+  atencao:   { label: "Atenção",            className: "border-amber-200 bg-amber-50 text-amber-700" },
+  relevante: { label: "Risco relevante",    className: "border-orange-200 bg-orange-50 text-orange-700" },
+  critico:   { label: "Situação crítica",   className: "border-red-200 bg-red-50 text-red-700" },
+};
+
+function RiscoBadge({ nivel }: { nivel: RiscoNivel }) {
+  const cfg = RISCO_CONFIG[nivel];
+  return (
+    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${cfg.className}`}>
+      {cfg.label}
+    </span>
   );
 }
 

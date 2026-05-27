@@ -108,7 +108,8 @@ export type TelemetryEvent =
   | "backup_shared_via_web_share"
   | "pendencia_created_from_documento"
   | "pendencia_created_from_funcionario"
-  | "funcionario_added";
+  | "funcionario_added"
+  | "saude_kb_question_tap";
 
 type QueuedEvent = {
   event: string;

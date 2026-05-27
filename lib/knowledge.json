@@ -7270,6 +7270,857 @@
         "conserto",
         "reforma"
       ]
+    },
+    {
+      "id": "sindico-primeiros-30-dias",
+      "categoria": "gestao",
+      "pergunta": "O que fazer nos primeiros 30 dias como síndico?",
+      "resposta": "Nos primeiros 30 dias, o síndico deve: 1) Pedir à administradora a pasta completa do condomínio (contratos, documentos, contas bancárias, seguros, AVCB, certidões); 2) Verificar vencimentos críticos: AVCB, seguro, mandato anterior, manutenções; 3) Fazer inspeção visual das áreas comuns e equipamentos; 4) Conhecer a equipe de funcionários e seus contratos; 5) Levantar inadimplência atual; 6) Identificar as pendências mais urgentes. Não tente resolver tudo de uma vez — priorize o que tem risco imediato.",
+      "contexto": "O art. 1.348 do Código Civil lista as obrigações do síndico. A transição de gestão é um momento crítico: o síndico que recebe o cargo também pode receber passivos não documentados. O levantamento inicial protege o novo gestor.",
+      "dica": "Solicite da gestão anterior uma lista de pendências em aberto, todos os contratos vigentes e o último balancete aprovado. Registre qualquer inconformidade antes de assumir formalmente.",
+      "keywords": [
+        "primeiros", "dias", "inicio", "comecar", "assumir", "novo sindico",
+        "inicio gestao", "começo", "posse", "tomou posse", "eleito",
+        "recém eleito", "recem eleito", "primeiro mês", "mes", "mandato novo",
+        "o que fazer", "por onde comecar", "começar", "checklist", "onboarding"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "avcb-vencido-urgencia",
+      "categoria": "manutencao",
+      "pergunta": "O AVCB está vencido. O que fazer agora?",
+      "resposta": "Trate como urgência operacional imediata. O AVCB vencido expõe o síndico a responsabilidade civil e criminal em caso de incêndio, e pode invalidar o seguro predial. Passos: 1) Contate o Corpo de Bombeiros da sua cidade ou uma empresa credenciada; 2) Solicite vistoria de renovação — o prazo médio pode ser de 60 a 90 dias; 3) Enquanto aguarda, verifique se os extintores, mangueiras e saídas de emergência estão em ordem; 4) Registre em ata o início do processo de renovação; 5) Comunique os condôminos que a renovação está em andamento.",
+      "contexto": "O AVCB (Auto de Vistoria do Corpo de Bombeiros) é exigido pela legislação estadual de segurança contra incêndio. A ausência ou vencimento não só gera risco à vida — pode resultar em embargo do prédio pela prefeitura e anulação do seguro.",
+      "dica": "Inicie o processo com pelo menos 90 dias de antecedência do vencimento. Guarde comprovante de protocolização junto ao Corpo de Bombeiros como prova de diligência.",
+      "keywords": [
+        "avcb", "vencido", "bombeiros", "incendio", "incêndio", "venceu",
+        "expirou", "renovar", "renovacao", "auto vistoria", "corpo bombeiros",
+        "vistoria bombeiros", "laudo incendio", "segurança incendio",
+        "habitese", "habite-se", "embargo", "invalidar seguro"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "seguro-vencido-o-que-fazer",
+      "categoria": "gestao",
+      "pergunta": "O seguro do prédio está vencido. Quais os riscos?",
+      "resposta": "Com o seguro vencido, o condomínio opera sem cobertura de risco de incêndio, destruição parcial ou total. Isso significa: o síndico pode ser responsabilizado pessoalmente por qualquer sinistro ocorrido no período sem cobertura; os condôminos assumem o risco coletivamente; financiadores de imóveis (Caixa, bancos) podem exigir o seguro como condição de financiamento. Ação imediata: contate a corretora ou seguradora, negocie a renovação retroativa se possível, e apresente nova apólice em pelo menos 30 dias.",
+      "contexto": "O art. 1.346 do Código Civil torna obrigatório o seguro predial. A omissão do síndico em manter o seguro ativo é falha de gestão que pode gerar responsabilidade civil pessoal (art. 1.348 §2º). O seguro deve cobrir o valor de reconstrução, não o de mercado.",
+      "dica": "Peça à corretora a renovação com antecedência de 45 dias. Guarde a apólice e o recibo de pagamento na pasta do condomínio. Informe a assembleia anual do valor e coberturas contratadas.",
+      "keywords": [
+        "seguro", "vencido", "venceu", "expirou", "apólice", "apolice",
+        "cobertura", "sinistro", "incendio", "renovar seguro", "seguro predial",
+        "sem seguro", "seguro obrigatorio", "seguradora", "corretora",
+        "responsabilidade sindico", "risco incendio"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "mandato-vencido-o-que-fazer",
+      "categoria": "assembleias",
+      "pergunta": "O mandato do síndico venceu e não foi feita eleição. O que acontece?",
+      "resposta": "O síndico com mandato vencido permanece no cargo por prorrogação tácita até que nova assembleia de eleição seja realizada. Isso é reconhecido pela jurisprudência para garantir a continuidade da administração. No entanto, o risco é alto: qualquer condômino pode exigir a convocação imediata da AGO ou AGE; o síndico fica em situação de vulnerabilidade jurídica para contratos e decisões tomadas nesse período. A eleição deve ser convocada com a máxima urgência — antes de 30 dias se possível.",
+      "contexto": "O art. 1.347 do CC permite mandatos de até 2 anos, renováveis. A ausência de eleição não cria vácuo legal imediato, mas fragiliza a gestão. Em caso de litígio, um juiz pode nomear síndico judicial provisório (art. 1.323 CC) se não houver eleição.",
+      "dica": "Convoque assembleia de eleição com no mínimo 10 dias de antecedência (salvo convenção que exija mais). Documente em ata a situação do mandato e a necessidade da convocação urgente.",
+      "keywords": [
+        "mandato", "vencido", "venceu", "expirou", "eleição", "eleicao",
+        "sem sindico", "sindico vencido", "renovar mandato", "prorrogação",
+        "prorrogacao", "assembleia eleição", "novo sindico", "prazo mandato",
+        "dois anos", "reeleição", "reeleicao", "sem eleicao"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "morador-agressivo-o-que-fazer",
+      "categoria": "responsabilidade",
+      "pergunta": "Morador agride funcionário ou ameaça síndico. O que fazer?",
+      "resposta": "Tome quatro providências imediatas: 1) Registre boletim de ocorrência policial — isso é essencial como prova; 2) Notifique formalmente o condômino por escrito descrevendo o episódio; 3) Reúna testemunhas, câmeras e qualquer evidência; 4) Consulte advogado sobre medida protetiva ou ação cível por danos morais. O síndico não pode expulsar o morador nem cortar serviços como forma de pressão. A via correta é: advertência formal, multa progressiva por comportamento antissocial e, em casos graves, busca por liminar judicial de restrição de acesso.",
+      "contexto": "O art. 1.337, parágrafo único do CC prevê multa de até 10 vezes o valor da cota para condômino antissocial. Agressão física é crime (lesão corporal, CP art. 129). Ameaças configuram crime de ameaça (CP art. 147). O síndico age como representante do condomínio e pode sofrer dano moral passível de indenização.",
+      "dica": "Não confronte sozinho o morador agressivo. Comunique sempre por escrito, com protocolo. Acione a polícia se houver risco imediato. Documente tudo — data, hora, testemunhas, câmeras.",
+      "keywords": [
+        "agressivo", "agrediu", "agrediu", "ameaca", "ameacou", "ameaça",
+        "brigou", "briga", "violento", "violência", "violencia", "morador bravo",
+        "morador agride", "funcionário agredido", "sindico ameacado",
+        "perturbador", "antissocial", "conflito grave", "policia"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "convenção-desatualizada",
+      "categoria": "convencao",
+      "pergunta": "A convenção do condomínio é muito antiga. O que fazer?",
+      "resposta": "Uma convenção desatualizada pode criar lacunas perigosas: regras sobre pet, LGPD, locação por temporada e assembleias eletrônicas ausentes. O processo de atualização exige: 1) Assembleia específica com pauta de revisão da convenção; 2) Aprovação por 2/3 dos condôminos (não apenas dos presentes); 3) Registro em cartório após aprovação. Antes disso, o síndico pode preencher lacunas atualizando o regimento interno, que exige apenas maioria simples e não precisa de registro em cartório.",
+      "contexto": "A convenção condominial é o 'contrato social' do condomínio, regulada pelo CC arts. 1.333 a 1.336. Mudanças na convenção exigem quórum qualificado de 2/3 (art. 1.351). O regimento interno pode ser alterado por maioria simples (art. 1.333), sendo uma alternativa mais ágil para temas urgentes.",
+      "dica": "Priorize atualizar o regimento interno antes de revisão completa da convenção. Chame um advogado condominialista para revisar o texto — erros na convenção geram litigiosidade.",
+      "keywords": [
+        "convenção antiga", "convencao antiga", "desatualizada", "desatualizado",
+        "ultrapassada", "antiga", "convenção velha", "atualizar convenção",
+        "revisar convenção", "mudança convenção", "alterar convenção",
+        "regimento interno", "registrar cartório", "dois terços", "quorum"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "ausencia-sindico-procedimento",
+      "categoria": "gestao",
+      "pergunta": "O síndico ficará ausente por um período. O que fazer?",
+      "resposta": "O síndico deve delegar suas atribuições ao subsíndico (se houver) ou ao gestor indicado em assembleia. Formalize a delegação por escrito com prazo definido, lista de competências delegadas e limites de gastos. Situações que não podem ser delegadas: assinatura de contratos acima do limite estabelecido em convenção, aprovação de obras extraordinárias e representação judicial. Se a ausência for prolongada (mais de 30 dias), considere convocar assembleia para nomear síndico interino.",
+      "contexto": "O CC art. 1.348 §2º permite ao síndico delegar funções, mas não a responsabilidade. O subsíndico, previsto no art. 1.347, substitui o síndico em suas ausências. Se não houver subsíndico, a convenção define o procedimento.",
+      "dica": "Deixe por escrito: quem responde, quais decisões pode tomar, qual o limite de cheque/pix e como contatar o síndico em emergências. Comunique a administradora e o conselho.",
+      "keywords": [
+        "ausência", "ausencia", "viagem", "afastar", "afastamento", "férias sindico",
+        "sindico viajando", "sindico ausente", "delegar", "delegação",
+        "subsíndico", "subsindico", "substituto sindico", "procurar sindico",
+        "gestão interina", "interino"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "empresa-terceirizada-sem-contrato",
+      "categoria": "gestao",
+      "pergunta": "O condomínio tem empresa terceirizada sem contrato formal. Qual o risco?",
+      "resposta": "Operar com prestadora de serviço sem contrato expõe o condomínio a riscos sérios: 1) Responsabilidade trabalhista dos funcionários terceirizados pode recair sobre o condomínio (TST, Súmula 331); 2) Sem contrato, não há SLA definido, prazo de aviso prévio nem cláusulas de rescisão; 3) Danos causados pelo prestador ficam sem respaldo contratual; 4) Ausência de garantias, seguros e apólices do prestador. Providencie contrato imediatamente, mesmo que simplificado: objeto, prazo, valor, responsabilidades, seguro e aviso prévio.",
+      "contexto": "A Reforma Trabalhista (Lei 13.467/2017) regulamentou a terceirização, mas não eliminou a responsabilidade subsidiária do tomador de serviços (contratante). Sem contrato, o condomínio não consegue demonstrar os termos da relação e pode ser condenado solidariamente em ação trabalhista.",
+      "dica": "Exija da empresa contratada: contrato assinado, comprovante de regularidade fiscal (CNPJ ativo, certidão negativa de débitos trabalhistas), apólice de seguro de responsabilidade civil e registro dos funcionários na empresa terceirizada.",
+      "keywords": [
+        "terceirizada", "terceirizado", "empresa terceirizada", "sem contrato",
+        "contrato informal", "prestadora sem contrato", "portaria terceirizada",
+        "limpeza terceirizada", "prestador serviço", "fornecedor sem contrato",
+        "risco trabalhista", "responsabilidade trabalhista", "vínculo empregatício"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "prestador-sem-nota-fiscal",
+      "categoria": "gestao",
+      "pergunta": "Prestador de serviço se recusa a emitir nota fiscal. O que fazer?",
+      "resposta": "Não contrate sem nota fiscal. Isso expõe o condomínio a: 1) Autuação por sonegação fiscal (o condomínio pode responder solidariamente); 2) Ausência de garantia formal do serviço prestado; 3) Impossibilidade de dedução contábil; 4) Risco de vínculo empregatício reconhecido em Justiça do Trabalho. Se o prestador já executou o serviço sem NF, peça que emita retroativamente — muitas vezes é possível. Caso se recuse, documente a negativa e avalie ação de ressarcimento.",
+      "contexto": "A emissão de nota fiscal é obrigatória para prestadores de serviço, seja pessoa física (RPA/recibo quando permitido) ou pessoa jurídica (NFS-e). O condomínio deve reter ISS quando aplicável (Lei Complementar 116/2003 e legislação municipal).",
+      "dica": "Inclua em todos os contratos a obrigação de emissão de nota fiscal como condição de pagamento. Nunca pague antes de receber a nota — isso é regra de gestão, não burocracia.",
+      "keywords": [
+        "nota fiscal", "nf", "nfse", "nota", "fiscal", "sem nota",
+        "prestador recusa", "prestador informal", "sem recibo", "pagamento informal",
+        "sonegação", "sonegacao", "receita federal", "iss", "retenção",
+        "retencao", "comprovante", "recibo"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "funcionario-sem-registro-risco",
+      "categoria": "trabalhista",
+      "pergunta": "O condomínio tem funcionário trabalhando sem carteira assinada. Qual o risco?",
+      "resposta": "O risco é imediato e severo. Funcionário sem registro gera: 1) Multa por infração trabalhista (art. 47 CLT — valor por empregado não registrado); 2) Passivo de todos os direitos não pagos: FGTS + 40%, INSS, décimo terceiro, férias, horas extras; 3) Em ação judicial, o vínculo é reconhecido retroativamente a partir do primeiro dia de trabalho; 4) Solidariedade tributária com a Receita Federal e Previdência. Regularize imediatamente: calcule o passivo com a administradora, registre o funcionário e pague o que for devido.",
+      "contexto": "O art. 29 da CLT exige registro em CTPS no momento da admissão. A ausência de registro não elimina o vínculo empregatício — apenas o oculta. O Auditor Fiscal do Trabalho pode autuar o condomínio e o prazo prescricional trabalhista é de 2 anos após o rompimento do vínculo.",
+      "dica": "Se o funcionário trabalha há muito tempo sem registro, consulte um advogado trabalhista antes de regularizar para calcular o passivo e negociar o pagamento. Uma regularização mal feita pode ser pior que o problema original.",
+      "keywords": [
+        "sem carteira", "sem registro", "não registrado", "nao registrado",
+        "carteira assinada", "ctps", "funcionario informal", "trabalha sem contrato",
+        "pagamento informal", "empregado sem registro", "multa trabalhista",
+        "auditoria trabalhista", "fiscal trabalho", "passivo trabalhista"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "inadimplencia-alta-estrategia",
+      "categoria": "inadimplencia",
+      "pergunta": "A inadimplência no condomínio está muito alta. Por onde começar?",
+      "resposta": "Com inadimplência alta (acima de 10-15% da arrecadação), a gestão financeira entra em risco. O plano de ação: 1) Mapeie o total, os casos mais antigos e os maiores devedores; 2) Ofereça acordo de parcelamento com desconto de juros para quem regularizar em 30 dias; 3) Acione cobrança judicial para os casos sem acordo — taxa condominial é título executivo extrajudicial (CPC art. 784); 4) Avalie cota extra emergencial para cobrir déficit enquanto o processo corre; 5) Apresente o cenário em assembleia com transparência.",
+      "contexto": "A taxa condominial é título executivo extrajudicial (art. 784, X do CPC), o que agiliza a cobrança judicial sem precisar de ação de conhecimento prévia. O prazo prescricional é de 5 anos (Lei 14.905/2024). A negativação em cartório pode ser feita após notificação.",
+      "dica": "Nunca corte serviços essenciais como água ou elevador para pressionar inadimplentes — isso é ilegal e gera passivo. A via judicial é mais demorada mas é a única legalmente segura.",
+      "keywords": [
+        "inadimplência alta", "inadimplencia alta", "muito inadimplente",
+        "varios inadimplentes", "muitos devedores", "arrecadação baixa",
+        "receita insuficiente", "caixa negativo", "déficit", "deficit",
+        "taxa inadimplência", "percentual inadimplencia", "estrategia cobranca",
+        "como cobrar", "plano cobranca"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "administradora-o-que-cobrar",
+      "categoria": "gestao",
+      "pergunta": "O que o síndico deve cobrar da administradora?",
+      "resposta": "O síndico tem direito a exigir da administradora: 1) Balancete mensal detalhado com comprovantes; 2) Extrato bancário da conta do condomínio; 3) Relação de inadimplentes atualizada; 4) Contratos vigentes de fornecedores; 5) Documentos de funcionários (holerites, férias, FGTS); 6) Guias de encargos pagas (INSS, FGTS, ISS); 7) Apólice do seguro predial vigente; 8) AVCB e certidões do prédio; 9) Ata das assembleias e lista de moradores. Defina em reunião mensal a agenda de entrega desses documentos.",
+      "contexto": "O contrato com a administradora define suas obrigações. O síndico, como representante legal do condomínio, tem direito pleno de acesso a todos os documentos financeiros e administrativos — isso não é favor, é obrigação contratual da administradora.",
+      "dica": "Peça acesso ao sistema online da administradora para visualizar balancetes e extratos em tempo real. Se a administradora resistir em fornecer documentos, isso é sinal de alerta.",
+      "keywords": [
+        "administradora", "cobrar administradora", "documentos administradora",
+        "balancete", "extrato bancário", "extrato bancario", "prestacao contas",
+        "prestação contas", "inadimplentes lista", "contratos fornecedores",
+        "o que pedir", "direitos sindico", "acesso documentos", "relatórios"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "documentos-sindico-pasta-completa",
+      "categoria": "gestao",
+      "pergunta": "Quais documentos o síndico deve ter em mãos?",
+      "resposta": "A pasta essencial do síndico deve conter: 1) Convenção e regimento interno atualizados; 2) CNPJ do condomínio; 3) AVCB vigente; 4) Apólice do seguro predial com coberturas; 5) Contratos de fornecedores (elevador, limpeza, portaria, segurança); 6) Lista de funcionários com cargos e contratos; 7) Último balancete aprovado e previsão orçamentária; 8) Relação de inadimplentes; 9) Plantas do edifício (elétrica, hidráulica, estrutural); 10) Atas das últimas assembleias; 11) Certidão Negativa de Débitos trabalhistas e previdenciários.",
+      "contexto": "O síndico responde pessoalmente por atos de gestão (CC art. 1.348). Ter os documentos em ordem é proteção jurídica, não burocracia. Em caso de ação contra o condomínio, quem tem documentação organizada tem defesa mais sólida.",
+      "dica": "Mantenha cópia digital criptografada de todos os documentos. Ao deixar o cargo, formalize a entrega desses documentos ao próximo síndico com protocolo assinado.",
+      "keywords": [
+        "documentos", "pasta sindico", "documentos essenciais", "o que guardar",
+        "quais documentos", "organizar documentos", "arquivo condomínio",
+        "documentação", "cnpj", "convenção cópia", "contratos pasta",
+        "avcb cópia", "seguro cópia", "balancete guardado"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "revisao-mensal-sindico",
+      "categoria": "gestao",
+      "pergunta": "O que o síndico deve revisar todo mês?",
+      "resposta": "A rotina mensal do síndico inclui: 1) Verificar balancete e extrato bancário do mês anterior; 2) Conferir lista de inadimplentes e situação das cobranças em andamento; 3) Revisar pendências de manutenção abertas; 4) Verificar vencimentos dos próximos 60 dias (AVCB, seguro, contratos, férias de funcionários); 5) Checar folha de pagamento dos funcionários e encargos pagos; 6) Atualizar o livro ou sistema de ocorrências; 7) Reunião rápida com o zelador ou responsável pelas áreas comuns.",
+      "contexto": "Não existe obrigação legal de reunião mensal, mas é boa prática de gestão. Muitos problemas em condomínio decorrem de omissão — síndico que não verifica regularmente deixa situações se agravarem até virar emergência.",
+      "dica": "Reserve 2 horas por mês para a revisão mensal. Use uma checklist fixa. O que é monitorado regularmente raramente vira crise.",
+      "keywords": [
+        "revisão mensal", "revisao mensal", "mensal", "rotina sindico",
+        "todo mês", "toda semana", "verificar mensalmente", "agenda sindico",
+        "checklist mensal", "o que revisar", "controle mensal", "acompanhamento"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "troca-administradora-processo",
+      "categoria": "gestao",
+      "pergunta": "Como trocar de administradora de forma segura?",
+      "resposta": "A troca de administradora exige: 1) Verificar o prazo de aviso prévio no contrato atual (geralmente 30 a 90 dias); 2) Aprovação em assembleia com quórum definido na convenção; 3) Cotação e seleção da nova administradora com critérios claros (custo, sistema, referências); 4) Formalizar rescisão por escrito com a atual; 5) Solicitar à administradora sainte todos os documentos: contratos, certidões, histórico financeiro, dados bancários, acesso a sistemas; 6) Abrir nova conta bancária no nome do condomínio antes da transição.",
+      "contexto": "O contrato com a administradora é rescindível por deliberação em assembleia. O prazo de aviso prévio e multa rescisória (se houver) estão no contrato — leia-o antes de convocar a assembleia.",
+      "dica": "Não troque de administradora sem ter a nova já contratada e pronta para assumir. O período de transição é de alto risco operacional — balancetes, folha e inadimplência não podem parar.",
+      "keywords": [
+        "trocar administradora", "troca administradora", "mudar administradora",
+        "nova administradora", "sair administradora", "rescisão contrato administradora",
+        "processo troca", "como trocar", "rescisao contrato", "aviso previo administradora",
+        "documentos transição", "transferência gestão"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "advertencia-formal-funcionario",
+      "categoria": "trabalhista",
+      "pergunta": "Como aplicar uma advertência formal a um funcionário do condomínio?",
+      "resposta": "A advertência deve seguir este processo: 1) Identifique e documente a falta com precisão (data, hora, testemunhas, natureza); 2) Convoque o funcionário para ouvir sua versão — isso é essencial para validade; 3) Redija a advertência por escrito com: data, identificação do funcionário, descrição da falta, fundamentação (convenção, regulamento ou CLT); 4) Entregue pessoalmente e peça assinatura de recebimento; 5) Se o funcionário recusar assinar, duas testemunhas devem atestar a entrega; 6) Arquive cópia no prontuário do funcionário.",
+      "contexto": "A advertência escrita não está expressamente prevista em lei como etapa obrigatória antes da demissão por justa causa, mas a jurisprudência trabalhista a exige como demonstração de proporcionalidade. Sem advertências anteriores, justa causas como desídia costumam ser anuladas na Justiça do Trabalho.",
+      "dica": "Uma advertência nunca deve ser usada como punição oculta — sempre fundamente em regra específica. Guarde as advertências por pelo menos 5 anos mesmo após o desligamento do funcionário.",
+      "keywords": [
+        "advertência", "advertencia", "advertir", "funcionário", "funcionario",
+        "falta funcionario", "punição", "punicao", "punir empregado",
+        "carta advertência", "carta advertencia", "aplicar advertencia",
+        "processo disciplinar", "infração funcionario", "notificar funcionario"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "acumulo-funcao-remuneracao",
+      "categoria": "trabalhista",
+      "pergunta": "O porteiro faz serviços além do que está no contrato. Tem direito a adicional?",
+      "resposta": "Sim. Quando um funcionário realiza habitualmente tarefas de outro cargo mais bem remunerado, tem direito a diferença salarial por acúmulo de função. Por exemplo: porteiro que também faz serviços de zelador pode reivindicar a diferença entre os salários das funções. A chave é a habitualidade — tarefa esporádica não gera adicional. A CCT pode prever valores específicos para acúmulo de função (verifique a CCT da sua região).",
+      "contexto": "O acúmulo de função é reconhecido pela jurisprudência trabalhista mesmo sem previsão expressa em lei, com base nos princípios de isonomia e boa-fé. A CCT SECOVI geralmente prevê adicionais específicos para certas situações de acúmulo.",
+      "dica": "Defina claramente as funções de cada cargo no regimento de pessoal. Se o condomínio precisar que um funcionário acumule funções, formalize com adendo ao contrato e defina o adicional antes de exigir a tarefa.",
+      "keywords": [
+        "acúmulo função", "acumulo funcao", "porteiro zelador", "dupla função",
+        "múltiplas funções", "multiplas funcoes", "adicional função",
+        "tarefas extras", "serviço além do contrato", "diferença salarial",
+        "mais de um cargo", "habitualidade", "desvio função"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "banco-horas-condominio",
+      "categoria": "trabalhista",
+      "pergunta": "O condomínio pode usar banco de horas em vez de pagar horas extras?",
+      "resposta": "Sim, desde que haja previsão em acordo individual escrito, convenção coletiva ou acordo coletivo de trabalho. Com banco de horas: as horas extras são compensadas com folgas no prazo máximo de 1 ano (acordo individual) ou conforme a CCT. Se não forem compensadas no prazo, devem ser pagas como horas extras com acréscimo. O banco de horas deve ser controlado de forma transparente — funcionário tem direito a ver o saldo a qualquer momento.",
+      "contexto": "O banco de horas está previsto no art. 59, §2º da CLT. Sem acordo formal, horas extras devem ser pagas na folha com acréscimo mínimo de 50%. A Reforma Trabalhista (2017) ampliou possibilidades de banco de horas por acordo individual.",
+      "dica": "Mantenha registro claro do banco de horas — entrada, saída e folgas usadas. Banco de horas sem controle pode virar passivo maior do que as horas extras que queria evitar.",
+      "keywords": [
+        "banco de horas", "banco horas", "compensação horas", "compensacao horas",
+        "horas extras compensar", "folga compensatória", "folga compensatoria",
+        "hora extra banco", "compensar hora extra", "acordo compensacao",
+        "prazo compensacao", "horas acumuladas"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "dsr-folga-semanal",
+      "categoria": "trabalhista",
+      "pergunta": "O funcionário tem direito a folga semanal remunerada?",
+      "resposta": "Sim. Todo funcionário tem direito ao repouso semanal remunerado (DSR) de 24 horas consecutivas, preferencialmente aos domingos, mas pode ser em outro dia da semana conforme a escala. Para condomínios, é comum que a folga dominical seja alternada ou prevista na escala. Se o funcionário trabalhar no dia de descanso sem folga compensatória, o dia trabalhado deve ser pago em dobro.",
+      "contexto": "O DSR (Descanso Semanal Remunerado) é garantido pela Lei 605/1949 e pelo art. 7º, XV da Constituição Federal. A CCT do setor condominial geralmente detalha como organizar as escalas com DSR garantido.",
+      "dica": "Construa a escala de trabalho com o DSR já incorporado. Funcionários que trabalham 6×1 (6 dias trabalham, 1 folgam) têm o DSR garantido — apenas certifique que a folga é remunerada.",
+      "keywords": [
+        "folga", "folga semanal", "descanso semanal", "dsr", "repouso semanal",
+        "domingo folga", "dia folga", "escala folga", "trabalhar domingo",
+        "folga remunerada", "descansou", "não pode trabalhar todos dias",
+        "6x1", "folga semana"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "suspensao-disciplinar-funcionario",
+      "categoria": "trabalhista",
+      "pergunta": "O condomínio pode suspender um funcionário como punição?",
+      "resposta": "Sim. A suspensão disciplinar é uma das três penalidades previstas em lei: advertência, suspensão e demissão por justa causa. A suspensão deve ser proporcional à falta, por prazo máximo de 30 dias consecutivos (art. 474 da CLT). Durante a suspensão, o funcionário não recebe salário. O processo correto: advertência escrita prévia para faltas menores, depois suspensão para reincidência ou falta mais grave. Nunca aplique suspensão sem advertência anterior para a mesma conduta, salvo em faltas gravíssimas.",
+      "contexto": "Art. 474 da CLT: suspensão superior a 30 dias equivale a rescisão imotivada. Faltas que justificam suspensão: falta injustificada reiterada, desobediência a ordens legais do empregador, ato de indisciplina, comportamento irregular. A CCT pode ter regras específicas.",
+      "dica": "Antes de suspender, ouça o funcionário. Registre a suspensão por escrito, com data de início e fim. Guarde todos os documentos — advertências anteriores e a suspensão — no prontuário.",
+      "keywords": [
+        "suspensão", "suspensao", "suspender funcionário", "suspender empregado",
+        "punição funcionario", "punicao funcionario", "penalidade",
+        "afastar temporariamente", "sem salário por punição", "sem salario punicao",
+        "30 dias suspensão", "disciplinar funcionario"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "votacao-email-whatsapp-validade",
+      "categoria": "assembleias",
+      "pergunta": "Decisão tomada por e-mail ou WhatsApp entre condôminos tem validade?",
+      "resposta": "Depende do que diz a convenção. Sem previsão expressa, deliberações condominiais exigem assembleia formal. Com o avanço da assembleia eletrônica (art. 1.354-A do CC, incluído pela Lei 14.309/2022), é possível realizar assembleias digitais com plataformas que garantam autenticação e registro. Votações informais por WhatsApp ou e-mail sem protocolo adequado são juridicamente frágeis e podem ser anuladas por qualquer condômino.",
+      "contexto": "A Lei 14.309/2022 inseriu o art. 1.354-A no Código Civil, permitindo explicitamente assembleias virtuais ou híbridas. Para votações digitais terem validade: deve haver convocação formal, plataforma com autenticação dos participantes, registro de votos e ata assinada.",
+      "dica": "Prefira plataformas especializadas em assembleias condominiais digitais para votações importantes. WhatsApp pode ser usado para enquetes informais e comunicados, não para deliberações vinculantes.",
+      "keywords": [
+        "votação email", "votacao email", "votação whatsapp", "votacao whatsapp",
+        "decisão online", "decisao online", "assembleia virtual", "assembleia online",
+        "assembleia eletrônica", "assembleia eletronica", "voto digital",
+        "voto remoto", "deliberação digital", "enquete condôminos"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "obras-aprovacao-assembleia",
+      "categoria": "assembleias",
+      "pergunta": "Que quórum é necessário para aprovar obras em assembleia?",
+      "resposta": "O quórum varia conforme o tipo de obra: 1) Obras de conservação e manutenção necessária: o síndico pode aprovar sozinho (art. 1.341 CC); 2) Obras úteis (melhoria sem luxo): maioria simples dos presentes em segunda convocação (art. 1.341 §1º); 3) Obras voluptuárias (luxo ou mero deleite): 2/3 dos condôminos (art. 1.341 §2º); 4) Obras que alteram a estrutura ou fachada: também 2/3 mínimo. Sempre consulte a convenção — ela pode exigir quóruns maiores.",
+      "contexto": "O Código Civil (art. 1.341) classifica as obras em necessárias, úteis e voluptuárias. A distinção importa porque define quem pode aprovar e qual o custo a repartir. Obras necessárias feitas pelo síndico sem assembleia devem ser comunicadas à AGO mais próxima.",
+      "dica": "Descreva na pauta da assembleia exatamente o tipo de obra, o orçamento e o impacto financeiro antes de votar. Votação sem informação suficiente é fonte de conflito posterior.",
+      "keywords": [
+        "quórum obras", "quorum obras", "aprovar obra assembleia",
+        "obra votação", "obra votacao", "benfeitorias", "melhoria assembleia",
+        "obra luxo", "obra necessária", "obra necessaria", "obra útil",
+        "obra voluptuária", "obra voluptuaria", "dois terços obras",
+        "maioria obras", "reforma votação"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "assembleia-sem-quorum",
+      "categoria": "assembleias",
+      "pergunta": "O que fazer quando a assembleia não atinge quórum?",
+      "resposta": "Na primeira convocação, o quórum mínimo é 1/2 mais 1 dos condôminos (maioria absoluta). Se não for atingido, convoque segunda convocação com intervalo mínimo geralmente de 30 minutos (verifique sua convenção — algumas exigem novo edital). Na segunda convocação, a assembleia instala com qualquer número de condôminos presentes. Para deliberações especiais (mudança de convenção, obras voluptuárias), o quórum é calculado sobre o total de condôminos, não sobre os presentes — isso não muda com segunda convocação.",
+      "contexto": "O CC art. 1.353 permite segunda convocação com qualquer número de condôminos para a maioria das decisões. Exceção importante: mudança de convenção (art. 1.351) e obras voluptuárias ainda exigem 2/3 do total de condôminos, independentemente de segunda convocação.",
+      "dica": "Inclua sempre primeira e segunda convocação no mesmo edital, com o intervalo definido na convenção. Isso evita ter que reconvocar por falta de quórum.",
+      "keywords": [
+        "sem quórum", "sem quorum", "quórum insuficiente", "assembleia vazia",
+        "falta condôminos", "falta condominios", "segunda convocação",
+        "segunda convocacao", "segunda chamada", "não atingiu quorum",
+        "nao atingiu quorum", "pouca presença", "pouca participação"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "convocacao-assembleia-detalhada",
+      "categoria": "assembleias",
+      "pergunta": "Como convocar uma assembleia corretamente?",
+      "resposta": "A convocação válida deve conter: 1) Data, hora e local da reunião (ou link, para virtual); 2) Pauta completa e específica — itens vagos ('outros assuntos') podem ser anulados; 3) Primeira e segunda convocação no mesmo edital; 4) Prazo mínimo de antecedência (verifique sua convenção — geralmente 10 a 15 dias); 5) Assinatura do síndico ou do Conselho (para AGE convocada por condôminos: 1/4 do total). A convocação deve ser entregue em mão, por AR, afixada no quadro de avisos ou enviada por e-mail/app se a convenção permitir.",
+      "contexto": "A convocação irregular (prazo curto, pauta incompleta ou meio indevido) é fundamento para anulação da assembleia. Art. 1.350 e 1.354 do CC tratam das convocações. O STJ tem jurisprudência consolidada: vício de convocação pode invalidar toda a assembleia.",
+      "dica": "Guarde o comprovante de entrega da convocação de cada condômino — isso é sua prova em caso de impugnação da assembleia. Para grandes prédios, liste a entrega de cada aviso com data e assinatura de recebimento.",
+      "keywords": [
+        "convocar assembleia", "convocação assembleia", "convocacao assembleia",
+        "edital assembleia", "prazo convocação", "prazo convocacao",
+        "como convocar", "aviso assembleia", "comunicado assembleia",
+        "regras convocação", "assembleia inválida", "assembleia invalida",
+        "pauta assembleia", "notificação assembleia"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "prestacao-contas-como-fazer",
+      "categoria": "financeiro",
+      "pergunta": "O que deve ser apresentado na prestação de contas da AGO?",
+      "resposta": "A prestação de contas da assembleia ordinária deve incluir: 1) Demonstrativo de receitas e despesas do exercício; 2) Balancete de verificação com saldo bancário confirmado; 3) Extrato da conta bancária do condomínio; 4) Comprovantes de despesas relevantes (notas fiscais, recibos); 5) Relatório de inadimplência; 6) Situação do fundo de reserva; 7) Previsão orçamentária para o próximo exercício; 8) Parecer do Conselho Fiscal (quando houver). Tudo deve ser disponibilizado aos condôminos com antecedência — pelo menos 5 dias antes da assembleia.",
+      "contexto": "O CC art. 1.348, VIII exige que o síndico preste contas anualmente. O conselho fiscal tem papel de auditoria interna (art. 1.356 CC). A assembleia aprova ou rejeita as contas — aprovação por maioria simples.",
+      "dica": "Distribua o resumo financeiro com antecedência. Condôminos que chegam à AGO sem entender os números tendem a rejeitar as contas por desconfiança, não por irregularidade. Transparência previne conflito.",
+      "keywords": [
+        "prestação contas", "prestacao contas", "ago prestacao contas",
+        "assembleia ordinária", "assembleia ordinaria", "demonstrativo financeiro",
+        "balancete anual", "como apresentar contas", "documentos ago",
+        "contas aprovadas", "contas rejeitadas", "previsão orçamentária",
+        "relatorio financeiro", "reunião anual"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "fundo-reserva-insuficiente",
+      "categoria": "financeiro",
+      "pergunta": "O fundo de reserva do condomínio está insuficiente. O que fazer?",
+      "resposta": "O fundo de reserva insuficiente é um sinal de alerta financeiro. Ações imediatas: 1) Avalie o custo de uma emergência plausível (reforma urgente, sinistro, contingência trabalhista); 2) Calcule o que seria necessário — regra prática: pelo menos 5% do orçamento anual; 3) Proponha em assembleia um aporte ao fundo via cota extra ou aumento temporário da contribuição; 4) Corrija a previsão orçamentária para incluir contribuição mensal ao fundo. Não use o fundo de reserva para despesas ordinárias.",
+      "contexto": "O fundo de reserva está previsto no CC art. 1.348, VI e deve ser aplicado nas despesas previstas na convenção. Uso indevido do fundo (para cobrir déficit corrente, por exemplo) é irregularidade de gestão. O percentual mínimo de contribuição deve estar na convenção.",
+      "dica": "Separe as contas do fundo de reserva das do caixa operacional — use conta poupança ou conta separada. Misturar as contas é um dos erros mais comuns e mais difíceis de desfazer.",
+      "keywords": [
+        "fundo reserva", "fundo de reserva", "reserva insuficiente",
+        "fundo baixo", "sem reserva", "caixa vazio", "emergência sem recurso",
+        "emergencia sem recurso", "déficit", "deficit", "fundo zerado",
+        "repor fundo", "cota reserva"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "conflito-moradores-mediacao",
+      "categoria": "convencao",
+      "pergunta": "Dois moradores estão em conflito aberto. O que o síndico pode fazer?",
+      "resposta": "O síndico não é árbitro de conflitos pessoais, mas tem papel de preservar a ordem no condomínio. Passos: 1) Registre o conflito formalmente se envolver perturbação da ordem; 2) Convide as partes separadamente para conversar, sem tomar partido; 3) Se houver infração ao regimento (barulho, ofensas em área comum), aplique advertência e multa seguindo o rito correto; 4) Para conflitos persistentes, ofereça ou oriente sobre mediação extrajudicial; 5) Se houver ameaça ou agressão, oriente o prejudicado a registrar BO e o síndico deve notificar formalmente o agressor.",
+      "contexto": "O síndico tem poder de polícia condominial limitado à aplicação das regras previstas na convenção e regimento. Não pode obrigar moradores a se reconciliarem — apenas regular condutas que violem as regras coletivas. A mediação extrajudicial (Lei 13.140/2015) é uma alternativa extrajudicial que pode ser sugerida.",
+      "dica": "Documente cada interação com as partes. Nunca coloque no papel 'fulano disse que beltrano fez X' sem evidência — isso pode gerar ação por dano moral contra o síndico.",
+      "keywords": [
+        "conflito moradores", "briga moradores", "desentendimento", "rixa",
+        "vizinhos brigando", "moradores em conflito", "conflito grave",
+        "mediação", "mediacao", "resolver conflito", "síndico no conflito",
+        "conflito apartamento", "disputa moradores", "briga vizinhos"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "grupo-whatsapp-condominio",
+      "categoria": "lgpd",
+      "pergunta": "O condomínio tem grupo de WhatsApp. O síndico pode usar para comunicados oficiais?",
+      "resposta": "Pode usar como canal de comunicação complementar, mas com cuidados: 1) WhatsApp não é canal oficial sem previsão em convenção — decida em assembleia se será considerado válido para comunicados formais; 2) Não poste dados pessoais de moradores, inadimplentes ou funcionários sem consentimento — viola a LGPD; 3) Não vote ou delibere pelo grupo — decisões precisam de assembleia formal; 4) Moderação: o síndico como admin pode remover conteúdo ofensivo e advertir moradores que violem regras de convivência no grupo. Notificações e multas ainda precisam ser entregues formalmente.",
+      "contexto": "A LGPD (Lei 13.709/2018) proíbe divulgação de dados pessoais sem base legal. Publicar nome de inadimplente, CPF, foto ou informações pessoais de moradores em grupo aberto pode gerar multa e ação por danos morais. O grupo de WhatsApp do condomínio deve ter regras claras aprovadas em assembleia.",
+      "dica": "Crie um documento de 'Regras do grupo' e compartilhe ao adicionar cada morador. Defina: o que pode ser postado, horários de comunicado, quem pode publicar e o que gera remoção do grupo.",
+      "keywords": [
+        "grupo whatsapp", "whatsapp condominio", "grupo condomínio",
+        "comunicado whatsapp", "chat moradores", "grupo moradores",
+        "postar whatsapp", "lgpd whatsapp", "privacidade whatsapp",
+        "comunicado oficial", "canal comunicação", "mensagem moradores",
+        "regras grupo", "admin grupo"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "vandalismo-areas-comuns",
+      "categoria": "responsabilidade",
+      "pergunta": "Há vandalismo ou depredação nas áreas comuns. O que o síndico deve fazer?",
+      "resposta": "Aja em três frentes: 1) Documente o dano imediatamente com fotos e vídeos, registrando data e horário; 2) Se souber quem causou, notifique formalmente exigindo o reparo ou ressarcimento; 3) Se o autor for desconhecido, avalie imagens de câmeras de segurança e considere registro de boletim de ocorrência; 4) Aplique a multa prevista no regimento (dano ao patrimônio comum); 5) Se o responsável não ressarcir, o condomínio pode ajuizar ação de reparação de danos. O custo do reparo não pode ser rateado entre todos os condôminos se o responsável for identificado.",
+      "contexto": "O condômino que causar dano às áreas comuns responde civilmente pela reparação integral (CC art. 186 e 927). O locatário que causar dano tem responsabilidade própria, mas o proprietário responde solidariamente perante o condomínio — e pode cobrar depois do locatário.",
+      "dica": "Câmeras de segurança em áreas comuns são essenciais para responsabilização. Mantenha o sistema de CFTV funcionando e com retenção de imagens por pelo menos 30 dias.",
+      "keywords": [
+        "vandalismo", "depredação", "depredacao", "dano área comum",
+        "dano area comum", "destruiu", "quebrou", "pichação", "pichacao",
+        "patrimônio", "patrimonio", "quem pagou", "quem causou dano",
+        "ressarcimento", "reparo", "quem paga conserto"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "elevador-sem-contrato",
+      "categoria": "manutencao",
+      "pergunta": "O elevador do prédio não tem contrato de manutenção. Qual o risco?",
+      "resposta": "O risco é crítico. Elevador sem manutenção preventiva e sem contrato: 1) Em caso de acidente, o condomínio tem presunção de culpa e o síndico pode responder criminalmente (lesão ou homicídio culposo); 2) O seguro predial pode recusar cobertura de sinistro com elevador se não houver contrato de manutenção; 3) O órgão de fiscalização pode embargar o elevador; 4) A norma técnica NBR 16083 e legislações estaduais exigem manutenção periódica documentada. Contrate imediatamente empresa habilitada — não opere o elevador sem contrato.",
+      "contexto": "O STJ tem jurisprudência consolidada de responsabilidade objetiva do condomínio por acidente em elevador. A Lei Estadual varia por estado (SP Lei 10.166/1998; RJ Lei 2.212/1994 etc.), mas todas exigem manutenção periódica por empresa credenciada.",
+      "dica": "Ao contratar empresa de manutenção de elevador, exija: registro no CREA, ART emitida, relatório mensal de visita, certificado anual de inspeção. Guarde todos os documentos — eles são sua defesa em caso de acidente.",
+      "keywords": [
+        "elevador sem contrato", "elevador manutenção", "elevador manutencao",
+        "contrato elevador", "empresa elevador", "manutenção elevador",
+        "elevador vencido", "sem manutenção elevador", "elevador parado",
+        "acidente elevador", "risco elevador", "credenciada elevador",
+        "nbr elevador", "laudo elevador"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "portao-quebrado-responsabilidade",
+      "categoria": "gestao",
+      "pergunta": "O portão da garagem está quebrado. Quem é responsável e o que fazer?",
+      "resposta": "O portão da garagem é área comum, portanto a manutenção e o reparo são responsabilidade do condomínio. O síndico deve: 1) Contratar reparo imediato — portão quebrado é questão de segurança; 2) Em caso de emergência, buscar aprovação informal do Conselho ou subsíndico enquanto convoca assembleia se o valor exceder o limite da convenção; 3) Se o dano foi causado por um morador ou visitante, acione o responsável para ressarcimento; 4) Registre ocorrência fotográfica antes do reparo; 5) Verifique se o seguro predial cobre o dano.",
+      "contexto": "Portões de garagem são considerados área comum (CC art. 1.331 §1º). O síndico pode contratar reparos urgentes sem assembleia quando necessário à segurança do prédio (CC art. 1.341, I — obras urgentes). O limite de valor para decisão unilateral do síndico deve estar na convenção.",
+      "dica": "Mantenha contato de um técnico de emergência para portões e outros equipamentos críticos de segurança. Portão quebrado pode expor o prédio a furtos e invasões — não adie o reparo.",
+      "keywords": [
+        "portão quebrado", "portao quebrado", "portão danificado", "portao danificado",
+        "portão garagem", "portao garagem", "portão não abre", "portao nao abre",
+        "conserto portão", "reparo portão", "quem paga portão",
+        "automático quebrado", "automatico quebrado", "motor portão"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "barulho-recorrente-escalada",
+      "categoria": "multas",
+      "pergunta": "Mesmo após advertência, o morador continua fazendo barulho. O que fazer?",
+      "resposta": "Para barulho recorrente após advertência, escale as medidas proporcionalmente: 1) Segunda advertência com multa prevista no regimento (geralmente 1 a 5 vezes a cota); 2) Para reincidência: nova multa com valor progressivo; 3) Se o barulho for perturbação do sossego (crime — CP art. 42), oriente os prejudicados a acionar a polícia no momento da ocorrência e registrar BO; 4) Para comportamento antissocial reiterado: condomínio pode aplicar multa de até 10x a cota (CC art. 1.337 parágrafo único), mas isso exige deliberação em assembleia; 5) Se nada resolver, ação judicial por dano moral e obrigação de fazer.",
+      "contexto": "O CC art. 1.337 prevê multa por comportamento antissocial reiterado. O STJ tem precedentes condenando condôminos por perturbação sonora recorrente. A multa progressiva é o instrumento mais eficaz — desde que esteja prevista no regimento.",
+      "dica": "Monte um histórico de todas as ocorrências: datas, horários, natureza do barulho, testemunhas, advertências enviadas e respostas do morador. Esse histórico é essencial tanto para multa progressiva quanto para ação judicial.",
+      "keywords": [
+        "barulho recorrente", "barulho persistente", "continua barulho",
+        "não parou", "nao parou", "vizinho barulhento", "reincidente barulho",
+        "barulho repetido", "segunda advertência barulho", "multa progressiva",
+        "antissocial", "perturbação sossego", "perturbacao sossego",
+        "barulho crônico", "barulho cronico", "escalada punição"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "obra-irregular-embargo",
+      "categoria": "obras",
+      "pergunta": "Morador está fazendo obra irregular sem avisar o condomínio. O que fazer?",
+      "resposta": "Aja imediatamente: 1) Notifique o morador por escrito exigindo a paralisação da obra e apresentação da documentação (ART, cronograma, autorização da prefeitura se necessário); 2) Se a obra afeta estrutura ou fachada, convoque a paralisação imediata — o síndico tem esse poder; 3) Registre a ocorrência com fotos detalhadas; 4) Se o morador não parar, acione o Corpo de Bombeiros ou prefeitura para embargo; 5) Aplique multa prevista no regimento por obra sem autorização; 6) Se houver dano já causado, acione o responsável para ressarcimento e contrate laudo de engenheiro.",
+      "contexto": "O CC art. 1.336, II proíbe alterações que prejudiquem a estrutura. A NBR 16.280 exige apresentação de projeto e ART para reformas que afetam estrutura, instalações ou fachada. O síndico pode paralisar obras que ameacem a segurança sem precisar de assembleia (CC art. 1.341, I).",
+      "dica": "Não apenas paralise — exija regularização com prazo formal. Coloque no comunicado: o que precisa ser apresentado, o prazo e a consequência do não cumprimento. Se paralisar verbalmente, confirme sempre por escrito.",
+      "keywords": [
+        "obra irregular", "obra sem autorização", "obra sem autorizacao",
+        "reforma irregular", "reforma clandestina", "obra clandestina",
+        "morador fazendo obra", "sem avisar obra", "obra estrutura",
+        "obra fachada", "embargo obra", "paralisar obra", "notificar obra"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "documentos-prazo-guarda-completo",
+      "categoria": "gestao",
+      "pergunta": "Por quanto tempo o condomínio deve guardar os documentos?",
+      "resposta": "Prazos de guarda obrigatória: 1) Documentos de funcionários (contratos, holerites, FGTS, rescisões): 10 a 30 anos dependendo do tipo; 2) Certidões e atas de assembleia: permanente; 3) Contratos de fornecedores: 5 anos após o encerramento; 4) Balancetes e documentos fiscais: 5 anos; 5) Projetos do edifício (plantas elétricas, hidráulicas, estruturais): permanente — esses documentos não podem ser descartados; 6) AVCB e laudos técnicos: permanente; 7) Registros de manutenção: 5 anos mínimo.",
+      "contexto": "A prescrição trabalhista é de 5 anos em relação ao empregado ativo (art. 7º XXIX CF) e 2 anos após o desligamento para ajuizar ação. Documentos fiscais seguem a prescrição do CTN (5 anos). Projetos não têm prazo de descarte legal — são parte da memória técnica do edifício.",
+      "dica": "Digitalize e faça backup em nuvem de todos os documentos importantes. Para documentos físicos obrigatórios, mantenha em arquivo organizado por categoria e ano. Ao trocar de síndico, formalize a entrega com protocolo assinado.",
+      "keywords": [
+        "prazo guardar", "tempo guardar", "quanto tempo guardar",
+        "guarda documentos", "arquivar", "retenção documentos", "retencao documentos",
+        "descartar documento", "pode jogar fora", "quando jogar fora",
+        "arquivo morto", "documentos antigos", "prazo legal", "anos guardar"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "cota-extra-emergencia-aprovacao",
+      "categoria": "financeiro",
+      "pergunta": "É necessário aprovação em assembleia para cobrar cota extra de emergência?",
+      "resposta": "Depende da urgência e do que diz a convenção. Para situações de emergência real (risco à segurança, obra urgente imprescindível), o síndico pode tomar a providência e apresentar as contas à próxima assembleia. Para cobrar cota extra em si, normalmente é necessária aprovação em assembleia — mas a maioria das convenções permite ao síndico acionar o fundo de reserva em emergências. Verifique o que sua convenção prevê: limites de valor, definição de urgência e aprovação posterior.",
+      "contexto": "O CC art. 1.341, §1º autoriza o síndico a fazer obras urgentes de conservação sem aprovação prévia. Para a cobrança de cota extra destinada a cobrir o custo, geralmente é necessária deliberação — salvo previsão específica na convenção para situações de emergência.",
+      "dica": "Para emergências: use o fundo de reserva se disponível, apresente as contas na próxima assembleia e convoque assembleia específica para ratificar a despesa e aprovar a cota extra se necessário.",
+      "keywords": [
+        "cota extra emergência", "cota extra emergencia", "taxa extra emergencia",
+        "cota emergência", "cota extra aprovação", "taxa extra aprovação",
+        "cobrar extra", "assembleia cota extra", "urgencia cota",
+        "fundo reserva emergencia", "despesa emergência", "despesa urgente"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "riscos-criticos-sindico",
+      "categoria": "gestao",
+      "pergunta": "Quais são os maiores riscos que o síndico deve evitar?",
+      "resposta": "Os riscos críticos do síndico são: 1) AVCB vencido — responsabilidade criminal em incêndio; 2) Seguro predial vencido ou sem cobertura mínima — exposição coletiva; 3) Funcionário sem registro — passivo trabalhista imediato; 4) Decisões sem ata ou documento — sem prova de gestão; 5) Obras sem contrato ou sem ART — responsabilidade por danos; 6) Inadimplência ignorada por mais de 6 meses — prescrição parcial e déficit crescente; 7) Elevador sem manutenção — responsabilidade por acidente; 8) Não realizar a AGO no prazo — possibilidade de destituição.",
+      "contexto": "O síndico responde civil e criminalmente por atos de gestão (CC art. 1.348). A ausência de documentação é o principal problema em ações contra síndicos — não a intenção de prejudicar, mas a ausência de prova de diligência. Documentar tudo é proteção jurídica, não burocracia.",
+      "dica": "Mantenha uma lista dos 10 itens críticos do condomínio com data de vencimento ou status. Revise mensalmente. O que é monitorado não vira surpresa.",
+      "keywords": [
+        "riscos síndico", "riscos sindico", "maiores riscos", "risco gestão",
+        "risco gestao", "responsabilidade sindico", "evitar risco",
+        "proteger sindico", "problemas síndico", "problemas sindico",
+        "vulnerabilidade síndico", "erros comuns sindico", "o que evitar",
+        "cuidados sindico"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "atraso-salario-funcionario",
+      "categoria": "trabalhista",
+      "pergunta": "O condomínio está atrasando o pagamento do salário dos funcionários. Quais os riscos?",
+      "resposta": "Atraso no pagamento de salário é falta grave do empregador e gera: 1) Multa diária pelo atraso após o 5º dia útil do mês seguinte (Lei 7.855/1989); 2) O funcionário pode pedir rescisão indireta (equivalente à demissão sem justa causa pelo empregador), com todos os direitos de quem foi demitido sem causa; 3) Débitos previdenciários (INSS) vencidos geram multa e juros; 4) O FGTS atrasado gera multa de 5% ao mês. Regularize imediatamente mesmo que de forma parcelada — comunique ao funcionário e ao sindicato se necessário.",
+      "contexto": "O art. 459 da CLT determina pagamento até o 5º dia útil do mês subsequente. Rescisão indireta (art. 483, d, CLT) é o mecanismo pelo qual o empregado se desliga por culpa do empregador, recebendo todos os direitos de demissão sem justa causa. É um risco severo.",
+      "dica": "Salário de funcionário é prioridade de caixa — deve ser pago antes de qualquer outro fornecedor. Em situação de caixa difícil, pague salário primeiro e negocie parcelamento com fornecedores, nunca o contrário.",
+      "keywords": [
+        "atraso salário", "atraso salario", "salário atrasado", "salario atrasado",
+        "não pagou salário", "nao pagou salario", "pagamento atrasado",
+        "folha atrasada", "funcionário sem receber", "risco salarial",
+        "rescisão indireta", "rescisao indireta", "multa atraso salario"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "animais-regras-areas-comuns",
+      "categoria": "convencao",
+      "pergunta": "O condomínio pode proibir animais nas áreas comuns como elevador e jardim?",
+      "resposta": "Sim. O STJ consolidou que a convenção não pode proibir a presença de animais domésticos nas unidades, mas pode regular o uso das áreas comuns. Regras válidas: exigir guia e focinheira no elevador e corredores, proibir animais na piscina e academia, exigir crachá de vacinação, determinar horários para uso de jardim com animais. Regras inválidas: proibir que o animal circule pelas áreas comuns inteiramente, multar pelo simples fato de ter animal. Se o animal causar dano, sujidade ou perturbação, aí sim há fundamento para advertência e multa.",
+      "contexto": "STJ REsp 1.783.076 (2021) determinou que proibição genérica de animais em convenção é inválida. O que a convenção pode fazer é regular o modo de circulação nas áreas comuns. Para animais que causem perturbação comprovada, aplica-se o rito normal de advertência e multa.",
+      "dica": "Atualize o regimento interno com regras claras sobre animais: guia obrigatória, limpeza de dejetos, responsabilidade por danos, vacinação anual. Regras específicas são mais fáceis de aplicar do que proibições genéricas.",
+      "keywords": [
+        "animal área comum", "animal area comum", "cachorro elevador",
+        "pet área comum", "pet area comum", "proibir animal", "animal condomínio",
+        "cachorro jardim", "animal piscina", "regras animais", "guia obrigatória",
+        "focinheira obrigatória", "regulamentar animal", "proibição animal"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "inadimplente-reincidente",
+      "categoria": "inadimplencia",
+      "pergunta": "O condômino paga atrasado todo mês. O que pode ser feito além da multa?",
+      "resposta": "Para inadimplência reiterada, o condomínio tem algumas ferramentas além da multa mensal: 1) Negativação em cartório de protesto ou Serasa/SPC (se convenção permitir); 2) Restrição de uso de áreas comuns não essenciais (salão de festas, academia — nunca água ou elevador); 3) Ação de execução de título extrajudicial — mais rápida que cobrança comum; 4) Para inadimplência crônica, avalie penhora do imóvel — inclusive bem de família quando a dívida condominial é a única pendência; 5) Ofereça acordo de parcelamento formal com desconto de multa como incentivo ao pagamento regular.",
+      "contexto": "O STJ reconhece que bem de família pode ser penhorado por dívida condominial (REsp 1.601.057). A ação de execução de título extrajudicial (CPC art. 784, X) não precisa de reconhecimento prévio da dívida — apenas notificação e prazo para pagamento ou nomeação de bens.",
+      "dica": "Não deixe a dívida crescer por mais de 3 meses sem ação formal. A cobrança judicial de dívidas menores é mais rápida e mais barata para o condomínio do que esperar acumular valor.",
+      "keywords": [
+        "atraso recorrente", "paga todo mês atrasado", "sempre atrasa",
+        "reincidente cobrança", "devedor crônico", "devedor cronico",
+        "inadimplente recorrente", "histórico inadimplência",
+        "penhorar imóvel", "penhora imovel", "bem família dívida condominial",
+        "bem de familia", "parcelamento inadimplente"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "contratacao-terceirizado-cuidados",
+      "categoria": "trabalhista",
+      "pergunta": "Quais cuidados ao contratar empresa terceirizada de portaria ou limpeza?",
+      "resposta": "Antes de contratar empresa terceirizada exija: 1) Certidão Negativa de Débitos Trabalhistas (CNDT); 2) Certidão Negativa do INSS; 3) Regularidade do FGTS; 4) Contrato com cláusula de responsabilidade subsidiária explícita; 5) Apólice de seguro de acidentes de trabalho; 6) Registro dos funcionários que prestarão serviço no condomínio. Durante a vigência: monitore o pagamento de salários e encargos mensalmente e exija comprovantes. O TST reconhece responsabilidade subsidiária do tomador quando o prestador não honra seus compromissos trabalhistas.",
+      "contexto": "Súmula 331 do TST consolida que tomador de serviços (condomínio) responde subsidiariamente pelos débitos trabalhistas do prestador quando há falha na fiscalização. A responsabilidade é subsidiária, não solidária — mas pode representar passivo significativo.",
+      "dica": "Inclua no contrato a obrigação da empresa de fornecer comprovantes mensais de pagamento de salário e encargos dos funcionários que trabalham no condomínio. Esse controle ativo é a principal defesa contra responsabilização.",
+      "keywords": [
+        "contratar terceirizada", "empresa portaria", "empresa limpeza",
+        "terceirização portaria", "terceirização limpeza", "prestador portaria",
+        "cuidados contratar", "verificar terceirizada", "documentos empresa",
+        "CNDT", "responsabilidade subsidiária", "responsabilidade subsidiaria",
+        "fiscalizar terceirizado", "cnpj empresa"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "ago-convocacao-prazo",
+      "categoria": "assembleias",
+      "pergunta": "Qual o prazo para realizar a assembleia ordinária anual?",
+      "resposta": "A AGO (Assembleia Geral Ordinária) deve ser realizada dentro dos primeiros 6 meses do ano — ou conforme prazo definido na convenção. A pauta mínima obrigatória: prestação de contas do exercício anterior, previsão orçamentária para o próximo exercício e eleição do síndico quando o mandato vencer. Se o síndico não convocar no prazo, qualquer condômino pode exigir a convocação, e em último caso o Ministério Público pode ser acionado.",
+      "contexto": "O CC art. 1.350 determina que a AGO seja convocada pelo síndico com antecedência de pelo menos 10 dias. Convenções podem exigir prazo maior. A ausência de AGO no prazo é irregularidade de gestão que pode fundamentar ação de destituição do síndico.",
+      "dica": "Agende a AGO sempre para março ou abril — antes do encerramento do semestre. Use o app para registrar a data e receber o alerta de vencimento com 60 dias de antecedência.",
+      "keywords": [
+        "prazo ago", "prazo assembleia ordinária", "prazo assembleia ordinaria",
+        "quando fazer ago", "ago anual prazo", "assembleia anual prazo",
+        "primeiro semestre ago", "6 meses ago", "seis meses assembleia",
+        "convocação ago", "não fez ago", "nao fez ago", "atraso ago"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "plano-acao-risco-critico",
+      "categoria": "gestao",
+      "pergunta": "Como o síndico deve agir quando identificar um risco crítico no prédio?",
+      "resposta": "Diante de risco crítico (estrutural, de incêndio, de acidente), siga este protocolo: 1) Interdite imediatamente a área se houver risco iminente às pessoas; 2) Chame profissional habilitado para avaliar o risco (engenheiro, bombeiros conforme o caso); 3) Registre tudo com fotos e documentação da área interditada; 4) Comunique os condôminos por escrito sobre a situação e as providências; 5) Convocar assembleia de emergência se a solução exigir aprovação ou gasto significativo; 6) Acompanhe e documente cada etapa da resolução.",
+      "contexto": "O CC art. 1.341, I autoriza o síndico a tomar medidas urgentes sem assembleia quando houver risco à segurança. O dever de comunicação aos condôminos é essencial — o síndico que age sem comunicar corre o risco de ser responsabilizado por tomada de decisão unilateral.",
+      "dica": "Nunca minimize um risco crítico para não alarmar os condôminos. Omissão em risco crítico é a situação que gera responsabilidade criminal mais clara para o síndico.",
+      "keywords": [
+        "risco crítico", "risco critico", "emergência prédio", "emergencia predio",
+        "risco estrutural", "situação grave", "situacao grave", "perigo iminente",
+        "interdição", "interdicao", "área interditada", "vistoria emergência",
+        "engenheiro urgente", "protocolo emergência", "incidente grave"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "sindico-responsabilidade-penal",
+      "categoria": "juridico",
+      "pergunta": "Em quais situações o síndico pode responder criminalmente?",
+      "resposta": "O síndico pode responder criminalmente por: 1) Omissão em risco de vida: AVCB vencido + incêndio com vítima pode configurar homicídio ou lesão culposa; 2) Desvio de verbas do condomínio: apropriação indébita (CP art. 168); 3) Acidente com vítima em área comum por negligência de manutenção; 4) Não cumprimento de decisões judiciais relacionadas ao condomínio (desobediência, CP art. 330). Responsabilidade penal exige dolo (intenção) ou culpa (negligência, imprudência, imperícia) — a simples má gestão sem consequência pessoal não configura crime.",
+      "contexto": "A responsabilidade penal do síndico é pessoal e não pode ser transferida ao condomínio (pessoa jurídica de fins especiais). O síndico profissional tem responsabilidade ainda mais elevada por sua especialização. O seguro D&O (Directors and Officers) não cobre responsabilidade criminal — apenas civil.",
+      "dica": "Documente todas as decisões tomadas e os alertas comunicados aos condôminos. A prova de que o síndico agiu com diligência (mesmo se o resultado foi negativo) é a principal defesa em ação penal.",
+      "keywords": [
+        "responsabilidade penal", "crime sindico", "preso sindico",
+        "processo criminal", "ação penal", "desvio verbas", "peculato",
+        "apropriação indébita", "apropriacao indebita", "homicídio culposo",
+        "lesão culposa", "negligência sindico", "criminalmente responsável"
+      ],
+      "riscoNivel": "critico"
+    },
+    {
+      "id": "laudo-estrutural-obrigatorio",
+      "categoria": "manutencao",
+      "pergunta": "Quando o prédio precisa de laudo estrutural obrigatório?",
+      "resposta": "O laudo estrutural é obrigatório em diversas situações: 1) Prédios com mais de 10 anos (muitos municípios exigem vistoria periódica); 2) Após sinistro (incêndio, alagamento, impacto de veículo); 3) Antes de obras que afetem a estrutura; 4) Quando houver fissuras, rachaduras ou infiltrações estruturais; 5) Por exigência do Corpo de Bombeiros para renovação do AVCB; 6) Por determinação municipal (inspeção predial obrigatória — lei vigente em SP, RJ e outras cidades). Contrate engenheiro estrutural habilitado e guarde o laudo na pasta do condomínio.",
+      "contexto": "A inspeção predial obrigatória ganhou força após tragédias como desabamentos em Fortaleza. São Paulo (Lei 16.642/2017) e Rio de Janeiro têm legislação específica. A periodicidade varia por idade do edifício. O laudo protege juridicamente o condomínio e o síndico.",
+      "dica": "Verifique a legislação municipal do seu município sobre inspeção predial. Muitas cidades já exigem laudo periódico e o descumprimento pode resultar em embargo e multa pelo município.",
+      "keywords": [
+        "laudo estrutural", "vistoria estrutural", "inspeção predial",
+        "inspecao predial", "fissura", "rachadura", "trinca", "estrutura comprometida",
+        "engenheiro estrutural", "quando precisar laudo", "laudo obrigatório",
+        "laudo obrigatorio", "periocidade laudo", "lei inspeção predial"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "comunicado-decisao-sindico",
+      "categoria": "gestao",
+      "pergunta": "Como o síndico deve comunicar decisões aos moradores?",
+      "resposta": "Decisões do síndico devem ser comunicadas por escrito usando canais formais previstos na convenção: quadro de avisos, comunicado entregue em mão, carta, e-mail ou sistema de comunicação do condomínio. Comunicados verbais não têm validade jurídica. O comunicado deve conter: o que foi decidido, por qual fundamento (convenção, assembleia, urgência), prazo para cumprimento e consequências do não cumprimento. Para decisões que exigiram aprovação em assembleia, anexe o número da ata ou o trecho relevante.",
+      "contexto": "A comunicação formal é proteção jurídica do síndico. Em caso de impugnação, a prova de que o morador foi devidamente comunicado é essencial. Art. 1.348, VII do CC inclui a comunicação como dever do síndico.",
+      "dica": "Use o aplicativo ou sistema de comunicação do condomínio para comunicados importantes — isso cria log de entrega e leitura. Para comunicados críticos (obras, multas, embargo), entregue pessoalmente com protocolo.",
+      "keywords": [
+        "comunicar moradores", "comunicado sindico", "avisar condôminos",
+        "notificar condomínio", "circular", "aviso", "comunicação formal",
+        "como comunicar", "decisão comunicar", "forma comunicação",
+        "quadro avisos", "email moradores", "formato comunicado"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "sindico-pode-contratar-sozinho",
+      "categoria": "gestao",
+      "pergunta": "O síndico pode contratar serviços e fornecedores sem consultar assembleia?",
+      "resposta": "Sim, dentro dos limites estabelecidos em convenção. O síndico tem autonomia para contratar serviços de manutenção rotineira, reparos urgentes e despesas previstas no orçamento aprovado. Para contratos acima do valor-limite definido na convenção (geralmente 5 a 10 cotas mensais), é necessária aprovação em assembleia. Para contratos de longo prazo (mais de 1 ano), verifique se a convenção exige deliberação. Em caso de urgência real, o síndico pode contratar e apresentar à próxima assembleia para ratificação.",
+      "contexto": "O art. 1.348, II do CC permite ao síndico representar o condomínio em atos corriqueiros de gestão. O que diferencia ato de gestão de ato extraordinário é o valor e o impacto — a convenção deve definir os limites. Sem previsão, a prudência indica consultar o Conselho.",
+      "dica": "Verifique na convenção o valor máximo que o síndico pode contratar sem assembleia. Se não houver previsão, estabeleça um limite com o Conselho por escrito e submeta à próxima AGO para formalização.",
+      "keywords": [
+        "contratar sozinho", "comprar sem assembleia", "autorizar serviço",
+        "limite sindico", "autonomia sindico", "poder sindico",
+        "contrato sem aprovação", "contrato sem aprovacao", "quanto pode gastar",
+        "valor limite sindico", "despesas sindico", "fornecedor sindico",
+        "obra urgente autorizar", "compras condominio"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "fachada-alteracao-proibicao",
+      "categoria": "convencao",
+      "pergunta": "Morador quer colocar ar-condicionado ou mudar a cor da fachada. Pode?",
+      "resposta": "Instalação de ar-condicionado na fachada ou janela exige autorização expressa do condomínio. Se a convenção não proibir, pode ser aprovada pelo síndico mediante condições: calha de drenagem, vedação adequada, não alterar a fachada visualmente além do previsto. Mudança de cor, revestimento ou qualquer alteração visual da fachada requer aprovação em assembleia por 2/3 dos condôminos. O síndico pode embargar unilateralmente obras que alterem a fachada sem autorização.",
+      "contexto": "O CC art. 1.336, III proíbe alterar a forma e a cor da fachada. A norma é de ordem pública — nem assembleia pode autorizar mudança de fachada por maioria simples. Para uniformidade: muitas convenções criam 'padrão de fachada' que define o que é permitido.",
+      "dica": "Crie um 'padrão de fachada' aprovado em assembleia definindo equipamentos permitidos (modelos de ar, grades, persianas, cor de película). Isso evita conflitos caso a caso e simplifica a gestão.",
+      "keywords": [
+        "fachada", "ar condicionado fachada", "ar condicionado janela",
+        "alterar fachada", "mudar fachada", "cor fachada", "pintura fachada",
+        "revestimento fachada", "proibir fachada", "autorização fachada",
+        "mudança visual", "padrão fachada", "grade janela fachada"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "conselho-fiscal-funcao",
+      "categoria": "gestao",
+      "pergunta": "Para que serve o Conselho Fiscal do condomínio?",
+      "resposta": "O Conselho Fiscal é o órgão de fiscalização financeira interna do condomínio. Suas funções incluem: 1) Verificar balancetes e documentos contábeis mensalmente; 2) Emitir parecer antes da AGO sobre as contas do síndico; 3) Convocar assembleia se o síndico não o fizer no prazo; 4) Fiscalizar contratos e despesas relevantes; 5) Dar suporte técnico ao síndico em decisões financeiras. O Conselho não administra — apenas fiscaliza e orienta. Membros do Conselho não recebem remuneração salvo previsão em convenção.",
+      "contexto": "O CC art. 1.356 prevê que o condomínio pode ter Conselho Fiscal com no mínimo três membros eleitos em assembleia com mandato de 2 anos. A existência do Conselho é facultativa, mas altamente recomendável para transparência de gestão.",
+      "dica": "O Conselho Fiscal efetivo se reúne mensalmente para revisar o balancete — não apenas antes da AGO. Convide o Conselho para acompanhar obras maiores e contratos relevantes. Isso distribui a responsabilidade de fiscalização.",
+      "keywords": [
+        "conselho fiscal", "função conselho fiscal", "para que serve conselho",
+        "membros conselho", "conselho condomínio", "fiscalizar condomínio",
+        "auditar contas", "revisar balancete conselho", "conselho eleito",
+        "mandato conselho", "quem fiscaliza sindico"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "locatario-responsabilidade-danos",
+      "categoria": "locacao",
+      "pergunta": "Locatário causou dano ao condomínio. Quem paga?",
+      "resposta": "O locatário responde diretamente ao condomínio pelos danos que causar às áreas comuns. O condomínio pode notificar o locatário diretamente e aplicar multa. Se o locatário não pagar, o proprietário da unidade (locador) responde solidariamente perante o condomínio — e pode depois cobrar o locatário regressivamente. Na prática: 1) Notifique o locatário com descrição e valor do dano; 2) Dê prazo para ressarcimento; 3) Se não pagar, inclua o valor no boleto do condomínio na unidade (que é do proprietário); 4) O proprietário resolve com o locatário depois.",
+      "contexto": "A lei do inquilinato (Lei 8.245/91) responsabiliza o locatário pelo cumprimento das regras do condomínio e pela reparação de danos. O CC art. 1.336 §1º prevê multa não quitada pode ser cobrada com execução forçada. O proprietário responde solidariamente ao condomínio.",
+      "dica": "Documente o dano com fotos antes de qualquer reparo. A comunicação ao locatário e ao proprietário deve ser simultânea — isso evita o argumento de que 'não sabia do dano'.",
+      "keywords": [
+        "locatário dano", "locatario dano", "inquilino danificou", "inquilino causou dano",
+        "dano área comum inquilino", "quem paga dano locatário", "inquilino responsável",
+        "dono paga locatário", "proprietário responsável", "cobrar inquilino",
+        "ressarcimento locatário", "ressarcimento locatario"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "sinistro-seguro-passo-a-passo",
+      "categoria": "gestao",
+      "pergunta": "Ocorreu um sinistro no prédio. Como acionar o seguro?",
+      "resposta": "Após um sinistro (incêndio, alagamento, impacto), siga: 1) Garanta a segurança das pessoas — prioridade absoluta; 2) Registre o ocorrido com fotos e vídeos antes de qualquer reparo; 3) Notifique a seguradora ou corretora por telefone e por escrito no menor prazo possível (geralmente até 72h); 4) Solicite visita do regulador de sinistros da seguradora; 5) Preserva os danos para vistoria — não faça reparos antes da vistoria; 6) Reúna documentação: boletim de ocorrência (se for crime), laudos de manutenção, AVCB, contratos. Reparos emergenciais (vazamento ativo, risco à segurança) podem ser feitos com documentação prévia.",
+      "contexto": "A apólice define o prazo de comunicação do sinistro (geralmente 2 a 5 dias úteis). A ausência de comunicação no prazo pode ser argumento para recusa de cobertura. A reguladora (empresa contratada pela seguradora) avalia a causa e o valor do sinistro — nem sempre concorda com o orçamento do síndico.",
+      "dica": "Guarde em local acessível o número da apólice, o contato da seguradora e da corretora. Em caso de sinistro, acione a corretora primeiro — eles conhecem o processo e orientam corretamente.",
+      "keywords": [
+        "sinistro seguro", "acionar seguro", "acionamento seguro",
+        "incêndio seguro", "incendio seguro", "alagamento seguro",
+        "como acionar seguro", "comunicar sinistro", "seguradora condomínio",
+        "regulador sinistros", "indenização seguro", "indenizacao seguro",
+        "visita regulador", "apólice sinistro"
+      ],
+      "riscoNivel": "relevante"
+    },
+    {
+      "id": "ponto-eletronico-funcionarios",
+      "categoria": "trabalhista",
+      "pergunta": "O condomínio é obrigado a ter ponto eletrônico para os funcionários?",
+      "resposta": "O ponto eletrônico é obrigatório para empregadores com mais de 20 empregados (Portaria MTE 1.510/2009 e Portaria 671/2021). Condomínios com menos de 20 empregados podem usar ponto manual (fichas ou livro de ponto). A CCT do setor pode definir regras específicas sobre tipo de controle de ponto. O importante é que qualquer sistema de controle seja transparente, fidedigno e que o funcionário tenha acesso ao seu registro. Sistemas informais (WhatsApp, anotação verbal) não têm validade.",
+      "contexto": "A Portaria MTE 671/2021 (que substituiu a 1.510/2009) regulamenta os Registros Eletrônicos de Ponto. Empresas com menos de 20 empregados podem usar ponto alternativo (manual, mecânico ou eletrônico simples) desde que seja idôneo. O não registro de ponto gera presunção de jornada extra máxima — risco trabalhista.",
+      "dica": "Mesmo sem obrigação de sistema eletrônico, use livro de ponto ou folha de ponto assinada diariamente. Registre entrada, saída e intervalos. Isso é sua prova em caso de ação por horas extras.",
+      "keywords": [
+        "ponto eletrônico", "ponto eletronico", "controle ponto",
+        "registro ponto", "ponto funcionário", "ponto empregado",
+        "livro ponto", "folha ponto", "bater ponto", "sistema ponto",
+        "obrigatório ponto", "obrigatorio ponto", "quantos funcionários ponto"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "acordo-parcelamento-clausulas",
+      "categoria": "inadimplencia",
+      "pergunta": "Como formalizar um acordo de parcelamento com morador inadimplente?",
+      "resposta": "O acordo de parcelamento deve ser um documento escrito contendo: 1) Valor total da dívida (principal + multa + juros + correção); 2) Número e valor de cada parcela; 3) Data de vencimento de cada parcela; 4) Cláusula de rescisão do acordo por descumprimento (com retomada da dívida integral); 5) Reconhecimento explícito da dívida pelo devedor; 6) Assinaturas com data. Entregue uma cópia ao devedor e guarde o original. O acordo pode prever desconto de juros e multa como incentivo ao cumprimento.",
+      "contexto": "O acordo de parcelamento interrompe a prescrição da dívida condominial (CC art. 202, VI). O reconhecimento da dívida pelo devedor (explícito no acordo) torna mais fácil a execução judicial se ele descumprir. Mesmo com acordo, o boleto normal deve ser emitido sem os valores negociados — o devedor paga o acordo separado.",
+      "dica": "Inclua no acordo: se o devedor atrasar mais de X dias em qualquer parcela, o acordo é automaticamente rescindido e a dívida original (com todos os encargos) volta a ser exigível. Isso é a principal proteção do condomínio.",
+      "keywords": [
+        "acordo parcelamento", "parcelar dívida", "parcelar divida",
+        "parcelamento inadimplente", "formalizar acordo", "contrato parcelamento",
+        "acordo devedor", "desconto juros", "negociar divida",
+        "condições parcelamento", "clausulas parcelamento", "rescisão acordo"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "zelador-moradia-funcional",
+      "categoria": "funcionarios",
+      "pergunta": "O zelador mora no prédio. O que isso implica na relação de trabalho?",
+      "resposta": "A moradia funcional do zelador (uso do apartamento do condomínio como benefício) tem implicações trabalhistas importantes: 1) O valor do aluguel de mercado da moradia integra o salário para fins de cálculo de FGTS, férias e décimo terceiro; 2) Ao ser demitido, o zelador deve desocupar o imóvel — mas o prazo é o mesmo do aviso prévio trabalhado ou indenizado; 3) Se o condomínio não tiver imóvel disponível, não é obrigado a fornecer moradia; 4) A CCT pode definir valor-referência da moradia funcional para o cálculo. Documente desde o início o valor de mercado da moradia atribuído ao zelador.",
+      "contexto": "O TST reconhece a moradia funcional como salário in natura (art. 458 CLT). Isso significa que integra a base de cálculo de todos os direitos trabalhistas. O valor deve ser acordado e registrado no contrato para evitar discussões judiciais posteriores.",
+      "dica": "Inclua no contrato de trabalho do zelador o valor de referência da moradia funcional e o endereço do imóvel. Documente a entrega das chaves e as condições do imóvel no início. Na rescisão, faça vistoria e documente a devolução.",
+      "keywords": [
+        "zelador mora no prédio", "zelador moradia", "moradia funcional zelador",
+        "apartamento zelador", "imóvel zelador", "zelador demitido onde mora",
+        "desocupar moradia", "salário moradia", "benefício moradia",
+        "moradia salário", "calcular férias zelador moradia"
+      ],
+      "riscoNivel": "atencao"
+    },
+    {
+      "id": "comunicado-obra-moradores",
+      "categoria": "obras",
+      "pergunta": "Como comunicar os moradores sobre uma obra ou manutenção no prédio?",
+      "resposta": "O comunicado de obra deve conter: 1) O que será feito (descrição objetiva da obra ou manutenção); 2) Período de execução (início e previsão de fim); 3) Horários de trabalho; 4) Áreas afetadas e eventuais restrições de acesso; 5) Impacto nos serviços (elevador, água, energia — se houver interrupção, informe data e duração estimada); 6) Nome da empresa executora e responsável; 7) Contato para dúvidas. Distribua com pelo menos 3 dias de antecedência. Para obras com impacto maior, convoque reunião prévia.",
+      "contexto": "O dever de comunicação do síndico está no art. 1.348, VII do CC. Obras sem comunicação prévia geram reclamações, conflitos e até impugnações de despesas em assembleia. A comunicação antecipada é gestão preventiva.",
+      "dica": "Para obras que causam ruído, distribua o comunicado por unidade e afixe no quadro de avisos e no elevador. Se houver interrupção de água ou energia, avise com 48h de antecedência no mínimo — é obrigação básica de respeito ao morador.",
+      "keywords": [
+        "comunicado obra", "avisar obra", "notificar obra", "comunicar manutenção",
+        "comunicar manutencao", "aviso obra moradores", "circular obra",
+        "interrupção serviço", "interrupcao servico", "aviso manutenção",
+        "quando avisar obra", "como comunicar obra", "informar condôminos"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "inadimplente-assembleia-votacao",
+      "categoria": "inadimplencia",
+      "pergunta": "Condômino inadimplente pode votar em assembleia?",
+      "resposta": "Não. O condômino com dívida condominial em aberto perde o direito de voto em assembleia (CC art. 1.335, III). Ele pode comparecer e falar, mas não vota enquanto a dívida não for quitada ou formalmente negociada com acordo. O síndico deve verificar a lista de inadimplentes antes da assembleia e informar os presentes qual é a situação. Atenção: se a dívida está sendo discutida judicialmente, há controvérsia — consulte advogado sobre o caso específico.",
+      "contexto": "O CC art. 1.335, III veda expressamente o direito de voto ao condômino em atraso. A suspensão do direito de voto é automática — não precisa de deliberação em assembleia para acontecer. O mesmo artigo proíbe votar por procuração (o procurador do inadimplente também não vota).",
+      "dica": "Prepare para a assembleia uma lista atualizada de inadimplentes e a verificação de quórum já excluindo os que não têm direito a voto. Isso evita contestação posterior sobre validade das deliberações.",
+      "keywords": [
+        "inadimplente voto", "inadimplente votação", "devedor vota",
+        "devedor assembleia", "inadimplente assembleia", "bloqueado voto",
+        "sem direito voto", "pode votar devendo", "inadimplente participa",
+        "participação devedor", "quem pode votar", "condômino em débito"
+      ],
+      "riscoNivel": "baixo"
+    },
+    {
+      "id": "seguro-rc-sindico-necessidade",
+      "categoria": "gestao",
+      "pergunta": "O síndico precisa de seguro de responsabilidade civil?",
+      "resposta": "Não é obrigatório por lei, mas é altamente recomendado — especialmente para síndicos profissionais e condomínios maiores. O seguro RC do síndico (D&O — Directors and Officers) cobre: honorários advocatícios em defesa judicial, indenizações decorrentes de erros de gestão não intencionais, custas processuais. Não cobre: atos dolosos (intencionais), desvio de verbas, responsabilidade criminal. O custo varia entre R$ 150 a R$ 500/mês dependendo do perfil do condomínio — pode ser pago pelo próprio condomínio com aprovação em assembleia.",
+      "contexto": "O CC art. 1.348 §2º responsabiliza o síndico pessoalmente por danos causados por negligência ou imprudência no exercício do cargo. A responsabilidade pessoal do síndico morador é igual à do síndico profissional — ambos podem ser processados por condôminos insatisfeitos.",
+      "dica": "Peça que o condomínio aprove em AGO a contratação de seguro RC para o síndico. Isso protege o gestor e demonstra transparência — é um custo de gestão profissional justificável.",
+      "keywords": [
+        "seguro sindico", "seguro responsabilidade civil", "seguro rc",
+        "d&o sindico", "dano moral sindico", "processado sindico",
+        "ação judicial sindico", "proteção sindico", "síndico processado",
+        "indenização sindico", "seguro gestor", "responsabilidade pessoal"
+      ],
+      "riscoNivel": "atencao"
     }
   ]
 }

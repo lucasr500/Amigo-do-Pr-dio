@@ -9,6 +9,8 @@ export type Topic = {
   examplePrompt: string;
 };
 
+export type RiscoNivel = "baixo" | "atencao" | "relevante" | "critico";
+
 export type KnowledgeEntry = {
   id: string;
   categoria: string;
@@ -17,6 +19,7 @@ export type KnowledgeEntry = {
   contexto: string;
   dica?: string;
   keywords: string[];
+  riscoNivel?: RiscoNivel;
 };
 
 // Nível de confiança exibido ao usuário com base no score de match.
@@ -59,7 +62,7 @@ function tokenize(text: string): string[] {
 // Direction: what the user might say → what the base uses.
 
 const SYNONYMS: Record<string, string[]> = {
-  suspender: ["cortar"],
+  suspender: ["cortar", "trabalhista", "advertencia", "disciplinar"],
   interromper: ["cortar"],
   bloquear: ["cortar", "proibir"],
   devedor: ["inadimplente", "inadimplencia"],
@@ -185,9 +188,9 @@ const SYNONYMS: Record<string, string[]> = {
   penal: ["responsabilidade", "crime"],
   aviso: ["notificacao"],
   previo: ["rescisao", "aviso"],
-  reincidente: ["multa", "contumaz"],
+  reincidente: ["multa", "contumaz", "inadimplente", "cobranca"],
   apólice: ["seguro", "cobertura"],
-  revisao: ["contrato", "gestao"],
+  revisao: ["contrato", "gestao", "mensal", "rotina"],
   // Fase 12: temporalidade e recorrência
   recarga: ["extintor", "validade"],
   bacteriologica: ["agua", "analise", "limpeza"],
@@ -276,6 +279,48 @@ const SYNONYMS: Record<string, string[]> = {
   infracao: ["multa", "advertencia", "notificacao"],
   familiar: ["parente", "familia", "conflito"],
   nepotismo: ["conflito", "interesses", "empresa"],
+  // Sprint LEGAL-SAFETY-AND-KB-DEPTH: novos cenários operacionais
+  vencido: ["vencimento", "prazo", "renovacao"],
+  atrasado: ["prazo", "vencimento", "pendente"],
+  agressivo: ["conflito", "morador", "responsabilidade"],
+  violento: ["conflito", "morador", "seguranca"],
+  ameaca: ["conflito", "morador", "policia"],
+  brigou: ["conflito", "morador", "responsabilidade"],
+  desatualizada: ["convencao", "regimento", "alteracao"],
+  ultrapassada: ["convencao", "regimento", "revisao"],
+  desatualizado: ["convencao", "regimento", "alteracao"],
+  ausente: ["sindico", "gestao", "responsabilidade"],
+  afastou: ["sindico", "gestao", "substituto"],
+  irregular: ["multa", "obra", "infrator", "notificacao"],
+  informal: ["contrato", "registro", "trabalhista"],
+  clandestino: ["obra", "irregular", "embargo"],
+  nota: ["fiscal", "prestador", "contrato", "financeiro"],
+  nf: ["fiscal", "prestador", "nota"],
+  terceirizada: ["empresa", "prestador", "contrato"],
+  terceirizacao: ["empresa", "prestador", "contrato"],
+  primeiros: ["gestao", "sindico", "inicio"],
+  inicio: ["gestao", "sindico", "primeiros"],
+  comecar: ["gestao", "sindico", "inicio"],
+  começo: ["gestao", "sindico", "inicio"],
+  prioridade: ["gestao", "sindico", "urgencia"],
+  mensal: ["revisao", "rotina", "gestao"],
+  rotina: ["revisao", "gestao", "cronograma"],
+  vandalismo: ["dano", "areas-comuns", "responsabilidade"],
+  vandalo: ["dano", "areas-comuns", "multa"],
+  depredacao: ["dano", "areas-comuns", "responsabilidade"],
+  banco: ["horas", "trabalhista", "compensacao"],
+  compensacao: ["horas", "trabalhista", "banco"],
+  dsr: ["folga", "descanso", "trabalhista"],
+  descanso: ["dsr", "folga", "trabalhista"],
+  acumulo: ["funcao", "trabalhista", "remuneracao"],
+  cumulativa: ["funcao", "trabalhista", "acumulo"],
+  dupla: ["funcao", "trabalhista", "acumulo"],
+  suspensao: ["trabalhista", "advertencia", "disciplinar"],
+  pauta: ["assembleia", "convocacao", "ago"],
+  inadimplencia: ["inadimplente", "cobranca", "taxa"],
+  alto: ["inadimplencia", "risco", "financeiro"],
+  checklist: ["rotina", "gestao", "revisao"],
+  onboarding: ["sindico", "inicio", "primeiros"],
 };
 
 function expandWithSynonyms(tokens: string[]): string[] {
@@ -374,6 +419,8 @@ const CONTEXTUAL_FALLBACK_MESSAGES: Record<string, string> = {
     "Não encontrei uma resposta exata, mas sua dúvida parece envolver manutenção, vistoria, AVCB, extintores ou equipamentos do prédio. Veja orientações próximas.",
   juridico:
     "Não encontrei uma resposta exata, mas sua dúvida parece ter natureza jurídica específica. Veja orientações próximas e, se necessário, consulte um especialista.",
+  operacional:
+    "Não encontrei uma orientação exata, mas sua dúvida parece envolver rotina operacional do condomínio. Veja temas próximos — documentação, gestão e primeiros passos do síndico.",
 };
 
 const FALLBACK_GENERIC =
@@ -593,6 +640,10 @@ const DOMAIN_ANCHOR_WORDS = new Set([
   // Fase 32: novos termos para lacunas críticas
   "airbnb", "temporada", "hospedagem", "desempate", "empate",
   "infracao", "documentar", "registrar",
+  // Sprint LEGAL-SAFETY-AND-KB-DEPTH: novos cenários operacionais
+  "mandato", "agressivo", "fiscal", "terceirizada", "banco",
+  "acumulo", "dsr", "pauta", "vandalismo", "suspensao",
+  "checklist", "vencido", "ausencia", "irregular",
 ]);
 
 // Termos que aparecem em 5+ entradas e têm baixo poder discriminatório.
