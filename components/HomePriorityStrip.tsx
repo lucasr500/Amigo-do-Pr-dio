@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { buildCommandCenter, type CommandCenterResult } from "@/lib/command-center";
 import { getSyncStatus, formatLastSync } from "@/lib/sync/syncStatus";
 import { isEnabled } from "@/lib/feature-flags";
+import { buildSinceLastVisitContext, type SinceLastVisitContext } from "@/lib/since-last-visit";
 
 type Props = {
   refreshKey?: number;
@@ -32,11 +33,13 @@ const RISK_DOT = {
 export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifications }: Props) {
   const [data, setData] = useState<CommandCenterResult | null>(null);
   const [syncLabel, setSyncLabel] = useState<string | null>(null);
+  const [sinceLastVisit, setSinceLastVisit] = useState<SinceLastVisitContext | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const cc = buildCommandCenter();
     setData(cc);
+    setSinceLastVisit(buildSinceLastVisitContext());
 
     // Sync status discreto
     const syncEnabled = isEnabled("sync_enabled");
@@ -101,9 +104,16 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           </button>
         )}
 
-        {/* Linha 3: sync status discreto */}
+        {/* Linha 3: contexto desde última visita */}
+        {sinceLastVisit?.hasContext && sinceLastVisit.contextPhrase && (
+          <p className="mt-1.5 text-[10.5px] text-navy-400 leading-snug">
+            {sinceLastVisit.newNotificationsCount > 0 ? "⚑ " : "· "}{sinceLastVisit.contextPhrase}
+          </p>
+        )}
+
+        {/* Linha 4: sync status discreto */}
         {syncLabel && (
-          <p className="mt-2 text-[10.5px] text-navy-400">
+          <p className="mt-1 text-[10.5px] text-navy-400">
             {syncLabel.includes("Falha") ? "⚠️ " : "✓ "}{syncLabel}
           </p>
         )}

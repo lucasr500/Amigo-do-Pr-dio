@@ -73,11 +73,17 @@ function ActionRow({ item, onNavigate }: { item: CommandAction; onNavigate?: Pro
   );
 }
 
-function EmptyState() {
+function EmptyState({ implantacaoPct }: { implantacaoPct: number }) {
   return (
     <div className="rounded-xl bg-navy-50/60 px-4 py-5 text-center">
-      <p className="text-[13px] font-medium text-navy-700">Condomínio bem organizado</p>
-      <p className="mt-0.5 text-[11.5px] text-navy-400">Nenhuma ação prioritária identificada.</p>
+      <p className="text-[13px] font-medium text-navy-700">
+        {implantacaoPct >= 80 ? "Prédio organizado" : "Nenhuma ação urgente"}
+      </p>
+      <p className="mt-1 text-[11.5px] leading-relaxed text-navy-400">
+        {implantacaoPct >= 80
+          ? "O monitoramento está ativo. Continue mantendo os dados atualizados."
+          : "Complete os dados essenciais em Meu prédio para ativar o monitoramento completo."}
+      </p>
     </div>
   );
 }
@@ -118,7 +124,7 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
             <p className="text-[13px] font-semibold text-navy-800">Centro de comando</p>
             <p className="text-[11.5px] text-navy-500 truncate">
               {data.allActions.length === 0
-                ? "Condomínio bem organizado"
+                ? data.implantacaoPct >= 80 ? "Prédio organizado · monitorando" : "Complete os dados para monitoramento completo"
                 : urgentCount > 0
                   ? `${urgentCount} ação${urgentCount > 1 ? "ões" : ""} urgente${urgentCount > 1 ? "s" : ""} · ${data.allActions.length} total`
                   : `${data.allActions.length} ação${data.allActions.length > 1 ? "ões" : ""} · ${riskCfg.label}`}
@@ -152,6 +158,9 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
                 {data.allActions.length === 0
                   ? "Nenhuma ação identificada"
                   : `${data.allActions.length} ação${data.allActions.length !== 1 ? "ões" : ""} · ${riskCfg.label}`}
+                {data.implantacaoPct < 80 && (
+                  <span className="ml-1.5 text-[10px] text-navy-300">· configuração {data.implantacaoPct}%</span>
+                )}
               </p>
             </div>
           </div>
@@ -183,7 +192,7 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
                 onClick={() => onNavigate?.("pendencias")}
                 className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 hover:bg-amber-100 transition-colors"
               >
-                {data.stalePendenciasCount} passo{data.stalePendenciasCount > 1 ? "s" : ""} parado{data.stalePendenciasCount > 1 ? "s" : ""}
+                {data.stalePendenciasCount} passo{data.stalePendenciasCount > 1 ? "s" : ""} parado{data.stalePendenciasCount > 1 ? "s" : ""} +14 dias
               </button>
             )}
             {data.missingDocsCount > 0 && (
@@ -211,7 +220,7 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
         <div className="px-2 pb-4">
           {data.allActions.length === 0 ? (
             <div className="px-2">
-              <EmptyState />
+              <EmptyState implantacaoPct={data.implantacaoPct} />
             </div>
           ) : (
             priorities.map((priority) => {

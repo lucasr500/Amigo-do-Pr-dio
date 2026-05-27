@@ -34,6 +34,19 @@ const SEVERITY_GROUP_COLOR: Record<AppNotification["severity"], string> = {
   info:     "text-navy-500",
 };
 
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min  = Math.floor(diff / 60000);
+  const h    = Math.floor(diff / 3600000);
+  const d    = Math.floor(diff / 86400000);
+  if (min < 2)   return "agora mesmo";
+  if (min < 60)  return `há ${min} min`;
+  if (h < 24)    return `há ${h}h`;
+  if (d === 1)   return "ontem";
+  if (d < 30)    return `há ${d} dias`;
+  return "há mais de um mês";
+}
+
 type Props = {
   onClose: () => void;
   onAction?: (actionKey: string) => void;
@@ -131,8 +144,10 @@ export default function NotificationCenter({ onClose, onAction }: Props) {
         <div className="max-h-[70vh] overflow-y-auto px-4 pb-6">
           {notifications.length === 0 && (
             <div className="rounded-xl bg-navy-50/60 px-4 py-5 text-center">
-              <p className="text-[13px] text-navy-500">Tudo em dia</p>
-              <p className="mt-0.5 text-[11px] text-navy-400">Nenhuma notificação ativa no momento.</p>
+              <p className="text-[13px] font-medium text-navy-700">Nenhum alerta ativo</p>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-navy-400">
+                O monitoramento está rodando. Alertas aparecem quando prazos se aproximam ou dados precisam de atenção.
+              </p>
             </div>
           )}
 
@@ -161,9 +176,14 @@ export default function NotificationCenter({ onClose, onAction }: Props) {
                         className="w-full pr-4 text-left"
                         onClick={() => handleRead(n)}
                       >
-                        <p className={`text-[12.5px] font-semibold leading-snug ${n.read ? "text-navy-600" : "text-navy-800"}`}>
-                          {n.title}
-                        </p>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-[12.5px] font-semibold leading-snug ${n.read ? "text-navy-600" : "text-navy-800"}`}>
+                            {n.title}
+                          </p>
+                          <span className="flex-shrink-0 text-[10px] text-navy-300 mt-px">
+                            {relativeTime(n.createdAt)}
+                          </span>
+                        </div>
                         <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-500">
                           {n.body}
                         </p>

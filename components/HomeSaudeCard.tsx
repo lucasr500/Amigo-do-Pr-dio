@@ -12,6 +12,7 @@ import {
   hasMinimumHealthData as checkMinHealth,
 } from "@/lib/health-config";
 import { getMemoriaOperacional } from "@/lib/session";
+import { getHealthHistoryStats } from "@/lib/health-history";
 
 function hasMinimumHealthData(): boolean {
   return checkMinHealth(getMemoriaOperacional());
@@ -56,16 +57,31 @@ function RingIndicator({ pct, color }: { pct: number; color: string }) {
   );
 }
 
+type TrendBadge = { label: string; color: string } | null;
+
 type Props = { refreshKey?: number; onClick?: () => void };
 
 export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
   const [result, setResult]     = useState<HealthScoreResult | null>(null);
   const [hasData, setHasData]   = useState(false);
+  const [trendBadge, setTrendBadge] = useState<TrendBadge>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setHasData(hasMinimumHealthData());
     setResult(computeHealthScore());
+
+    const stats = getHealthHistoryStats();
+    if (stats.trend === "up" && stats.previousWeek !== null) {
+      const delta = stats.current - stats.previousWeek;
+      if (delta >= 3) setTrendBadge({ label: `↑ +${delta}% esta semana`, color: "text-emerald-600" });
+    } else if (stats.trend === "down" && stats.previousWeek !== null) {
+      const delta = stats.previousWeek - stats.current;
+      if (delta >= 3) setTrendBadge({ label: `↓ −${delta}% esta semana`, color: "text-amber-600" });
+    } else if (stats.trend === "stable" && stats.totalDaysTracked >= 3) {
+      setTrendBadge({ label: "→ Estável esta semana", color: "text-navy-400" });
+    }
+
     setHydrated(true);
   }, [refreshKey]);
 
@@ -130,6 +146,11 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
             Saúde operacional
           </p>
           <p className="mt-0.5 text-[12px] leading-snug text-navy-600">{phrase}</p>
+          {trendBadge && (
+            <p className={`mt-0.5 text-[10.5px] font-medium ${trendBadge.color}`}>
+              {trendBadge.label}
+            </p>
+          )}
         </div>
 
         <svg

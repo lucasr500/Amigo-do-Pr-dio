@@ -20,9 +20,11 @@ import {
   getProfile,
   getAgendaEvents,
   getPendenciasConcluidas,
+  getAuditLog,
   type MemoriaOperacional,
   type CondominioProfile,
 } from "@/lib/session";
+import { getHealthHistoryStats, type HealthHistoryStats } from "@/lib/health-history";
 import { trackEvent } from "@/lib/telemetry";
 
 // ─── Status mappings — importados de health-config para evitar duplicação ─────
@@ -158,6 +160,23 @@ function buildLastRecords(): RecordItem[] {
   type Entry = { date: string; item: RecordItem };
   const all: Entry[] = [];
 
+  // Eventos positivos do audit log (micro conquistas operacionais)
+  const recentAudit = getAuditLog()
+    .filter((e) => e.impact === "positive")
+    .slice(-6);
+  for (const e of recentAudit) {
+    all.push({
+      date: e.timestamp,
+      item: {
+        id: `audit-${e.id}`,
+        label: e.action,
+        detail: new Date(e.timestamp).toLocaleDateString("pt-BR") + (e.detail ? ` · ${e.detail}` : ""),
+        badgeLabel: "Registrado",
+        badgeStyle: "bg-blue-100 text-blue-700",
+      },
+    });
+  }
+
   for (const e of getAgendaEvents().filter((ev) => !!ev.completedAt)) {
     const d = new Date(e.completedAt!);
     all.push({
@@ -238,12 +257,13 @@ function hasMinimumHealthData(): boolean {
 }
 
 export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio, onGoToPendencias, onGoToAgenda, onGoToRevisao, onAskQuestion }: Props) {
-  const [result, setResult]     = useState<HealthScoreResult | null>(null);
-  const [areas, setAreas]       = useState<MonitoredArea[]>([]);
-  const [records, setRecords]   = useState<RecordItem[]>([]);
-  const [hasData, setHasData]   = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-  const [showCalc, setShowCalc] = useState(false);
+  const [result, setResult]         = useState<HealthScoreResult | null>(null);
+  const [areas, setAreas]           = useState<MonitoredArea[]>([]);
+  const [records, setRecords]       = useState<RecordItem[]>([]);
+  const [histStats, setHistStats]   = useState<HealthHistoryStats | null>(null);
+  const [hasData, setHasData]       = useState(false);
+  const [hydrated, setHydrated]     = useState(false);
+  const [showCalc, setShowCalc]     = useState(false);
   const toggleCalc = useCallback(() => setShowCalc((v) => !v), []);
 
   useEffect(() => {
@@ -254,6 +274,7 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
     setResult(r);
     setAreas(computeAreas(r, m, profile));
     setRecords(buildLastRecords());
+    setHistStats(getHealthHistoryStats());
     setHydrated(true);
   }, [refreshKey]);
 
@@ -321,6 +342,21 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
   const badgeLabel   = BADGE_LABEL[result.statusKey];
   const badgeStyle   = BADGE_STYLE[result.statusKey];
 
+  // Frase de tendência histórica — só aparece quando há histórico suficiente
+  let trendPhrase: { text: string; color: string } | null = null;
+  if (histStats && histStats.totalDaysTracked >= 2 && histStats.previousWeek !== null) {
+    const delta = histStats.current - histStats.previousWeek;
+    if (delta >= 5) {
+      trendPhrase = { text: `↑ O condomínio ficou mais protegido esta semana (+${delta}%)`, color: "text-emerald-600" };
+    } else if (delta <= -5) {
+      trendPhrase = { text: `↓ Monitoramento recuou ${Math.abs(delta)}% esta semana — verifique alertas`, color: "text-amber-600" };
+    } else if (histStats.trend === "stable" && histStats.totalDaysTracked >= 5) {
+      trendPhrase = { text: `→ Estável nos últimos 7 dias`, color: "text-navy-400" };
+    }
+  } else if (histStats && histStats.totalDaysTracked >= 1) {
+    trendPhrase = { text: `Monitorado há ${histStats.totalDaysTracked} dia${histStats.totalDaysTracked > 1 ? "s" : ""}`, color: "text-navy-400" };
+  }
+
   return (
     <div className="flex w-full max-w-full flex-col overflow-x-hidden">
 
@@ -372,6 +408,11 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
             <p className="mt-2 text-[11.5px] leading-relaxed text-navy-400">
               {result.diagnosticPhrase}
             </p>
+            {trendPhrase && (
+              <p className={`mt-2 text-[11px] font-medium ${trendPhrase.color}`}>
+                {trendPhrase.text}
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -546,8 +587,11 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         </div>
 
         {records.length === 0 ? (
-          <div className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-5 shadow-card">
-            <p className="text-[12.5px] text-navy-400">Nenhum registro recente.</p>
+          <div className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-5 shadow-card text-center">
+            <p className="text-[13px] font-medium text-navy-700">Nenhum registro ainda</p>
+            <p className="mt-1 text-[11.5px] leading-relaxed text-navy-400">
+              Conquistas aparecem aqui — pendências concluídas, agendas realizadas, dados atualizados.
+            </p>
           </div>
         ) : (
           <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
