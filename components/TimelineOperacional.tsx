@@ -34,8 +34,9 @@ const MEMORIA_MAP: Partial<
   ultimaInspecaoExtintores: { label: "Inspeção de extintores",    icon: "🧯", tipo: "manutencao" },
   ultimaVistoriaSPDA:       { label: "Vistoria do para-raios",    icon: "⚡", tipo: "manutencao" },
   ultimaVistoriaEletrica:   { label: "Vistoria elétrica",         icon: "🔌", tipo: "manutencao" },
-  vencimentoAVCB:           { label: "AVCB atualizado",           icon: "📋", tipo: "vencimento" },
-  vencimentoSeguro:         { label: "Seguro atualizado",         icon: "🛡️", tipo: "vencimento" },
+  vencimentoAVCB:           { label: "AVCB",                      icon: "📋", tipo: "vencimento" },
+  vencimentoSeguro:         { label: "Seguro predial",            icon: "🛡️", tipo: "vencimento" },
+  fimMandatoSindico:        { label: "Fim do mandato",            icon: "🗓️", tipo: "vencimento" },
 };
 
 const CHECKLIST_LABELS: Record<string, string> = {
@@ -70,12 +71,24 @@ function formatRelativeDate(date: Date): string {
   return `${meses} mês${meses > 1 ? "es" : ""} atrás`;
 }
 
+function formatDaysUntil(date: Date): string {
+  const ds = Math.ceil((date.getTime() - Date.now()) / 86400000);
+  if (ds <= 0) return "Hoje";
+  if (ds === 1) return "Amanhã";
+  if (ds <= 30) return `Em ${ds} dias`;
+  if (ds <= 60) return "Em 1 mês";
+  const m = Math.round(ds / 30);
+  return `Em ${m} meses`;
+}
+
 function formatMonthLabel(date: Date): string {
   return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 }
 
-function buildTimeline(): TimelineEvent[] {
-  const events: TimelineEvent[] = [];
+type BuildResult = { upcoming: TimelineEvent[]; past: TimelineEvent[] };
+
+function buildTimeline(): BuildResult {
+  const allEvents: TimelineEvent[] = [];
   const now = new Date();
 
   const memoria = getMemoriaOperacional();
@@ -85,13 +98,13 @@ function buildTimeline(): TimelineEvent[] {
     const date = new Date(val);
     if (isNaN(date.getTime())) continue;
     const isFuture = date > now;
-    events.push({
+    allEvents.push({
       id: `mem-${key}`,
       date,
       label: isFuture
-        ? `${meta.label} — vence ${date.toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}`
+        ? `${meta.label} vence ${date.toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" })}`
         : meta.label,
-      detalhe: isFuture ? undefined : formatRelativeDate(date),
+      detalhe: isFuture ? formatDaysUntil(date) : formatRelativeDate(date),
       icon: meta.icon,
       tipo: meta.tipo,
     });
@@ -103,7 +116,7 @@ function buildTimeline(): TimelineEvent[] {
     const total = 10;
     const done = Object.values(data.checked).filter(Boolean).length;
     if (done < total) continue;
-    events.push({
+    allEvents.push({
       id: `cl-${id}`,
       date: new Date(data.lastUsed),
       label: CHECKLIST_LABELS[id],
@@ -115,7 +128,7 @@ function buildTimeline(): TimelineEvent[] {
 
   const favorites = getFavorites().slice(-5);
   for (const fav of favorites) {
-    events.push({
+    allEvents.push({
       id: `fav-${fav.id}`,
       date: new Date(fav.ts),
       label: `Favorito: "${fav.q.length > 45 ? fav.q.slice(0, 45) + "…" : fav.q}"`,
@@ -131,7 +144,7 @@ function buildTimeline(): TimelineEvent[] {
   for (const p of concluidas) {
     const date = new Date(p.completedAt!);
     if (isNaN(date.getTime())) continue;
-    events.push({
+    allEvents.push({
       id: `pend-${p.id}`,
       date,
       label: `Concluído: "${p.titulo.length > 45 ? p.titulo.slice(0, 45) + "…" : p.titulo}"`,
@@ -145,10 +158,10 @@ function buildTimeline(): TimelineEvent[] {
   for (const ocorrencia of ocorrencias) {
     const date = new Date(ocorrencia.createdAt);
     if (isNaN(date.getTime())) continue;
-    events.push({
+    allEvents.push({
       id: `oc-${ocorrencia.id}`,
       date,
-      label: `Ocorrência registrada: ${OCORRENCIA_LABELS[ocorrencia.tipo]}`,
+      label: `Ocorrência: ${OCORRENCIA_LABELS[ocorrencia.tipo]}`,
       detalhe: formatRelativeDate(date),
       icon: "!",
       tipo: "ocorrencia",
@@ -159,7 +172,7 @@ function buildTimeline(): TimelineEvent[] {
   if (weeklyReview.lastCompletedAt) {
     const date = new Date(weeklyReview.lastCompletedAt);
     if (!isNaN(date.getTime())) {
-      events.push({
+      allEvents.push({
         id: `rev-semanal-${weeklyReview.lastCompletedWeekKey ?? "atual"}`,
         date,
         label: "Revisão semanal concluída",
@@ -174,7 +187,7 @@ function buildTimeline(): TimelineEvent[] {
   for (const e of agendaEvents) {
     const date = new Date(e.completedAt!);
     if (isNaN(date.getTime())) continue;
-    events.push({
+    allEvents.push({
       id: `agenda-${e.id}`,
       date,
       label: "Item da agenda concluído",
@@ -184,7 +197,47 @@ function buildTimeline(): TimelineEvent[] {
     });
   }
 
-  return events.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 12);
+  const upcoming = allEvents
+    .filter((e) => e.date > now)
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  const past = allEvents
+    .filter((e) => e.date <= now)
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 20);
+
+  return { upcoming, past };
+}
+
+function EventRow({ event, isUpcoming }: { event: TimelineEvent; isUpcoming?: boolean }) {
+  const iconBg =
+    isUpcoming
+      ? "bg-teal-50 text-teal-600"
+      : event.tipo === "favorito"
+      ? "bg-amber-50 text-amber-600"
+      : event.tipo === "ocorrencia"
+      ? "bg-cream-100 text-navy-600"
+      : "bg-navy-50 text-navy-500";
+
+  return (
+    <div className="relative flex items-start gap-3 pb-3">
+      <div
+        className={`relative z-10 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] ${iconBg}`}
+      >
+        {event.icon}
+      </div>
+      <div className="flex-1 min-w-0 pt-0.5">
+        <p className={`text-[12px] font-medium leading-snug ${isUpcoming ? "text-teal-800" : "text-navy-800"}`}>
+          {event.label}
+        </p>
+        {event.detalhe && (
+          <p className={`text-[10.5px] ${isUpcoming ? "text-teal-600 font-medium" : "text-navy-400"}`}>
+            {event.detalhe}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 type TimelineOperacionalProps = {
@@ -193,27 +246,29 @@ type TimelineOperacionalProps = {
 
 export default function TimelineOperacional({ refreshKey }: TimelineOperacionalProps) {
   const [hydrated, setHydrated] = useState(false);
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [upcoming, setUpcoming] = useState<TimelineEvent[]>([]);
+  const [past, setPast] = useState<TimelineEvent[]>([]);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    const built = buildTimeline();
-    setEvents(built);
+    const result = buildTimeline();
+    setUpcoming(result.upcoming);
+    setPast(result.past);
     setHydrated(true);
   }, [refreshKey]);
 
-  if (!hydrated || events.length === 0) return null;
+  if (!hydrated || (upcoming.length === 0 && past.length === 0)) return null;
 
   const handleExpand = () => {
     const next = !expanded;
     setExpanded(next);
     if (next) {
       logInteraction("timeline-aberta", "");
-      void trackEvent("timeline_viewed", { event_count: events.length });
+      void trackEvent("timeline_viewed", { upcoming_count: upcoming.length, past_count: past.length });
     }
   };
 
-  let lastMonth = "";
+  const nextUpcoming = upcoming[0];
 
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
@@ -231,7 +286,9 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
         <div className="flex-1 min-w-0">
           <p className="text-[12.5px] font-medium text-navy-800">Histórico operacional</p>
           <p className="text-[11px] text-navy-400">
-            {events.length} registro{events.length !== 1 ? "s" : ""} para lembrar o que foi feito
+            {nextUpcoming
+              ? `Próximo: ${nextUpcoming.label.split(" vence ")[0]} · ${nextUpcoming.detalhe}`
+              : `${past.length} registro${past.length !== 1 ? "s" : ""} recentes`}
           </p>
         </div>
         <span className="flex-shrink-0 text-[11px] text-navy-400">
@@ -241,48 +298,43 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
 
       {expanded && (
         <div className="mt-2 rounded-2xl border border-navy-100 bg-white/90 p-4">
-          <div className="relative">
-            <div className="absolute left-3 top-0 bottom-0 w-px bg-navy-100" aria-hidden="true" />
-            <div className="space-y-0">
-              {events.map((event) => {
-                const month = formatMonthLabel(event.date);
-                const showMonth = month !== lastMonth;
-                lastMonth = month;
-                return (
-                  <div key={event.id}>
-                    {showMonth && (
-                      <p className="mb-2 mt-3 pl-7 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-navy-300 first:mt-0">
-                        {month}
-                      </p>
-                    )}
-                    <div className="relative flex items-start gap-3 pb-3">
-                      <div
-                        className={`relative z-10 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] ${
-                          event.tipo === "checklist"
-                            ? "bg-navy-100 text-navy-600"
-                            : event.tipo === "vencimento"
-                            ? "bg-navy-100 text-navy-600"
-                            : event.tipo === "favorito"
-                            ? "bg-amber-50 text-amber-600"
-                            : event.tipo === "ocorrencia"
-                            ? "bg-cream-100 text-navy-600"
-                            : "bg-navy-50 text-navy-500"
-                        }`}
-                      >
-                        {event.icon}
-                      </div>
-                      <div className="flex-1 min-w-0 pt-0.5">
-                        <p className="text-[12px] font-medium leading-snug text-navy-800">{event.label}</p>
-                        {event.detalhe && (
-                          <p className="text-[10.5px] text-navy-400">{event.detalhe}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+
+          {/* Próximas datas */}
+          {upcoming.length > 0 && (
+            <div className="mb-4">
+              <p className="mb-2 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-teal-600">
+                Próximas datas
+              </p>
+              <div className="relative">
+                <div className="absolute left-3 top-0 bottom-0 w-px bg-teal-100" aria-hidden="true" />
+                <div className="space-y-0">
+                  {upcoming.map((event) => (
+                    <EventRow key={event.id} event={event} isUpcoming />
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Histórico */}
+          {past.length > 0 && (
+            <>
+              {upcoming.length > 0 && (
+                <p className="mb-2 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-navy-300">
+                  Histórico
+                </p>
+              )}
+              <div className="relative">
+                <div className="absolute left-3 top-0 bottom-0 w-px bg-navy-100" aria-hidden="true" />
+                <div className="space-y-0">
+                  {past.map((event) => {
+                    return <EventRow key={event.id} event={event} />;
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
         </div>
       )}
     </section>

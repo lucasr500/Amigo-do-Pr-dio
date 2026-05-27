@@ -90,7 +90,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           <button
             type="button"
             onClick={() => topAction.resolveTarget && onNavigate?.(topAction.resolveTarget)}
-            className="mt-2 flex w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-left transition-colors hover:bg-white active:scale-[0.99]"
+            className="mt-2 flex min-h-[44px] w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
           >
             <div className="min-w-0 flex-1">
               <p className={`text-[12px] font-semibold leading-snug ${hasUrgent ? "text-terracotta-800" : "text-navy-800"}`}>

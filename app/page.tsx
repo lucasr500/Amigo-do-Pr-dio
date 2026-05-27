@@ -864,42 +864,64 @@ export default function HomePage() {
               />
             </div>
 
-            {/* ── Backup e segurança ────────────────────────────────── */}
+            {/* ── Conta e dados ─────────────────────────────────────── */}
             {hasCondominioData && (
               <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Backup e segurança</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Exporte e restaure os dados do condomínio.</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta e dados</p>
+                <p className="mt-0.5 text-[11px] text-navy-400">Backup, sincronização e configurações do app.</p>
               </div>
             )}
+
+            {/* Conta e sincronização */}
+            <section className="px-5 pb-2 pt-2 sm:px-6">
+              <AccountPanel onRefresh={() => setRefreshKey((k) => k + 1)} />
+            </section>
+
+            {/* Backup e restauração */}
             <BackupPanel onImported={() => setRefreshKey((k) => k + 1)} />
 
+            {/* Notificações */}
+            <section className="px-5 pb-2 pt-1 sm:px-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Notificações</p>
+                <button
+                  type="button"
+                  onClick={() => setShowNotifSettings((v) => !v)}
+                  className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
+                >
+                  {showNotifSettings ? "Fechar" : "Configurar"}
+                </button>
+              </div>
+              {showNotifSettings && <NotificationSettingsPanel />}
+            </section>
+
+            {/* Evolução da saúde operacional */}
+            {hasCondominioData && (
+              <section className="px-5 pb-3 pt-1 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300 mb-3">Evolução da saúde operacional</p>
+                <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+                  <HealthTrendChart />
+                </div>
+              </section>
+            )}
+
             {/* ── Suporte e termos ──────────────────────────────────── */}
-            <section className="px-5 pb-3 pt-4 sm:px-6">
+            <section className="px-5 pb-3 pt-3 sm:px-6">
               <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
                 <div className="mb-3 flex items-center gap-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Suporte e termos</p>
-                  <span className="rounded-full bg-navy-100 px-2 py-0.5 text-[9.5px] font-semibold text-navy-500">Pré-beta</span>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Sobre o app</p>
                 </div>
                 <div className="space-y-2">
                   <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
                     <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Ferramenta de apoio operacional</p>
                     <p className="text-[11px] leading-relaxed text-navy-500">
-                      O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou outros profissionais especializados. As orientações têm caráter informativo.
+                      O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou profissional especializado. As orientações têm caráter informativo.
                     </p>
                   </div>
                   <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
                     <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Seus dados ficam no dispositivo</p>
                     <p className="text-[11px] leading-relaxed text-navy-500">
-                      As informações do condomínio são salvas localmente neste aparelho e não são enviadas a terceiros. Use "Exportar dados" para fazer backup.
-                    </p>
-                    <p className="mt-1.5 text-[10.5px] leading-relaxed text-navy-400">
-                      Evite inserir dados sensíveis desnecessários — como CPF, números de documento ou informações pessoais de moradores.
-                    </p>
-                  </div>
-                  <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
-                    <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Telemetria de uso</p>
-                    <p className="text-[11px] leading-relaxed text-navy-500">
-                      Eventos técnicos anônimos (sem texto livre nem dados do condomínio) podem ser coletados para melhorar o produto. Não compartilhamos dados com terceiros para fins de marketing.
+                      Os dados do condomínio são salvos localmente neste aparelho. Nada é enviado a terceiros. Use "Exportar dados" para fazer backup.
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 pt-1">
@@ -916,48 +938,10 @@ export default function HomePage() {
                       Política de privacidade
                     </a>
                     <p className="w-full text-[10px] leading-relaxed text-navy-300">
-                      Versão preliminar — aguardando revisão jurídica antes do lançamento público.
+                      Versão preliminar — pendente revisão jurídica.
                     </p>
                   </div>
                 </div>
-              </div>
-            </section>
-
-            {/* ── Conta e sincronização ─────────────────────────────── */}
-            <section className="px-5 pb-2 pt-3 sm:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta e sincronização</p>
-                <button
-                  type="button"
-                  onClick={() => setShowAccountModal(true)}
-                  className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
-                >
-                  Gerenciar
-                </button>
-              </div>
-              <AccountPanel onRefresh={() => setRefreshKey((k) => k + 1)} />
-            </section>
-
-            {/* ── Notificações ──────────────────────────────────────── */}
-            <section className="px-5 pb-2 pt-1 sm:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Notificações</p>
-                <button
-                  type="button"
-                  onClick={() => setShowNotifSettings((v) => !v)}
-                  className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
-                >
-                  {showNotifSettings ? "Fechar" : "Configurar"}
-                </button>
-              </div>
-              {showNotifSettings && <NotificationSettingsPanel />}
-            </section>
-
-            {/* ── Saúde histórica ───────────────────────────────────── */}
-            <section className="px-5 pb-4 pt-1 sm:px-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300 mb-3">Evolução da saúde operacional</p>
-              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
-                <HealthTrendChart />
               </div>
             </section>
 
