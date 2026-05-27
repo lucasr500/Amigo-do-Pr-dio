@@ -4,6 +4,10 @@
 //
 // Migração futura para backend: substituir `safeRead`/`safeWrite` por
 // chamadas fetch() mantendo as mesmas assinaturas de função.
+//
+// Versão do schema de dados: SESSION_SCHEMA_VERSION
+// Incrementar aqui ao adicionar campos incompatíveis.
+export const SESSION_SCHEMA_VERSION = 5;
 
 import { ate, desde, past } from "./urgency";
 
@@ -65,6 +69,56 @@ export type CondominioProfile = {
   nomeCondominio?: string;
 };
 
+// ─── Datas assistidas — precisão flexível ──────────────────────────────────
+// Permite aceitar datas completas, aproximadas, desconhecidas ou dispensadas.
+// Armazenado em paralelo com MemoriaOperacional para retrocompatibilidade.
+
+export type DatePrecision = "exact" | "month" | "year" | "unknown" | "not_applicable";
+
+export type AssistedDateField = {
+  value?: string;       // YYYY-MM-DD (exact), YYYY-MM (month), YYYY (year)
+  precision: DatePrecision;
+  status: "filled" | "estimated" | "unknown" | "to_discover" | "not_applicable";
+  notes?: string;
+  updatedAt: string;    // ISO
+};
+
+export type MemoriaAssistida = {
+  avcb?: AssistedDateField;
+  seguro?: AssistedDateField;
+  mandato?: AssistedDateField;
+};
+
+// ─── Modo de implantação ────────────────────────────────────────────────────
+// Capturado no onboarding para adaptar linguagem e plano inicial.
+export type ImplantacaoMode = "existing" | "new_sindico" | "organizing";
+
+// ─── Documentos essenciais ──────────────────────────────────────────────────
+export type DocumentoStatus = "tenho" | "nao_tenho" | "precisa_localizar" | "nao_se_aplica";
+
+export type DocumentoEssencial = {
+  id: string;
+  status: DocumentoStatus;
+  vencimento?: AssistedDateField;
+  observacoes?: string;
+  ondeEsta?: string;
+  updatedAt: string;
+};
+
+// ─── Férias de funcionários ─────────────────────────────────────────────────
+export type FeriasFuncionarioStatus = "em_dia" | "a_vencer" | "vencida" | "desconhecida";
+
+export type FuncionarioFerias = {
+  id: string;
+  nomeFuncao: string;
+  dataAdmissao?: string;
+  periodoAquisitivo?: string;
+  status: FeriasFuncionarioStatus;
+  observacoes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 // ─── Memória operacional do condomínio ─────────────────────────────────────
 // Registro leve de datas e fornecedores operacionais.
 // Permite que o produto "conheça" o histórico do prédio.
@@ -99,6 +153,10 @@ const KEYS = {
   INTERACTIONS:         "amigo_interactions",
   PROFILE:              "amigo_profile",
   MEMORIA:              "amigo_memoria",
+  MEMORIA_ASSISTIDA:    "amigo_memoria_assistida",
+  DOCUMENTOS:           "amigo_documentos",
+  FUNCIONARIOS:         "amigo_funcionarios",
+  IMPLANTACAO_MODE:     "amigo_implantacao_mode",
   SESSION_META:         "amigo_session_meta",
   RESOLUTION_EVENTS:    "amigo_resolution_events",
   PENDENCIAS:           "amigo_pendencias",
@@ -108,6 +166,9 @@ const KEYS = {
   REVISAO_SEMANAL:       "amigo_revisao_semanal",
   ONBOARDING_COMPLETE:   "amigo_onboarding_complete",
   COMUNICADO_HISTORY:    "amigo_comunicado_history",
+  NOTIFICATIONS:         "amigo_notifications",
+  HEALTH_HISTORY:        "amigo_health_history",
+  AUDIT_LOG:             "amigo_audit_log",
 } as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -116,8 +177,14 @@ function safeRead<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as T;
+    // Valida que o resultado é do tipo esperado (não null inesperado)
+    if (parsed === null && fallback !== null) return fallback;
+    return parsed;
   } catch {
+    // JSON corrompido — remove a chave para evitar problema recorrente
+    try { localStorage.removeItem(key); } catch { /* empty */ }
     return fallback;
   }
 }
@@ -126,8 +193,16 @@ function safeWrite(key: string, value: unknown): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // quota exceeded ou localStorage indisponível (modo privado)
+  } catch (e) {
+    if (e instanceof DOMException) {
+      // Quota exceeded: tenta liberar espaço removendo histórico de queries
+      try {
+        localStorage.removeItem(KEYS.QUERIES);
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch {
+        // Se ainda falha, ignora silenciosamente
+      }
+    }
   }
 }
 
@@ -424,7 +499,7 @@ export type Pendencia = {
   id: string;
   titulo: string;
   categoria?: string;
-  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda";
+  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario";
   matchedId?: string | null;
   status: "aberta" | "concluida";
   createdAt: string;
@@ -709,6 +784,286 @@ export function clearAllData(): void {
   }
 }
 
+// ─── Notifications storage ────────────────────────────────────────────────────
+
+export type NotificationSeverity = "info" | "warning" | "critical";
+
+export type AppNotification = {
+  id: string;
+  type: string;
+  severity: NotificationSeverity;
+  title: string;
+  body: string;
+  createdAt: string;
+  scheduledFor?: string;
+  read: boolean;
+  dismissed: boolean;
+  sourceModule: string;
+  actionKey?: string; // chave para CTA (ex: "open_avcb", "open_funcionarios")
+};
+
+export function getNotifications(): AppNotification[] {
+  return safeRead<AppNotification[]>(KEYS.NOTIFICATIONS, []);
+}
+
+export function saveNotifications(notifications: AppNotification[]): void {
+  safeWrite(KEYS.NOTIFICATIONS, notifications.slice(-100)); // max 100
+}
+
+export function addNotification(n: Omit<AppNotification, "id" | "createdAt" | "read" | "dismissed">): AppNotification {
+  const notification: AppNotification = {
+    ...n,
+    id: `notif_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: new Date().toISOString(),
+    read: false,
+    dismissed: false,
+  };
+  const all = getNotifications();
+  saveNotifications([...all, notification]);
+  return notification;
+}
+
+export function markNotificationRead(id: string): void {
+  const all = getNotifications().map((n) =>
+    n.id === id ? { ...n, read: true } : n
+  );
+  saveNotifications(all);
+}
+
+export function dismissNotification(id: string): void {
+  const all = getNotifications().map((n) =>
+    n.id === id ? { ...n, dismissed: true, read: true } : n
+  );
+  saveNotifications(all);
+}
+
+export function markAllNotificationsRead(): void {
+  const all = getNotifications().map((n) => ({ ...n, read: true }));
+  saveNotifications(all);
+}
+
+export function getUnreadNotificationCount(): number {
+  return getNotifications().filter((n) => !n.read && !n.dismissed).length;
+}
+
+// ─── Health History storage ────────────────────────────────────────────────────
+
+export type HealthSnapshot = {
+  date: string;            // YYYY-MM-DD
+  percentage: number;
+  statusKey: string;
+  factorCount: number;     // quantos fatores foram avaliados
+  missingCount: number;    // fatores com status "missing"
+  partialCount: number;    // fatores com status "partial"
+};
+
+export function getHealthHistory(): HealthSnapshot[] {
+  return safeRead<HealthSnapshot[]>(KEYS.HEALTH_HISTORY, []);
+}
+
+export function saveHealthHistory(snapshots: HealthSnapshot[]): void {
+  safeWrite(KEYS.HEALTH_HISTORY, snapshots.slice(-90)); // max 90 entradas (3 meses diários)
+}
+
+export function recordHealthSnapshot(snapshot: HealthSnapshot): void {
+  const all = getHealthHistory();
+  // Substitui snapshot do mesmo dia se já existir
+  const withoutToday = all.filter((s) => s.date !== snapshot.date);
+  saveHealthHistory([...withoutToday, snapshot]);
+}
+
+export function getHealthTrend(): "up" | "down" | "stable" | "unknown" {
+  const history = getHealthHistory();
+  if (history.length < 2) return "unknown";
+  const sorted = [...history].sort((a, b) => a.date.localeCompare(b.date));
+  const recent = sorted.slice(-7); // última semana
+  if (recent.length < 2) return "unknown";
+  const first = recent[0].percentage;
+  const last = recent[recent.length - 1].percentage;
+  const delta = last - first;
+  if (delta >= 5) return "up";
+  if (delta <= -5) return "down";
+  return "stable";
+}
+
+// ─── Audit Log (events auto-logged) ──────────────────────────────────────────
+
+export type AuditCategory =
+  | "documento"
+  | "funcionario"
+  | "health"
+  | "onboarding"
+  | "pendencia"
+  | "memoria"
+  | "implantacao";
+
+export type AuditEntry = {
+  id: string;
+  category: AuditCategory;
+  action: string;
+  detail?: string;
+  impact?: "positive" | "neutral" | "negative";
+  timestamp: string;
+};
+
+export function getAuditLog(): AuditEntry[] {
+  return safeRead<AuditEntry[]>(KEYS.AUDIT_LOG, []);
+}
+
+export function addAuditEntry(entry: Omit<AuditEntry, "id" | "timestamp">): void {
+  const all = getAuditLog();
+  const newEntry: AuditEntry = {
+    ...entry,
+    id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    timestamp: new Date().toISOString(),
+  };
+  safeWrite(KEYS.AUDIT_LOG, [...all, newEntry].slice(-200)); // max 200 entradas
+}
+
+// ─── Memória assistida (precisão de datas) ───────────────────────────────────
+// Camada paralela de metadados de precisão para campos críticos.
+// Não substitui MemoriaOperacional — convive com ela para retrocompatibilidade.
+
+export function getMemoriaAssistida(): MemoriaAssistida {
+  return safeRead<MemoriaAssistida>(KEYS.MEMORIA_ASSISTIDA, {});
+}
+
+export function saveMemoriaAssistida(ma: MemoriaAssistida): void {
+  safeWrite(KEYS.MEMORIA_ASSISTIDA, ma);
+}
+
+// Constrói AssistedDateField a partir de input do usuário.
+export function buildAssistedDate(
+  input: string,
+  mode: "exact" | "month" | "year" | "unknown" | "to_discover" | "not_applicable",
+  notes?: string
+): AssistedDateField {
+  const now = new Date().toISOString();
+  if (mode === "unknown") {
+    return { precision: "unknown", status: "unknown", notes, updatedAt: now };
+  }
+  if (mode === "to_discover") {
+    return { precision: "unknown", status: "to_discover", notes, updatedAt: now };
+  }
+  if (mode === "not_applicable") {
+    return { precision: "not_applicable", status: "not_applicable", notes, updatedAt: now };
+  }
+  if (mode === "month" && input) {
+    // input: "MM/YYYY" ou "YYYY-MM" — normaliza para YYYY-MM
+    const parts = input.includes("/") ? input.split("/") : input.split("-");
+    const [a, b] = parts.length === 2 ? [parts[0], parts[1]] : ["", ""];
+    const month = a.length === 4 ? a : b;
+    const year = a.length === 4 ? b : a;
+    const normalized = `${year}-${month.padStart(2, "0")}`;
+    return { value: `${normalized}-01`, precision: "month", status: "estimated", notes, updatedAt: now };
+  }
+  if (mode === "year" && input) {
+    return { value: `${input}-01-01`, precision: "year", status: "estimated", notes, updatedAt: now };
+  }
+  return { value: input, precision: "exact", status: "filled", notes, updatedAt: now };
+}
+
+// ─── Documentos essenciais ───────────────────────────────────────────────────
+
+export const DOCUMENTOS_ESSENCIAIS_IDS = [
+  "convencao",
+  "regimento",
+  "ata_eleicao",
+  "apolice_seguro",
+  "avcb_clcb",
+  "contrato_elevador",
+  "contrato_limpeza",
+  "contrato_portaria",
+  "laudos_tecnicos",
+  "extintores_comprovante",
+  "caixa_agua_comprovante",
+  "dedetizacao_comprovante",
+  "cct_funcionarios",
+  "controle_ferias",
+] as const;
+
+export type DocumentoEssencialId = typeof DOCUMENTOS_ESSENCIAIS_IDS[number];
+
+export const DOCUMENTO_LABEL: Record<DocumentoEssencialId, string> = {
+  convencao:               "Convenção condominial",
+  regimento:               "Regimento interno",
+  ata_eleicao:             "Ata de eleição do síndico",
+  apolice_seguro:          "Apólice de seguro",
+  avcb_clcb:               "AVCB / CLCB",
+  contrato_elevador:       "Contrato de manutenção de elevadores",
+  contrato_limpeza:        "Contrato de limpeza",
+  contrato_portaria:       "Contrato de portaria / segurança",
+  laudos_tecnicos:         "Laudos técnicos",
+  extintores_comprovante:  "Comprovantes de manutenção de extintores",
+  caixa_agua_comprovante:  "Comprovante de limpeza da caixa d'água",
+  dedetizacao_comprovante: "Comprovante de dedetização",
+  cct_funcionarios:        "CCT aplicável aos funcionários",
+  controle_ferias:         "Controle de férias dos funcionários",
+};
+
+export function getDocumentos(): DocumentoEssencial[] {
+  return safeRead<DocumentoEssencial[]>(KEYS.DOCUMENTOS, []);
+}
+
+export function saveDocumentos(docs: DocumentoEssencial[]): void {
+  safeWrite(KEYS.DOCUMENTOS, docs);
+}
+
+export function upsertDocumento(doc: DocumentoEssencial): void {
+  const all = getDocumentos().filter((d) => d.id !== doc.id);
+  all.push(doc);
+  saveDocumentos(all);
+}
+
+export function getDocumentoById(id: string): DocumentoEssencial | null {
+  return getDocumentos().find((d) => d.id === id) ?? null;
+}
+
+// ─── Férias de funcionários ──────────────────────────────────────────────────
+
+export function getFuncionarios(): FuncionarioFerias[] {
+  return safeRead<FuncionarioFerias[]>(KEYS.FUNCIONARIOS, []);
+}
+
+export function saveFuncionarios(list: FuncionarioFerias[]): void {
+  safeWrite(KEYS.FUNCIONARIOS, list);
+}
+
+export function addFuncionario(f: Omit<FuncionarioFerias, "id" | "createdAt" | "updatedAt">): FuncionarioFerias {
+  const all = getFuncionarios();
+  const novo: FuncionarioFerias = {
+    ...f,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  all.push(novo);
+  saveFuncionarios(all);
+  return novo;
+}
+
+export function updateFuncionario(id: string, changes: Partial<Omit<FuncionarioFerias, "id" | "createdAt">>): void {
+  saveFuncionarios(
+    getFuncionarios().map((f) =>
+      f.id === id ? { ...f, ...changes, updatedAt: new Date().toISOString() } : f
+    )
+  );
+}
+
+export function deleteFuncionario(id: string): void {
+  saveFuncionarios(getFuncionarios().filter((f) => f.id !== id));
+}
+
+// ─── Modo de implantação ─────────────────────────────────────────────────────
+
+export function getImplantacaoMode(): ImplantacaoMode | null {
+  return safeRead<ImplantacaoMode | null>(KEYS.IMPLANTACAO_MODE, null);
+}
+
+export function saveImplantacaoMode(mode: ImplantacaoMode): void {
+  safeWrite(KEYS.IMPLANTACAO_MODE, mode);
+}
+
 // ─── Habit score ─────────────────────────────────────────────────────────────
 // Indicador leve de engajamento do usuário com o produto.
 // Calculado 100% client-side a partir de sinais do localStorage.
@@ -968,7 +1323,7 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v4 — idem + agenda do prédio (amigo_agenda)
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4";
+  version: "1" | "2" | "3" | "4" | "5";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
@@ -978,17 +1333,21 @@ export type UserBackup = {
   pendencias?: Pendencia[]; // presente em v2+, ausente em v1
   ocorrencias?: Ocorrencia[]; // presente em v3+, ausente em v1/v2
   agenda?: AgendaEvent[]; // presente em v4, ausente em v1/v2/v3
+  memoriaAssistida?: MemoriaAssistida; // presente em v5
+  documentos?: DocumentoEssencial[]; // presente em v5
+  funcionarios?: FuncionarioFerias[]; // presente em v5
+  implantacaoMode?: ImplantacaoMode; // presente em v5
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "4",
+    version: "5",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -998,6 +1357,10 @@ export function exportUserData(): void {
     pendencias: getPendencias(),
     ocorrencias: getOcorrencias(),
     agenda: getAgendaEvents(),
+    memoriaAssistida: getMemoriaAssistida(),
+    documentos: getDocumentos(),
+    funcionarios: getFuncionarios(),
+    implantacaoMode: getImplantacaoMode() ?? undefined,
   };
 
   try {
@@ -1017,7 +1380,7 @@ export function exportUserData(): void {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "4",
+    version: "5",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1027,6 +1390,10 @@ export function getUserBackupJson(): string {
     pendencias: getPendencias(),
     ocorrencias: getOcorrencias(),
     agenda: getAgendaEvents(),
+    memoriaAssistida: getMemoriaAssistida(),
+    documentos: getDocumentos(),
+    funcionarios: getFuncionarios(),
+    implantacaoMode: getImplantacaoMode() ?? undefined,
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -1047,7 +1414,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1063,10 +1430,10 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if (d.version === "4" && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
 
@@ -1075,18 +1442,25 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    // Pendências: presentes em v2+
     const pendenciasCount =
-      (d.version === "2" || d.version === "3" || d.version === "4") && Array.isArray(d.pendencias)
+      (d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.pendencias)
         ? (d.pendencias as Pendencia[]).length
         : undefined;
     const ocorrenciasCount =
-      (d.version === "3" || d.version === "4") && Array.isArray(d.ocorrencias)
+      (d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.ocorrencias)
         ? (d.ocorrencias as Ocorrencia[]).length
         : undefined;
     const agendaCount =
-      d.version === "4" && Array.isArray(d.agenda)
+      (d.version === "4" || d.version === "5") && Array.isArray(d.agenda)
         ? (d.agenda as AgendaEvent[]).length
+        : undefined;
+    const documentosCount =
+      d.version === "5" && Array.isArray(d.documentos)
+        ? (d.documentos as DocumentoEssencial[]).length
+        : undefined;
+    const funcionariosCount =
+      d.version === "5" && Array.isArray(d.funcionarios)
+        ? (d.funcionarios as FuncionarioFerias[]).length
         : undefined;
 
     return {
@@ -1098,6 +1472,8 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
         pendenciasCount,
         ocorrenciasCount,
         agendaCount,
+        documentosCount,
+        funcionariosCount,
       },
     };
   } catch {
@@ -1105,7 +1481,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
   }
 }
 
-// Importa backup v1, v2 ou v3. v1 não restaura pendências; v3 restaura ocorrências.
+// Importa backup v1–v5. Retrocompatível com todas as versões anteriores.
 export function importUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1120,11 +1496,10 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
-    // Validação de tipos mínima — rejeita estruturas claramente erradas
     if (d.profile !== null && d.profile !== undefined && (typeof d.profile !== "object" || Array.isArray(d.profile))) {
       return { success: false, error: "Dados de perfil corrompidos no arquivo." };
     }
@@ -1137,15 +1512,13 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if (d.version === "4" && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
 
-    // Escrita — cada campo individualmente para não quebrar os demais em caso de falha parcial
-    // Perfil: se o backup tinha perfil null, limpa o perfil local (restaura o estado exportado)
     if (d.profile) {
       safeWrite(KEYS.PROFILE, d.profile);
     } else if (d.profile === null) {
@@ -1155,15 +1528,14 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    // Pendências: restaura em v2+ com campo válido
     let pendenciasCount: number | undefined;
-    if ((d.version === "2" || d.version === "3" || d.version === "4") && Array.isArray(d.pendencias)) {
+    if ((d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.pendencias)) {
       safeWrite(KEYS.PENDENCIAS, d.pendencias);
       pendenciasCount = (d.pendencias as Pendencia[]).length;
     }
 
     let ocorrenciasCount: number | undefined;
-    if ((d.version === "3" || d.version === "4") && Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.ocorrencias)) {
       safeWrite(KEYS.OCORRENCIAS, d.ocorrencias);
       ocorrenciasCount = (d.ocorrencias as Ocorrencia[]).length;
     } else {
@@ -1171,11 +1543,37 @@ export function importUserData(jsonString: string): ImportResult {
     }
 
     let agendaCount: number | undefined;
-    if (d.version === "4" && Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5") && Array.isArray(d.agenda)) {
       safeWrite(KEYS.AGENDA, d.agenda);
       agendaCount = (d.agenda as AgendaEvent[]).length;
     } else {
       try { localStorage.removeItem(KEYS.AGENDA); } catch { /* noop */ }
+    }
+
+    let documentosCount: number | undefined;
+    let funcionariosCount: number | undefined;
+    if (d.version === "5") {
+      if (Array.isArray(d.documentos)) {
+        safeWrite(KEYS.DOCUMENTOS, d.documentos);
+        documentosCount = (d.documentos as DocumentoEssencial[]).length;
+      } else {
+        try { localStorage.removeItem(KEYS.DOCUMENTOS); } catch { /* noop */ }
+      }
+      if (Array.isArray(d.funcionarios)) {
+        safeWrite(KEYS.FUNCIONARIOS, d.funcionarios);
+        funcionariosCount = (d.funcionarios as FuncionarioFerias[]).length;
+      } else {
+        try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
+      }
+      if (d.memoriaAssistida && typeof d.memoriaAssistida === "object" && !Array.isArray(d.memoriaAssistida)) {
+        safeWrite(KEYS.MEMORIA_ASSISTIDA, d.memoriaAssistida);
+      }
+      if (d.implantacaoMode && typeof d.implantacaoMode === "string") {
+        safeWrite(KEYS.IMPLANTACAO_MODE, d.implantacaoMode);
+      }
+    } else {
+      try { localStorage.removeItem(KEYS.DOCUMENTOS); } catch { /* noop */ }
+      try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -1192,6 +1590,8 @@ export function importUserData(jsonString: string): ImportResult {
         pendenciasCount,
         ocorrenciasCount,
         agendaCount,
+        documentosCount,
+        funcionariosCount,
       },
     };
   } catch {

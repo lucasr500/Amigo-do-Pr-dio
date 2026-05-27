@@ -7,10 +7,15 @@ import {
   getPendenciasAbertas,
   saveMemoriaOperacional,
   getProfile,
+  getMemoriaAssistida,
+  saveMemoriaAssistida,
   logInteraction,
-  MemoriaOperacional,
+  type MemoriaOperacional,
+  type MemoriaAssistida,
+  type AssistedDateField,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import AssistedDateInput from "@/components/ui/AssistedDateInput";
 
 type Props = {
   onSaved?: () => void;
@@ -139,15 +144,23 @@ const GRUPO_LABEL: Record<string, string> = {
 
 // Títulos e campo de telemetria para pendências criadas via "lembrar depois"
 const MEMORIA_LEMBRAR: Partial<Record<keyof MemoriaOperacional, { titulo: string; campo: string }>> = {
-  vencimentoAVCB:    { titulo: "Cadastrar data do AVCB",                    campo: "avcb" },
-  vencimentoSeguro:  { titulo: "Cadastrar vencimento do seguro condominial", campo: "seguro" },
-  fimMandatoSindico: { titulo: "Cadastrar fim do mandato do síndico",        campo: "mandato" },
+  vencimentoAVCB:    { titulo: "Descobrir data de vencimento do AVCB",        campo: "avcb" },
+  vencimentoSeguro:  { titulo: "Localizar apólice do seguro predial",          campo: "seguro" },
+  fimMandatoSindico: { titulo: "Confirmar data final do mandato do síndico",   campo: "mandato" },
+};
+
+// Mapeamento de campo essencial para chave na MemoriaAssistida
+const ESSENTIAL_TO_ASSISTED: Partial<Record<keyof MemoriaOperacional, keyof MemoriaAssistida>> = {
+  vencimentoAVCB:    "avcb",
+  vencimentoSeguro:  "seguro",
+  fimMandatoSindico: "mandato",
 };
 
 export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [draft, setDraft] = useState<MemoriaOperacional>({});
+  const [assistidaDraft, setAssistidaDraft] = useState<MemoriaAssistida>({});
   const [hasElevador, setHasElevador] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savedSummary, setSavedSummary] = useState<string[]>([]);
@@ -156,12 +169,14 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
 
   useEffect(() => {
     const memoria = getMemoriaOperacional();
+    const assistida = getMemoriaAssistida();
     const profile = getProfile();
     setDraft(memoria);
+    setAssistidaDraft(assistida);
     setHasElevador(profile?.hasElevador === true);
     setShowManutencoes(MANUTENCAO_KEYS.some((k) => memoria[k]));
     const existing = getPendenciasAbertas()
-      .filter((p) => p.origem === "memoria" && !!p.matchedId)
+      .filter((p) => (p.origem === "memoria" || p.origem === "assistente_preenchimento") && !!p.matchedId)
       .map((p) => p.matchedId!);
     setSavedMemoriaIds(new Set(existing));
     setHydrated(true);
@@ -196,8 +211,39 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
     setSavedMemoriaIds((prev) => new Set([...prev, key]));
   };
 
+  const handleAssistedChange = (key: keyof MemoriaOperacional, field: AssistedDateField) => {
+    const assistidaKey = ESSENTIAL_TO_ASSISTED[key];
+    if (!assistidaKey) return;
+
+    // Atualiza draft de assistida
+    setAssistidaDraft((prev) => ({ ...prev, [assistidaKey]: field }));
+
+    // Atualiza o campo de data original (para que guidance e health-score continuem funcionando)
+    if (field.status === "filled" || field.status === "estimated") {
+      set(key, field.value as MemoriaOperacional[typeof key]);
+    } else {
+      set(key, undefined as MemoriaOperacional[typeof key]);
+    }
+
+    // Gera pendência automática para "preciso descobrir"
+    if (field.status === "to_discover" && !savedMemoriaIds.has(key)) {
+      const entry = MEMORIA_LEMBRAR[key];
+      if (entry) {
+        addPendencia({
+          titulo: entry.titulo,
+          categoria: "gestao",
+          origem: "assistente_preenchimento",
+          matchedId: String(key),
+        });
+        void trackEvent("pendencia_created_from_memoria", { field: entry.campo });
+        setSavedMemoriaIds((prev) => new Set([...prev, key]));
+      }
+    }
+  };
+
   const salvar = () => {
     saveMemoriaOperacional(draft);
+    saveMemoriaAssistida(assistidaDraft);
     logInteraction("memoria-operacional-salva", String(Object.keys(draft).length));
     void trackEvent("memoria_saved", { item_count: Object.values(draft).filter(v => v && v !== "").length });
 
@@ -374,34 +420,51 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
 
               {(!isManutencoes || showManutencoes) && (
                 <div className="flex flex-col gap-3">
-                  {campos.map(({ key, label, sublabel, tipo, placeholder, icon }) => (
+                  {campos.map(({ key, label, sublabel, tipo, placeholder, icon }) => {
+                    const assistidaKey = ESSENTIAL_TO_ASSISTED[key];
+                    const isEssential = ESSENTIAL_KEYS.includes(key);
+                    const assistidaValue = assistidaKey ? assistidaDraft[assistidaKey] : undefined;
+                    return (
                     <div key={key} className="flex items-start gap-2.5">
                       <span className="mt-3.5 flex-shrink-0 text-[15px] leading-none" aria-hidden="true">
                         {icon}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11.5px] font-medium text-navy-700 mb-0.5">{label}</p>
-                        {sublabel && (
-                          <p className="text-[10px] text-navy-400 mb-1 leading-tight">{sublabel}</p>
-                        )}
-                        {tipo === "data" ? (
-                          <input
-                            type="date"
-                            value={draft[key] as string ?? ""}
-                            onChange={(e) => set(key, e.target.value || undefined)}
-                            className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                        {/* Campos essenciais usam AssistedDateInput; demais usam input simples */}
+                        {isEssential && tipo === "data" ? (
+                          <AssistedDateInput
+                            label={label}
+                            sublabel={sublabel}
+                            value={assistidaValue}
+                            onChange={(field) => handleAssistedChange(key, field)}
+                            allowNotApplicable={false}
                           />
                         ) : (
-                          <input
-                            type="text"
-                            value={draft[key] as string ?? ""}
-                            onChange={(e) => set(key, e.target.value || undefined)}
-                            placeholder={placeholder}
-                            className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-                          />
+                          <>
+                            <p className="text-[11.5px] font-medium text-navy-700 mb-0.5">{label}</p>
+                            {sublabel && (
+                              <p className="text-[10px] text-navy-400 mb-1 leading-tight">{sublabel}</p>
+                            )}
+                            {tipo === "data" ? (
+                              <input
+                                type="date"
+                                value={draft[key] as string ?? ""}
+                                onChange={(e) => set(key, e.target.value || undefined)}
+                                className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={draft[key] as string ?? ""}
+                                onChange={(e) => set(key, e.target.value || undefined)}
+                                placeholder={placeholder}
+                                className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                              />
+                            )}
+                          </>
                         )}
-                        {/* Lembrar depois — apenas nos essenciais quando o campo está vazio */}
-                        {ESSENTIAL_KEYS.includes(key) && !(draft[key] && draft[key] !== "") && (
+                        {/* Lembrar depois — apenas nos essenciais sem AssistedDateInput quando o campo está vazio */}
+                        {isEssential && !assistidaValue && !(draft[key] && draft[key] !== "") && (
                           <button
                             type="button"
                             disabled={savedMemoriaIds.has(key)}
@@ -417,7 +480,8 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                         )}
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               )}
             </div>

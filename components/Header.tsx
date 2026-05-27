@@ -8,6 +8,8 @@ import type { AppTab } from "@/components/BottomNav";
 type Props = {
   refreshKey?: number;
   activeTab?: AppTab;
+  unreadNotifications?: number;
+  onNotificationsClick?: () => void;
 };
 
 function getGreeting(): string {
@@ -17,7 +19,7 @@ function getGreeting(): string {
   return "Boa noite";
 }
 
-export default function Header({ refreshKey, activeTab }: Props) {
+export default function Header({ refreshKey, activeTab, unreadNotifications = 0, onNotificationsClick }: Props) {
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,8 +45,9 @@ export default function Header({ refreshKey, activeTab }: Props) {
 
           <button
             type="button"
-            aria-label="Notificações"
-            className="ml-3 mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-navy-300 transition-colors hover:bg-navy-50 hover:text-navy-500 active:scale-[0.96]"
+            aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificações não lidas` : "Notificações"}
+            onClick={onNotificationsClick}
+            className="relative ml-3 mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-navy-300 transition-colors hover:bg-navy-50 hover:text-navy-500 active:scale-[0.96]"
           >
             <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" aria-hidden="true">
               <path
@@ -60,6 +63,11 @@ export default function Header({ refreshKey, activeTab }: Props) {
                 strokeLinecap="round"
               />
             </svg>
+            {unreadNotifications > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-terracotta-500 text-[9px] font-bold text-white">
+                {unreadNotifications > 9 ? "9+" : unreadNotifications}
+              </span>
+            )}
           </button>
         </div>
       </header>

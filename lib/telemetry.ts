@@ -105,7 +105,10 @@ export type TelemetryEvent =
   | "assistant_response_feedback"
   | "comunicado_followup_created"
   | "saude_action_cta_tap"
-  | "backup_shared_via_web_share";
+  | "backup_shared_via_web_share"
+  | "pendencia_created_from_documento"
+  | "pendencia_created_from_funcionario"
+  | "funcionario_added";
 
 type QueuedEvent = {
   event: string;

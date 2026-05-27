@@ -23,6 +23,9 @@ import {
   type CondominioProfile,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
+import { startScheduler } from "@/lib/scheduler";
+import { getUnreadCount } from "@/lib/notifications";
+const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const FavoritesPanel = dynamic(() => import("@/components/FavoritesPanel"), { ssr: false });
 const HistoryPanel = dynamic(() => import("@/components/HistoryPanel"), { ssr: false });
 import GuidancePanel from "@/components/GuidancePanel";
@@ -89,6 +92,12 @@ const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), 
 const OnboardingProfile = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const OnboardingFlow = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
+const FuncionariosPanel = dynamic(() => import("@/components/FuncionariosPanel"), { ssr: false });
+const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
+const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
+// Aba Ferramentas — painéis de planejamento e decisão
+const PlanoAcaoPanel = dynamic(() => import("@/components/PlanoAcaoPanel"), { ssr: false });
+const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
 
 // ── Urgency + profile completion helpers ───────────────────────────────────────
 
@@ -158,6 +167,8 @@ export default function HomePage() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [condoName, setCondoName] = useState("");
+  const [showNotificationCenter, setShowNotificationCenter] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   const urgentCount = useMemo(() => {
@@ -179,7 +190,11 @@ export default function HomePage() {
       setCondoName(prof?.nomeCondominio ?? "");
     }
     if (isFirstRun()) setShowOnboarding(true);
-    return startSessionTimer();
+    // Inicia scheduler local (notificações + health snapshot)
+    const stopScheduler = startScheduler();
+    setUnreadNotifications(getUnreadCount());
+    const stopSession = startSessionTimer();
+    return () => { stopScheduler(); stopSession(); };
   }, []);
 
   useEffect(() => {
@@ -195,6 +210,7 @@ export default function HomePage() {
       setProfileCompletion(0);
       setCondoName("");
     }
+    setUnreadNotifications(getUnreadCount());
   }, [refreshKey]);
 
   useEffect(() => {
@@ -378,7 +394,12 @@ export default function HomePage() {
       <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
         {!(activeTab === "inicio" && subView) && (
-          <Header refreshKey={refreshKey} activeTab={activeTab} />
+          <Header
+            refreshKey={refreshKey}
+            activeTab={activeTab}
+            unreadNotifications={unreadNotifications}
+            onNotificationsClick={() => setShowNotificationCenter(true)}
+          />
         )}
 
         {/* ── 1. INÍCIO — painel operacional silencioso ──────────────── */}
@@ -662,6 +683,9 @@ export default function HomePage() {
                 <div id="agenda-predio" className="border-t border-navy-100 pt-6">
                   <AgendaPredio onSaved={() => setRefreshKey((k) => k + 1)} />
                 </div>
+                <div className="border-t border-navy-100 pt-6">
+                  <PlanoAcaoPanel />
+                </div>
               </div>
             )}
 
@@ -699,7 +723,10 @@ export default function HomePage() {
 
             {/* ── Explorar por tema ────────────────────────────────── */}
             {activeToolGroup === "temas" && (
-              <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
+              <>
+                <PainelOperacional onAsk={handleSuggestionSelect} refreshKey={refreshKey} />
+                <DecisoesSindicoPanel />
+              </>
             )}
 
           </div>
@@ -755,6 +782,33 @@ export default function HomePage() {
               }}
               autoExpand={shouldExpandMemoria}
             />
+
+            {/* ── Pessoal e contratos ───────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Pessoal e contratos</p>
+                <p className="mt-0.5 text-[11px] text-navy-400">Funcionários, férias e situação trabalhista.</p>
+              </div>
+            )}
+            <FuncionariosPanel onSaved={() => setRefreshKey((k) => k + 1)} />
+
+            {/* ── Documentação essencial ────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Documentação essencial</p>
+                <p className="mt-0.5 text-[11px] text-navy-400">Convenção, AVCB, seguro, laudos e contratos.</p>
+              </div>
+            )}
+            <DocumentosEssenciaisPanel onSaved={() => setRefreshKey((k) => k + 1)} />
+
+            {/* ── Checklist de implantação ──────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Implantação</p>
+                <p className="mt-0.5 text-[11px] text-navy-400">Progresso de organização e itens pendentes.</p>
+              </div>
+            )}
+            <ImplantacaoChecklist />
 
             {/* ── Histórico operacional ─────────────────────────────── */}
             {hasCondominioData && (
@@ -869,6 +923,28 @@ export default function HomePage() {
         <OnboardingFlow
           onComplete={() => {
             setShowOnboarding(false);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
+
+      {showNotificationCenter && (
+        <NotificationCenter
+          onClose={() => {
+            setShowNotificationCenter(false);
+            setUnreadNotifications(0); // considera lidas ao fechar
+          }}
+          onAction={(actionKey) => {
+            setShowNotificationCenter(false);
+            // Navega para aba correta baseado no actionKey
+            if (actionKey === "open_memoria" || actionKey === "open_funcionarios" || actionKey === "open_documentos") {
+              navigateTab("condominio");
+            } else if (actionKey === "open_pendencias") {
+              navigateToSubView("pendencias");
+              navigateTab("inicio");
+            } else if (actionKey === "open_revisao_semanal") {
+              handleOpenRevisaoMensal();
+            }
             setRefreshKey((k) => k + 1);
           }}
         />

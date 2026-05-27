@@ -33,7 +33,7 @@ export function buildSnapshot(userId: string, backup: UserBackup): SnapshotPaylo
   return {
     user_id: userId,
     payload: backup,
-    version: 4,
+    version: 5, // backup v5 (docs + funcionarios + assistida + implantacaoMode)
     device_hint: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 80) : null,
   };
 }

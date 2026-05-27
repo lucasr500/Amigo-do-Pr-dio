@@ -5,12 +5,16 @@
 
 import {
   getMemoriaOperacional,
+  getMemoriaAssistida,
+  getDocumentos,
+  getFuncionarios,
   getOcorrencias,
   getPendenciasAbertas,
   getProfile,
   getWeeklyReviewState,
   getCurrentWeekKey,
   type MemoriaOperacional,
+  type AssistedDateField,
 } from "./session";
 import { buildGuidanceItems } from "./guidance";
 
@@ -48,7 +52,23 @@ const ROUTINE_FIELDS: Array<keyof MemoriaOperacional> = [
 ];
 
 // Máximo de pontos brutos — backup excluído por ausência de timestamp confiável
-const MAX_RAW = 90;
+const MAX_RAW = 105;
+
+// Pontua um campo de data essencial considerando precisão da AssistedDateField.
+// Fallback para string legada (dados pré-v5) tratados como precisão parcial.
+function scoreEssentialField(
+  strValue: string | undefined,
+  assisted: AssistedDateField | undefined
+): number {
+  if (assisted) {
+    if (assisted.status === "not_applicable") return 7;
+    if (assisted.status === "unknown" || assisted.status === "to_discover") return 3;
+    if (assisted.precision === "exact") return 10;
+    if (assisted.precision === "month" || assisted.precision === "year") return 7;
+    return 5;
+  }
+  return strValue ? 8 : 0;
+}
 
 function statusFromPct(pct: number): HealthStatusKey {
   if (pct <= 39) return "critico";
@@ -87,19 +107,27 @@ export function computeHealthScore(): HealthScoreResult {
   const weekKey    = getCurrentWeekKey();
   const weekly     = getWeeklyReviewState();
 
+  const assistida  = getMemoriaAssistida();
+  const documentos = getDocumentos();
+  const funcionarios = getFuncionarios();
+
   const now     = Date.now();
   const weekAgo = now - 7 * 86_400_000;
   const staleMs = 14 * 86_400_000;
 
   let raw = 0;
 
-  // ── 1. Essenciais — 30 pts (10 cada) ─────────────────────────────────────
-  const hasAVCB    = !!m.vencimentoAVCB;
-  const hasSeguro  = !!m.vencimentoSeguro;
-  const hasMandato = !!m.fimMandatoSindico;
+  // ── 1. Essenciais — até 30 pts (precisão-aware) ───────────────────────────
+  const avcbPts    = scoreEssentialField(m.vencimentoAVCB, assistida.avcb);
+  const seguroPts  = scoreEssentialField(m.vencimentoSeguro, assistida.seguro);
+  const mandatoPts = scoreEssentialField(m.fimMandatoSindico, assistida.mandato);
+  raw += avcbPts + seguroPts + mandatoPts;
+
+  const hasAVCB    = avcbPts > 0;
+  const hasSeguro  = seguroPts > 0;
+  const hasMandato = mandatoPts > 0;
   const essentialsCount =
     (hasAVCB ? 1 : 0) + (hasSeguro ? 1 : 0) + (hasMandato ? 1 : 0);
-  raw += essentialsCount * 10;
 
   // ── 2. Estado de alertas — 20 pts ─────────────────────────────────────────
   const criticals = guidance.filter((i) => i.priority === "critico");
@@ -124,11 +152,35 @@ export function computeHealthScore(): HealthScoreResult {
   raw += Math.min(10, Math.round((filledRoutines / 3) * 10));
 
   // ── 6. Ocorrência com acompanhamento — 5 pts ─────────────────────────────
-  // Só pontua se houver vínculo explícito de rastreamento (próximo passo criado).
   const recentTracked = getOcorrencias().filter(
     (o) => new Date(o.createdAt).getTime() >= weekAgo && o.hasNextStep === true
   );
   if (recentTracked.length > 0) raw += 5;
+
+  // ── 7. Documentos essenciais — até 10 pts ────────────────────────────────
+  const TOTAL_DOCS = 14; // DOCUMENTOS_ESSENCIAIS_IDS.length — hardcoded to avoid import cycle
+  const docTenho       = documentos.filter((d) => d.status === "tenho").length;
+  const docNaoAplica   = documentos.filter((d) => d.status === "nao_se_aplica").length;
+  const docRegistrados = documentos.length;
+  const docAplicaveis  = Math.max(1, TOTAL_DOCS - docNaoAplica);
+  const docPct         = docRegistrados > 0 ? docTenho / docAplicaveis : -1;
+  let docPts = 0;
+  if (docPct >= 0.7) docPts = 10;
+  else if (docPct >= 0.4) docPts = 5;
+  else if (docPct >= 0) docPts = 2;
+  raw += docPts;
+
+  // ── 8. Funcionários / férias — até 5 pts ─────────────────────────────────
+  let funcPts = 0;
+  if (funcionarios.length === 0) {
+    funcPts = 3; // sem funcionários = sem risco trabalhista
+  } else {
+    const hasIssue = funcionarios.some(
+      (f) => f.status === "vencida" || f.status === "desconhecida"
+    );
+    funcPts = hasIssue ? 0 : 5;
+  }
+  raw += funcPts;
 
   const percentage     = Math.min(100, Math.round((raw / MAX_RAW) * 100));
   const statusKey      = statusFromPct(percentage);
@@ -138,12 +190,24 @@ export function computeHealthScore(): HealthScoreResult {
   // ── Fatores ───────────────────────────────────────────────────────────────
   const factors: HealthFactor[] = [];
 
-  // Essenciais
-  if (essentialsCount === 3) {
-    factors.push({ label: "Essenciais: 3/3 cadastrados", status: "ok" });
+  // Essenciais (precision-aware)
+  const avcbExact    = avcbPts === 10;
+  const seguroExact  = seguroPts === 10;
+  const mandatoExact = mandatoPts === 10;
+  const allExact     = avcbExact && seguroExact && mandatoExact;
+  const allFilled    = hasAVCB && hasSeguro && hasMandato;
+
+  if (allExact) {
+    factors.push({ label: "Essenciais: 3/3 com data exata", status: "ok" });
+  } else if (allFilled) {
+    factors.push({
+      label: "Essenciais: 3/3 registrados",
+      status: "partial",
+      note: "Confirmar precisão das datas melhora o score",
+    });
   } else if (essentialsCount > 0) {
     factors.push({
-      label: `Essenciais: ${essentialsCount}/3 cadastrados`,
+      label: `Essenciais: ${essentialsCount}/3 registrados`,
       status: "partial",
       note: "AVCB, seguro e mandato do síndico",
     });
@@ -211,6 +275,33 @@ export function computeHealthScore(): HealthScoreResult {
     });
   }
 
+  // Documentos
+  if (docRegistrados === 0) {
+    factors.push({ label: "Documentos: não mapeados ainda", status: "partial" });
+  } else if (docPts === 10) {
+    factors.push({ label: `Documentos: ${docTenho} confirmados`, status: "ok" });
+  } else {
+    factors.push({
+      label: `Documentos: ${docTenho} confirmados de ${TOTAL_DOCS}`,
+      status: "partial",
+    });
+  }
+
+  // Funcionários
+  if (funcionarios.length === 0) {
+    factors.push({ label: "Funcionários: sem vínculos registrados", status: "ok" });
+  } else if (funcPts === 5) {
+    factors.push({ label: `Funcionários: férias em dia (${funcionarios.length})`, status: "ok" });
+  } else {
+    const issueCount = funcionarios.filter(
+      (f) => f.status === "vencida" || f.status === "desconhecida"
+    ).length;
+    factors.push({
+      label: `Funcionários: ${issueCount} com férias a verificar`,
+      status: "missing",
+    });
+  }
+
   // ── Sugestões (máx 3) ─────────────────────────────────────────────────────
   const suggestions: string[] = [];
 
@@ -224,6 +315,10 @@ export function computeHealthScore(): HealthScoreResult {
     suggestions.push("Resolver alertas críticos");
   if (stale.length > 0 && suggestions.length < 3)
     suggestions.push("Concluir próximos passos antigos");
+  if (funcPts === 0 && funcionarios.length > 0 && suggestions.length < 3)
+    suggestions.push("Regularizar férias dos funcionários");
+  if (docRegistrados === 0 && suggestions.length < 3)
+    suggestions.push("Mapear situação dos documentos essenciais");
   if (!reviewedThisWeek && suggestions.length < 3)
     suggestions.push("Concluir revisão semanal");
   if (filledRoutines < 3 && suggestions.length < 3)
@@ -236,7 +331,7 @@ export function computeHealthScore(): HealthScoreResult {
     statusKey,
     statusLabel,
     diagnosticPhrase,
-    factors: factors.slice(0, 5),
+    factors: factors.slice(0, 6),
     suggestions: suggestions.slice(0, 3),
   };
 }
