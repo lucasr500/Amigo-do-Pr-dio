@@ -25,6 +25,7 @@ import {
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
+import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const FavoritesPanel = dynamic(() => import("@/components/FavoritesPanel"), { ssr: false });
 const HistoryPanel = dynamic(() => import("@/components/HistoryPanel"), { ssr: false });
@@ -98,6 +99,10 @@ const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoCheck
 // Aba Ferramentas — painéis de planejamento e decisão
 const PlanoAcaoPanel = dynamic(() => import("@/components/PlanoAcaoPanel"), { ssr: false });
 const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
+const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
+const AccountModal = dynamic(() => import("@/components/AccountModal"), { ssr: false });
+const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
+const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 
 // ── Urgency + profile completion helpers ───────────────────────────────────────
 
@@ -169,6 +174,8 @@ export default function HomePage() {
   const [condoName, setCondoName] = useState("");
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showNotifSettings, setShowNotifSettings] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   const urgentCount = useMemo(() => {
@@ -194,7 +201,10 @@ export default function HomePage() {
     const stopScheduler = startScheduler();
     setUnreadNotifications(getUnreadCount());
     const stopSession = startSessionTimer();
-    return () => { stopScheduler(); stopSession(); };
+    // Reprocessa sync pendente e ouve reconexão
+    void flushPendingSync();
+    const stopOnline = startOnlineListener();
+    return () => { stopScheduler(); stopSession(); stopOnline(); };
   }, []);
 
   useEffect(() => {
@@ -885,30 +895,40 @@ export default function HomePage() {
             </section>
 
             {/* ── Conta e sincronização ─────────────────────────────── */}
-            <section className="px-5 pb-8 sm:px-6">
-              <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
-                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Armazenamento</p>
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[15px]">
-                    💾
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[12.5px] font-medium text-navy-700">Dados salvos neste dispositivo</p>
-                    <p className="text-[11px] text-navy-400">Armazenamento local — sem conta necessária</p>
-                  </div>
-                </div>
-                <div className="rounded-[12px] border border-navy-100 bg-cream-100/40 px-3 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-[14px]">☁️</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-medium text-navy-600">Sincronização em nuvem</p>
-                      <p className="text-[11px] text-navy-400">Ainda não disponível. Nesta versão, use o backup manual para proteger seus dados.</p>
-                    </div>
-                    <span className="flex-shrink-0 rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-medium text-navy-500">
-                      Em breve
-                    </span>
-                  </div>
-                </div>
+            <section className="px-5 pb-2 pt-3 sm:px-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta e sincronização</p>
+                <button
+                  type="button"
+                  onClick={() => setShowAccountModal(true)}
+                  className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
+                >
+                  Gerenciar
+                </button>
+              </div>
+              <AccountPanel onRefresh={() => setRefreshKey((k) => k + 1)} />
+            </section>
+
+            {/* ── Notificações ──────────────────────────────────────── */}
+            <section className="px-5 pb-2 pt-1 sm:px-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Notificações</p>
+                <button
+                  type="button"
+                  onClick={() => setShowNotifSettings((v) => !v)}
+                  className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
+                >
+                  {showNotifSettings ? "Fechar" : "Configurar"}
+                </button>
+              </div>
+              {showNotifSettings && <NotificationSettingsPanel />}
+            </section>
+
+            {/* ── Saúde histórica ───────────────────────────────────── */}
+            <section className="px-5 pb-4 pt-1 sm:px-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300 mb-3">Evolução da saúde operacional</p>
+              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+                <HealthTrendChart />
               </div>
             </section>
 
@@ -926,6 +946,10 @@ export default function HomePage() {
             setRefreshKey((k) => k + 1);
           }}
         />
+      )}
+
+      {showAccountModal && (
+        <AccountModal onClose={() => setShowAccountModal(false)} />
       )}
 
       {showNotificationCenter && (

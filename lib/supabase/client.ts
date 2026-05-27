@@ -1,29 +1,40 @@
-// Stub de arquitetura — Fase 89A
-// Quando @supabase/supabase-js for instalado, substituir por:
-//   import { createBrowserClient } from "@supabase/ssr";
-// e remover este stub.
+// Cliente Supabase com lazy loading — o SDK nunca entra no bundle inicial.
+// Todas as funções que precisam do cliente devem ser async.
 
-export interface SupabaseClientStub {
-  auth: {
-    signInWithPassword: (creds: { email: string; password: string }) => Promise<unknown>;
-    signUp: (creds: { email: string; password: string }) => Promise<unknown>;
-    signOut: () => Promise<unknown>;
-    getSession: () => Promise<unknown>;
-  };
-  from: (table: string) => unknown;
+import { getSupabaseEnv, hasSupabaseEnv } from "@/lib/supabase/env";
+import type { Database } from "@/lib/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export { hasSupabaseEnv as hasSupabaseConfig };
+
+type AppSupabaseClient = SupabaseClient<Database>;
+
+let _client: AppSupabaseClient | null = null;
+
+// Retorna singleton lazy — importa SDK apenas na primeira chamada.
+export async function getSupabaseClient(): Promise<AppSupabaseClient | null> {
+  if (_client) return _client;
+
+  const env = getSupabaseEnv();
+  if (!env) return null;
+
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    _client = createClient<Database>(env.url, env.anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: "amigo_sb_session",
+      },
+    });
+    return _client;
+  } catch {
+    return null;
+  }
 }
 
-export function hasSupabaseConfig(): boolean {
-  return (
-    typeof process !== "undefined" &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
-
-// TODO: substituir por createBrowserClient() quando SDK instalado
-export function createSupabaseClient(): SupabaseClientStub | null {
-  if (!hasSupabaseConfig()) return null;
-  // SDK não instalado neste ciclo — retorna null intencionalmente
-  return null;
+// Limpa o singleton (logout / troca de conta).
+export function clearSupabaseClient(): void {
+  _client = null;
 }

@@ -1,24 +1,22 @@
 "use client";
 
-// Contexto de autenticação — preparado para login futuro.
+// Contexto de autenticação — suporta guest mode e magic link.
 // O app funciona 100% sem login (modo guest).
-// Quando auth real for habilitada: substituir GuestAuthState por sessão real do Supabase.
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { isEnabled } from "@/lib/feature-flags";
 
 export type AuthMode = "guest" | "authenticated" | "loading";
 
 export type GuestUser = {
   type: "guest";
-  localId: string; // ID local para identificar device
+  localId: string;
 };
 
 export type AuthenticatedUser = {
   type: "authenticated";
   id: string;
   email: string | null;
-  displayName?: string;
 };
 
 export type AppUser = GuestUser | AuthenticatedUser;
@@ -28,13 +26,9 @@ export type AuthState = {
   user: AppUser | null;
   isGuest: boolean;
   isAuthenticated: boolean;
-  // Ações futuras (stubs por ora):
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  sendMagicLink: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
-
-// ── Local ID — persiste no dispositivo para identificação ─────────────────────
 
 function getOrCreateLocalId(): string {
   if (typeof window === "undefined") return "guest";
@@ -50,32 +44,50 @@ function getOrCreateLocalId(): string {
   }
 }
 
-// ── Context ───────────────────────────────────────────────────────────────────
-
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<AuthMode>("loading");
   const [user, setUser] = useState<AppUser | null>(null);
 
+  const applyGuest = useCallback(() => {
+    setUser({ type: "guest", localId: getOrCreateLocalId() });
+    setMode("guest");
+  }, []);
+
   useEffect(() => {
     if (!isEnabled("auth_enabled")) {
-      // Auth desabilitada → sempre guest
-      const localId = getOrCreateLocalId();
-      setUser({ type: "guest", localId });
-      setMode("guest");
+      applyGuest();
       return;
     }
 
-    // TODO: quando auth_enabled, verificar sessão real:
-    // const session = await getSession(); // lib/auth/authClient.ts
-    // if (session) { setUser({ type: "authenticated", ... }); setMode("authenticated"); }
-    // else { setUser({ type: "guest", ... }); setMode("guest"); }
+    let cleanup: (() => void) | null = null;
 
-    const localId = getOrCreateLocalId();
-    setUser({ type: "guest", localId });
-    setMode("guest");
-  }, []);
+    (async () => {
+      const { getSession, onAuthStateChange } = await import("@/lib/auth/authClient");
+
+      // Verifica sessão existente
+      const existing = await getSession();
+      if (existing) {
+        setUser({ type: "authenticated", id: existing.user.id, email: existing.user.email });
+        setMode("authenticated");
+      } else {
+        applyGuest();
+      }
+
+      // Ouve mudanças futuras
+      cleanup = await onAuthStateChange((session) => {
+        if (session) {
+          setUser({ type: "authenticated", id: session.user.id, email: session.user.email });
+          setMode("authenticated");
+        } else {
+          applyGuest();
+        }
+      });
+    })();
+
+    return () => { cleanup?.(); };
+  }, [applyGuest]);
 
   const authState: AuthState = {
     mode,
@@ -83,20 +95,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isGuest: mode === "guest",
     isAuthenticated: mode === "authenticated",
 
-    async signIn(_email: string, _password: string) {
+    async sendMagicLink(email: string) {
       if (!isEnabled("auth_enabled")) return { error: "Login ainda não disponível." };
-      // TODO: implementar com authClient.signIn()
-      return { error: "Login ainda não implementado." };
-    },
-
-    async signUp(_email: string, _password: string) {
-      if (!isEnabled("auth_enabled")) return { error: "Cadastro ainda não disponível." };
-      return { error: "Cadastro ainda não implementado." };
+      const { signInWithMagicLink } = await import("@/lib/auth/authClient");
+      return signInWithMagicLink(email);
     },
 
     async signOut() {
-      setUser({ type: "guest", localId: getOrCreateLocalId() });
-      setMode("guest");
+      if (isEnabled("auth_enabled")) {
+        const { signOut: sbSignOut } = await import("@/lib/auth/authClient");
+        await sbSignOut();
+      }
+      applyGuest();
     },
   };
 
@@ -113,7 +123,6 @@ export function useAuth(): AuthState {
   return ctx;
 }
 
-// Hook leve para casos onde apenas o ID do usuário é necessário.
 export function useLocalId(): string {
   const { user } = useAuth();
   if (!user) return "guest";
