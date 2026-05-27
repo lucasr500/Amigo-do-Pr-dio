@@ -153,7 +153,10 @@ export function buildCommandCenter(): CommandCenterResult {
 
   const riskLevel: RiskLevel = (() => {
     const m = getMemoriaOperacional();
-    if (!m.vencimentoAVCB && !m.vencimentoSeguro && !m.fimMandatoSindico) return "sem-dados";
+    const a = getMemoriaAssistida();
+    const hasLegacy   = !!(m.vencimentoAVCB || m.vencimentoSeguro || m.fimMandatoSindico);
+    const hasAssisted = !!(a.avcb || a.seguro || a.mandato);
+    if (!hasLegacy && !hasAssisted) return "sem-dados";
     if (urgentActions.length > 0 || criticalNotifications.length > 0) return "critico";
     if (warningNotifications.length > 0 || stalePendencias > 0 || missingDocs > 2) return "atencao";
     return "estavel";

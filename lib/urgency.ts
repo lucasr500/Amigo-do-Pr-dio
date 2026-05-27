@@ -13,28 +13,44 @@ export type UrgencyLevel =
 
 // ─── Helpers de data ─────────────────────────────────────────────────────────
 
+// "YYYY-MM-DD" é interpretado como UTC midnight pelo ECMAScript.
+// Para usuários em BRT (UTC-3) isso cria off-by-1: Jan 15 UTC = Jan 14 21h BRT.
+// Forçamos meia-noite local adicionando T00:00:00 (sem timezone = local).
+function toLocalDate(iso: string): Date {
+  if (iso.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    return new Date(`${iso}T00:00:00`);
+  }
+  return new Date(iso);
+}
+
+function todayMidnight(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 /** Dias restantes até a data ISO. Negativo = vencida. */
 export function ate(iso: string): number {
-  return Math.floor((new Date(iso).getTime() - Date.now()) / 86400000);
+  return Math.floor((toLocalDate(iso).getTime() - todayMidnight().getTime()) / 86400000);
 }
 
 /** Dias decorridos desde a data ISO. */
 export function desde(iso: string): number {
-  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  return Math.floor((todayMidnight().getTime() - toLocalDate(iso).getTime()) / 86400000);
 }
 
-/** Retorna true se a data ISO já passou. */
+/** Retorna true se a data ISO já passou (antes de hoje). */
 export function past(iso: string): boolean {
-  return new Date(iso).getTime() <= Date.now();
+  return toLocalDate(iso).getTime() < todayMidnight().getTime();
 }
 
 // ─── Avaliação de vencimento ─────────────────────────────────────────────────
 
 /** Avalia urgência de uma data futura de vencimento (AVCB, Seguro, etc.). */
 export function urgencyVencimento(iso: string): UrgencyLevel {
-  const t = new Date(iso).getTime();
-  if (isNaN(t)) return "ausente";
-  const d = Math.floor((t - Date.now()) / 86400000);
+  const target = toLocalDate(iso);
+  if (isNaN(target.getTime())) return "ausente";
+  const d = Math.floor((target.getTime() - todayMidnight().getTime()) / 86400000);
   if (d < 0)  return "vencido";
   if (d === 0) return "hoje";
   if (d <= 7)  return "urgente";

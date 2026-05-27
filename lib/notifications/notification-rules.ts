@@ -44,9 +44,10 @@ function daysUntil(isoDate: string | undefined): number | null {
 
 function daysSince(isoDate: string | undefined): number | null {
   if (!isoDate) return null;
-  const d = new Date(isoDate);
+  const d = isoDate.length === 10 ? new Date(`${isoDate}T00:00:00`) : new Date(isoDate);
   if (isNaN(d.getTime())) return null;
-  return Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.floor((today.getTime() - d.getTime()) / 86_400_000);
 }
 
 // Verifica se a notificação do tipo indicado já foi gerada dentro do cooldown.
@@ -91,7 +92,7 @@ export function evaluateNotificationRules(
         sourceModule: "memoria",
         actionKey: "open_memoria",
       });
-    } else if (!avcbDate) {
+    } else if (!avcbDate && assistida.avcb?.status !== "not_applicable") {
       candidates.push({
         type: "critical_deadline",
         severity: "info",

@@ -34,18 +34,31 @@ const PRIORITY_ORDER: Record<ActionPriority, number> = {
   quando_possivel:  3,
 };
 
+function toLocalDate(iso: string): Date {
+  if (iso.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+    return new Date(`${iso}T00:00:00`);
+  }
+  return new Date(iso);
+}
+
+function todayMidnight(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 function daysSince(isoDate: string | undefined): number | null {
   if (!isoDate) return null;
-  const d = new Date(isoDate);
+  const d = toLocalDate(isoDate);
   if (isNaN(d.getTime())) return null;
-  return Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  return Math.floor((todayMidnight().getTime() - d.getTime()) / 86_400_000);
 }
 
 function daysUntil(isoDate: string | undefined): number | null {
   if (!isoDate) return null;
-  const d = new Date(isoDate);
+  const d = toLocalDate(isoDate);
   if (isNaN(d.getTime())) return null;
-  return Math.floor((d.getTime() - Date.now()) / 86_400_000);
+  return Math.floor((d.getTime() - todayMidnight().getTime()) / 86_400_000);
 }
 
 export function buildActionPlan(): ActionPlan {
