@@ -7,6 +7,15 @@ import {
   type HealthStatusKey,
 } from "@/lib/health-score";
 import {
+  HEALTH_RING_COLOR,
+  HEALTH_BADGE_STYLE,
+  HEALTH_STATUS_LABEL,
+  HEALTH_STATUS_TITLE,
+  HEALTH_SHORT_PHRASE,
+  hasMinimumHealthData as checkMinHealth,
+  buildUpgradeText,
+} from "@/lib/health-config";
+import {
   getMemoriaOperacional,
   getProfile,
   getAgendaEvents,
@@ -16,47 +25,13 @@ import {
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
-// ─── Status mappings ──────────────────────────────────────────────────────────
+// ─── Status mappings — importados de health-config para evitar duplicação ─────
 
-const RING_COLOR: Record<HealthStatusKey, string> = {
-  critico:           "#ef4444",
-  atencao:           "#f59e0b",
-  "em-evolucao":     "#60a5fa",
-  "bem-acompanhado": "#22c55e",
-  "tudo-em-ordem":   "#22c55e",
-};
-
-const STATUS_TITLE: Record<HealthStatusKey, string> = {
-  critico:           "Requer atenção",
-  atencao:           "Atenção necessária",
-  "em-evolucao":     "Em evolução",
-  "bem-acompanhado": "Condomínio saudável",
-  "tudo-em-ordem":   "Condomínio saudável",
-};
-
-const STATUS_PHRASE: Record<HealthStatusKey, string> = {
-  critico:           "Resolva os alertas prioritários.",
-  atencao:           "Resolva os alertas ativos.",
-  "em-evolucao":     "Complete as informações essenciais.",
-  "bem-acompanhado": "Seu condomínio está no caminho certo.",
-  "tudo-em-ordem":   "Tudo operacionalmente em ordem.",
-};
-
-const BADGE_LABEL: Record<HealthStatusKey, string> = {
-  critico:           "Crítico",
-  atencao:           "Atenção",
-  "em-evolucao":     "Em evolução",
-  "bem-acompanhado": "Bom",
-  "tudo-em-ordem":   "Bom",
-};
-
-const BADGE_STYLE: Record<HealthStatusKey, string> = {
-  critico:           "bg-red-100 text-red-700",
-  atencao:           "bg-amber-100 text-amber-700",
-  "em-evolucao":     "bg-blue-100 text-blue-700",
-  "bem-acompanhado": "bg-green-100 text-green-700",
-  "tudo-em-ordem":   "bg-green-100 text-green-700",
-};
+const RING_COLOR     = HEALTH_RING_COLOR;
+const STATUS_TITLE   = HEALTH_STATUS_TITLE;
+const STATUS_PHRASE  = HEALTH_SHORT_PHRASE;
+const BADGE_LABEL    = HEALTH_STATUS_LABEL;
+const BADGE_STYLE    = HEALTH_BADGE_STYLE;
 
 // ─── Large ring indicator ─────────────────────────────────────────────────────
 
@@ -251,12 +226,7 @@ type Props = {
 };
 
 function hasMinimumHealthData(): boolean {
-  const m = getMemoriaOperacional();
-  return !!(
-    m.vencimentoAVCB || m.vencimentoSeguro || m.fimMandatoSindico ||
-    m.ultimaDedetizacao || m.ultimaLimpezaCaixaDAgua || m.ultimaManutencaoElevador ||
-    m.ultimaInspecaoExtintores || m.ultimaVistoriaSPDA || m.ultimaVistoriaEletrica || m.ultimaAGO
-  );
+  return checkMinHealth(getMemoriaOperacional());
 }
 
 export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, onGoToCondominio, onGoToPendencias, onGoToAgenda, onGoToRevisao }: Props) {
@@ -478,10 +448,21 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         </div>
       </section>
 
+      {/* ── Caminho prático de melhoria ─────────────────────────────── */}
+      {result.percentage < 85 && result.suggestions.length > 0 && (
+        <section className="px-5 pb-4 sm:px-6">
+          <div className="rounded-[18px] border border-teal-200/60 bg-teal-50/50 px-4 py-3.5">
+            <p className="text-[12px] font-semibold text-teal-800">
+              {buildUpgradeText(result.percentage, result.suggestions)}
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* ── Para melhorar ──────────────────────────────────────────── */}
       {result.suggestions.length > 0 && (
         <section className="px-5 pb-4 sm:px-6">
-          <p className="mb-3 text-[14px] font-semibold text-navy-800">Pontos de atenção</p>
+          <p className="mb-3 text-[14px] font-semibold text-navy-800">O que faz diferença</p>
           <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
             {result.suggestions.map((item, idx) => (
               <div key={idx}>

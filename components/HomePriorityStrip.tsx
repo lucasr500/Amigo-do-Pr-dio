@@ -1,0 +1,115 @@
+"use client";
+
+// Strip de prioridade na Home — responde as 4 perguntas essenciais do síndico:
+// 1. Qual a ação mais urgente?  2. Há notificações críticas?
+// 3. Como está o prédio?        4. Está salvo?
+
+import { useEffect, useState } from "react";
+import { buildCommandCenter, type CommandCenterResult } from "@/lib/command-center";
+import { getSyncStatus, formatLastSync } from "@/lib/sync/syncStatus";
+import { isEnabled } from "@/lib/feature-flags";
+
+type Props = {
+  refreshKey?: number;
+  onNavigate?: (target: "condominio" | "ferramentas" | "agenda" | "pendencias") => void;
+  onOpenNotifications?: () => void;
+};
+
+const RISK_STRIP_STYLE = {
+  critico:    "border-terracotta-200 bg-terracotta-50/80",
+  atencao:    "border-amber-200 bg-amber-50/70",
+  estavel:    "border-teal-200/60 bg-teal-50/40",
+  "sem-dados": "border-navy-100 bg-navy-50/40",
+} as const;
+
+const RISK_DOT = {
+  critico:     "bg-terracotta-500",
+  atencao:     "bg-amber-400",
+  estavel:     "bg-teal-500",
+  "sem-dados": "bg-navy-300",
+} as const;
+
+export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifications }: Props) {
+  const [data, setData] = useState<CommandCenterResult | null>(null);
+  const [syncLabel, setSyncLabel] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    const cc = buildCommandCenter();
+    setData(cc);
+
+    // Sync status discreto
+    const syncEnabled = isEnabled("sync_enabled");
+    if (syncEnabled) {
+      const status = getSyncStatus();
+      if (status.state === "synced" && status.lastSyncAt) {
+        setSyncLabel(formatLastSync(status.lastSyncAt));
+      } else if (status.state === "error") {
+        setSyncLabel("Falha no sync");
+      }
+    }
+    setHydrated(true);
+  }, [refreshKey]);
+
+  if (!hydrated || !data) return null;
+
+  // Não exibir o strip se não há dados e não há ações urgentes
+  if (data.riskLevel === "sem-dados") return null;
+
+  const topAction = data.topPriority;
+  const hasUrgent = data.urgentActions.length > 0;
+  const hasCriticalNotif = data.criticalNotifications.length > 0;
+  const stripStyle = RISK_STRIP_STYLE[data.riskLevel];
+  const dotColor   = RISK_DOT[data.riskLevel];
+
+  return (
+    <section className="px-5 pb-3 sm:px-6">
+      <div className={`rounded-[16px] border px-4 py-3 ${stripStyle}`}>
+
+        {/* Linha 1: status dot + summary + notif badge */}
+        <div className="flex items-center gap-2.5">
+          <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dotColor}`} aria-hidden="true" />
+          <p className="flex-1 min-w-0 text-[12px] font-medium leading-snug text-navy-700 truncate">
+            {data.summaryText}
+          </p>
+          {(hasCriticalNotif || data.unreadCount > 0) && (
+            <button
+              type="button"
+              onClick={onOpenNotifications}
+              aria-label={`${data.unreadCount} notificações`}
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-terracotta-700 hover:bg-white transition-colors"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-terracotta-500" aria-hidden="true" />
+              {data.unreadCount}
+            </button>
+          )}
+        </div>
+
+        {/* Linha 2: ação prioritária #1 */}
+        {topAction && (
+          <button
+            type="button"
+            onClick={() => topAction.resolveTarget && onNavigate?.(topAction.resolveTarget)}
+            className="mt-2 flex w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2 text-left transition-colors hover:bg-white active:scale-[0.99]"
+          >
+            <div className="min-w-0 flex-1">
+              <p className={`text-[12px] font-semibold leading-snug ${hasUrgent ? "text-terracotta-800" : "text-navy-800"}`}>
+                {topAction.titulo}
+              </p>
+            </div>
+            <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
+
+        {/* Linha 3: sync status discreto */}
+        {syncLabel && (
+          <p className="mt-2 text-[10.5px] text-navy-400">
+            {syncLabel.includes("Falha") ? "⚠️ " : "✓ "}{syncLabel}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}

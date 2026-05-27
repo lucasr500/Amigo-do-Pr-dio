@@ -3,43 +3,23 @@
 import { useEffect, useState } from "react";
 import {
   computeHealthScore,
-  type HealthStatusKey,
   type HealthScoreResult,
 } from "@/lib/health-score";
+import {
+  HEALTH_RING_COLOR,
+  HEALTH_CARD_BG,
+  HEALTH_SHORT_PHRASE,
+  hasMinimumHealthData as checkMinHealth,
+} from "@/lib/health-config";
 import { getMemoriaOperacional } from "@/lib/session";
 
 function hasMinimumHealthData(): boolean {
-  const m = getMemoriaOperacional();
-  return !!(
-    m.vencimentoAVCB || m.vencimentoSeguro || m.fimMandatoSindico ||
-    m.ultimaDedetizacao || m.ultimaLimpezaCaixaDAgua || m.ultimaManutencaoElevador ||
-    m.ultimaInspecaoExtintores || m.ultimaVistoriaSPDA || m.ultimaVistoriaEletrica || m.ultimaAGO
-  );
+  return checkMinHealth(getMemoriaOperacional());
 }
 
-const RING_COLOR: Record<HealthStatusKey, string> = {
-  critico:         "#ef4444",
-  atencao:         "#f59e0b",
-  "em-evolucao":   "#60a5fa",
-  "bem-acompanhado": "#22c55e",
-  "tudo-em-ordem":   "#22c55e",
-};
-
-const CARD_BG: Record<HealthStatusKey, string> = {
-  critico:           "bg-red-50   border-red-100/60",
-  atencao:           "bg-amber-50 border-amber-100/60",
-  "em-evolucao":     "bg-navy-50/50 border-navy-100/50",
-  "bem-acompanhado": "bg-green-50 border-green-100/60",
-  "tudo-em-ordem":   "bg-green-50 border-green-100/60",
-};
-
-const SHORT_PHRASE: Record<HealthStatusKey, string> = {
-  critico:           "Requer atenção imediata.",
-  atencao:           "Resolva os alertas ativos.",
-  "em-evolucao":     "Complete as informações.",
-  "bem-acompanhado": "Seu condomínio está no caminho certo.",
-  "tudo-em-ordem":   "Organização operacional em dia.",
-};
+const RING_COLOR  = HEALTH_RING_COLOR;
+const CARD_BG     = HEALTH_CARD_BG;
+const SHORT_PHRASE = HEALTH_SHORT_PHRASE;
 
 function RingIndicator({ pct, color }: { pct: number; color: string }) {
   const r = 23;

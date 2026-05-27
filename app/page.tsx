@@ -98,7 +98,9 @@ const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosE
 const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
 // Aba Ferramentas — painéis de planejamento e decisão
 const PlanoAcaoPanel = dynamic(() => import("@/components/PlanoAcaoPanel"), { ssr: false });
+const CommandCenterPanel = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
+const HomePriorityStrip = dynamic(() => import("@/components/HomePriorityStrip"), { ssr: false });
 const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
 const AccountModal = dynamic(() => import("@/components/AccountModal"), { ssr: false });
 const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
@@ -478,6 +480,17 @@ export default function HomePage() {
             {/* Conteúdo normal da Home */}
             {!subView && hasCondominioData && (
               <>
+                {/* Cockpit strip — ação prioritária + notificações + sync */}
+                <HomePriorityStrip
+                  refreshKey={refreshKey}
+                  onNavigate={(target) => {
+                    if (target === "pendencias") navigateToSubView("pendencias");
+                    else if (target === "condominio") navigateTab("condominio");
+                    else if (target === "ferramentas") navigateTab("ferramentas");
+                    else if (target === "agenda") navigateTab("agenda");
+                  }}
+                  onOpenNotifications={() => setShowNotificationCenter(true)}
+                />
                 <HomeSaudeCard
                   refreshKey={refreshKey}
                   onClick={() => navigateToSubView("saude")}
@@ -694,7 +707,14 @@ export default function HomePage() {
                   <AgendaPredio onSaved={() => setRefreshKey((k) => k + 1)} />
                 </div>
                 <div className="border-t border-navy-100 pt-6">
-                  <PlanoAcaoPanel />
+                  <CommandCenterPanel
+                    refreshKey={refreshKey}
+                    onNavigate={(target) => {
+                      if (target === "pendencias") { navigateToSubView("pendencias"); navigateTab("inicio"); }
+                      else if (target === "condominio") navigateTab("condominio");
+                      else if (target === "agenda") navigateTab("agenda");
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -818,7 +838,16 @@ export default function HomePage() {
                 <p className="mt-0.5 text-[11px] text-navy-400">Progresso de organização e itens pendentes.</p>
               </div>
             )}
-            <ImplantacaoChecklist />
+            <ImplantacaoChecklist
+              onNavigate={(target) => {
+                if (target === "condominio") {
+                  const el = document.getElementById("revisao-mensal");
+                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                } else if (target === "ferramentas") {
+                  navigateTab("ferramentas");
+                }
+              }}
+            />
 
             {/* ── Histórico operacional ─────────────────────────────── */}
             {hasCondominioData && (

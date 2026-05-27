@@ -22,6 +22,18 @@ const SEVERITY_DOT: Record<AppNotification["severity"], string> = {
   info:     "bg-navy-400",
 };
 
+const SEVERITY_GROUP_LABEL: Record<AppNotification["severity"], string> = {
+  critical: "Crítico",
+  warning:  "Atenção",
+  info:     "Informativo",
+};
+
+const SEVERITY_GROUP_COLOR: Record<AppNotification["severity"], string> = {
+  critical: "text-terracotta-700",
+  warning:  "text-amber-700",
+  info:     "text-navy-500",
+};
+
 type Props = {
   onClose: () => void;
   onAction?: (actionKey: string) => void;
@@ -33,9 +45,15 @@ export default function NotificationCenter({ onClose, onAction }: Props) {
 
   useEffect(() => {
     if (!isEnabled("notifications_enabled")) { setHydrated(true); return; }
+    // Ordena por severidade (critical first) depois por data
+    const severityOrder: Record<AppNotification["severity"], number> = { critical: 0, warning: 1, info: 2 };
     const all = getNotifications()
       .filter((n) => !n.dismissed)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      .sort((a, b) => {
+        const sev = severityOrder[a.severity] - severityOrder[b.severity];
+        if (sev !== 0) return sev;
+        return b.createdAt.localeCompare(a.createdAt);
+      });
     setNotifications(all);
     setHydrated(true);
   }, []);
@@ -109,56 +127,66 @@ export default function NotificationCenter({ onClose, onAction }: Props) {
           </div>
         </div>
 
-        {/* Lista */}
-        <div className="max-h-[70vh] overflow-y-auto px-4 pb-6 space-y-2">
+        {/* Lista agrupada por severidade */}
+        <div className="max-h-[70vh] overflow-y-auto px-4 pb-6">
           {notifications.length === 0 && (
             <div className="rounded-xl bg-navy-50/60 px-4 py-5 text-center">
-              <p className="text-[13px] text-navy-500">Nenhuma notificação</p>
-              <p className="mt-0.5 text-[11px] text-navy-400">Tudo em dia por enquanto.</p>
+              <p className="text-[13px] text-navy-500">Tudo em dia</p>
+              <p className="mt-0.5 text-[11px] text-navy-400">Nenhuma notificação ativa no momento.</p>
             </div>
           )}
 
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              className={`relative rounded-xl border px-3.5 py-3 transition-colors ${SEVERITY_STYLE[n.severity]} ${!n.read ? "ring-1 ring-navy-100" : ""}`}
-            >
-              {/* Unread dot */}
-              {!n.read && (
-                <span
-                  className={`absolute right-3 top-3 h-1.5 w-1.5 rounded-full ${SEVERITY_DOT[n.severity]}`}
-                  aria-hidden="true"
-                />
-              )}
-
-              <button
-                type="button"
-                className="w-full text-left"
-                onClick={() => handleRead(n)}
-              >
-                <p className={`text-[12.5px] font-semibold leading-snug ${n.read ? "text-navy-600" : "text-navy-800"}`}>
-                  {n.title}
+          {(["critical", "warning", "info"] as const).map((severity) => {
+            const group = notifications.filter((n) => n.severity === severity);
+            if (group.length === 0) return null;
+            return (
+              <div key={severity} className="mb-4">
+                <p className={`mb-2 text-[10.5px] font-semibold uppercase tracking-wide ${SEVERITY_GROUP_COLOR[severity]}`}>
+                  {SEVERITY_GROUP_LABEL[severity]}
                 </p>
-                <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-500">
-                  {n.body}
-                </p>
-                {n.actionKey && (
-                  <p className="mt-1 text-[11px] font-medium text-navy-600">
-                    Toque para ver →
-                  </p>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDismiss(n.id)}
-                className="absolute right-3 bottom-2.5 text-[10px] text-navy-300 hover:text-navy-500"
-                aria-label="Dispensar"
-              >
-                Dispensar
-              </button>
-            </div>
-          ))}
+                <div className="space-y-2">
+                  {group.map((n) => (
+                    <div
+                      key={n.id}
+                      className={`relative rounded-xl border px-3.5 py-3 transition-colors ${SEVERITY_STYLE[n.severity]} ${!n.read ? "ring-1 ring-navy-100" : ""}`}
+                    >
+                      {!n.read && (
+                        <span
+                          className={`absolute right-3 top-3 h-1.5 w-1.5 rounded-full ${SEVERITY_DOT[n.severity]}`}
+                          aria-hidden="true"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        className="w-full pr-4 text-left"
+                        onClick={() => handleRead(n)}
+                      >
+                        <p className={`text-[12.5px] font-semibold leading-snug ${n.read ? "text-navy-600" : "text-navy-800"}`}>
+                          {n.title}
+                        </p>
+                        <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-500">
+                          {n.body}
+                        </p>
+                        {n.actionKey && (
+                          <p className="mt-1 text-[11px] font-medium text-navy-600">
+                            Ver →
+                          </p>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDismiss(n.id)}
+                        className="absolute bottom-2.5 right-3 text-[10px] text-navy-300 hover:text-navy-500"
+                        aria-label="Dispensar"
+                      >
+                        Dispensar
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
