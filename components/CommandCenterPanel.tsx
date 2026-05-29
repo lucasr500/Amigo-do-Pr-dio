@@ -4,7 +4,7 @@
 // férias e notificações em um único painel coeso. Substitui PlanoAcaoPanel.
 
 import { useEffect, useMemo, useState } from "react";
-import { buildCommandCenter, type CommandCenterResult, type CommandAction } from "@/lib/command-center";
+import { buildCommandCenter, type CommandCenterResult, type CommandAction, type GuidanceEngineItem } from "@/lib/command-center";
 
 type Props = {
   refreshKey?: number;
@@ -69,6 +69,56 @@ function ActionRow({ item, onNavigate }: { item: CommandAction; onNavigate?: Pro
           <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}
+    </button>
+  );
+}
+
+const GUIDANCE_PRIORITY_COLOR: Record<string, string> = {
+  critico:      "text-terracotta-300",
+  importante:   "text-amber-300",
+  planejamento: "text-navy-400",
+  melhoria:     "text-navy-500",
+};
+
+function GuidanceTopItem({ item, rank }: { item: GuidanceEngineItem; rank: number }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => setExpanded((v) => !v)}
+      className="w-full text-left focus:outline-none"
+      aria-expanded={expanded}
+    >
+      <div className="flex items-start gap-2.5">
+        <span className={`mt-0.5 flex-shrink-0 text-[11px] font-bold ${GUIDANCE_PRIORITY_COLOR[item.prioridade] ?? "text-navy-400"}`}>
+          {rank}.
+        </span>
+        <span className="mt-0 flex-shrink-0 text-[13px] leading-none">{item.icon}</span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[12.5px] font-semibold leading-snug text-white">{item.titulo}</p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-navy-300">{item.proximoPasso}</p>
+          {expanded && (
+            <div className="mt-2 space-y-2">
+              {item.checklist.length > 0 && (
+                <div className="space-y-1">
+                  {item.checklist.map((step, i) => (
+                    <div key={i} className="flex items-start gap-1.5">
+                      <span className="mt-0.5 flex-shrink-0 text-[10px] font-semibold text-navy-500">{i + 1}.</span>
+                      <p className="text-[11px] leading-relaxed text-navy-200">{step}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {item.consequencia && (
+                <p className="text-[10.5px] leading-relaxed text-terracotta-300">
+                  <span className="font-semibold">Risco:</span> {item.consequencia}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        <span className="mt-0.5 flex-shrink-0 text-[10px] text-navy-600">{expanded ? "↑" : "↓"}</span>
+      </div>
     </button>
   );
 }
@@ -173,13 +223,26 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
           </button>
         </div>
 
-        {/* "O que eu faria hoje" — síntese operacional principal */}
-        {data.todayAnswer && (
+        {/* "Se eu fosse síndico hoje" — Top 3 do guidance engine */}
+        {data.guidanceTopTres.length > 0 ? (
+          <div className="mx-4 mb-3 overflow-hidden rounded-xl bg-navy-800">
+            <p className="px-4 pb-1.5 pt-3 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">
+              Se eu fosse síndico hoje
+            </p>
+            <div className="divide-y divide-navy-700/50 px-4 pb-3">
+              {data.guidanceTopTres.map((item, idx) => (
+                <div key={item.id} className={idx === 0 ? "pb-2.5" : "py-2.5"}>
+                  <GuidanceTopItem item={item} rank={idx + 1} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : data.todayAnswer ? (
           <div className="mx-4 mb-3 rounded-xl bg-navy-800 px-4 py-3">
             <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">Se eu fosse síndico hoje</p>
             <p className="mt-1.5 text-[12.5px] font-medium leading-snug text-white">{data.todayAnswer}</p>
           </div>
-        )}
+        ) : null}
 
         {/* Risco + Melhoria */}
         {(data.topRisco || data.maiorMelhoria) && (
@@ -188,14 +251,33 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
               <div className="rounded-xl bg-terracotta-50 border border-terracotta-100 px-3 py-2.5">
                 <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-terracotta-500">Maior risco</p>
                 <p className="mt-1 text-[11px] font-medium leading-snug text-terracotta-800">{data.topRisco}</p>
+                {data.guidanceTopRisco?.consequencia && (
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-terracotta-600">
+                    {data.guidanceTopRisco.consequencia}
+                  </p>
+                )}
               </div>
             )}
             {data.maiorMelhoria && (
               <div className="rounded-xl bg-navy-50 border border-navy-100 px-3 py-2.5">
                 <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-navy-500">Maior ganho</p>
                 <p className="mt-1 text-[11px] font-medium leading-snug text-navy-700">{data.maiorMelhoria}</p>
+                {data.guidanceMaiorMelhoria?.proximoPasso && (
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-relaxed text-navy-500">
+                    {data.guidanceMaiorMelhoria.proximoPasso}
+                  </p>
+                )}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Maior lacuna operacional */}
+        {data.guidanceMaiorLacuna && data.guidanceMaiorLacuna.id !== data.guidanceTopRisco?.id && (
+          <div className="mx-4 mb-3 rounded-xl border border-amber-100 bg-amber-50/60 px-3 py-2.5">
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-amber-600">Maior lacuna</p>
+            <p className="mt-1 text-[11px] font-medium leading-snug text-amber-800">{data.guidanceMaiorLacuna.titulo}</p>
+            <p className="mt-0.5 text-[10px] leading-relaxed text-amber-700">{data.guidanceMaiorLacuna.proximoPasso}</p>
           </div>
         )}
 

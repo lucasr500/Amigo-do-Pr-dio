@@ -97,6 +97,11 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
               <p className={`text-[12px] font-semibold leading-snug ${hasUrgent ? "text-terracotta-800" : "text-navy-800"}`}>
                 {topAction.titulo}
               </p>
+              {!hasUrgent && sinceLastVisit && data && data.guidanceTopTres[0] && (
+                <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-navy-500">
+                  {data.guidanceTopTres[0].proximoPasso}
+                </p>
+              )}
             </div>
             <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

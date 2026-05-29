@@ -3,6 +3,8 @@
 // Sem IA. Totalmente determinístico. Roda 100% client-side.
 
 import { buildActionPlan, type ActionItem, type ActionPriority } from "@/lib/action-plan";
+import { buildGuidanceEngine, type GuidanceEngineItem } from "./guidance-engine";
+export type { GuidanceEngineItem } from "./guidance-engine";
 import {
   getNotifications,
   getPendenciasAbertas,
@@ -59,6 +61,11 @@ export type CommandCenterResult = {
   topRisco: string;       // Único maior risco atual
   maiorLacuna: string;    // Maior gap operacional
   maiorMelhoria: string;  // Melhor oportunidade de melhoria
+  // Guidance engine — orientação operacional rica
+  guidanceTopTres: GuidanceEngineItem[];
+  guidanceTopRisco: GuidanceEngineItem | null;
+  guidanceMaiorLacuna: GuidanceEngineItem | null;
+  guidanceMaiorMelhoria: GuidanceEngineItem | null;
 };
 
 function buildResolveTarget(item: ActionItem): CommandAction["resolveTarget"] {
@@ -238,6 +245,7 @@ export function buildCommandCenter(): CommandCenterResult {
   const overdueVacations = funcs.filter((f) => f.status === "vencida").length;
   const implantacaoPct   = computeImplantacaoPct();
   const correlacoes      = buildCorrelacoes();
+  const engine           = buildGuidanceEngine();
 
   const riskLevel: RiskLevel = (() => {
     const m = getMemoriaOperacional();
@@ -253,68 +261,48 @@ export function buildCommandCenter(): CommandCenterResult {
   const summaryText  = buildSummaryText(riskLevel, urgentActions.length, stalePendencias, missingDocs, overdueVacations);
   const upgradeText  = buildUpgradeText(health.percentage, urgentActions);
 
-  // ── Síntese operacional ───────────────────────────────────────────────────
+  // ── Síntese operacional (derivada do guidance engine) ────────────────────
 
   // "O que eu faria hoje se fosse síndico deste prédio?"
   const todayAnswer = (() => {
     if (riskLevel === "sem-dados") {
       return "Cadastraria os dados do prédio: AVCB, seguro predial e fim do mandato. São os três pilares do monitoramento operacional.";
     }
+    const top3 = engine.topTresHoje;
+    if (top3.length > 0) {
+      const top = top3[0];
+      const extras = top3.slice(1).map((i) => i.titulo).join("; ");
+      return extras ? `${top.proximoPasso} Depois: ${extras}.` : top.proximoPasso;
+    }
     if (urgentActions.length > 0) {
       const top = urgentActions[0];
-      const rest = urgentActions.length > 1 ? ` Depois: ${urgentActions.slice(1, 3).map((a) => a.titulo.replace(/\s*—.*/, "")).join("; ")}.` : "";
-      return `Resolveria agora: ${top.titulo.replace(/\s*—.*/, "")}.${rest}`;
+      return `Resolveria agora: ${top.titulo.replace(/\s*—.*/, "")}.`;
     }
-    if (thisWeekActions.length > 0) {
-      const top = thisWeekActions[0];
-      return `Sem urgências críticas. Avançaria em: ${top.titulo.replace(/\s*—.*/, "")}.`;
-    }
-    if (!health.suggestions || health.percentage < 85) {
+    if (health.percentage < 85) {
       return "Prédio estável. Completaria a revisão semanal e atualizaria qualquer dado desatualizado.";
     }
     return "Prédio bem organizado. Manteria a rotina de revisão semanal e verificaria o calendário de manutenções.";
   })();
 
-  // Top risco único
-  const topRisco = (() => {
-    if (urgentActions.length > 0) {
-      const legal = urgentActions.find((a) => a.categoria === "legal");
-      const trab  = urgentActions.find((a) => a.categoria === "trabalhista");
-      const top   = legal ?? trab ?? urgentActions[0];
-      return top.titulo.replace(/\s*—.*/, "");
-    }
-    if (overdueVacations > 0) return "Férias vencidas — passivo trabalhista acumulando";
-    if (manutStatus.atrasadas > 0) return `${manutStatus.atrasadas} manutenç${manutStatus.atrasadas > 1 ? "ões" : "ão"} crítica${manutStatus.atrasadas > 1 ? "s" : ""} atrasada${manutStatus.atrasadas > 1 ? "s" : ""}`;
-    const m = getMemoriaOperacional();
-    const a = getMemoriaAssistida();
-    if (!m.vencimentoAVCB && !a.avcb?.value) return "AVCB sem data cadastrada — vencimento não monitorado";
-    if (!m.vencimentoSeguro && !a.seguro?.value) return "Seguro sem data cadastrada — vencimento não monitorado";
-    return "Nenhum risco crítico identificado no momento";
-  })();
+  const topRisco = engine.topRisco
+    ? engine.topRisco.titulo
+    : urgentActions.length > 0
+      ? urgentActions[0].titulo.replace(/\s*—.*/, "")
+      : overdueVacations > 0
+        ? "Férias vencidas — passivo trabalhista acumulando"
+        : "Nenhum risco crítico identificado no momento";
 
-  // Maior lacuna operacional
-  const maiorLacuna = (() => {
-    const m = getMemoriaOperacional();
-    const a = getMemoriaAssistida();
-    if (!m.vencimentoAVCB && !a.avcb?.value && !m.vencimentoSeguro && !a.seguro?.value) {
-      return "AVCB e seguro sem data — os dois essenciais mais críticos sem monitoramento";
-    }
-    if (!m.vencimentoAVCB && !a.avcb?.value) return "Data do AVCB não cadastrada";
-    if (!m.vencimentoSeguro && !a.seguro?.value) return "Vencimento do seguro não cadastrado";
-    if (docs.length === 0) return "Documentos essenciais sem mapeamento";
-    if (funcs.length === 0) return "Funcionários sem registro — risco trabalhista não monitorado";
-    if (manutStatus.total === 0) return "Manutenções recorrentes sem cadastro — calendário operacional inativo";
-    return "Dados operacionais em bom nível de cobertura";
-  })();
+  const maiorLacuna = engine.maiorLacuna
+    ? engine.maiorLacuna.titulo
+    : docs.length === 0
+      ? "Documentos essenciais sem mapeamento"
+      : "Dados operacionais em bom nível de cobertura";
 
-  // Melhor oportunidade de melhoria
-  const maiorMelhoria = (() => {
-    if (manutStatus.total === 0) return "Cadastrar manutenções recorrentes ativa o calendário operacional e adiciona até 15 pts ao score";
-    if (health.percentage < 60) return "Completar os dados essenciais (AVCB, seguro, mandato) dará o maior salto no score";
-    if (implantacaoPct < 70) return `Completar a implantação (${implantacaoPct}%) aumenta a cobertura do monitoramento`;
-    if (stalePendencias > 0) return `Limpar ${stalePendencias} próximo${stalePendencias > 1 ? "s" : ""} passo${stalePendencias > 1 ? "s" : ""} parado${stalePendencias > 1 ? "s" : ""} melhora o acompanhamento`;
-    return "Manter a revisão semanal em dia e o calendário de manutenções atualizado";
-  })();
+  const maiorMelhoria = engine.maiorMelhoria
+    ? engine.maiorMelhoria.titulo
+    : manutStatus.total === 0
+      ? "Cadastrar manutenções recorrentes ativa o calendário operacional e adiciona até 15 pts ao score"
+      : "Manter a revisão semanal em dia e o calendário de manutenções atualizado";
 
   return {
     riskLevel,
@@ -338,5 +326,9 @@ export function buildCommandCenter(): CommandCenterResult {
     topRisco,
     maiorLacuna,
     maiorMelhoria,
+    guidanceTopTres: engine.topTresHoje,
+    guidanceTopRisco: engine.topRisco,
+    guidanceMaiorLacuna: engine.maiorLacuna,
+    guidanceMaiorMelhoria: engine.maiorMelhoria,
   };
 }
