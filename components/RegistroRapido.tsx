@@ -75,6 +75,10 @@ type Props = {
   onSaved?: () => void;
 };
 
+// Tipos frequentes exibidos na primeira linha; os demais ficam ocultos até expandir
+const TIPOS_FREQUENTES: OcorrenciaTipo[] = ["barulho", "vazamento", "manutencao", "obra", "area-comum", "reclamacao"];
+const TIPOS_OUTROS: OcorrenciaTipo[] = ["inadimplencia", "funcionario", "assembleia", "briga", "vistoria", "lembrete", "outro"];
+
 export default function RegistroRapido({ onSaved }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [tipo, setTipo] = useState<OcorrenciaTipo>("barulho");
@@ -89,16 +93,20 @@ export default function RegistroRapido({ onSaved }: Props) {
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showMoreTipos, setShowMoreTipos] = useState(false);
 
   const resetForm = () => {
     setTitulo(""); setDescricao(""); setLocal(""); setProximo(""); setLink("");
     setPrioridade("media"); setCreateStep(true); setMessage(""); setCopied(false);
-    setShowAdvanced(false);
+    setShowAdvanced(false); setShowMoreTipos(false); setTipo("barulho");
   };
 
+  const canSave = descricao.trim().length > 0 || titulo.trim().length > 0;
+
   const handleSave = () => {
-    const cleanDescription = descricao.trim();
-    if (!cleanDescription) return;
+    if (!canSave) return;
+    // Use tipo label as description when user left it blank (tipo-only quick register)
+    const cleanDescription = descricao.trim() || TIPO_LABEL[tipo];
     const occurrence = addOcorrencia({
       titulo: titulo.trim() || undefined,
       tipo,
@@ -206,21 +214,64 @@ export default function RegistroRapido({ onSaved }: Props) {
 
         <div className="space-y-3">
 
-          {/* Tipo */}
+          {/* Tipo — chips compactos (sem select) */}
           <div>
-            <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-tipo">
-              Tipo
-            </label>
-            <select
-              id="ocorrencia-tipo"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value as OcorrenciaTipo)}
-              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            >
-              {(Object.entries(TIPO_LABEL) as Array<[OcorrenciaTipo, string]>).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
+            <p className="mb-1.5 text-[11.5px] font-medium text-navy-600">Tipo</p>
+            <div className="flex flex-wrap gap-1.5">
+              {TIPOS_FREQUENTES.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTipo(t)}
+                  className={`min-h-[36px] rounded-full px-3 py-1 text-[11.5px] font-medium ring-1 transition-all active:scale-95 ${
+                    tipo === t
+                      ? "bg-navy-700 text-white ring-navy-700"
+                      : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
+                  }`}
+                >
+                  {TIPO_LABEL[t]}
+                </button>
               ))}
-            </select>
+              {!showMoreTipos && (
+                <button
+                  type="button"
+                  onClick={() => setShowMoreTipos(true)}
+                  className="min-h-[36px] rounded-full px-3 py-1 text-[11.5px] text-navy-400 ring-1 ring-navy-100 hover:ring-navy-200"
+                >
+                  Mais ↓
+                </button>
+              )}
+              {showMoreTipos && TIPOS_OUTROS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTipo(t)}
+                  className={`min-h-[36px] rounded-full px-3 py-1 text-[11.5px] font-medium ring-1 transition-all active:scale-95 ${
+                    tipo === t
+                      ? "bg-navy-700 text-white ring-navy-700"
+                      : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
+                  }`}
+                >
+                  {TIPO_LABEL[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* O que aconteceu? */}
+          <div>
+            <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-descricao">
+              O que aconteceu? <span className="font-normal text-navy-400">opcional</span>
+            </label>
+            <textarea
+              id="ocorrencia-descricao"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              maxLength={400}
+              rows={2}
+              placeholder="Breve relato — não precisa ser formal. Ex: morador do 301 reclamou do barulho do 302."
+              className="min-h-[72px] w-full resize-none rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] leading-relaxed text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+            />
           </div>
 
           {/* Prioridade */}
@@ -232,7 +283,7 @@ export default function RegistroRapido({ onSaved }: Props) {
                   key={p}
                   type="button"
                   onClick={() => setPrioridade(p)}
-                  className={`flex-1 rounded-xl border py-1.5 text-[11.5px] font-medium ring-1 transition-all active:scale-95 ${
+                  className={`min-h-[44px] flex-1 rounded-xl border py-1.5 text-[11.5px] font-medium ring-1 transition-all active:scale-95 ${
                     prioridade === p
                       ? "border-navy-600 bg-navy-700 text-white ring-navy-700"
                       : `${PRIORIDADE_COLOR[p]} ring-current`
@@ -244,56 +295,6 @@ export default function RegistroRapido({ onSaved }: Props) {
             </div>
           </div>
 
-          {/* Título */}
-          <div>
-            <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-titulo">
-              Resumo curto <span className="font-normal text-navy-400">opcional</span>
-            </label>
-            <input
-              id="ocorrencia-titulo"
-              type="text"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              maxLength={80}
-              placeholder="Ex: Barulho no 3º andar após 22h"
-              autoComplete="off"
-              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            />
-          </div>
-
-          {/* Descrição */}
-          <div>
-            <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-descricao">
-              Descrição
-            </label>
-            <textarea
-              id="ocorrencia-descricao"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              maxLength={400}
-              rows={3}
-              placeholder="Ex: Morador do apto 301 reclamou do barulho do 302. Situação recorrente."
-              className="min-h-20 w-full resize-none rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] leading-relaxed text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            />
-          </div>
-
-          {/* Local */}
-          <div>
-            <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-local">
-              Unidade ou local <span className="font-normal text-navy-400">opcional</span>
-            </label>
-            <input
-              id="ocorrencia-local"
-              type="text"
-              value={local}
-              onChange={(e) => setLocal(e.target.value)}
-              maxLength={80}
-              placeholder="Ex: Apto 301, garagem, área comum"
-              autoComplete="off"
-              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-            />
-          </div>
-
           {/* Campos avançados */}
           {!showAdvanced && (
             <button
@@ -301,11 +302,41 @@ export default function RegistroRapido({ onSaved }: Props) {
               onClick={() => setShowAdvanced(true)}
               className="text-[11.5px] text-navy-400 hover:text-navy-600"
             >
-              + Próxima ação e link
+              + Unidade, título e próxima ação
             </button>
           )}
           {showAdvanced && (
             <>
+              <div>
+                <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-local">
+                  Unidade ou local <span className="font-normal text-navy-400">opcional</span>
+                </label>
+                <input
+                  id="ocorrencia-local"
+                  type="text"
+                  value={local}
+                  onChange={(e) => setLocal(e.target.value)}
+                  maxLength={80}
+                  placeholder="Ex: Apto 301, garagem, área comum"
+                  autoComplete="off"
+                  className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-titulo">
+                  Título <span className="font-normal text-navy-400">opcional</span>
+                </label>
+                <input
+                  id="ocorrencia-titulo"
+                  type="text"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  maxLength={80}
+                  placeholder="Ex: Barulho no 3º andar após 22h"
+                  autoComplete="off"
+                  className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                />
+              </div>
               <div>
                 <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-proximo">
                   Próxima ação <span className="font-normal text-navy-400">opcional</span>
@@ -354,10 +385,10 @@ export default function RegistroRapido({ onSaved }: Props) {
           <button
             type="button"
             onClick={handleSave}
-            disabled={!descricao.trim()}
-            className="inline-flex min-h-10 items-center rounded-xl bg-navy-700 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
+            disabled={!canSave}
+            className="inline-flex min-h-[44px] items-center rounded-xl bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
           >
-            Salvar registro
+            Registrar ocorrência
           </button>
         </div>
 

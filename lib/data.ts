@@ -417,6 +417,8 @@ const CONTEXTUAL_FALLBACK_MESSAGES: Record<string, string> = {
     "Não encontrei uma resposta exata, mas sua dúvida parece envolver áreas comuns — garagem, piscina, elevador ou outros espaços coletivos. Veja orientações próximas.",
   manutencao:
     "Não encontrei uma resposta exata, mas sua dúvida parece envolver manutenção, vistoria, AVCB, extintores ou equipamentos do prédio. Veja orientações próximas.",
+  documentos:
+    "Não encontrei uma resposta exata, mas sua dúvida parece envolver localização ou organização de documentos do condomínio. Veja orientações próximas.",
   juridico:
     "Não encontrei uma resposta exata, mas sua dúvida parece ter natureza jurídica específica. Veja orientações próximas e, se necessário, consulte um especialista.",
   operacional:
@@ -505,6 +507,12 @@ export const TOPICS: Topic[] = [
     title: "Finanças e rateio",
     icon: "💼",
     examplePrompt: "Como calcular o reajuste necessário da cota condominial?",
+  },
+  {
+    id: "documentos",
+    title: "Documentos e onde encontrar",
+    icon: "📁",
+    examplePrompt: "Onde encontro o AVCB do condomínio?",
   },
 ];
 

@@ -89,6 +89,16 @@ const THEME_QUESTIONS: Record<string, string[]> = {
     "Síndico pode fazer obra usando fundo de reserva?",
     "Como justificar aumento de cota condominial para os moradores?",
   ],
+  documentos: [
+    "Onde encontro o AVCB do condomínio?",
+    "O que é AVCB e por que o condomínio precisa ter?",
+    "Onde está a apólice do seguro predial?",
+    "Onde está a convenção condominial?",
+    "Como sei quando o mandato do síndico termina?",
+    "Como verificar se a manutenção do elevador está em dia?",
+    "Quais documentos o condomínio precisa ter?",
+    "Como organizar os documentos do condomínio?",
+  ],
 };
 
 // ── Grupos de categorias ──────────────────────────────────────────────────────
@@ -150,6 +160,18 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
       { label: "Funcionários", topicId: "funcionarios" },
       { label: "LGPD", topicId: "lgpd" },
       { label: "Trabalhista", topicId: "trabalhista" },
+    ],
+  },
+  {
+    id: "documentos",
+    title: "Onde encontrar documentos",
+    icon: "📁",
+    description: "AVCB, seguro, convenção, mandato — onde localizar cada documento.",
+    subtopics: [
+      { label: "AVCB", topicId: "documentos" },
+      { label: "Seguro predial", topicId: "documentos" },
+      { label: "Convenção", topicId: "documentos" },
+      { label: "Mandato síndico", topicId: "documentos" },
     ],
   },
 ];

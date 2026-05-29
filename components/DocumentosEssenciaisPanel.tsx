@@ -17,6 +17,7 @@ import {
   type DocumentoCategoria,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import { getWhereToFind } from "@/lib/discovery-hints";
 
 type Props = { onSaved?: () => void };
 
@@ -94,10 +95,28 @@ const EMPTY_STATE_EXPERT: Record<DocumentoCategoria, string> = {
   fiscal:      "CND indica que o condomínio está quite com obrigações fiscais. Necessária em financiamentos e algumas negociações.",
 };
 
+// Maps document IDs to discovery hint IDs in lib/discovery-hints.ts
+const DOC_HINT_MAP: Partial<Record<DocumentoEssencialId, string>> = {
+  avcb_clcb:               "avcb",
+  apolice_seguro:          "seguro_apolice",
+  convencao:               "convencao",
+  extintores_comprovante:  "manut_extintores",
+  contrato_elevador:       "manut_elevador",
+  caixa_agua_comprovante:  "manut_caixa",
+  dedetizacao_comprovante: "manut_dedetizacao",
+  cct_funcionarios:        "funcionarios",
+  ppra_pgr:                "funcionarios",
+  pcmso:                   "funcionarios",
+  controle_ferias:         "ferias_funcionario",
+};
+
+const CRIT_ORDER: Record<string, number> = { critica: 0, importante: 1, recomendada: 2 };
+
 export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [grupoAberto, setGrupoAberto] = useState<DocumentoCategoria | null>(null);
+  const [grupoMostrandoTodos, setGrupoMostrandoTodos] = useState<Set<DocumentoCategoria>>(new Set());
   const [docs, setDocs] = useState<Record<string, DocumentoEssencial>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState<DocumentoStatus | null>(null);
@@ -135,6 +154,13 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     return critico && (!doc || (doc.status !== "tenho" && doc.status !== "nao_se_aplica"));
   }).length;
 
+  // First critical document not yet confirmed — used for priority prompt
+  const firstUnfilledCritical = DOCUMENTOS_ESSENCIAIS_IDS.find((id) => {
+    const critico = DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica";
+    const doc = docs[id];
+    return critico && (!doc || (doc.status !== "tenho" && doc.status !== "nao_se_aplica"));
+  }) as DocumentoEssencialId | undefined;
+
   const openEditor = (id: string) => {
     const doc = docs[id];
     setEditingId(id);
@@ -150,27 +176,26 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     setEditingLink("");
   };
 
-  const saveEditing = (id: string) => {
-    if (!editingStatus) return;
+  const persistDoc = (id: string, status: DocumentoStatus, onde?: string, link?: string) => {
     const now = new Date().toISOString();
     const existing = docs[id];
     const updated: DocumentoEssencial = {
       id,
-      status: editingStatus,
+      status,
       updatedAt: now,
       ...(existing ? {
         vencimento: existing.vencimento,
         observacoes: existing.observacoes,
         dataVencimento: existing.dataVencimento,
       } : {}),
-      ondeEsta: editingOnde.trim() || existing?.ondeEsta,
-      linkExterno: editingLink.trim() || existing?.linkExterno,
+      ondeEsta: onde?.trim() || existing?.ondeEsta,
+      linkExterno: link?.trim() || existing?.linkExterno,
     };
     const next = { ...docs, [id]: updated };
     setDocs(next);
     upsertDocumento(updated);
 
-    if (editingStatus === "precisa_localizar" && !pendenciaIds.has(id)) {
+    if (status === "precisa_localizar" && !pendenciaIds.has(id)) {
       const titulo = PENDENCIA_TITULO[id as DocumentoEssencialId] ?? `Localizar: ${DOCUMENTO_LABEL[id as DocumentoEssencialId] ?? id}`;
       addPendencia({ titulo, categoria: "gestao", origem: "documento", matchedId: id });
       void trackEvent("pendencia_created_from_documento", { doc_id: id });
@@ -180,14 +205,24 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     addAuditEntry({
       category: "documento",
       action: `Documento atualizado: ${DOCUMENTO_LABEL[id as DocumentoEssencialId] ?? id}`,
-      detail: editingStatus,
-      impact: editingStatus === "tenho" ? "positive" : editingStatus === "nao_tenho" ? "negative" : "neutral",
+      detail: status,
+      impact: status === "tenho" ? "positive" : status === "nao_tenho" ? "negative" : "neutral",
     });
 
     setSavedFeedback(true);
     setTimeout(() => setSavedFeedback(false), 1500);
     onSaved?.();
+  };
+
+  const saveEditing = (id: string) => {
+    if (!editingStatus) return;
+    persistDoc(id, editingStatus, editingOnde, editingLink);
     closeEditor();
+  };
+
+  // One-tap save from priority card — no extra fields needed
+  const quickSave = (id: DocumentoEssencialId, status: DocumentoStatus) => {
+    persistDoc(id, status);
   };
 
   // ── Collapsed ──────────────────────────────────────────────────────────────
@@ -274,26 +309,69 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           </div>
         )}
 
-        {/* Empty state especialista */}
-        {cadastrados === 0 && (
-          <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
-            <p className="text-[12px] leading-relaxed text-navy-600">
-              Mapear o status dos documentos essenciais é o primeiro passo para saber o que o condomínio tem, o que precisa localizar e o que ainda não foi providenciado. Não é necessário fazer upload — apenas registrar a situação de cada um.
+        {/* Cartão de prioridade: próximo crítico a confirmar */}
+        {criticosNaoConfirmados > 0 && firstUnfilledCritical && (
+          <div className="mb-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3.5 py-3">
+            <p className="text-[10.5px] font-semibold text-amber-700 mb-1.5">
+              {cadastrados === 0
+                ? "Comece pelo mais importante"
+                : "Próximo documento crítico a confirmar"}
             </p>
+            <p className="text-[13px] font-semibold leading-snug text-navy-800 mb-2.5">
+              {DOCUMENTO_LABEL[firstUnfilledCritical]}
+            </p>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {(["tenho", "precisa_localizar", "nao_se_aplica"] as DocumentoStatus[]).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => quickSave(firstUnfilledCritical, s)}
+                  className="min-h-[44px] rounded-full bg-white px-4 py-1 text-[11.5px] font-medium text-navy-700 ring-1 ring-navy-200 hover:ring-navy-400 active:scale-95 transition-all"
+                >
+                  {STATUS_LABEL[s]}
+                </button>
+              ))}
+            </div>
+            {DOC_HINT_MAP[firstUnfilledCritical] && getWhereToFind(DOC_HINT_MAP[firstUnfilledCritical]!) && (
+              <p className="text-[10.5px] leading-snug text-navy-400">
+                <span className="font-medium">Onde encontrar:</span>{" "}
+                {getWhereToFind(DOC_HINT_MAP[firstUnfilledCritical]!)}
+              </p>
+            )}
           </div>
         )}
 
         {/* Grupos por categoria */}
         <div className="space-y-2">
           {GRUPOS.map((cat) => {
-            const idsGrupo = DOCUMENTOS_ESSENCIAIS_IDS.filter(
-              (id) => DOCUMENTO_CATEGORIA[id as DocumentoEssencialId] === cat
-            );
-            const tenhoGrupo = idsGrupo.filter((id) => docs[id]?.status === "tenho").length;
-            const precisaGrupo = idsGrupo.filter((id) => docs[id]?.status === "precisa_localizar").length;
-            const naoTenhoGrupo = idsGrupo.filter((id) => docs[id]?.status === "nao_tenho").length;
-            const cadastradosGrupo = idsGrupo.filter((id) => !!docs[id]).length;
-            const aberto = grupoAberto === cat;
+            // Sort criticals first within each group
+            const idsGrupo = DOCUMENTOS_ESSENCIAIS_IDS
+              .filter((id) => DOCUMENTO_CATEGORIA[id as DocumentoEssencialId] === cat)
+              .sort((a, b) =>
+                (CRIT_ORDER[DOCUMENTO_CRITICIDADE[a as DocumentoEssencialId]] ?? 2) -
+                (CRIT_ORDER[DOCUMENTO_CRITICIDADE[b as DocumentoEssencialId]] ?? 2)
+              );
+
+            const tenhoGrupo        = idsGrupo.filter((id) => docs[id]?.status === "tenho").length;
+            const precisaGrupo      = idsGrupo.filter((id) => docs[id]?.status === "precisa_localizar").length;
+            const naoTenhoGrupo     = idsGrupo.filter((id) => docs[id]?.status === "nao_tenho").length;
+            const cadastradosGrupo  = idsGrupo.filter((id) => !!docs[id]).length;
+            const aberto            = grupoAberto === cat;
+
+            // Progressive reveal: when a group has no registered docs, show only criticals first
+            const criticalIds   = idsGrupo.filter((id) => DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica");
+            const showAll       = grupoMostrandoTodos.has(cat) || cadastradosGrupo > 0 || criticalIds.length === 0;
+            const idsToShow     = showAll ? idsGrupo : criticalIds;
+            const hiddenCount   = showAll ? 0 : idsGrupo.length - criticalIds.length;
+
+            // Progress bar color
+            const barColor = cadastradosGrupo === 0
+              ? ""
+              : tenhoGrupo === idsGrupo.length
+              ? "bg-teal-400"
+              : tenhoGrupo > 0
+              ? "bg-amber-400"
+              : "bg-terracotta-300";
 
             return (
               <div key={cat} className="rounded-xl border border-navy-50 overflow-hidden">
@@ -308,6 +386,15 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11.5px] text-navy-500">{GRUPO_DESCRICAO[cat]}</p>
+                    {/* Per-category progress bar */}
+                    {cadastradosGrupo > 0 && (
+                      <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-navy-100">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+                          style={{ width: `${Math.round((tenhoGrupo / idsGrupo.length) * 100)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {cadastradosGrupo > 0 && (
@@ -342,7 +429,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                       </p>
                     )}
 
-                    {idsGrupo.map((id) => {
+                    {idsToShow.map((id) => {
                       const docId = id as DocumentoEssencialId;
                       const doc = docs[id];
                       const status = doc?.status;
@@ -350,6 +437,8 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                       const isEditing = editingId === id;
                       const hasOnde = !!doc?.ondeEsta;
                       const hasLink = !!doc?.linkExterno;
+                      const hintId = DOC_HINT_MAP[docId];
+                      const whereToFind = hintId ? getWhereToFind(hintId) : null;
 
                       return (
                         <div key={id} className="rounded-lg bg-white px-3 py-2">
@@ -400,6 +489,13 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                             </div>
                           )}
 
+                          {/* Dica de localização para documentos a localizar (modo leitura) */}
+                          {!isEditing && status === "precisa_localizar" && whereToFind && (
+                            <p className="mt-1 text-[10.5px] leading-snug text-amber-600">
+                              <span className="font-medium">Onde encontrar:</span> {whereToFind}
+                            </p>
+                          )}
+
                           {/* Editor inline */}
                           {isEditing && (
                             <div className="mt-2.5 space-y-2.5">
@@ -420,6 +516,15 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                                   </button>
                                 ))}
                               </div>
+
+                              {/* Discovery hint when marking as "precisa_localizar" */}
+                              {editingStatus === "precisa_localizar" && whereToFind && (
+                                <div className="rounded-lg bg-amber-50/70 px-3 py-2">
+                                  <p className="text-[10.5px] leading-snug text-amber-700">
+                                    <span className="font-medium">Onde encontrar:</span> {whereToFind}
+                                  </p>
+                                </div>
+                              )}
 
                               {/* Onde está */}
                               <div>
@@ -478,6 +583,17 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                         </div>
                       );
                     })}
+
+                    {/* Progressive reveal: "Ver N mais" when showing only criticals */}
+                    {hiddenCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setGrupoMostrandoTodos((prev) => new Set([...prev, cat]))}
+                        className="w-full py-2 text-[11px] text-navy-400 hover:text-navy-600 text-center transition-colors"
+                      >
+                        Ver {hiddenCount} mais →
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

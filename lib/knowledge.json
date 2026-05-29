@@ -8121,6 +8121,110 @@
         "indenização sindico", "seguro gestor", "responsabilidade pessoal"
       ],
       "riscoNivel": "atencao"
+    },
+    {
+      "id": "onde-encontrar-avcb",
+      "categoria": "documentos",
+      "pergunta": "Onde encontro o AVCB do condomínio?",
+      "resposta": "O AVCB (Auto de Vistoria do Corpo de Bombeiros) é emitido pelo Corpo de Bombeiros do estado após vistoria. Para encontrá-lo: (1) Verifique o acervo documental do prédio — pasta de documentos ou arquivo da administradora; (2) Solicite à administradora ou à empresa que realiza a manutenção preventiva de incêndio; (3) Consulte o sistema online do Corpo de Bombeiros do seu estado (ex: CBPMESP em SP, CBMRJ no RJ). Se o certificado estiver vencido ou extraviado, entre em contato com a empresa credenciada para revalidação.",
+      "contexto": "O AVCB tem validade variável (geralmente 1 a 3 anos) e precisa ser renovado periodicamente. A ausência pode gerar auto de infração, interdição e responsabilidade civil e criminal do síndico.",
+      "dica": "Guarde o AVCB em pasta física e em versão digital (PDF). Cadastre a data de vencimento no app para receber alertas automáticos.",
+      "keywords": [
+        "avcb", "auto vistoria bombeiros", "certificado bombeiros", "clcb", "onde avcb",
+        "vencimento avcb", "renovar avcb", "bombeiros condominio", "incendio certificado",
+        "laudo bombeiros", "onde encontrar avcb", "localizar avcb"
+      ]
+    },
+    {
+      "id": "o-que-e-avcb",
+      "categoria": "documentos",
+      "pergunta": "O que é AVCB e por que o condomínio precisa ter?",
+      "resposta": "O AVCB (Auto de Vistoria do Corpo de Bombeiros) é o certificado que atesta que o prédio atende às normas de segurança contra incêndio — extintores, saídas de emergência, sistema de alarme, iluminação de emergência e outros equipamentos exigidos pela legislação estadual. A ausência ou vencimento do AVCB pode: gerar interdição do prédio pelo Corpo de Bombeiros, impedir renovação do seguro predial, responsabilizar civil e criminalmente o síndico em caso de acidente, e invalidar o laudo de vistoria para financiamentos imobiliários. Prédios residenciais com mais de um pavimento ou área superior a 750 m² geralmente são obrigados.",
+      "contexto": "Cada estado tem legislação própria — em SP é o Decreto Estadual 63.911/2018. O prazo de validade varia por categoria do imóvel.",
+      "dica": "Além do AVCB, verifique se o CLCB (Certificado de Licença do Corpo de Bombeiros) se aplica ao seu prédio — alguns estados usam um ou outro dependendo do porte.",
+      "keywords": [
+        "avcb", "o que e avcb", "para que serve avcb", "obrigatorio avcb", "clcb",
+        "auto vistoria bombeiros", "seguranca incendio", "extintor", "saida emergencia",
+        "norma incendio condominio", "bombeiros obrigatorio"
+      ]
+    },
+    {
+      "id": "onde-encontrar-apolice-seguro",
+      "categoria": "documentos",
+      "pergunta": "Onde está a apólice do seguro predial?",
+      "resposta": "A apólice do seguro predial deve estar com: (1) A administradora do condomínio — geralmente guarda cópia física e digital; (2) A corretora de seguros que intermediou a contratação; (3) O acervo documental do prédio — pasta administrativa. Se não localizar, solicite diretamente à seguradora informando o CNPJ do condomínio. O seguro predial é obrigatório por lei (art. 1.346 do CC) e a apólice comprova que a cobertura está ativa.",
+      "contexto": "O Código Civil art. 1.346 torna obrigatório o seguro de toda a edificação contra risco de incêndio ou destruição. A falta de seguro pode gerar responsabilidade pessoal do síndico.",
+      "dica": "Fotografe a apólice e salve o PDF em local de fácil acesso. Cadastre a data de vencimento para receber alerta antes da renovação.",
+      "keywords": [
+        "apolice seguro", "seguro predial", "onde apolice", "seguro obrigatorio condominio",
+        "renovar seguro", "vencimento seguro", "corretora seguro", "administradora seguro",
+        "localizar apolice", "encontrar seguro"
+      ]
+    },
+    {
+      "id": "onde-encontrar-convencao",
+      "categoria": "documentos",
+      "pergunta": "Onde está a convenção condominial?",
+      "resposta": "A convenção condominial pode ser encontrada em: (1) Cartório de registro de imóveis onde o prédio foi registrado — é o documento oficial e pode ser solicitado por qualquer condômino; (2) Administradora do condomínio — geralmente guarda cópia; (3) Acervo histórico do prédio — pasta jurídica. Se a convenção for antiga e estiver apenas em papel, vale a pena digitalizar e compartilhar com todos os condôminos. Alterações aprovadas em assembleia devem ser registradas em cartório para ter validade perante terceiros.",
+      "contexto": "A convenção é o documento constitutivo do condomínio. Sem ela, é difícil tomar decisões com segurança jurídica.",
+      "dica": "Verifique se a convenção está atualizada e registrada. Convenções antigas podem ter cláusulas em conflito com o CC/2002.",
+      "keywords": [
+        "convencao condominial", "onde convencao", "localizar convencao", "cartorio convencao",
+        "registro convencao", "encontrar convencao", "convencao desatualizada",
+        "regimento interno", "estatuto condominio"
+      ]
+    },
+    {
+      "id": "onde-encontrar-mandato-sindico",
+      "categoria": "documentos",
+      "pergunta": "Como sei quando o mandato do síndico termina?",
+      "resposta": "A data de fim do mandato consta na ata de eleição ou recondução do síndico. Para encontrar: (1) Verifique a última ata de assembleia de eleição/recondução — deve estar arquivada com a administradora ou no acervo do prédio; (2) Se registrada em cartório, pode ser solicitada lá; (3) Consulte a convenção — ela define a duração do mandato (geralmente 2 anos, renovável). O síndico deve ser eleito ou reconduzido em assembleia antes do vencimento. Mandato vencido sem eleição gera irregularidade — qualquer condômino pode pedir convocação de assembleia.",
+      "contexto": "O Código Civil art. 1.347 define que o mandato do síndico pode ser de até 2 anos, renovável por igual período. A convenção pode definir prazo menor.",
+      "dica": "Cadastre a data de fim de mandato no app para receber lembrete com antecedência suficiente para convocar a assembleia.",
+      "keywords": [
+        "mandato sindico", "fim mandato", "quando termina mandato", "ata eleicao sindico",
+        "eleicao sindico", "reconduzir sindico", "vencimento mandato", "assembleia eleicao",
+        "prazo mandato", "onde ata eleicao"
+      ]
+    },
+    {
+      "id": "onde-verificar-manutencao-elevador",
+      "categoria": "documentos",
+      "pergunta": "Como verificar se a manutenção do elevador está em dia?",
+      "resposta": "Para verificar: (1) Solicite o livro de registro de manutenção ao técnico ou empresa responsável — por lei deve estar na casa de máquinas do elevador; (2) Verifique a nota fiscal ou ordem de serviço da última manutenção (deve ser mensal); (3) Consulte o contrato com a empresa de manutenção para confirmar a periodicidade contratada. A manutenção mensal de elevadores é obrigatória por lei (ABNT NBR 16083) e por legislação municipal na maioria das cidades. A ausência pode gerar autuação e responsabilidade civil em caso de acidente.",
+      "contexto": "A empresa de manutenção é obrigada a manter o livro de registros acessível na casa de máquinas. O síndico pode e deve solicitar cópia de cada OS.",
+      "dica": "Exija sempre a ordem de serviço assinada após cada manutenção. Guarde os comprovantes mensalmente.",
+      "keywords": [
+        "manutencao elevador", "elevador em dia", "onde comprovante elevador",
+        "livro registro elevador", "ordem servico elevador", "verificar elevador",
+        "empresa elevador", "mensalidade elevador", "contrato elevador"
+      ]
+    },
+    {
+      "id": "quais-documentos-essenciais-condominio",
+      "categoria": "documentos",
+      "pergunta": "Quais documentos o condomínio precisa ter?",
+      "resposta": "Os documentos essenciais do condomínio são divididos por categoria: (1) Jurídicos: convenção condominial, regimento interno, ata de eleição do síndico; (2) Segurança: AVCB/CLCB, laudo SPDA (para-raio), certificado de brigada de incêndio; (3) Manutenção: contratos de elevador e laudos técnicos, comprovantes de extintores, limpeza de caixa d'água e dedetização; (4) Trabalhistas (se houver funcionários): CCT, PPRA/PGR, PCMSO; (5) Seguro: apólice do seguro predial vigente; (6) Fiscal: CND do condomínio. Não é necessário ter todos de uma vez — comece pelos críticos (AVCB, seguro, convenção) e vá mapeando os demais.",
+      "contexto": "A ausência de documentos críticos pode gerar interdição, multas e responsabilidade pessoal do síndico.",
+      "dica": "Use o Amigo do Prédio para mapear o status de cada documento — não precisa fazer upload, apenas registrar se tem, precisa localizar ou não se aplica.",
+      "keywords": [
+        "documentos condominio", "quais documentos", "pasta documental", "acervo condominio",
+        "documentos obrigatorios", "organizar documentos", "lista documentos",
+        "avcb seguro convencao", "documentos necessarios sindico"
+      ]
+    },
+    {
+      "id": "organizar-documentos-condominio",
+      "categoria": "documentos",
+      "pergunta": "Como organizar os documentos do condomínio?",
+      "resposta": "A organização recomendada por categoria: (1) Pasta jurídica: convenção, regimento, atas de assembleias; (2) Pasta de segurança: AVCB, laudo SPDA, certificado de brigada; (3) Pasta de contratos: elevador, limpeza, portaria, administradora; (4) Pasta trabalhista: CCT, PPRA/PGR, PCMSO, controle de férias; (5) Pasta financeira: contas, extratos, prestações de contas aprovadas. Mantenha cópia digital (PDF nomeado com data) e física. Para documentos com vencimento, registre a data para controle preventivo. Não precisa escanear tudo de uma vez — priorize AVCB, seguro e convenção.",
+      "contexto": "A organização documental facilita auditorias, transição de síndico e demonstra boa gestão perante os condôminos.",
+      "dica": "Ao assumir a sindicância, o primeiro passo é fazer um inventário dos documentos existentes — registre o que tem, o que falta e o que precisa renovar.",
+      "keywords": [
+        "organizar documentos", "pasta condominio", "acervo documental", "gestao documental",
+        "digitalizar documentos", "arquivar condominio", "inventario documentos",
+        "transicao sindico documentos", "onde guardar documentos"
+      ]
     }
   ]
 }

@@ -324,7 +324,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
           <button
             type="button"
             onClick={() => setStep(2)}
-            className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
             {isNewSindico ? "Começar o levantamento" : "Configurar alertas do prédio"}
             <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -390,7 +390,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
           <button
             type="button"
             onClick={() => setStep(3)}
-            className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
             Continuar
           </button>
@@ -429,7 +429,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
             <button
               type="button"
               onClick={() => toggleNaoSei(field)}
-              className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-medium ring-1 transition-all active:scale-95 ${
+              className={`min-h-[36px] rounded-full px-3 py-1.5 text-[10.5px] font-medium ring-1 transition-all active:scale-95 ${
                 unknown
                   ? "bg-navy-100 text-navy-700 ring-navy-200"
                   : "bg-white text-navy-400 ring-navy-150 hover:ring-navy-300"
@@ -504,7 +504,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
           <button
             type="button"
             onClick={() => setStep(4)}
-            className="inline-flex min-h-10 flex-1 items-center justify-center rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
+            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
             {filledNow > 0 ? "Continuar" : "Continuar assim mesmo"}
           </button>
@@ -578,7 +578,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
       <button
         type="button"
         onClick={finish}
-        className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
+        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
       >
         {isNewSindico ? "Ver meu plano de implantação" : filledDates > 0 ? "Ir para meu painel" : "Explorar mesmo assim"}
         <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
