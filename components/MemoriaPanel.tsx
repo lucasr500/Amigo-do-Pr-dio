@@ -17,6 +17,80 @@ import {
 import { trackEvent } from "@/lib/telemetry";
 import AssistedDateInput from "@/components/ui/AssistedDateInput";
 
+// ── FlexDateInput — para datas de manutenção onde mês/ano é suficiente ────────
+// Definido no nível do módulo para evitar re-identidade em re-renders (bug iPhone).
+
+type FlexDateMode = "month" | "exact" | "unknown";
+
+type FlexDateInputProps = {
+  value: string;       // YYYY-MM-DD, YYYY-MM-01, ou ""
+  onChange: (v: string) => void;
+};
+
+function FlexDateInput({ value, onChange }: FlexDateInputProps) {
+  const deriveMode = (v: string): FlexDateMode => {
+    if (!v) return "month";
+    return "month";
+  };
+  const [mode, setMode] = useState<FlexDateMode>(() => deriveMode(value));
+
+  const monthValue = value ? value.slice(0, 7) : "";
+  const exactValue = value || "";
+
+  const handleModeSwitch = (m: FlexDateMode) => {
+    setMode(m);
+    if (m === "unknown") onChange("");
+  };
+
+  const modeOptions: { key: FlexDateMode; label: string }[] = [
+    { key: "month", label: "Mês/ano" },
+    { key: "exact", label: "Data exata" },
+    { key: "unknown", label: "Não sei" },
+  ];
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex gap-1">
+        {modeOptions.map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => handleModeSwitch(key)}
+            className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-medium ring-1 transition-all active:scale-95 ${
+              mode === key
+                ? "bg-navy-700 text-white ring-navy-700"
+                : "bg-white text-navy-500 ring-navy-150 hover:ring-navy-300"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {mode === "month" && (
+        <input
+          type="month"
+          value={monthValue}
+          onChange={(e) => onChange(e.target.value ? `${e.target.value}-01` : "")}
+          className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+        />
+      )}
+      {mode === "exact" && (
+        <input
+          type="date"
+          value={exactValue}
+          onChange={(e) => onChange(e.target.value || "")}
+          className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+        />
+      )}
+      {mode === "unknown" && (
+        <p className="rounded-xl border border-navy-100/60 bg-navy-50/40 px-3 py-2.5 text-[11.5px] text-navy-500">
+          Sem data registrada — o app não vai incluir este campo no calendário.
+        </p>
+      )}
+    </div>
+  );
+}
+
 type Props = {
   onSaved?: () => void;
   autoExpand?: boolean;
@@ -430,7 +504,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                         {icon}
                       </span>
                       <div className="flex-1 min-w-0">
-                        {/* Campos essenciais usam AssistedDateInput; demais usam input simples */}
+                        {/* Campos essenciais usam AssistedDateInput; manutenções usam FlexDateInput; texto usa input simples */}
                         {isEssential && tipo === "data" ? (
                           <AssistedDateInput
                             label={label}
@@ -439,28 +513,30 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                             onChange={(field) => handleAssistedChange(key, field)}
                             allowNotApplicable={false}
                           />
+                        ) : tipo === "data" ? (
+                          <>
+                            <p className="text-[11.5px] font-medium text-navy-700 mb-1">{label}</p>
+                            {sublabel && (
+                              <p className="text-[10px] text-navy-400 mb-1.5 leading-tight">{sublabel}</p>
+                            )}
+                            <FlexDateInput
+                              value={(draft[key] as string) ?? ""}
+                              onChange={(v) => set(key, (v || undefined) as MemoriaOperacional[typeof key])}
+                            />
+                          </>
                         ) : (
                           <>
                             <p className="text-[11.5px] font-medium text-navy-700 mb-0.5">{label}</p>
                             {sublabel && (
                               <p className="text-[10px] text-navy-400 mb-1 leading-tight">{sublabel}</p>
                             )}
-                            {tipo === "data" ? (
-                              <input
-                                type="date"
-                                value={draft[key] as string ?? ""}
-                                onChange={(e) => set(key, e.target.value || undefined)}
-                                className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-                              />
-                            ) : (
-                              <input
-                                type="text"
-                                value={draft[key] as string ?? ""}
-                                onChange={(e) => set(key, e.target.value || undefined)}
-                                placeholder={placeholder}
-                                className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
-                              />
-                            )}
+                            <input
+                              type="text"
+                              value={draft[key] as string ?? ""}
+                              onChange={(e) => set(key, e.target.value || undefined)}
+                              placeholder={placeholder}
+                              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                            />
                           </>
                         )}
                         {/* Lembrar depois — apenas nos essenciais sem AssistedDateInput quando o campo está vazio */}

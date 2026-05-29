@@ -16,6 +16,56 @@ import { trackEvent } from "@/lib/telemetry";
 
 type Props = { onSaved?: () => void };
 
+// ── DateOrUnknown: campo de data com opção "Não sei" ─────────────────────────
+// Definido no nível do módulo para evitar re-identidade e o bug do teclado iPhone.
+
+type DateOrUnknownProps = {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+};
+
+function DateOrUnknown({ label, value, onChange }: DateOrUnknownProps) {
+  const [unknown, setUnknown] = useState(!value);
+
+  const toggleUnknown = () => {
+    const next = !unknown;
+    setUnknown(next);
+    if (next) onChange("");
+  };
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <p className="text-[11px] font-medium text-navy-600">{label}</p>
+        <button
+          type="button"
+          onClick={toggleUnknown}
+          className={`rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 transition-all active:scale-95 ${
+            unknown
+              ? "bg-navy-100 text-navy-700 ring-navy-200"
+              : "bg-white text-navy-400 ring-navy-150 hover:ring-navy-300"
+          }`}
+        >
+          {unknown ? "Informar" : "Não sei"}
+        </button>
+      </div>
+      {unknown ? (
+        <div className="min-h-9 flex items-center rounded-xl border border-navy-100/60 bg-navy-50/40 px-3 py-1.5">
+          <span className="text-[11px] text-navy-400">Não registrada</span>
+        </div>
+      ) : (
+        <input
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none"
+        />
+      )}
+    </div>
+  );
+}
+
 // ── FuncForm: componente no nível do módulo (fora do FuncionariosPanel)
 // Garantia de estabilidade de identidade — evita o bug do teclado no iPhone onde
 // inputs re-montados a cada keystroke perdem o foco.
@@ -88,24 +138,16 @@ function FuncForm({
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <p className="mb-1 text-[11px] font-medium text-navy-600">Data admissão</p>
-          <input
-            type="date"
-            value={draftAdmissao}
-            onChange={(e) => setDraftAdmissao(e.target.value)}
-            className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none"
-          />
-        </div>
-        <div>
-          <p className="mb-1 text-[11px] font-medium text-navy-600">Última fruição férias</p>
-          <input
-            type="date"
-            value={draftUltimasFerias}
-            onChange={(e) => setDraftUltimasFerias(e.target.value)}
-            className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none"
-          />
-        </div>
+        <DateOrUnknown
+          label="Data admissão"
+          value={draftAdmissao}
+          onChange={setDraftAdmissao}
+        />
+        <DateOrUnknown
+          label="Última fruição férias"
+          value={draftUltimasFerias}
+          onChange={setDraftUltimasFerias}
+        />
       </div>
       <div>
         <p className="mb-1 text-[11px] font-medium text-navy-600">Período aquisitivo (opcional)</p>

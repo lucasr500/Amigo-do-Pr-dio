@@ -105,6 +105,7 @@ const HomePriorityStrip = dynamic(() => import("@/components/HomePriorityStrip")
 const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
 const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
+const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
 
 // ── Saudação dinâmica ──────────────────────────────────────────────────────────
 
@@ -465,44 +466,17 @@ export default function HomePage() {
               />
             )}
 
-            {/* ProfileCompletionCard — esconde quando 100% completo */}
-            {!subView && hasCondominioData && profileCompletion < 100 && (
-              <div className="mx-5 mb-3 sm:mx-6">
-                <div className="overflow-hidden rounded-[14px] border border-navy-100/80 bg-white/80 px-4 py-3 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-navy-500">
-                        Perfil do condomínio
-                      </p>
-                      <p className="mt-0.5 text-[13px] text-navy-700">
-                        {profileCompletion >= 60
-                          ? "Quase lá. Adicione as informações que faltam."
-                          : profileCompletion > 0
-                          ? "Continue preenchendo para ativar todos os alertas."
-                          : "Adicione prazos e perfil para ativar o monitoramento."}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void trackEvent("profile_completion_cta_tap", {
-                          completion_bucket: completionBucket(profileCompletion),
-                        });
-                        navigateTab("condominio");
-                      }}
-                      className="flex-shrink-0 rounded-full border border-navy-200 bg-navy-50 px-3 py-1.5 text-[12px] font-medium text-navy-600 transition-colors hover:bg-navy-100 active:scale-95"
-                    >
-                      Completar dados
-                    </button>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-navy-100">
-                    <div
-                      className="h-full rounded-full bg-navy-500 transition-all"
-                      style={{ width: `${profileCompletion}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* ProgressiveSetupCard — aponta especificamente o que falta e o que ativa */}
+            {!subView && hasCondominioData && (
+              <ProgressiveSetupCard
+                refreshKey={refreshKey}
+                onNavigate={(target) => {
+                  void trackEvent("profile_completion_cta_tap", {
+                    completion_bucket: completionBucket(profileCompletion),
+                  });
+                  navigateTab(target);
+                }}
+              />
             )}
 
             {/* Conteúdo normal da Home */}
