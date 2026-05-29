@@ -3,25 +3,20 @@
 import { useState } from "react";
 import { trackEvent } from "@/lib/telemetry";
 
-type Resultado = {
-  arrecadacaoBruta: number;
-  arrecadacaoLiquida: number;
-  despesaProjetada: number;
-  balanco: number;
-  reajusteMinimo: number;
-  novaCota: number | null;
+type Perfil = "conservador" | "moderado" | "arrojado";
+
+const PERFIL_CONFIG: Record<Perfil, { label: string; range: [number, number]; color: string }> = {
+  conservador: { label: "Conservador",  range: [5, 8],   color: "text-navy-600" },
+  moderado:    { label: "Moderado",     range: [9, 11],  color: "text-amber-600" },
+  arrojado:    { label: "Arrojado",     range: [12, 15], color: "text-terracotta-600" },
 };
 
 function fmt(n: number): string {
   return n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function fmtPct(n: number): string {
-  return n.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-}
-
 function parseNum(s: string): number {
-  return Math.max(0, parseFloat(s.replace(",", ".")) || 0);
+  return Math.max(0, parseFloat(s.replace(/\./g, "").replace(",", ".")) || 0);
 }
 
 type Props = {
@@ -30,75 +25,79 @@ type Props = {
 };
 
 export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste", highlighted = false }: Props) {
-  const [arrecadacao, setArrecadacao] = useState("");
-  const [despesa, setDespesa] = useState("");
-  const [unidades, setUnidades] = useState("");
-  const [inadimplencia, setInadimplencia] = useState("5");
-  const [aumentoDespesas, setAumentoDespesas] = useState("8");
-  const [reforcoReserva, setReforcoReserva] = useState("0");
+  const [arrecadacaoMensal, setArrecadacaoMensal] = useState("");
   const [cotaAtual, setCotaAtual] = useState("");
-  const [resultado, setResultado] = useState<Resultado | null>(null);
+  const [reajustePct, setReajustePct] = useState(8);
+  const [perfil, setPerfil] = useState<Perfil>("moderado");
+  const [resultado, setResultado] = useState<{
+    novaCota: number | null;
+    novaArrecadacaoMensal: number;
+    novaArrecadacaoAnual: number;
+    diferencaMensal: number;
+    diferencaAnual: number;
+    arrecadacaoMensalAtual: number;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const arrNum = parseNum(arrecadacao);
-  const despNum = parseNum(despesa);
-  const unidNum = Math.max(1, parseInt(unidades, 10) || 1);
-  const inadPct = Math.max(0, Math.min(50, parseNum(inadimplencia))) / 100;
-  const aumentoPct = Math.max(0, Math.min(100, parseNum(aumentoDespesas))) / 100;
-  const reforcoNum = parseNum(reforcoReserva);
-  const cotaNum = parseNum(cotaAtual);
-
-  const podeCalcular = arrNum > 0 && despNum > 0;
+  const arrNum   = parseNum(arrecadacaoMensal);
+  const cotaNum  = parseNum(cotaAtual);
+  const podeCalc = arrNum > 0;
 
   const calcular = () => {
-    if (!podeCalcular) return;
+    if (!podeCalc) return;
+    const fator = 1 + reajustePct / 100;
+    const novaArrecadacaoMensal = arrNum * fator;
+    const novaArrecadacaoAnual  = novaArrecadacaoMensal * 12;
+    const novaCota = cotaNum > 0 ? cotaNum * fator : null;
+    const diferencaMensal = novaArrecadacaoMensal - arrNum;
+    const diferencaAnual  = diferencaMensal * 12;
 
-    const arrecadacaoBruta = arrNum;
-    const arrecadacaoLiquida = arrNum * (1 - inadPct);
-    const despesaProjetada = despNum * (1 + aumentoPct) + reforcoNum;
-    const balanco = arrecadacaoLiquida - despesaProjetada;
-
-    // % mínimo de reajuste para cobrir a projeção com inadimplência
-    // nova_arrecadacao_liquida >= despesa_projetada
-    // unidades * nova_cota * (1 - inadPct) >= despesa_projetada
-    // nova_cota = despesa_projetada / (unidades * (1 - inadPct))
-    const cotaNecessaria = despesaProjetada / (unidNum * (1 - inadPct));
-    const cotaBase = cotaNum > 0 ? cotaNum : arrNum / unidNum;
-    const reajusteMinimo = ((cotaNecessaria - cotaBase) / cotaBase) * 100;
-
-    const novaCota = cotaNum > 0 ? cotaNecessaria : null;
-
-    setResultado({ arrecadacaoBruta, arrecadacaoLiquida, despesaProjetada, balanco, reajusteMinimo, novaCota });
-
+    setResultado({
+      novaCota,
+      novaArrecadacaoMensal,
+      novaArrecadacaoAnual,
+      diferencaMensal,
+      diferencaAnual,
+      arrecadacaoMensalAtual: arrNum,
+    });
     void trackEvent("simulador_reajuste_calculado", {
-      tem_cota_atual: cotaNum > 0,
-      inadimplencia_pct: Math.round(inadPct * 100),
-      aumento_despesas_pct: Math.round(aumentoPct * 100),
+      perfil,
+      reajuste_pct: reajustePct,
+      tem_cota: cotaNum > 0,
     });
   };
 
-  const resetResultado = () => { setResultado(null); setCopied(false); };
+  const handlePerfil = (p: Perfil) => {
+    setPerfil(p);
+    const [min, max] = PERFIL_CONFIG[p].range;
+    // Define o ponto central do perfil
+    setReajustePct(Math.round((min + max) / 2));
+    setResultado(null);
+  };
 
-  const handleCopyResultado = async (r: Resultado) => {
-    const texto = [
+  const handleCopy = async () => {
+    if (!resultado) return;
+    const { novaCota, novaArrecadacaoMensal, novaArrecadacaoAnual, diferencaMensal, diferencaAnual } = resultado;
+    const lines = [
       "Simulador de reajuste de cota — Amigo do Prédio",
       "",
-      `Arrecadação bruta: R$ ${fmt(r.arrecadacaoBruta)}`,
-      `Arrecadação líquida estimada: R$ ${fmt(r.arrecadacaoLiquida)}`,
-      `Despesa projetada: R$ ${fmt(r.despesaProjetada)}`,
-      `Balanço: ${r.balanco >= 0 ? "+" : ""}R$ ${fmt(r.balanco)}`,
-      `Reajuste mínimo estimado: ${r.reajusteMinimo > 0 ? "+" + fmtPct(r.reajusteMinimo) + "%" : "Sem necessidade"}`,
-      ...(r.novaCota !== null ? [`Nova cota estimada: R$ ${fmt(r.novaCota)}`] : []),
+      `Perfil: ${PERFIL_CONFIG[perfil].label}`,
+      `Reajuste simulado: ${reajustePct}%`,
       "",
-      "Simulação estimativa. Não substitui previsão orçamentária oficial. Reajuste deve ser aprovado em assembleia.",
-    ].join("\n");
+      `Arrecadação mensal atual: R$ ${fmt(arrNum)}`,
+      `Nova arrecadação mensal: R$ ${fmt(novaArrecadacaoMensal)}`,
+      `Nova arrecadação anual: R$ ${fmt(novaArrecadacaoAnual)}`,
+      `Diferença mensal: +R$ ${fmt(diferencaMensal)}`,
+      `Diferença anual: +R$ ${fmt(diferencaAnual)}`,
+      ...(novaCota !== null ? [`Nova cota estimada: R$ ${fmt(novaCota)}`] : []),
+      "",
+      "Simulação para planejamento. Não substitui previsão orçamentária formal nem aprovação assemblear.",
+    ];
     try {
-      await navigator.clipboard.writeText(texto);
+      await navigator.clipboard.writeText(lines.join("\n"));
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
-    } catch {
-      // Clipboard indisponível
-    }
+    } catch { /* clipboard indisponível */ }
   };
 
   return (
@@ -115,56 +114,73 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
       <div className="overflow-hidden rounded-xl border border-navy-100 bg-white shadow-sm">
         <div className="space-y-4 p-4">
 
-          {/* Arrecadação e Despesa */}
+          {/* Perfil */}
+          <div>
+            <p className="mb-1.5 text-[11.5px] font-medium text-navy-600">Perfil do reajuste</p>
+            <div className="flex gap-2">
+              {(Object.keys(PERFIL_CONFIG) as Perfil[]).map((p) => {
+                const cfg = PERFIL_CONFIG[p];
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => handlePerfil(p)}
+                    className={`flex-1 rounded-xl border py-2 text-[11.5px] font-medium transition-all active:scale-95 ${
+                      perfil === p
+                        ? "border-navy-600 bg-navy-700 text-white"
+                        : "border-navy-100 bg-navy-50/40 text-navy-600 hover:bg-navy-50"
+                    }`}
+                  >
+                    {cfg.label}
+                    <span className="mt-0.5 block text-[9.5px] opacity-70">
+                      {cfg.range[0]}–{cfg.range[1]}%
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Slider */}
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between">
+              <p className="text-[11.5px] font-medium text-navy-600">Percentual de reajuste</p>
+              <p className={`text-[17px] font-bold tabular-nums ${PERFIL_CONFIG[perfil].color}`}>
+                {reajustePct}%
+              </p>
+            </div>
+            <input
+              type="range"
+              min={5}
+              max={15}
+              step={1}
+              value={reajustePct}
+              onChange={(e) => { setReajustePct(Number(e.target.value)); setResultado(null); }}
+              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-navy-100 accent-navy-700"
+            />
+            <div className="mt-0.5 flex justify-between text-[9.5px] text-navy-400">
+              <span>5%</span><span>10%</span><span>15%</span>
+            </div>
+          </div>
+
+          {/* Arrecadação mensal */}
           <div className="flex gap-3">
-            <div className="min-w-0 flex-1">
-              <label htmlFor="sr-arrecadacao" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
+            <div className="flex-1 min-w-0">
+              <label htmlFor="sr-arr-mensal" className="mb-1 block text-[11.5px] font-medium text-navy-600">
                 Arrecadação mensal (R$)
               </label>
               <input
-                id="sr-arrecadacao"
+                id="sr-arr-mensal"
                 type="text"
                 inputMode="decimal"
-                value={arrecadacao}
-                onChange={(e) => { setArrecadacao(e.target.value); resetResultado(); }}
+                value={arrecadacaoMensal}
+                onChange={(e) => { setArrecadacaoMensal(e.target.value); setResultado(null); }}
                 placeholder="Ex: 12.000,00"
                 className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
             </div>
-            <div className="min-w-0 flex-1">
-              <label htmlFor="sr-despesa" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
-                Despesa mensal média (R$)
-              </label>
-              <input
-                id="sr-despesa"
-                type="text"
-                inputMode="decimal"
-                value={despesa}
-                onChange={(e) => { setDespesa(e.target.value); resetResultado(); }}
-                placeholder="Ex: 11.000,00"
-                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
-              />
-            </div>
-          </div>
-
-          {/* Unidades e Cota atual */}
-          <div className="flex gap-3">
-            <div className="min-w-0 flex-1">
-              <label htmlFor="sr-unidades" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
-                Nº de unidades
-              </label>
-              <input
-                id="sr-unidades"
-                type="text"
-                inputMode="numeric"
-                value={unidades}
-                onChange={(e) => { setUnidades(e.target.value); resetResultado(); }}
-                placeholder="Ex: 30"
-                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <label htmlFor="sr-cota" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
+            <div className="flex-1 min-w-0">
+              <label htmlFor="sr-cota" className="mb-1 block text-[11.5px] font-medium text-navy-600">
                 Cota atual (R$) <span className="text-navy-400">opcional</span>
               </label>
               <input
@@ -172,59 +188,11 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
                 type="text"
                 inputMode="decimal"
                 value={cotaAtual}
-                onChange={(e) => { setCotaAtual(e.target.value); resetResultado(); }}
+                onChange={(e) => { setCotaAtual(e.target.value); setResultado(null); }}
                 placeholder="Ex: 400,00"
                 className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
               />
             </div>
-          </div>
-
-          {/* Inadimplência e Aumento de despesas */}
-          <div className="flex gap-3">
-            <div className="min-w-0 flex-1">
-              <label htmlFor="sr-inadimplencia" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
-                Inadimplência (%)
-              </label>
-              <input
-                id="sr-inadimplencia"
-                type="text"
-                inputMode="decimal"
-                value={inadimplencia}
-                onChange={(e) => { setInadimplencia(e.target.value); resetResultado(); }}
-                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
-              />
-              <p className="mt-1 text-[10.5px] text-navy-400">Padrão: 5%</p>
-            </div>
-            <div className="min-w-0 flex-1">
-              <label htmlFor="sr-aumento" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
-                Aumento de despesas (%)
-              </label>
-              <input
-                id="sr-aumento"
-                type="text"
-                inputMode="decimal"
-                value={aumentoDespesas}
-                onChange={(e) => { setAumentoDespesas(e.target.value); resetResultado(); }}
-                className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 outline-none transition-colors focus:border-navy-400 focus:bg-white"
-              />
-              <p className="mt-1 text-[10.5px] text-navy-400">Estimativa anual</p>
-            </div>
-          </div>
-
-          {/* Reforço reserva */}
-          <div>
-            <label htmlFor="sr-reserva" className="mb-1.5 block text-[11.5px] font-medium text-navy-600">
-              Reforço de reserva / fundo (R$/mês) <span className="text-navy-400">opcional</span>
-            </label>
-            <input
-              id="sr-reserva"
-              type="text"
-              inputMode="decimal"
-              value={reforcoReserva}
-              onChange={(e) => { setReforcoReserva(e.target.value); resetResultado(); }}
-              placeholder="Ex: 500,00"
-              className="min-h-11 w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[14px] text-navy-800 placeholder-navy-300 outline-none transition-colors focus:border-navy-400 focus:bg-white"
-            />
           </div>
 
         </div>
@@ -234,14 +202,14 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
           <button
             type="button"
             onClick={calcular}
-            disabled={!podeCalcular}
+            disabled={!podeCalc}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-navy-800 py-3 text-[13px] font-medium text-cream-50 transition-all hover:bg-navy-900 active:scale-[0.98] disabled:opacity-40"
           >
-            Simular reajuste
+            Simular reajuste de {reajustePct}%
           </button>
-          {!podeCalcular && (
+          {!podeCalc && (
             <p className="mt-2 text-center text-[10.5px] text-navy-400">
-              Informe arrecadação e despesa para simular.
+              Informe a arrecadação mensal para simular.
             </p>
           )}
         </div>
@@ -250,34 +218,32 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
         {resultado && (
           <div className="border-t border-navy-50 p-4">
 
-            {/* Balanço em destaque */}
-            <div className={`mb-4 rounded-xl px-4 py-4 text-center ${resultado.balanco >= 0 ? "bg-navy-700" : "bg-navy-800"}`}>
+            {/* Destaque visual */}
+            <div className="mb-4 rounded-xl bg-navy-700 px-4 py-4 text-center">
               <p className="text-[10.5px] font-medium uppercase tracking-[0.10em] text-cream-50/60">
-                Balanço projetado
+                Nova arrecadação mensal
               </p>
               <p className="mt-1.5 font-display text-[28px] font-semibold tracking-tight text-cream-50">
-                {resultado.balanco >= 0 ? "+" : ""}R$ {fmt(resultado.balanco)}
+                R$ {fmt(resultado.novaArrecadacaoMensal)}
               </p>
               <p className="mt-1 text-[11px] text-cream-50/60">
-                {resultado.balanco >= 0 ? "Arrecadação cobre a projeção" : "Déficit estimado — reajuste necessário"}
+                +R$ {fmt(resultado.diferencaMensal)}/mês · +R$ {fmt(resultado.diferencaAnual)}/ano
               </p>
             </div>
 
             {/* Detalhes */}
             <div className="mb-4 space-y-2">
               <div className="flex justify-between rounded-lg bg-navy-50 px-3 py-2">
-                <span className="text-[11.5px] text-navy-500">Arrecadação líquida estimada</span>
-                <span className="text-[12.5px] font-medium text-navy-800">R$ {fmt(resultado.arrecadacaoLiquida)}</span>
+                <span className="text-[11.5px] text-navy-500">Arrecadação mensal atual</span>
+                <span className="text-[12.5px] font-medium text-navy-800">R$ {fmt(resultado.arrecadacaoMensalAtual)}</span>
               </div>
               <div className="flex justify-between rounded-lg bg-navy-50 px-3 py-2">
-                <span className="text-[11.5px] text-navy-500">Despesa projetada</span>
-                <span className="text-[12.5px] font-medium text-navy-800">R$ {fmt(resultado.despesaProjetada)}</span>
+                <span className="text-[11.5px] text-navy-500">Nova arrecadação anual</span>
+                <span className="text-[12.5px] font-semibold text-navy-800">R$ {fmt(resultado.novaArrecadacaoAnual)}</span>
               </div>
               <div className="flex justify-between rounded-lg bg-navy-50 px-3 py-2">
-                <span className="text-[11.5px] text-navy-500">Reajuste mínimo estimado</span>
-                <span className={`text-[12.5px] font-semibold ${resultado.reajusteMinimo > 0 ? "text-amber-600" : "text-navy-600"}`}>
-                  {resultado.reajusteMinimo > 0 ? `+${fmtPct(resultado.reajusteMinimo)}%` : "Sem necessidade"}
-                </span>
+                <span className="text-[11.5px] text-navy-500">Diferença anual projetada</span>
+                <span className="text-[12.5px] font-semibold text-amber-600">+R$ {fmt(resultado.diferencaAnual)}</span>
               </div>
               {resultado.novaCota !== null && (
                 <div className="flex justify-between rounded-lg bg-navy-50 px-3 py-2">
@@ -288,15 +254,13 @@ export default function SimuladorReajusteCota({ anchorId = "simulador-reajuste",
             </div>
 
             <p className="text-[10.5px] leading-relaxed text-navy-400">
-              Simulação estimativa. Não substitui a previsão orçamentária oficial elaborada pela administradora ou contador.
-              Verifique extratos, balancetes e demonstrativos reais antes de qualquer decisão. Eventual reajuste deve
-              observar a convenção condominial e ser aprovado em assembleia.
+              Simulação para planejamento interno. Não substitui previsão orçamentária formal elaborada pela administradora. Eventual reajuste deve observar a convenção condominial e ser aprovado em assembleia.
             </p>
 
             <div className="mt-3 flex justify-end">
               <button
                 type="button"
-                onClick={() => handleCopyResultado(resultado)}
+                onClick={handleCopy}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11.5px] font-medium transition-all ${
                   copied
                     ? "border-navy-200 bg-navy-100 text-navy-600"

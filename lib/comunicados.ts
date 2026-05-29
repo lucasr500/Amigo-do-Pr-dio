@@ -60,9 +60,9 @@ export const COMUNICADO_TEMPLATES: ComunicadoDef[] = [
       },
       {
         id: "pauta",
-        label: "Pauta (um item por linha)",
+        label: "Pauta (um item por linha — editável)",
         type: "textarea",
-        placeholder: "Prestação de contas\nAprovação do orçamento\nAssuntos gerais",
+        placeholder: "Prestação de contas do exercício\nPrevisão orçamentária\nEleição de síndico, subsíndico e conselho\nAssuntos gerais",
       },
     ],
     generate: (v, condo) => {

@@ -8,20 +8,32 @@ import {
   getPendenciasAbertas,
   getDocumentos,
   getFuncionarios,
+  getManutencoes,
   getMemoriaOperacional,
   getImplantacaoMode,
   getMemoriaAssistida,
+  getProfile,
+  getOcorrencias,
   DOCUMENTOS_ESSENCIAIS_IDS,
+  DOCUMENTO_CRITICIDADE,
   type AppNotification,
+  type DocumentoEssencialId,
 } from "@/lib/session";
 import { computeHealthScore } from "@/lib/health-score";
 import { STALE_TASK_DAYS } from "@/lib/health-config";
+import { contarStatusManutencoes, temManutencaoCriticaAtrasada } from "@/lib/recorrencias";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
 
 export type CommandAction = ActionItem & {
   sourceModule?: string; // "avcb" | "seguro" | "funcionarios" | "documentos" | "pendencias" | "rotina"
   resolveTarget?: "condominio" | "ferramentas" | "agenda" | "pendencias"; // aba para resolver
+};
+
+export type CorrelacaoGap = {
+  id: string;
+  texto: string;
+  prioridade: "critica" | "atencao" | "info";
 };
 
 export type CommandCenterResult = {
@@ -38,8 +50,15 @@ export type CommandCenterResult = {
   stalePendenciasCount: number;
   missingDocsCount: number;
   overdueVacationsCount: number;
+  manutencoesAtrasadas: number;
   healthPercentage: number;
   implantacaoPct: number;                  // % de implantação concluída
+  correlacoes: CorrelacaoGap[];            // lacunas detectadas por correlação
+  // Síntese operacional — respostas humanas diretas
+  todayAnswer: string;    // "O que eu faria hoje se fosse síndico deste prédio?"
+  topRisco: string;       // Único maior risco atual
+  maiorLacuna: string;    // Maior gap operacional
+  maiorMelhoria: string;  // Melhor oportunidade de melhoria
 };
 
 function buildResolveTarget(item: ActionItem): CommandAction["resolveTarget"] {
@@ -87,6 +106,73 @@ function computeImplantacaoPct(): number {
   return Math.round((done / checks.length) * 100);
 }
 
+// Detecta lacunas operacionais por correlação de dados
+function buildCorrelacoes(): CorrelacaoGap[] {
+  const gaps: CorrelacaoGap[] = [];
+  const profile = getProfile();
+  const m = getMemoriaOperacional();
+  const manutencoes = getManutencoes();
+  const funcs = getFuncionarios();
+  const docs = getDocumentos();
+
+  // "Tem elevador mas não tem manutenção registrada"
+  if (profile?.hasElevador) {
+    const temManutElevador = manutencoes.some((x) => x.id === "manut_elevador" && x.ativo && x.ultimaExecucao);
+    const temMemoriaElevador = !!m.ultimaManutencaoElevador;
+    if (!temManutElevador && !temMemoriaElevador) {
+      gaps.push({ id: "gap_elevador", texto: "Prédio com elevador sem manutenção mensal registrada.", prioridade: "critica" });
+    }
+  }
+
+  // "Tem funcionários mas sem férias mapeadas"
+  const funcsSemFerias = funcs.filter((f) => f.status === "desconhecida" || (!f.ultimasFeriasGozo && !f.periodoAquisitivo));
+  if (funcs.length > 0 && funcsSemFerias.length === funcs.length) {
+    gaps.push({ id: "gap_ferias", texto: `Existem ${funcs.length} funcionário${funcs.length > 1 ? "s" : ""} sem histórico de férias mapeado.`, prioridade: "atencao" });
+  }
+
+  // "Documentos críticos não localizados"
+  const docsCriticosNaoConfirmados = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => {
+    const isCritico = DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica";
+    const doc = docs.find((d) => d.id === id);
+    return isCritico && (!doc || doc.status === "nao_tenho");
+  });
+  if (docsCriticosNaoConfirmados.length >= 2) {
+    gaps.push({ id: "gap_docs_criticos", texto: `${docsCriticosNaoConfirmados.length} documentos críticos (AVCB, seguro, convenção etc.) não confirmados.`, prioridade: "atencao" });
+  }
+
+  // "Manutenções recorrentes atrasadas"
+  if (manutencoes.length > 0 && temManutencaoCriticaAtrasada()) {
+    gaps.push({ id: "gap_manut_atrasada", texto: "Há manutenções críticas com prazo vencido.", prioridade: "critica" });
+  }
+
+  // "Recorrências cadastradas mas sem última execução"
+  const manutSemExec = manutencoes.filter((x) => x.ativo && !x.ultimaExecucao).length;
+  if (manutSemExec >= 3) {
+    gaps.push({ id: "gap_manut_sem_exec", texto: `${manutSemExec} manutenções sem data de última execução — cobertura operacional incompleta.`, prioridade: "info" });
+  }
+
+  // "Ocorrência urgente registrada nos últimos 7 dias"
+  const ocorrencias = getOcorrencias();
+  const cutoff7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const urgentOcorrencias = ocorrencias.filter(
+    (o) => o.prioridade === "alta" && o.createdAt >= cutoff7d
+  );
+  if (urgentOcorrencias.length > 0) {
+    gaps.push({
+      id: "gap_ocorrencia_urgente",
+      texto: `${urgentOcorrencias.length} ocorrência${urgentOcorrencias.length > 1 ? "s" : ""} de prioridade alta registrada${urgentOcorrencias.length > 1 ? "s" : ""} nos últimos 7 dias.`,
+      prioridade: "atencao",
+    });
+  }
+
+  // "Perfil do condomínio incompleto"
+  if (profile && !profile.numUnidades && !profile.tipoGestao) {
+    gaps.push({ id: "gap_perfil_incompleto", texto: "Perfil do condomínio incompleto — complete para ativar orientações específicas.", prioridade: "info" });
+  }
+
+  return gaps;
+}
+
 function buildSummaryText(
   riskLevel: RiskLevel,
   urgentCount: number,
@@ -129,6 +215,7 @@ export function buildCommandCenter(): CommandCenterResult {
   const docs      = getDocumentos();
   const funcs     = getFuncionarios();
   const allNotifs = getNotifications().filter((n) => !n.dismissed);
+  const manutStatus = contarStatusManutencoes();
 
   const actions: CommandAction[] = plan.items.map((item) => ({
     ...item,
@@ -150,6 +237,7 @@ export function buildCommandCenter(): CommandCenterResult {
   const missingDocs      = docs.filter((d) => d.status === "precisa_localizar" || d.status === "nao_tenho").length;
   const overdueVacations = funcs.filter((f) => f.status === "vencida").length;
   const implantacaoPct   = computeImplantacaoPct();
+  const correlacoes      = buildCorrelacoes();
 
   const riskLevel: RiskLevel = (() => {
     const m = getMemoriaOperacional();
@@ -165,6 +253,69 @@ export function buildCommandCenter(): CommandCenterResult {
   const summaryText  = buildSummaryText(riskLevel, urgentActions.length, stalePendencias, missingDocs, overdueVacations);
   const upgradeText  = buildUpgradeText(health.percentage, urgentActions);
 
+  // ── Síntese operacional ───────────────────────────────────────────────────
+
+  // "O que eu faria hoje se fosse síndico deste prédio?"
+  const todayAnswer = (() => {
+    if (riskLevel === "sem-dados") {
+      return "Cadastraria os dados do prédio: AVCB, seguro predial e fim do mandato. São os três pilares do monitoramento operacional.";
+    }
+    if (urgentActions.length > 0) {
+      const top = urgentActions[0];
+      const rest = urgentActions.length > 1 ? ` Depois: ${urgentActions.slice(1, 3).map((a) => a.titulo.replace(/\s*—.*/, "")).join("; ")}.` : "";
+      return `Resolveria agora: ${top.titulo.replace(/\s*—.*/, "")}.${rest}`;
+    }
+    if (thisWeekActions.length > 0) {
+      const top = thisWeekActions[0];
+      return `Sem urgências críticas. Avançaria em: ${top.titulo.replace(/\s*—.*/, "")}.`;
+    }
+    if (!health.suggestions || health.percentage < 85) {
+      return "Prédio estável. Completaria a revisão semanal e atualizaria qualquer dado desatualizado.";
+    }
+    return "Prédio bem organizado. Manteria a rotina de revisão semanal e verificaria o calendário de manutenções.";
+  })();
+
+  // Top risco único
+  const topRisco = (() => {
+    if (urgentActions.length > 0) {
+      const legal = urgentActions.find((a) => a.categoria === "legal");
+      const trab  = urgentActions.find((a) => a.categoria === "trabalhista");
+      const top   = legal ?? trab ?? urgentActions[0];
+      return top.titulo.replace(/\s*—.*/, "");
+    }
+    if (overdueVacations > 0) return "Férias vencidas — passivo trabalhista acumulando";
+    if (manutStatus.atrasadas > 0) return `${manutStatus.atrasadas} manutenç${manutStatus.atrasadas > 1 ? "ões" : "ão"} crítica${manutStatus.atrasadas > 1 ? "s" : ""} atrasada${manutStatus.atrasadas > 1 ? "s" : ""}`;
+    const m = getMemoriaOperacional();
+    const a = getMemoriaAssistida();
+    if (!m.vencimentoAVCB && !a.avcb?.value) return "AVCB sem data cadastrada — vencimento não monitorado";
+    if (!m.vencimentoSeguro && !a.seguro?.value) return "Seguro sem data cadastrada — vencimento não monitorado";
+    return "Nenhum risco crítico identificado no momento";
+  })();
+
+  // Maior lacuna operacional
+  const maiorLacuna = (() => {
+    const m = getMemoriaOperacional();
+    const a = getMemoriaAssistida();
+    if (!m.vencimentoAVCB && !a.avcb?.value && !m.vencimentoSeguro && !a.seguro?.value) {
+      return "AVCB e seguro sem data — os dois essenciais mais críticos sem monitoramento";
+    }
+    if (!m.vencimentoAVCB && !a.avcb?.value) return "Data do AVCB não cadastrada";
+    if (!m.vencimentoSeguro && !a.seguro?.value) return "Vencimento do seguro não cadastrado";
+    if (docs.length === 0) return "Documentos essenciais sem mapeamento";
+    if (funcs.length === 0) return "Funcionários sem registro — risco trabalhista não monitorado";
+    if (manutStatus.total === 0) return "Manutenções recorrentes sem cadastro — calendário operacional inativo";
+    return "Dados operacionais em bom nível de cobertura";
+  })();
+
+  // Melhor oportunidade de melhoria
+  const maiorMelhoria = (() => {
+    if (manutStatus.total === 0) return "Cadastrar manutenções recorrentes ativa o calendário operacional e adiciona até 15 pts ao score";
+    if (health.percentage < 60) return "Completar os dados essenciais (AVCB, seguro, mandato) dará o maior salto no score";
+    if (implantacaoPct < 70) return `Completar a implantação (${implantacaoPct}%) aumenta a cobertura do monitoramento`;
+    if (stalePendencias > 0) return `Limpar ${stalePendencias} próximo${stalePendencias > 1 ? "s" : ""} passo${stalePendencias > 1 ? "s" : ""} parado${stalePendencias > 1 ? "s" : ""} melhora o acompanhamento`;
+    return "Manter a revisão semanal em dia e o calendário de manutenções atualizado";
+  })();
+
   return {
     riskLevel,
     topPriority,
@@ -179,7 +330,13 @@ export function buildCommandCenter(): CommandCenterResult {
     stalePendenciasCount: stalePendencias,
     missingDocsCount: missingDocs,
     overdueVacationsCount: overdueVacations,
+    manutencoesAtrasadas: manutStatus.atrasadas,
     healthPercentage: health.percentage,
     implantacaoPct,
+    correlacoes,
+    todayAnswer,
+    topRisco,
+    maiorLacuna,
+    maiorMelhoria,
   };
 }

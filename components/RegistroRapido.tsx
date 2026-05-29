@@ -7,22 +7,37 @@ import {
   markOcorrenciaMessageGenerated,
   type Ocorrencia,
   type OcorrenciaTipo,
+  type OcorrenciaPrioridade,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 const TIPO_LABEL: Record<OcorrenciaTipo, string> = {
-  barulho: "Barulho",
-  vazamento: "Vazamento",
-  obra: "Obra",
-  inadimplencia: "Inadimplência",
-  manutencao: "Manutenção",
-  funcionario: "Funcionário",
+  barulho:      "Barulho",
+  vazamento:    "Vazamento",
+  obra:         "Obra",
+  inadimplencia:"Inadimplência",
+  manutencao:   "Manutenção",
+  funcionario:  "Funcionário",
   "area-comum": "Área comum",
-  assembleia: "Assembleia",
-  outro: "Outro",
+  assembleia:   "Assembleia",
+  briga:        "Briga/Conflito",
+  vistoria:     "Vistoria",
+  reclamacao:   "Reclamação",
+  lembrete:     "Lembrete",
+  outro:        "Outro",
 };
 
-const TIPOS = Object.entries(TIPO_LABEL) as Array<[OcorrenciaTipo, string]>;
+const PRIORIDADE_LABEL: Record<OcorrenciaPrioridade, string> = {
+  alta:  "Alta",
+  media: "Média",
+  baixa: "Baixa",
+};
+
+const PRIORIDADE_COLOR: Record<OcorrenciaPrioridade, string> = {
+  alta:  "bg-terracotta-50 text-terracotta-700 ring-terracotta-200",
+  media: "bg-amber-50 text-amber-700 ring-amber-200",
+  baixa: "bg-navy-50 text-navy-600 ring-navy-100",
+};
 
 const MESSAGE_BY_TYPE: Partial<Record<OcorrenciaTipo, string>> = {
   barulho:
@@ -37,6 +52,10 @@ const MESSAGE_BY_TYPE: Partial<Record<OcorrenciaTipo, string>> = {
     "Prezados moradores, reforçamos a importância de utilizar as áreas comuns com cuidado, respeito às regras internas e atenção à boa convivência entre todos.",
   assembleia:
     "Prezados moradores, lembramos a importância de acompanhar os comunicados sobre assembleias e participar das decisões que envolvem a rotina do condomínio.",
+  briga:
+    "Prezados moradores, reforçamos que a boa convivência no condomínio depende do respeito mútuo. Em caso de situações de conflito, a administração está à disposição para mediar.",
+  reclamacao:
+    "Prezados moradores, a administração tomou conhecimento de uma situação e está acompanhando. Agradecemos a comunicação e reforçamos o compromisso com a qualidade de vida de todos.",
 };
 
 function monthKey(date = new Date()): string {
@@ -44,7 +63,7 @@ function monthKey(date = new Date()): string {
 }
 
 function categoriaFromTipo(tipo: OcorrenciaTipo): string {
-  if (tipo === "obra" || tipo === "vazamento" || tipo === "manutencao") return "manutencao";
+  if (tipo === "obra" || tipo === "vazamento" || tipo === "manutencao" || tipo === "vistoria") return "manutencao";
   if (tipo === "assembleia") return "assembleias";
   if (tipo === "inadimplencia") return "inadimplencia";
   if (tipo === "funcionario") return "funcionarios";
@@ -59,35 +78,44 @@ type Props = {
 export default function RegistroRapido({ onSaved }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [tipo, setTipo] = useState<OcorrenciaTipo>("barulho");
+  const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [local, setLocal] = useState("");
+  const [prioridade, setPrioridade] = useState<OcorrenciaPrioridade>("media");
+  const [proximo, setProximo] = useState("");
+  const [link, setLink] = useState("");
   const [createStep, setCreateStep] = useState(true);
   const [saved, setSaved] = useState<Ocorrencia | null>(null);
   const [message, setMessage] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const resetForm = () => {
-    setDescricao("");
-    setLocal("");
-    setCreateStep(true);
-    setMessage("");
-    setCopied(false);
+    setTitulo(""); setDescricao(""); setLocal(""); setProximo(""); setLink("");
+    setPrioridade("media"); setCreateStep(true); setMessage(""); setCopied(false);
+    setShowAdvanced(false);
   };
 
   const handleSave = () => {
     const cleanDescription = descricao.trim();
     if (!cleanDescription) return;
-    const cleanLocal = local.trim();
     const occurrence = addOcorrencia({
+      titulo: titulo.trim() || undefined,
       tipo,
-      descricao: cleanDescription.slice(0, 240),
-      local: cleanLocal ? cleanLocal.slice(0, 80) : undefined,
+      descricao: cleanDescription.slice(0, 400),
+      local: local.trim() ? local.trim().slice(0, 80) : undefined,
+      prioridade,
+      proximo: proximo.trim() ? proximo.trim().slice(0, 160) : undefined,
+      link: link.trim() ? link.trim() : undefined,
       hasNextStep: createStep,
     });
 
     if (createStep) {
+      const pendTitulo = titulo.trim()
+        ? `Acompanhar: ${titulo.trim().slice(0, 60)}`
+        : `Acompanhar ${TIPO_LABEL[tipo].toLowerCase()}`;
       addPendencia({
-        titulo: `Acompanhar ${TIPO_LABEL[tipo].toLowerCase()}`,
+        titulo: pendTitulo,
         categoria: categoriaFromTipo(tipo),
         origem: "ocorrencia",
         matchedId: occurrence.id,
@@ -96,8 +124,11 @@ export default function RegistroRapido({ onSaved }: Props) {
 
     void trackEvent("ocorrencia_created", {
       tipo,
+      prioridade,
+      has_titulo: Boolean(titulo.trim()),
+      has_proximo: Boolean(proximo.trim()),
+      has_link: Boolean(link.trim()),
       has_next_step: createStep,
-      has_unit_or_location: Boolean(cleanLocal),
       source: "registro_rapido",
       month_key: monthKey(),
     });
@@ -113,22 +144,14 @@ export default function RegistroRapido({ onSaved }: Props) {
     if (!generated) return;
     setMessage(generated);
     markOcorrenciaMessageGenerated(saved.id);
-    void trackEvent("admin_message_generated", {
-      tipo: saved.tipo,
-      source: "registro_rapido",
-    });
     onSaved?.();
   };
 
   const handleCopyMessage = async () => {
-    if (!saved || !message.trim()) return;
+    if (!message.trim()) return;
     try {
       await navigator.clipboard.writeText(message);
       setCopied(true);
-      void trackEvent("admin_message_copied", {
-        tipo: saved.tipo,
-        source: "registro_rapido",
-      });
       setTimeout(() => setCopied(false), 2500);
     } catch {
       setCopied(false);
@@ -149,9 +172,9 @@ export default function RegistroRapido({ onSaved }: Props) {
             +
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-medium text-navy-800">Registro rápido</p>
+            <p className="text-[13px] font-medium text-navy-800">Registro de ocorrência</p>
             <p className="text-[11.5px] leading-snug text-navy-400">
-              Anote uma situação da rotina e transforme em acompanhamento.
+              Registre situações, conflitos, vistorias e lembretes da rotina.
             </p>
           </div>
           <span className="text-[11.5px] font-semibold text-navy-500">Registrar</span>
@@ -166,19 +189,15 @@ export default function RegistroRapido({ onSaved }: Props) {
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-              Registro rápido
+              Registro de ocorrência
             </p>
             <p className="mt-0.5 text-[12.5px] leading-snug text-navy-500">
-              Registro operacional simples. Não é livro oficial nem protocolo.
+              Diário operacional. Não é livro oficial nem protocolo.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => {
-              setExpanded(false);
-              setSaved(null);
-              resetForm();
-            }}
+            onClick={() => { setExpanded(false); setSaved(null); resetForm(); }}
             className="text-[11.5px] text-navy-400 hover:text-navy-600"
           >
             Fechar
@@ -186,6 +205,8 @@ export default function RegistroRapido({ onSaved }: Props) {
         </div>
 
         <div className="space-y-3">
+
+          {/* Tipo */}
           <div>
             <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-tipo">
               Tipo
@@ -196,30 +217,70 @@ export default function RegistroRapido({ onSaved }: Props) {
               onChange={(e) => setTipo(e.target.value as OcorrenciaTipo)}
               className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
             >
-              {TIPOS.map(([value, label]) => (
+              {(Object.entries(TIPO_LABEL) as Array<[OcorrenciaTipo, string]>).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
           </div>
 
+          {/* Prioridade */}
+          <div>
+            <p className="mb-1 text-[11.5px] font-medium text-navy-600">Prioridade</p>
+            <div className="flex gap-2">
+              {(["alta", "media", "baixa"] as OcorrenciaPrioridade[]).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPrioridade(p)}
+                  className={`flex-1 rounded-xl border py-1.5 text-[11.5px] font-medium ring-1 transition-all active:scale-95 ${
+                    prioridade === p
+                      ? "border-navy-600 bg-navy-700 text-white ring-navy-700"
+                      : `${PRIORIDADE_COLOR[p]} ring-current`
+                  }`}
+                >
+                  {PRIORIDADE_LABEL[p]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Título */}
+          <div>
+            <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-titulo">
+              Resumo curto <span className="font-normal text-navy-400">opcional</span>
+            </label>
+            <input
+              id="ocorrencia-titulo"
+              type="text"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              maxLength={80}
+              placeholder="Ex: Barulho no 3º andar após 22h"
+              autoComplete="off"
+              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+            />
+          </div>
+
+          {/* Descrição */}
           <div>
             <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-descricao">
-              Descrição curta
+              Descrição
             </label>
             <textarea
               id="ocorrencia-descricao"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
-              maxLength={240}
+              maxLength={400}
               rows={3}
-              placeholder="Ex: reclamação de barulho recorrente no período da noite"
+              placeholder="Ex: Morador do apto 301 reclamou do barulho do 302. Situação recorrente."
               className="min-h-20 w-full resize-none rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] leading-relaxed text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
             />
           </div>
 
+          {/* Local */}
           <div>
             <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-local">
-              Unidade ou local <span className="font-normal text-navy-300">opcional</span>
+              Unidade ou local <span className="font-normal text-navy-400">opcional</span>
             </label>
             <input
               id="ocorrencia-local"
@@ -227,10 +288,56 @@ export default function RegistroRapido({ onSaved }: Props) {
               value={local}
               onChange={(e) => setLocal(e.target.value)}
               maxLength={80}
-              placeholder="Ex: bloco B, garagem, área comum"
+              placeholder="Ex: Apto 301, garagem, área comum"
+              autoComplete="off"
               className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
             />
           </div>
+
+          {/* Campos avançados */}
+          {!showAdvanced && (
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(true)}
+              className="text-[11.5px] text-navy-400 hover:text-navy-600"
+            >
+              + Próxima ação e link
+            </button>
+          )}
+          {showAdvanced && (
+            <>
+              <div>
+                <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-proximo">
+                  Próxima ação <span className="font-normal text-navy-400">opcional</span>
+                </label>
+                <input
+                  id="ocorrencia-proximo"
+                  type="text"
+                  value={proximo}
+                  onChange={(e) => setProximo(e.target.value)}
+                  maxLength={160}
+                  placeholder="Ex: Ligar para o morador do 302 amanhã"
+                  autoComplete="off"
+                  className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[11.5px] font-medium text-navy-600" htmlFor="ocorrencia-link">
+                  Link ou referência <span className="font-normal text-navy-400">opcional</span>
+                </label>
+                <input
+                  id="ocorrencia-link"
+                  type="text"
+                  value={link}
+                  onChange={(e) => setLink(e.target.value)}
+                  maxLength={200}
+                  placeholder="Ex: https://... ou 'E-mail de 28/05'"
+                  autoComplete="off"
+                  className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                />
+              </div>
+            </>
+          )}
 
           <label className="flex items-start gap-2 rounded-xl bg-navy-50/60 px-3 py-2.5">
             <input
@@ -240,7 +347,7 @@ export default function RegistroRapido({ onSaved }: Props) {
               className="mt-0.5 h-4 w-4 rounded border-navy-200 text-navy-700"
             />
             <span className="text-[12px] leading-relaxed text-navy-600">
-              Criar próximo passo para acompanhar esta situação
+              Criar próximo passo para acompanhar
             </span>
           </label>
 
@@ -258,7 +365,7 @@ export default function RegistroRapido({ onSaved }: Props) {
           <div className="mt-3 rounded-xl border border-navy-100 bg-navy-50/45 px-3 py-3">
             <p className="text-[12.5px] font-semibold text-navy-700">Registro salvo</p>
             <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-500">
-              A situação entrou no histórico operacional{saved.hasNextStep ? " e nos próximos passos." : "."}
+              {saved.titulo ? `"${saved.titulo}" — ` : ""}{TIPO_LABEL[saved.tipo]}{saved.hasNextStep ? " · próximo passo criado" : ""}
             </p>
 
             {canGenerateMessage && !message && (
@@ -267,7 +374,7 @@ export default function RegistroRapido({ onSaved }: Props) {
                 onClick={handleGenerateMessage}
                 className="mt-2 rounded-full px-3 py-1.5 text-[11.5px] font-medium text-navy-600 transition-colors hover:bg-white"
               >
-                Gerar mensagem para moradores
+                Gerar comunicado para moradores
               </button>
             )}
 
@@ -280,14 +387,14 @@ export default function RegistroRapido({ onSaved }: Props) {
                   className="w-full resize-none rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12.5px] leading-relaxed text-navy-700 focus:border-navy-300 focus:outline-none"
                 />
                 <p className="mt-1.5 text-[10.5px] leading-relaxed text-navy-400">
-                  Modelo administrativo editável. Ajuste conforme a convenção, o regimento interno e a situação concreta.
+                  Modelo editável. Ajuste conforme a convenção e a situação concreta.
                 </p>
                 <button
                   type="button"
                   onClick={handleCopyMessage}
                   className="mt-2 inline-flex min-h-9 items-center rounded-full bg-navy-700 px-4 py-2 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-navy-800"
                 >
-                  {copied ? "Mensagem copiada" : "Copiar mensagem"}
+                  {copied ? "Copiado!" : "Copiar comunicado"}
                 </button>
               </div>
             )}

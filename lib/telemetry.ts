@@ -109,7 +109,8 @@ export type TelemetryEvent =
   | "pendencia_created_from_documento"
   | "pendencia_created_from_funcionario"
   | "funcionario_added"
-  | "saude_kb_question_tap";
+  | "saude_kb_question_tap"
+  | "ocorrencia_to_pendencia";
 
 type QueuedEvent = {
   event: string;

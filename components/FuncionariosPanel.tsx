@@ -16,6 +16,130 @@ import { trackEvent } from "@/lib/telemetry";
 
 type Props = { onSaved?: () => void };
 
+// ── FuncForm: componente no nível do módulo (fora do FuncionariosPanel)
+// Garantia de estabilidade de identidade — evita o bug do teclado no iPhone onde
+// inputs re-montados a cada keystroke perdem o foco.
+type FuncFormProps = {
+  draftNome: string; setDraftNome: (v: string) => void;
+  draftCargo: string; setDraftCargo: (v: string) => void;
+  draftStatus: FeriasFuncionarioStatus; setDraftStatus: (v: FeriasFuncionarioStatus) => void;
+  draftAdmissao: string; setDraftAdmissao: (v: string) => void;
+  draftUltimasFerias: string; setDraftUltimasFerias: (v: string) => void;
+  draftPeriodo: string; setDraftPeriodo: (v: string) => void;
+  isEditing: boolean;
+  onSave: () => void;
+  onCancel: () => void;
+};
+
+function FuncForm({
+  draftNome, setDraftNome,
+  draftCargo, setDraftCargo,
+  draftStatus, setDraftStatus,
+  draftAdmissao, setDraftAdmissao,
+  draftUltimasFerias, setDraftUltimasFerias,
+  draftPeriodo, setDraftPeriodo,
+  isEditing, onSave, onCancel,
+}: FuncFormProps) {
+  return (
+    <div className="mt-3 rounded-xl border border-navy-100 bg-navy-50/30 p-3 space-y-2.5">
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="mb-1 text-[11px] font-medium text-navy-600">Nome ou apelido</p>
+          <input
+            type="text"
+            value={draftNome}
+            onChange={(e) => setDraftNome(e.target.value)}
+            placeholder="Ex: Porteiro, João"
+            maxLength={60}
+            autoComplete="off"
+            className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none"
+          />
+        </div>
+        <div>
+          <p className="mb-1 text-[11px] font-medium text-navy-600">Cargo / função</p>
+          <input
+            type="text"
+            value={draftCargo}
+            onChange={(e) => setDraftCargo(e.target.value)}
+            placeholder="Ex: Zelador"
+            maxLength={40}
+            autoComplete="off"
+            className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none"
+          />
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-[11px] font-medium text-navy-600">Situação das férias</p>
+        <div className="flex flex-wrap gap-1.5">
+          {(["em_dia", "a_vencer", "vencida", "desconhecida"] as FeriasFuncionarioStatus[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setDraftStatus(s)}
+              className={`rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition-all active:scale-95 ${
+                draftStatus === s
+                  ? "bg-navy-700 text-white ring-navy-700"
+                  : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
+              }`}
+            >
+              {STATUS_LABEL[s]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <p className="mb-1 text-[11px] font-medium text-navy-600">Data admissão</p>
+          <input
+            type="date"
+            value={draftAdmissao}
+            onChange={(e) => setDraftAdmissao(e.target.value)}
+            className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none"
+          />
+        </div>
+        <div>
+          <p className="mb-1 text-[11px] font-medium text-navy-600">Última fruição férias</p>
+          <input
+            type="date"
+            value={draftUltimasFerias}
+            onChange={(e) => setDraftUltimasFerias(e.target.value)}
+            className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none"
+          />
+        </div>
+      </div>
+      <div>
+        <p className="mb-1 text-[11px] font-medium text-navy-600">Período aquisitivo (opcional)</p>
+        <input
+          type="text"
+          value={draftPeriodo}
+          onChange={(e) => setDraftPeriodo(e.target.value)}
+          placeholder="Ex: jan/2024 – jan/2025"
+          maxLength={40}
+          autoComplete="off"
+          className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none"
+        />
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!draftNome.trim()}
+          className="rounded-xl bg-navy-700 px-4 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
+        >
+          {isEditing ? "Atualizar" : "Adicionar"}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-2 text-[11.5px] text-navy-400 hover:text-navy-600"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const STATUS_LABEL: Record<FeriasFuncionarioStatus, string> = {
   em_dia:       "Em dia",
   a_vencer:     "A vencer",
@@ -30,6 +154,56 @@ const STATUS_BADGE: Record<FeriasFuncionarioStatus, string> = {
   desconhecida: "bg-navy-50 text-navy-400 ring-navy-100",
 };
 
+// Calcula meses desde a última fruição de férias ou desde admissão
+function mesesDesde(isoDate: string | undefined): number | null {
+  if (!isoDate) return null;
+  const d = new Date(`${isoDate}T00:00:00`);
+  if (isNaN(d.getTime())) return null;
+  const now = new Date();
+  return Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24 * 30));
+}
+
+// Gera texto de contexto temporal para férias
+function contextoFeriasLabel(f: FuncionarioFerias): string | null {
+  if (f.ultimasFeriasGozo) {
+    const m = mesesDesde(f.ultimasFeriasGozo);
+    if (m === null) return null;
+    if (m >= 12) return `Férias há ${m} meses — período aquisitivo acumulando`;
+    if (m >= 10) return `Férias há ${m} meses — período aquisitivo a vencer`;
+    return null;
+  }
+  if (f.dataAdmissao) {
+    const m = mesesDesde(f.dataAdmissao);
+    if (m === null) return null;
+    if (m >= 14) return `Admitido há ${m} meses sem férias mapeadas`;
+    if (m >= 12) return `Admitido há ${m} meses — férias a serem planejadas`;
+  }
+  return null;
+}
+
+// Avalia risco trabalhista individual
+function riscoTrabalhista(f: FuncionarioFerias): { nivel: "alto" | "medio" | "baixo" | "ok"; texto: string } | null {
+  if (f.status === "vencida") {
+    return { nivel: "alto", texto: "Férias vencidas geram passivo trabalhista" };
+  }
+  if (f.status === "desconhecida") {
+    return { nivel: "medio", texto: "Situação desconhecida — verificar com RH" };
+  }
+  if (f.ultimasFeriasGozo) {
+    const m = mesesDesde(f.ultimasFeriasGozo);
+    if (m !== null && m >= 14) {
+      return { nivel: "alto", texto: `${m} meses sem férias — ação necessária` };
+    }
+  }
+  if (f.dataAdmissao && !f.ultimasFeriasGozo) {
+    const m = mesesDesde(f.dataAdmissao);
+    if (m !== null && m >= 14) {
+      return { nivel: "medio", texto: "Férias não mapeadas — verifique registro" };
+    }
+  }
+  return null;
+}
+
 export default function FuncionariosPanel({ onSaved }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -39,8 +213,11 @@ export default function FuncionariosPanel({ onSaved }: Props) {
   const [hasPendencia, setHasPendencia] = useState(false);
 
   const [draftNome, setDraftNome] = useState("");
+  const [draftCargo, setDraftCargo] = useState("");
   const [draftStatus, setDraftStatus] = useState<FeriasFuncionarioStatus>("desconhecida");
   const [draftPeriodo, setDraftPeriodo] = useState("");
+  const [draftAdmissao, setDraftAdmissao] = useState("");
+  const [draftUltimasFerias, setDraftUltimasFerias] = useState("");
   const [draftObs, setDraftObs] = useState("");
 
   useEffect(() => {
@@ -53,20 +230,20 @@ export default function FuncionariosPanel({ onSaved }: Props) {
   if (!hydrated) return null;
 
   const resetForm = () => {
-    setDraftNome("");
-    setDraftStatus("desconhecida");
-    setDraftPeriodo("");
-    setDraftObs("");
-    setAdding(false);
-    setEditingId(null);
+    setDraftNome(""); setDraftCargo(""); setDraftStatus("desconhecida");
+    setDraftPeriodo(""); setDraftAdmissao(""); setDraftUltimasFerias(""); setDraftObs("");
+    setAdding(false); setEditingId(null);
   };
 
   const handleAdd = () => {
     if (!draftNome.trim()) return;
     const novo = addFuncionario({
       nomeFuncao: draftNome.trim(),
+      cargo: draftCargo.trim() || undefined,
       status: draftStatus,
       periodoAquisitivo: draftPeriodo.trim() || undefined,
+      dataAdmissao: draftAdmissao.trim() || undefined,
+      ultimasFeriasGozo: draftUltimasFerias.trim() || undefined,
       observacoes: draftObs.trim() || undefined,
     });
     const next = [...funcionarios, novo];
@@ -87,8 +264,11 @@ export default function FuncionariosPanel({ onSaved }: Props) {
     const f = funcionarios.find((x) => x.id === id);
     if (!f) return;
     setDraftNome(f.nomeFuncao);
+    setDraftCargo(f.cargo ?? "");
     setDraftStatus(f.status);
     setDraftPeriodo(f.periodoAquisitivo ?? "");
+    setDraftAdmissao(f.dataAdmissao ?? "");
+    setDraftUltimasFerias(f.ultimasFeriasGozo ?? "");
     setDraftObs(f.observacoes ?? "");
     setEditingId(id);
     setAdding(false);
@@ -98,8 +278,11 @@ export default function FuncionariosPanel({ onSaved }: Props) {
     if (!editingId || !draftNome.trim()) return;
     updateFuncionario(editingId, {
       nomeFuncao: draftNome.trim(),
+      cargo: draftCargo.trim() || undefined,
       status: draftStatus,
       periodoAquisitivo: draftPeriodo.trim() || undefined,
+      dataAdmissao: draftAdmissao.trim() || undefined,
+      ultimasFeriasGozo: draftUltimasFerias.trim() || undefined,
       observacoes: draftObs.trim() || undefined,
     });
     const next = getFuncionarios();
@@ -135,13 +318,17 @@ export default function FuncionariosPanel({ onSaved }: Props) {
     desconhecida: funcionarios.filter((f) => f.status === "desconhecida").length,
   };
 
+  const comRisco = funcionarios.filter((f) => riscoTrabalhista(f) !== null).length;
+
   // ── Collapsed ──────────────────────────────────────────────────────────────
   if (!expanded) {
     const subtitle = funcionarios.length === 0
-      ? "Registre funcionários e situação de férias — pode ser simples"
+      ? "Registre funcionários, férias e data de admissão — visão trabalhista básica"
       : funcionarios.length === 1
-      ? `${funcionarios[0].nomeFuncao} · ${STATUS_LABEL[funcionarios[0].status]}`
-      : `${funcionarios.length} funcionários · ${counts.em_dia} em dia · ${counts.vencida + counts.desconhecida} a verificar`;
+      ? `${funcionarios[0].nomeFuncao}${funcionarios[0].cargo ? ` (${funcionarios[0].cargo})` : ""} · ${STATUS_LABEL[funcionarios[0].status]}`
+      : comRisco > 0
+      ? `${funcionarios.length} funcionários · ${comRisco} com risco trabalhista`
+      : `${funcionarios.length} funcionários · ${counts.em_dia} em dia`;
 
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
@@ -154,9 +341,12 @@ export default function FuncionariosPanel({ onSaved }: Props) {
             👷
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-navy-800">Funcionários e férias</p>
-            <p className="text-[11.5px] text-navy-400">{subtitle}</p>
+            <p className="text-[13px] font-medium text-navy-800">Funcionários</p>
+            <p className="text-[11.5px] text-navy-400 truncate">{subtitle}</p>
           </div>
+          {comRisco > 0 && (
+            <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" aria-hidden="true" />
+          )}
           <span className="shrink-0 text-[11.5px] font-semibold text-navy-500">
             {funcionarios.length === 0 ? "Registrar →" : "Ver →"}
           </span>
@@ -168,75 +358,24 @@ export default function FuncionariosPanel({ onSaved }: Props) {
   // ── Form ───────────────────────────────────────────────────────────────────
   const isFormActive = adding || !!editingId;
 
-  const FuncForm = () => (
-    <div className="mt-3 rounded-xl border border-navy-100 bg-navy-50/30 p-3 space-y-2.5">
-      <div>
-        <p className="mb-1 text-[11px] font-medium text-navy-600">Nome ou função</p>
-        <input
-          type="text"
-          value={draftNome}
-          onChange={(e) => setDraftNome(e.target.value)}
-          placeholder="Ex: Porteiro, Zeladora, João"
-          maxLength={60}
-          className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none"
-        />
-      </div>
-      <div>
-        <p className="mb-1 text-[11px] font-medium text-navy-600">Situação das férias</p>
-        <div className="flex flex-wrap gap-1.5">
-          {(["em_dia", "a_vencer", "vencida", "desconhecida"] as FeriasFuncionarioStatus[]).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setDraftStatus(s)}
-              className={`rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition-all active:scale-95 ${
-                draftStatus === s
-                  ? "bg-navy-700 text-white ring-navy-700"
-                  : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
-              }`}
-            >
-              {STATUS_LABEL[s]}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div>
-        <p className="mb-1 text-[11px] font-medium text-navy-600">Período aquisitivo (opcional)</p>
-        <input
-          type="text"
-          value={draftPeriodo}
-          onChange={(e) => setDraftPeriodo(e.target.value)}
-          placeholder="Ex: jan/2023 – jan/2024"
-          maxLength={40}
-          className="min-h-9 w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none"
-        />
-      </div>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={editingId ? handleSaveEdit : handleAdd}
-          disabled={!draftNome.trim()}
-          className="rounded-xl bg-navy-700 px-4 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
-        >
-          {editingId ? "Atualizar" : "Adicionar"}
-        </button>
-        <button
-          type="button"
-          onClick={resetForm}
-          className="px-2 text-[11.5px] text-navy-400 hover:text-navy-600"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>
-  );
+  const funcFormProps: FuncFormProps = {
+    draftNome, setDraftNome,
+    draftCargo, setDraftCargo,
+    draftStatus, setDraftStatus,
+    draftAdmissao, setDraftAdmissao,
+    draftUltimasFerias, setDraftUltimasFerias,
+    draftPeriodo, setDraftPeriodo,
+    isEditing: !!editingId,
+    onSave: editingId ? handleSaveEdit : handleAdd,
+    onCancel: resetForm,
+  };
 
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
       <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-semibold text-navy-800">Funcionários e férias</p>
+          <p className="text-[13px] font-semibold text-navy-800">Funcionários</p>
           <button
             type="button"
             onClick={() => setExpanded(false)}
@@ -249,7 +388,7 @@ export default function FuncionariosPanel({ onSaved }: Props) {
         {funcionarios.length === 0 && !isFormActive && (
           <div className="mb-3 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Registre os funcionários e a situação das férias de cada um. Pode usar apenas a função, sem nome completo. Se não souber, marque &ldquo;Não sei&rdquo; — o app cria um lembrete.
+              Registrar funcionários, data de admissão e histórico de férias permite ao app identificar riscos trabalhistas e gerar contexto operacional. Férias vencidas há mais de 12 meses geram passivo — o app avisa antes que vire problema.
             </p>
           </div>
         )}
@@ -257,40 +396,66 @@ export default function FuncionariosPanel({ onSaved }: Props) {
         {/* Lista */}
         {funcionarios.length > 0 && (
           <div className="mb-3 space-y-2">
-            {funcionarios.map((f) => (
-              <div key={f.id} className="flex items-center justify-between gap-2 rounded-xl border border-navy-50 bg-navy-50/30 px-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-medium text-navy-800 truncate">{f.nomeFuncao}</p>
-                  {f.periodoAquisitivo && (
-                    <p className="text-[10.5px] text-navy-400">{f.periodoAquisitivo}</p>
+            {funcionarios.map((f) => {
+              const risco = riscoTrabalhista(f);
+              const contexto = contextoFeriasLabel(f);
+
+              return (
+                <div key={f.id} className={`rounded-xl border px-3 py-2.5 ${risco?.nivel === "alto" ? "border-terracotta-100 bg-terracotta-50/30" : "border-navy-50 bg-navy-50/30"}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] font-medium text-navy-800 truncate">
+                        {f.nomeFuncao}
+                        {f.cargo && f.cargo !== f.nomeFuncao && (
+                          <span className="ml-1.5 text-[11px] font-normal text-navy-400">({f.cargo})</span>
+                        )}
+                      </p>
+                      {f.dataAdmissao && (
+                        <p className="text-[10.5px] text-navy-400">
+                          Desde {new Date(`${f.dataAdmissao}T00:00:00`).toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className={`inline-flex items-center rounded-full px-2 py-px text-[10px] font-medium ring-1 ${STATUS_BADGE[f.status]}`}>
+                        {STATUS_LABEL[f.status]}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleEdit(f.id)}
+                        className="text-[10.5px] text-navy-400 hover:text-navy-600"
+                      >
+                        editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(f.id)}
+                        className="text-[10.5px] text-terracotta-500 hover:text-terracotta-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Contexto temporal */}
+                  {contexto && (
+                    <p className="mt-1 text-[10.5px] text-amber-600">{contexto}</p>
+                  )}
+
+                  {/* Alerta de risco */}
+                  {risco && (
+                    <p className={`mt-0.5 text-[10.5px] font-medium ${risco.nivel === "alto" ? "text-terracotta-600" : "text-amber-600"}`}>
+                      {risco.nivel === "alto" ? "⚠ " : "· "}{risco.texto}
+                    </p>
                   )}
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className={`inline-flex items-center rounded-full px-2 py-px text-[10px] font-medium ring-1 ${STATUS_BADGE[f.status]}`}>
-                    {STATUS_LABEL[f.status]}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleEdit(f.id)}
-                    className="text-[10.5px] text-navy-400 hover:text-navy-600"
-                  >
-                    editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(f.id)}
-                    className="text-[10.5px] text-terracotta-500 hover:text-terracotta-700"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Form de edição */}
-        {editingId && <FuncForm />}
+        {editingId && <FuncForm {...funcFormProps} />}
 
         {/* Botão adicionar / form novo */}
         {!isFormActive && (
@@ -305,16 +470,16 @@ export default function FuncionariosPanel({ onSaved }: Props) {
             Adicionar funcionário
           </button>
         )}
-        {adding && <FuncForm />}
+        {adding && <FuncForm {...funcFormProps} />}
 
         {hasPendencia && (counts.vencida > 0 || counts.desconhecida > 0) && (
           <p className="mt-3 text-[10.5px] text-amber-600">
-            Pendência criada para verificar situação de férias.
+            Próximo passo criado para verificar situação de férias.
           </p>
         )}
 
         <p className="mt-3 text-[10px] leading-relaxed text-navy-400">
-          Férias vencidas podem gerar passivo trabalhista. Se não souber a situação, marque &ldquo;Não sei&rdquo; para criar um lembrete.
+          Férias vencidas há mais de 12 meses geram passivo trabalhista. Registre as datas de admissão e última fruição para acompanhamento preventivo.
         </p>
       </div>
     </section>

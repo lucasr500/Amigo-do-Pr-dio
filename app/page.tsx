@@ -96,6 +96,7 @@ const OnboardingFlow = dynamic(() => import("@/components/onboarding/OnboardingF
 const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 const FuncionariosPanel = dynamic(() => import("@/components/FuncionariosPanel"), { ssr: false });
 const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
+const CalendarioOperacionalPanel = dynamic(() => import("@/components/CalendarioOperacionalPanel"), { ssr: false });
 const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
 // Aba Ferramentas — painéis de planejamento e decisão
 const CommandCenterPanel = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
@@ -104,6 +105,31 @@ const HomePriorityStrip = dynamic(() => import("@/components/HomePriorityStrip")
 const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
 const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
+
+// ── Saudação dinâmica ──────────────────────────────────────────────────────────
+
+function buildGreeting(condoName?: string): string {
+  const h = new Date().getHours();
+  const day = new Date().getDay(); // 0=dom, 5=sex, 6=sáb
+  const condo = condoName ? ` — ${condoName}` : "";
+
+  // Sexta-feira: mensagem contextual discreta
+  if (day === 5 && h >= 14 && h < 22) return `Boa sexta-feira, síndico${condo}`;
+
+  // Horário
+  if (h >= 5 && h < 12)  return `Bom dia, síndico${condo}`;
+  if (h >= 12 && h < 18) return `Boa tarde, síndico${condo}`;
+  return `Boa noite, síndico${condo}`;
+}
+
+function DynamicGreeting({ condoName }: { condoName: string }) {
+  const greeting = buildGreeting(condoName || undefined);
+  return (
+    <div className="px-5 pb-2 pt-1 sm:px-6">
+      <p className="text-[15px] font-semibold leading-snug text-navy-800">{greeting}</p>
+    </div>
+  );
+}
 
 // ── Urgency + profile completion helpers ───────────────────────────────────────
 
@@ -482,6 +508,16 @@ export default function HomePage() {
             {/* Conteúdo normal da Home */}
             {!subView && hasCondominioData && (
               <>
+                {/* Saudação dinâmica */}
+                <DynamicGreeting condoName={condoName} />
+                <HomeSaudeCard
+                  refreshKey={refreshKey}
+                  onClick={() => navigateToSubView("saude")}
+                />
+                <HomeAgendaCard
+                  refreshKey={refreshKey}
+                  onNavigate={() => navigateTab("agenda")}
+                />
                 {/* Cockpit strip — ação prioritária + notificações + sync */}
                 <HomePriorityStrip
                   refreshKey={refreshKey}
@@ -492,14 +528,6 @@ export default function HomePage() {
                     else if (target === "agenda") navigateTab("agenda");
                   }}
                   onOpenNotifications={() => setShowNotificationCenter(true)}
-                />
-                <HomeSaudeCard
-                  refreshKey={refreshKey}
-                  onClick={() => navigateToSubView("saude")}
-                />
-                <HomeAgendaCard
-                  refreshKey={refreshKey}
-                  onNavigate={() => navigateTab("agenda")}
                 />
                 {urgentCount > 0 && (
                   <div className="px-5 pb-3 sm:px-6">
@@ -513,7 +541,7 @@ export default function HomePage() {
                       </span>
                       <div className="min-w-0 flex-1 text-left">
                         <p className="text-[13px] font-semibold text-terracotta-800">
-                          {urgentCount} pendência{urgentCount !== 1 ? "s" : ""} vencida{urgentCount !== 1 ? "s" : ""}
+                          {urgentCount} {urgentCount !== 1 ? "pendências vencidas" : "pendência vencida"}
                         </p>
                         <p className="text-[11.5px] text-terracotta-600">
                           Prazo passou — requer atenção
@@ -832,6 +860,7 @@ export default function HomePage() {
               </div>
             )}
             <DocumentosEssenciaisPanel onSaved={() => setRefreshKey((k) => k + 1)} />
+            <CalendarioOperacionalPanel refreshKey={refreshKey} />
 
             {/* ── Checklist de implantação ──────────────────────────── */}
             {hasCondominioData && (

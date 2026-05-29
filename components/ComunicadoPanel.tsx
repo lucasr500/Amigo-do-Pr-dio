@@ -56,6 +56,9 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
   const [wasCopied, setWasCopied] = useState(false);
   const [followupCreated, setFollowupCreated] = useState(false);
 
+  const AGO_PAUTA_DEFAULT =
+    "Prestação de contas do exercício\nPrevisão orçamentária\nEleição de síndico, subsíndico e conselho\nAssuntos gerais";
+
   useEffect(() => {
     const profile = getProfile();
     setCondoName(profile?.nomeCondominio ?? "");
@@ -67,7 +70,10 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
     if (!id) return;
     setSelectedId(id);
     setActiveAnchor(targetAnchor as ComunicadoAnchor);
-    setValues({});
+    const prefill: Record<string, string> = id === "assembleia"
+      ? { tipo: "Ordinária", pauta: AGO_PAUTA_DEFAULT }
+      : {};
+    setValues(prefill);
     setCopied(false);
     setCopyError(false);
   }, [targetAnchor]);
@@ -81,7 +87,11 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
   const handleSelect = (id: ComunicadoId) => {
     setSelectedId(id);
     setActiveAnchor(TEMPLATE_TO_ANCHOR[id]);
-    setValues({});
+    // AGO: pré-preenche tipo e pauta para Ordinária
+    const prefill: Record<string, string> = id === "assembleia"
+      ? { tipo: "Ordinária", pauta: AGO_PAUTA_DEFAULT }
+      : {};
+    setValues(prefill);
     setCopied(false);
     setCopyError(false);
     setWasCopied(false);

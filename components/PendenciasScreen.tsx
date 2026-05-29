@@ -13,15 +13,17 @@ import { trackEvent } from "@/lib/telemetry";
 
 // ─── Priority helpers ─────────────────────────────────────────────────────────
 
-function getPriority(p: Pendencia): "Alta" | "Média" | null {
-  if (p.origem === "guidance") return "Alta";
-  if (p.origem === "response" || p.origem === "memoria" || p.origem === "ocorrencia") return "Média";
+function getPriority(p: Pendencia): "Crítica" | "Alta" | "Média" | null {
+  if (p.prioridade === "critica") return "Crítica";
+  if (p.prioridade === "alta" || p.origem === "guidance") return "Alta";
+  if (p.prioridade === "media" || p.origem === "response" || p.origem === "memoria" || p.origem === "ocorrencia") return "Média";
   return null;
 }
 
-const PRIORITY_STYLE: Record<"Alta" | "Média", string> = {
-  Alta:  "bg-green-100 text-green-700",
-  Média: "bg-amber-100 text-amber-700",
+const PRIORITY_STYLE: Record<"Crítica" | "Alta" | "Média", string> = {
+  Crítica: "bg-terracotta-100 text-terracotta-700",
+  Alta:    "bg-amber-100 text-amber-700",
+  Média:   "bg-navy-100 text-navy-600",
 };
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────
@@ -47,13 +49,17 @@ function getIcon(p: Pendencia): string {
 // ─── Subtitle helpers ─────────────────────────────────────────────────────────
 
 const ORIGEM_SUBTITLE: Partial<Record<NonNullable<Pendencia["origem"]>, string>> = {
-  response:   "Gerado pelo assistente",
-  guidance:   "Alerta operacional",
-  memoria:    "Dado do condomínio",
-  ocorrencia: "Vinculado a ocorrência",
-  manual:     "Criado por você",
-  agenda:     "Vinculado à agenda",
-  revisao:    "Da revisão mensal",
+  response:                  "Gerado pelo assistente",
+  guidance:                  "Alerta operacional",
+  memoria:                   "Dado do condomínio",
+  ocorrencia:                "Vinculado a ocorrência",
+  manual:                    "Criado por você",
+  agenda:                    "Vinculado à agenda",
+  revisao:                   "Da revisão mensal",
+  documento:                 "Documento a localizar",
+  funcionario:               "Dado de funcionário",
+  comunicado:                "Gerado em comunicado",
+  assistente_preenchimento:  "Dado a descobrir",
 };
 
 function getSubtitle(p: Pendencia): string {
@@ -145,6 +151,10 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
   const [formError,       setFormError]       = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  // Resolução inline
+  const [completingId,  setCompletingId]  = useState<string | null>(null);
+  const [completingObs, setCompletingObs] = useState("");
+
   useEffect(() => {
     setAll(getPendencias());
     setHydrated(true);
@@ -156,7 +166,7 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
   const concluidas = all
     .filter((p) => p.status === "concluida")
     .sort((a, b) => (b.completedAt ?? "").localeCompare(a.completedAt ?? ""))
-    .slice(0, 12);
+    .slice(0, 20);
 
   const todayStr    = new Date().toISOString().slice(0, 10);
   const nextWeekStr = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
@@ -185,15 +195,23 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
 
   const displayItems = getDisplayItems();
 
-  function handleComplete(id: string) {
+  function startComplete(id: string) {
+    setCompletingId(id);
+    setCompletingObs("");
+  }
+
+  function finishComplete(id: string, obs?: string) {
     const p = all.find((x) => x.id === id);
-    completePendencia(id);
+    completePendencia(id, obs);
     logInteraction("pendencia-concluida", id);
     void trackEvent("pendencia_completed", {
-      categoria:  p?.categoria ?? null,
-      origem:     p?.origem ?? null,
-      matched_id: p?.matchedId ?? null,
+      categoria:     p?.categoria ?? null,
+      origem:        p?.origem ?? null,
+      matched_id:    p?.matchedId ?? null,
+      has_observacao: Boolean(obs?.trim()),
     });
+    setCompletingId(null);
+    setCompletingObs("");
     setAll(getPendencias());
   }
 
@@ -497,12 +515,12 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                       </div>
 
                       {/* Ações — apenas para pendências não concluídas */}
-                      {activeFilter !== "Concluídas" && (
+                      {activeFilter !== "Concluídas" && completingId !== p.id && (
                         <div className="mt-2.5 flex flex-wrap items-center gap-3 border-t border-navy-50 pt-2.5">
                           <button
                             type="button"
-                            onClick={() => handleComplete(p.id)}
-                            className="inline-flex items-center gap-1 text-[11.5px] font-medium text-navy-500 transition-colors hover:text-green-600 active:scale-95"
+                            onClick={() => startComplete(p.id)}
+                            className="inline-flex items-center gap-1 text-[11.5px] font-medium text-navy-500 transition-colors hover:text-teal-600 active:scale-95"
                           >
                             <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                               <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -538,6 +556,59 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                               </button>
                             )
                           )}
+                        </div>
+                      )}
+
+                      {/* Formulário de resolução inline */}
+                      {completingId === p.id && (
+                        <div className="mt-2.5 space-y-2 border-t border-navy-50 pt-2.5">
+                          <label className="block text-[11px] font-medium text-navy-500">
+                            Como foi resolvido? <span className="font-normal text-navy-300">(opcional)</span>
+                          </label>
+                          <input
+                            type="text"
+                            autoComplete="off"
+                            value={completingObs}
+                            onChange={(e) => setCompletingObs(e.target.value)}
+                            placeholder="Ex: AVCB renovado, documento localizado…"
+                            maxLength={120}
+                            className="min-h-10 w-full rounded-xl border border-navy-100 bg-navy-50/30 px-3 py-2 text-[12.5px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-300 focus:bg-white"
+                          />
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => finishComplete(p.id, completingObs)}
+                              className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-teal-700 px-4 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-teal-800 active:scale-[0.98]"
+                            >
+                              <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                              Concluir
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => finishComplete(p.id)}
+                              className="text-[11.5px] text-navy-400 hover:text-navy-600"
+                            >
+                              Pular
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setCompletingId(null); setCompletingObs(""); }}
+                              className="ml-auto text-[11px] text-navy-300 hover:text-navy-500"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Observação de resolução (concluídas) */}
+                      {activeFilter === "Concluídas" && p.observacaoResolucao && (
+                        <div className="mt-1.5 rounded-lg bg-teal-50 px-2.5 py-1.5">
+                          <p className="text-[10.5px] text-teal-700">
+                            <span className="font-medium">Resolução:</span> {p.observacaoResolucao}
+                          </p>
                         </div>
                       )}
                     </div>

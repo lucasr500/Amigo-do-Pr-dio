@@ -508,6 +508,34 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         </section>
       )}
 
+      {/* ── Como subir o score ─────────────────────────────────────── */}
+      {result.percentage < 95 && result.howToGain10Pts.length > 0 && (
+        <section className="px-5 pb-4 sm:px-6">
+          <p className="mb-2 text-[14px] font-semibold text-navy-800">
+            Como subir {Math.min(result.percentage + 15, 100) - result.percentage > 0 ? `para ${Math.min(result.percentage + 15, 100)}%` : "mais"}
+          </p>
+          {result.biggestBottleneck && (
+            <div className="mb-2.5 rounded-xl bg-amber-50 border border-amber-100 px-3.5 py-2.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-amber-600">Maior gargalo</p>
+              <p className="mt-0.5 text-[12px] font-medium text-amber-900">{result.biggestBottleneck}</p>
+            </div>
+          )}
+          <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+            {result.howToGain10Pts.map((item, idx) => (
+              <div key={idx}>
+                {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
+                <div className="flex items-start gap-3 px-4 py-3.5">
+                  <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-[10px] font-semibold text-teal-700">
+                    {idx + 1}
+                  </span>
+                  <p className="text-[12.5px] leading-snug text-navy-700">{item}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Para melhorar ──────────────────────────────────────────── */}
       {result.suggestions.length > 0 && (
         <section className="px-5 pb-4 sm:px-6">

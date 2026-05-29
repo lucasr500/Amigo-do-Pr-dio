@@ -9,9 +9,13 @@ import {
   getPendenciasConcluidas,
   getWeeklyReviewState,
   getAgendaEvents,
+  addPendencia,
+  updateOcorrencia,
   logInteraction,
   MemoriaOperacional,
+  type Ocorrencia,
   type OcorrenciaTipo,
+  type OcorrenciaStatus,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
@@ -57,6 +61,10 @@ const OCORRENCIA_LABELS: Record<OcorrenciaTipo, string> = {
   funcionario: "Funcionário",
   "area-comum": "Área comum",
   assembleia: "Assembleia",
+  briga: "Briga/Conflito",
+  vistoria: "Vistoria",
+  reclamacao: "Reclamação",
+  lembrete: "Lembrete",
   outro: "Outro",
 };
 
@@ -240,6 +248,92 @@ function EventRow({ event, isUpcoming }: { event: TimelineEvent; isUpcoming?: bo
   );
 }
 
+const STATUS_LABELS: Record<OcorrenciaStatus, string> = {
+  aberta:       "Aberta",
+  acompanhando: "Acompanhando",
+  resolvida:    "Resolvida",
+};
+
+const STATUS_STYLE: Record<OcorrenciaStatus, string> = {
+  aberta:       "bg-navy-100 text-navy-600",
+  acompanhando: "bg-amber-100 text-amber-700",
+  resolvida:    "bg-teal-100 text-teal-700",
+};
+
+function OcorrenciaEventRow({
+  event,
+  ocorrencia,
+  onStatusChange,
+  onToPendencia,
+}: {
+  event: TimelineEvent;
+  ocorrencia: Ocorrencia | undefined;
+  onStatusChange: (id: string, s: OcorrenciaStatus) => void;
+  onToPendencia: (oc: Ocorrencia) => void;
+}) {
+  const [showStatusPicker, setShowStatusPicker] = useState(false);
+  const status: OcorrenciaStatus = ocorrencia?.statusOcorrencia ?? "aberta";
+
+  return (
+    <div className="relative flex items-start gap-3 pb-3">
+      <div className="relative z-10 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-cream-100 text-navy-600 text-[11px]">
+        !
+      </div>
+      <div className="flex-1 min-w-0 pt-0.5">
+        <p className="text-[12px] font-medium leading-snug text-navy-800">{event.label}</p>
+        {event.detalhe && (
+          <p className="text-[10.5px] text-navy-400">{event.detalhe}</p>
+        )}
+        {ocorrencia && (
+          <>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setShowStatusPicker((v) => !v)}
+                className={`inline-flex min-h-[44px] items-center rounded-full px-2.5 py-0.5 text-[10px] font-medium ${STATUS_STYLE[status]}`}
+              >
+                {STATUS_LABELS[status]} ▾
+              </button>
+              {!ocorrencia.linkedPendenciaId ? (
+                <button
+                  type="button"
+                  onClick={() => onToPendencia(ocorrencia)}
+                  className="inline-flex min-h-[44px] items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-[10px] text-navy-500 transition-colors hover:bg-navy-100"
+                >
+                  → Criar pendência
+                </button>
+              ) : (
+                <span className="flex min-h-[44px] items-center text-[10px] text-teal-600">Pendência criada ✓</span>
+              )}
+            </div>
+            {showStatusPicker && (
+              <div className="mt-1 flex gap-1.5 flex-wrap">
+                {(["aberta", "acompanhando", "resolvida"] as OcorrenciaStatus[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      onStatusChange(ocorrencia.id, s);
+                      setShowStatusPicker(false);
+                    }}
+                    className={`inline-flex min-h-[44px] items-center rounded-full px-3 text-[10px] font-medium ring-1 transition-all active:scale-95 ${
+                      status === s
+                        ? STATUS_STYLE[s] + " ring-current"
+                        : "bg-white text-navy-500 ring-navy-200 hover:ring-navy-400"
+                    }`}
+                  >
+                    {STATUS_LABELS[s]}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 type TimelineOperacionalProps = {
   refreshKey?: number;
 };
@@ -249,13 +343,41 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
   const [upcoming, setUpcoming] = useState<TimelineEvent[]>([]);
   const [past, setPast] = useState<TimelineEvent[]>([]);
   const [expanded, setExpanded] = useState(false);
+  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
 
-  useEffect(() => {
+  function refresh() {
     const result = buildTimeline();
     setUpcoming(result.upcoming);
     setPast(result.past);
+    setOcorrencias(getOcorrencias());
+  }
+
+  useEffect(() => {
+    refresh();
     setHydrated(true);
-  }, [refreshKey]);
+  }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function handleStatusChange(id: string, status: OcorrenciaStatus) {
+    updateOcorrencia(id, { statusOcorrencia: status });
+    setOcorrencias(getOcorrencias());
+  }
+
+  function handleToPendencia(oc: Ocorrencia) {
+    if (oc.linkedPendenciaId) return;
+    const titulo = oc.titulo
+      ? `Acompanhar: ${oc.titulo}`
+      : `Acompanhar: ${OCORRENCIA_LABELS[oc.tipo]}${oc.descricao ? " — " + oc.descricao.slice(0, 60) : ""}`;
+    const nova = addPendencia({ titulo, origem: "ocorrencia", categoria: "operacional" });
+    updateOcorrencia(oc.id, { linkedPendenciaId: nova.id });
+    setOcorrencias(getOcorrencias());
+    void trackEvent("ocorrencia_to_pendencia", { tipo: oc.tipo });
+  }
+
+  function getOcorrenciaForEvent(event: TimelineEvent): Ocorrencia | undefined {
+    if (event.tipo !== "ocorrencia") return undefined;
+    const oc_id = event.id.replace(/^oc-/, "");
+    return ocorrencias.find((o) => o.id === oc_id);
+  }
 
   if (!hydrated || (upcoming.length === 0 && past.length === 0)) return null;
 
@@ -308,9 +430,11 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
               <div className="relative">
                 <div className="absolute left-3 top-0 bottom-0 w-px bg-teal-100" aria-hidden="true" />
                 <div className="space-y-0">
-                  {upcoming.map((event) => (
-                    <EventRow key={event.id} event={event} isUpcoming />
-                  ))}
+                  {upcoming.map((event) =>
+                    event.tipo === "ocorrencia"
+                      ? <OcorrenciaEventRow key={event.id} event={event} ocorrencia={getOcorrenciaForEvent(event)} onStatusChange={handleStatusChange} onToPendencia={handleToPendencia} />
+                      : <EventRow key={event.id} event={event} isUpcoming />
+                  )}
                 </div>
               </div>
             </div>
@@ -327,9 +451,11 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
               <div className="relative">
                 <div className="absolute left-3 top-0 bottom-0 w-px bg-navy-100" aria-hidden="true" />
                 <div className="space-y-0">
-                  {past.map((event) => {
-                    return <EventRow key={event.id} event={event} />;
-                  })}
+                  {past.map((event) =>
+                    event.tipo === "ocorrencia"
+                      ? <OcorrenciaEventRow key={event.id} event={event} ocorrencia={getOcorrenciaForEvent(event)} onStatusChange={handleStatusChange} onToPendencia={handleToPendencia} />
+                      : <EventRow key={event.id} event={event} />
+                  )}
                 </div>
               </div>
             </>

@@ -7,7 +7,7 @@
 //
 // Versão do schema de dados: SESSION_SCHEMA_VERSION
 // Incrementar aqui ao adicionar campos incompatíveis.
-export const SESSION_SCHEMA_VERSION = 5;
+export const SESSION_SCHEMA_VERSION = 8;
 
 import { ate, desde, past } from "./urgency";
 
@@ -60,13 +60,27 @@ type ChecklistEvent = {
 // ─── Perfil operacional do condomínio ──────────────────────────────────────
 // Todos os campos são opcionais — o perfil pode ser parcial.
 // Armazenado em localStorage com a mesma estratégia safeRead/safeWrite.
+export type TipoGestao = "sindico_morador" | "profissional" | "autogestao" | "administradora";
+
 export type CondominioProfile = {
+  nomeCondominio?: string;
   hasElevador?: boolean;
   hasPiscina?: boolean;
   hasFuncionarios?: boolean;
   hasPortaria?: boolean;
   tipoSindico?: "morador" | "profissional";
-  nomeCondominio?: string;
+  // Campos v2 — opcionais para retrocompatibilidade
+  endereco?: string;
+  bairro?: string;
+  cidade?: string;
+  uf?: string;
+  numUnidades?: number;
+  numBlocos?: number;
+  hasGaragem?: boolean;
+  hasSalao?: boolean;
+  tipoGestao?: TipoGestao;
+  nomeAdministradora?: string;
+  observacoesInternas?: string;
 };
 
 // ─── Datas assistidas — precisão flexível ──────────────────────────────────
@@ -96,12 +110,45 @@ export type ImplantacaoMode = "existing" | "new_sindico" | "organizing";
 // ─── Documentos essenciais ──────────────────────────────────────────────────
 export type DocumentoStatus = "tenho" | "nao_tenho" | "precisa_localizar" | "nao_se_aplica";
 
+export type DocumentoCategoria =
+  | "seguranca" | "trabalhista" | "juridico" | "operacional" | "fiscal" | "manutencao";
+
+export type DocumentoCriticidade = "critica" | "importante" | "recomendada";
+
 export type DocumentoEssencial = {
   id: string;
   status: DocumentoStatus;
   vencimento?: AssistedDateField;
   observacoes?: string;
   ondeEsta?: string;
+  updatedAt: string;
+  // Campos v2 — opcionais para retrocompatibilidade
+  dataVencimento?: string;   // YYYY-MM-DD — vencimento explícito quando "tenho"
+  recorrencia?: ManutencaoFrequencia; // se renovação periódica
+  // Campos v3 — link e localização física
+  linkExterno?: string;      // URL ou caminho de referência
+  nomeArquivo?: string;      // nome descritivo do arquivo físico ou digital
+};
+
+// ─── Manutenções recorrentes ─────────────────────────────────────────────────
+// Engine de recorrência operacional. Cada item representa uma manutenção
+// obrigatória ou recomendada, com frequência e histórico de execução.
+
+export type ManutencaoFrequencia =
+  | "mensal" | "bimestral" | "trimestral" | "semestral" | "anual" | "sob_demanda";
+
+export type ManutencaoCriticidade = "critica" | "importante" | "recomendada";
+
+export type ManutencaoRecorrente = {
+  id: string;
+  label: string;
+  frequencia: ManutencaoFrequencia;
+  criticidade: ManutencaoCriticidade;
+  ultimaExecucao?: string; // YYYY-MM-DD
+  fornecedor?: string;
+  observacoes?: string;
+  ativo: boolean; // false = não se aplica a este condomínio
+  createdAt: string;
   updatedAt: string;
 };
 
@@ -111,7 +158,9 @@ export type FeriasFuncionarioStatus = "em_dia" | "a_vencer" | "vencida" | "desco
 export type FuncionarioFerias = {
   id: string;
   nomeFuncao: string;
-  dataAdmissao?: string;
+  cargo?: string;              // cargo/função explícito
+  dataAdmissao?: string;       // YYYY-MM-DD
+  ultimasFeriasGozo?: string;  // YYYY-MM-DD — início da última fruição de férias
   periodoAquisitivo?: string;
   status: FeriasFuncionarioStatus;
   observacoes?: string;
@@ -156,6 +205,7 @@ const KEYS = {
   MEMORIA_ASSISTIDA:    "amigo_memoria_assistida",
   DOCUMENTOS:           "amigo_documentos",
   FUNCIONARIOS:         "amigo_funcionarios",
+  MANUTENCOES:          "amigo_manutencoes",
   IMPLANTACAO_MODE:     "amigo_implantacao_mode",
   SESSION_META:         "amigo_session_meta",
   RESOLUTION_EVENTS:    "amigo_resolution_events",
@@ -499,16 +549,20 @@ export function countMemoriaItens(): number {
 // Sistema leve de próximos passos do síndico.
 // Persiste em localStorage; não incluído no UserBackup v1.
 
+export type PendenciaPrioridade = "critica" | "alta" | "media" | "baixa";
+
 export type Pendencia = {
   id: string;
   titulo: string;
   categoria?: string;
-  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario";
+  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario" | "comunicado";
   matchedId?: string | null;
   status: "aberta" | "concluida";
   createdAt: string;
   completedAt?: string;
-  dueDate?: string; // ISO yyyy-mm-dd — opcional, retrocompatível com pendências sem prazo
+  dueDate?: string;
+  prioridade?: PendenciaPrioridade;          // v8+
+  observacaoResolucao?: string;              // v8+ — preenchido ao concluir
 };
 
 export function getPendencias(): Pendencia[] {
@@ -530,14 +584,29 @@ export function addPendencia(
   return nova;
 }
 
-export function completePendencia(id: string): void {
+export function completePendencia(id: string, observacao?: string): void {
   safeWrite(
     KEYS.PENDENCIAS,
     getPendencias().map((p) =>
       p.id === id
-        ? { ...p, status: "concluida" as const, completedAt: new Date().toISOString() }
+        ? {
+            ...p,
+            status: "concluida" as const,
+            completedAt: new Date().toISOString(),
+            ...(observacao?.trim() ? { observacaoResolucao: observacao.trim() } : {}),
+          }
         : p
     )
+  );
+}
+
+export function updatePendencia(
+  id: string,
+  patch: Partial<Pick<Pendencia, "prioridade" | "dueDate" | "titulo">>
+): void {
+  safeWrite(
+    KEYS.PENDENCIAS,
+    getPendencias().map((p) => (p.id === id ? { ...p, ...patch } : p))
   );
 }
 
@@ -652,16 +721,30 @@ export type OcorrenciaTipo =
   | "funcionario"
   | "area-comum"
   | "assembleia"
+  | "briga"
+  | "vistoria"
+  | "reclamacao"
+  | "lembrete"
   | "outro";
+
+export type OcorrenciaPrioridade = "alta" | "media" | "baixa";
+export type OcorrenciaStatus = "aberta" | "acompanhando" | "resolvida";
 
 export type Ocorrencia = {
   id: string;
+  titulo?: string;
   tipo: OcorrenciaTipo;
   descricao: string;
   local?: string;
+  prioridade?: OcorrenciaPrioridade;
+  proximo?: string;
+  link?: string;
   createdAt: string;
   hasNextStep?: boolean;
   messageGeneratedAt?: string;
+  statusOcorrencia?: OcorrenciaStatus;   // v8+
+  responsavel?: string;                   // v8+
+  linkedPendenciaId?: string;             // v8+ — vinculado a uma pendência
 };
 
 export function getOcorrencias(): Ocorrencia[] {
@@ -680,6 +763,16 @@ export function addOcorrencia(
   all.push(nova);
   safeWrite(KEYS.OCORRENCIAS, all.slice(-80));
   return nova;
+}
+
+export function updateOcorrencia(
+  id: string,
+  patch: Partial<Omit<Ocorrencia, "id" | "createdAt">>
+): void {
+  safeWrite(
+    KEYS.OCORRENCIAS,
+    getOcorrencias().map((o) => (o.id === id ? { ...o, ...patch } : o))
+  );
 }
 
 export function markOcorrenciaMessageGenerated(id: string): void {
@@ -970,20 +1063,31 @@ export function buildAssistedDate(
 // ─── Documentos essenciais ───────────────────────────────────────────────────
 
 export const DOCUMENTOS_ESSENCIAIS_IDS = [
+  // Jurídico
   "convencao",
   "regimento",
   "ata_eleicao",
+  // Segurança
   "apolice_seguro",
   "avcb_clcb",
+  "spda_laudo",
+  "brigada_certificado",
+  // Manutenção / Contratos
   "contrato_elevador",
   "contrato_limpeza",
   "contrato_portaria",
   "laudos_tecnicos",
+  // Operacional / Comprovantes
   "extintores_comprovante",
   "caixa_agua_comprovante",
   "dedetizacao_comprovante",
+  // Trabalhista
   "cct_funcionarios",
   "controle_ferias",
+  "ppra_pgr",
+  "pcmso",
+  // Fiscal
+  "cnd_condominio",
 ] as const;
 
 export type DocumentoEssencialId = typeof DOCUMENTOS_ESSENCIAIS_IDS[number];
@@ -992,17 +1096,66 @@ export const DOCUMENTO_LABEL: Record<DocumentoEssencialId, string> = {
   convencao:               "Convenção condominial",
   regimento:               "Regimento interno",
   ata_eleicao:             "Ata de eleição do síndico",
-  apolice_seguro:          "Apólice de seguro",
+  apolice_seguro:          "Apólice de seguro predial",
   avcb_clcb:               "AVCB / CLCB",
+  spda_laudo:              "Laudo SPDA / Para-raio",
+  brigada_certificado:     "Certificado de Brigada de Incêndio",
   contrato_elevador:       "Contrato de manutenção de elevadores",
   contrato_limpeza:        "Contrato de limpeza",
   contrato_portaria:       "Contrato de portaria / segurança",
-  laudos_tecnicos:         "Laudos técnicos",
-  extintores_comprovante:  "Comprovantes de manutenção de extintores",
+  laudos_tecnicos:         "Laudos técnicos (estrutural, elétrico etc.)",
+  extintores_comprovante:  "Comprovante de manutenção de extintores",
   caixa_agua_comprovante:  "Comprovante de limpeza da caixa d'água",
   dedetizacao_comprovante: "Comprovante de dedetização",
   cct_funcionarios:        "CCT aplicável aos funcionários",
   controle_ferias:         "Controle de férias dos funcionários",
+  ppra_pgr:                "PPRA / PGR",
+  pcmso:                   "PCMSO",
+  cnd_condominio:          "CND / Certidão negativa fiscal",
+};
+
+export const DOCUMENTO_CATEGORIA: Record<DocumentoEssencialId, DocumentoCategoria> = {
+  convencao:               "juridico",
+  regimento:               "juridico",
+  ata_eleicao:             "juridico",
+  apolice_seguro:          "seguranca",
+  avcb_clcb:               "seguranca",
+  spda_laudo:              "seguranca",
+  brigada_certificado:     "seguranca",
+  contrato_elevador:       "manutencao",
+  contrato_limpeza:        "operacional",
+  contrato_portaria:       "operacional",
+  laudos_tecnicos:         "manutencao",
+  extintores_comprovante:  "seguranca",
+  caixa_agua_comprovante:  "operacional",
+  dedetizacao_comprovante: "operacional",
+  cct_funcionarios:        "trabalhista",
+  controle_ferias:         "trabalhista",
+  ppra_pgr:                "trabalhista",
+  pcmso:                   "trabalhista",
+  cnd_condominio:          "fiscal",
+};
+
+export const DOCUMENTO_CRITICIDADE: Record<DocumentoEssencialId, DocumentoCriticidade> = {
+  convencao:               "critica",
+  regimento:               "importante",
+  ata_eleicao:             "critica",
+  apolice_seguro:          "critica",
+  avcb_clcb:               "critica",
+  spda_laudo:              "critica",
+  brigada_certificado:     "critica",
+  contrato_elevador:       "importante",
+  contrato_limpeza:        "recomendada",
+  contrato_portaria:       "recomendada",
+  laudos_tecnicos:         "importante",
+  extintores_comprovante:  "critica",
+  caixa_agua_comprovante:  "importante",
+  dedetizacao_comprovante: "importante",
+  cct_funcionarios:        "importante",
+  controle_ferias:         "importante",
+  ppra_pgr:                "importante",
+  pcmso:                   "importante",
+  cnd_condominio:          "recomendada",
 };
 
 export function getDocumentos(): DocumentoEssencial[] {
@@ -1021,6 +1174,52 @@ export function upsertDocumento(doc: DocumentoEssencial): void {
 
 export function getDocumentoById(id: string): DocumentoEssencial | null {
   return getDocumentos().find((d) => d.id === id) ?? null;
+}
+
+// ─── Manutenções recorrentes ──────────────────────────────────────────────────
+
+export function getManutencoes(): ManutencaoRecorrente[] {
+  return safeRead<ManutencaoRecorrente[]>(KEYS.MANUTENCOES, []);
+}
+
+export function saveManutencoes(list: ManutencaoRecorrente[]): void {
+  safeWrite(KEYS.MANUTENCOES, list);
+}
+
+export function upsertManutencao(m: ManutencaoRecorrente): void {
+  const all = getManutencoes().filter((x) => x.id !== m.id);
+  all.push(m);
+  saveManutencoes(all);
+}
+
+export function addManutencao(
+  m: Omit<ManutencaoRecorrente, "id" | "createdAt" | "updatedAt">
+): ManutencaoRecorrente {
+  const all = getManutencoes();
+  const nova: ManutencaoRecorrente = {
+    ...m,
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  all.push(nova);
+  saveManutencoes(all);
+  return nova;
+}
+
+export function updateManutencao(
+  id: string,
+  changes: Partial<Omit<ManutencaoRecorrente, "id" | "createdAt">>
+): void {
+  saveManutencoes(
+    getManutencoes().map((m) =>
+      m.id === id ? { ...m, ...changes, updatedAt: new Date().toISOString() } : m
+    )
+  );
+}
+
+export function deleteManutencao(id: string): void {
+  saveManutencoes(getManutencoes().filter((m) => m.id !== id));
 }
 
 // ─── Férias de funcionários ──────────────────────────────────────────────────
@@ -1327,31 +1526,32 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v4 — idem + agenda do prédio (amigo_agenda)
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4" | "5";
+  version: "1" | "2" | "3" | "4" | "5" | "6";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
   memoria: MemoriaOperacional;
   favorites: FavoriteEntry[];
   checklists: ChecklistStorage;
-  pendencias?: Pendencia[]; // presente em v2+, ausente em v1
-  ocorrencias?: Ocorrencia[]; // presente em v3+, ausente em v1/v2
-  agenda?: AgendaEvent[]; // presente em v4, ausente em v1/v2/v3
-  memoriaAssistida?: MemoriaAssistida; // presente em v5
-  documentos?: DocumentoEssencial[]; // presente em v5
-  funcionarios?: FuncionarioFerias[]; // presente em v5
-  implantacaoMode?: ImplantacaoMode; // presente em v5
+  pendencias?: Pendencia[]; // v2+
+  ocorrencias?: Ocorrencia[]; // v3+
+  agenda?: AgendaEvent[]; // v4+
+  memoriaAssistida?: MemoriaAssistida; // v5+
+  documentos?: DocumentoEssencial[]; // v5+
+  funcionarios?: FuncionarioFerias[]; // v5+
+  implantacaoMode?: ImplantacaoMode; // v5+
+  manutencoes?: ManutencaoRecorrente[]; // v6+
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "5",
+    version: "6",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1365,6 +1565,7 @@ export function exportUserData(): void {
     documentos: getDocumentos(),
     funcionarios: getFuncionarios(),
     implantacaoMode: getImplantacaoMode() ?? undefined,
+    manutencoes: getManutencoes(),
   };
 
   try {
@@ -1384,7 +1585,7 @@ export function exportUserData(): void {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "5",
+    version: "6",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1398,6 +1599,7 @@ export function getUserBackupJson(): string {
     documentos: getDocumentos(),
     funcionarios: getFuncionarios(),
     implantacaoMode: getImplantacaoMode() ?? undefined,
+    manutencoes: getManutencoes(),
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -1418,7 +1620,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1434,10 +1636,10 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
 
@@ -1446,26 +1648,17 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    const pendenciasCount =
-      (d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.pendencias)
-        ? (d.pendencias as Pendencia[]).length
-        : undefined;
-    const ocorrenciasCount =
-      (d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.ocorrencias)
-        ? (d.ocorrencias as Ocorrencia[]).length
-        : undefined;
-    const agendaCount =
-      (d.version === "4" || d.version === "5") && Array.isArray(d.agenda)
-        ? (d.agenda as AgendaEvent[]).length
-        : undefined;
-    const documentosCount =
-      d.version === "5" && Array.isArray(d.documentos)
-        ? (d.documentos as DocumentoEssencial[]).length
-        : undefined;
-    const funcionariosCount =
-      d.version === "5" && Array.isArray(d.funcionarios)
-        ? (d.funcionarios as FuncionarioFerias[]).length
-        : undefined;
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6";
+    const isV5plus = d.version === "5" || d.version === "6";
+
+    const pendenciasCount = isV2plus && Array.isArray(d.pendencias) ? (d.pendencias as Pendencia[]).length : undefined;
+    const ocorrenciasCount = isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length : undefined;
+    const agendaCount = isV4plus && Array.isArray(d.agenda) ? (d.agenda as AgendaEvent[]).length : undefined;
+    const documentosCount = isV5plus && Array.isArray(d.documentos) ? (d.documentos as DocumentoEssencial[]).length : undefined;
+    const funcionariosCount = isV5plus && Array.isArray(d.funcionarios) ? (d.funcionarios as FuncionarioFerias[]).length : undefined;
+    const manutencoesCount = d.version === "6" && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
 
     return {
       success: true,
@@ -1478,6 +1671,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
         agendaCount,
         documentosCount,
         funcionariosCount,
+        manutencoesCount,
       },
     };
   } catch {
@@ -1485,7 +1679,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
   }
 }
 
-// Importa backup v1–v5. Retrocompatível com todas as versões anteriores.
+// Importa backup v1–v6. Retrocompatível com todas as versões anteriores.
 export function importUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1500,7 +1694,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1516,10 +1710,10 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
 
@@ -1532,14 +1726,19 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6";
+    const isV5plus = d.version === "5" || d.version === "6";
+
     let pendenciasCount: number | undefined;
-    if ((d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.pendencias)) {
+    if (isV2plus && Array.isArray(d.pendencias)) {
       safeWrite(KEYS.PENDENCIAS, d.pendencias);
       pendenciasCount = (d.pendencias as Pendencia[]).length;
     }
 
     let ocorrenciasCount: number | undefined;
-    if ((d.version === "3" || d.version === "4" || d.version === "5") && Array.isArray(d.ocorrencias)) {
+    if (isV3plus && Array.isArray(d.ocorrencias)) {
       safeWrite(KEYS.OCORRENCIAS, d.ocorrencias);
       ocorrenciasCount = (d.ocorrencias as Ocorrencia[]).length;
     } else {
@@ -1547,7 +1746,7 @@ export function importUserData(jsonString: string): ImportResult {
     }
 
     let agendaCount: number | undefined;
-    if ((d.version === "4" || d.version === "5") && Array.isArray(d.agenda)) {
+    if (isV4plus && Array.isArray(d.agenda)) {
       safeWrite(KEYS.AGENDA, d.agenda);
       agendaCount = (d.agenda as AgendaEvent[]).length;
     } else {
@@ -1556,7 +1755,8 @@ export function importUserData(jsonString: string): ImportResult {
 
     let documentosCount: number | undefined;
     let funcionariosCount: number | undefined;
-    if (d.version === "5") {
+    let manutencoesCount: number | undefined;
+    if (isV5plus) {
       if (Array.isArray(d.documentos)) {
         safeWrite(KEYS.DOCUMENTOS, d.documentos);
         documentosCount = (d.documentos as DocumentoEssencial[]).length;
@@ -1580,6 +1780,13 @@ export function importUserData(jsonString: string): ImportResult {
       try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
 
+    if (d.version === "6" && Array.isArray(d.manutencoes)) {
+      safeWrite(KEYS.MANUTENCOES, d.manutencoes);
+      manutencoesCount = (d.manutencoes as ManutencaoRecorrente[]).length;
+    } else {
+      try { localStorage.removeItem(KEYS.MANUTENCOES); } catch { /* noop */ }
+    }
+
     const profile = d.profile as CondominioProfile | null;
     const memoria = d.memoria as MemoriaOperacional;
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
@@ -1596,6 +1803,7 @@ export function importUserData(jsonString: string): ImportResult {
         agendaCount,
         documentosCount,
         funcionariosCount,
+        manutencoesCount,
       },
     };
   } catch {

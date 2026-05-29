@@ -173,6 +173,32 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
           </button>
         </div>
 
+        {/* "O que eu faria hoje" — síntese operacional principal */}
+        {data.todayAnswer && (
+          <div className="mx-4 mb-3 rounded-xl bg-navy-800 px-4 py-3">
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">Se eu fosse síndico hoje</p>
+            <p className="mt-1.5 text-[12.5px] font-medium leading-snug text-white">{data.todayAnswer}</p>
+          </div>
+        )}
+
+        {/* Risco + Melhoria */}
+        {(data.topRisco || data.maiorMelhoria) && (
+          <div className="mx-4 mb-3 grid grid-cols-2 gap-2">
+            {data.topRisco && (
+              <div className="rounded-xl bg-terracotta-50 border border-terracotta-100 px-3 py-2.5">
+                <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-terracotta-500">Maior risco</p>
+                <p className="mt-1 text-[11px] font-medium leading-snug text-terracotta-800">{data.topRisco}</p>
+              </div>
+            )}
+            {data.maiorMelhoria && (
+              <div className="rounded-xl bg-navy-50 border border-navy-100 px-3 py-2.5">
+                <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-navy-500">Maior ganho</p>
+                <p className="mt-1 text-[11px] font-medium leading-snug text-navy-700">{data.maiorMelhoria}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Resumo */}
         {data.summaryText && (
           <div className="mx-4 mb-3 rounded-xl bg-navy-50/60 px-3.5 py-2.5">
@@ -184,7 +210,7 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
         )}
 
         {/* Stats rápidos */}
-        {(data.stalePendenciasCount > 0 || data.missingDocsCount > 0 || data.overdueVacationsCount > 0) && (
+        {(data.stalePendenciasCount > 0 || data.missingDocsCount > 0 || data.overdueVacationsCount > 0 || data.manutencoesAtrasadas > 0) && (
           <div className="mx-4 mb-3 flex flex-wrap gap-1.5">
             {data.stalePendenciasCount > 0 && (
               <button
@@ -193,6 +219,15 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
                 className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 hover:bg-amber-100 transition-colors"
               >
                 {data.stalePendenciasCount} passo{data.stalePendenciasCount > 1 ? "s" : ""} parado{data.stalePendenciasCount > 1 ? "s" : ""} +14 dias
+              </button>
+            )}
+            {data.manutencoesAtrasadas > 0 && (
+              <button
+                type="button"
+                onClick={() => onNavigate?.("condominio")}
+                className="rounded-full bg-terracotta-50 px-2.5 py-1 text-[11px] font-medium text-terracotta-700 hover:bg-terracotta-100 transition-colors"
+              >
+                {data.manutencoesAtrasadas} manutenç{data.manutencoesAtrasadas > 1 ? "ões" : "ão"} atrasada{data.manutencoesAtrasadas > 1 ? "s" : ""}
               </button>
             )}
             {data.missingDocsCount > 0 && (
@@ -213,6 +248,33 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
                 férias vencidas
               </button>
             )}
+          </div>
+        )}
+
+        {/* Correlações / lacunas operacionais */}
+        {data.correlacoes.length > 0 && (
+          <div className="mx-4 mb-3 space-y-1.5">
+            {data.correlacoes.slice(0, 3).map((gap) => (
+              <div
+                key={gap.id}
+                className={`flex items-start gap-2 rounded-xl px-3 py-2 ${
+                  gap.prioridade === "critica"
+                    ? "bg-terracotta-50/70 border border-terracotta-100"
+                    : gap.prioridade === "atencao"
+                    ? "bg-amber-50/70 border border-amber-100"
+                    : "bg-navy-50/50 border border-navy-100"
+                }`}
+              >
+                <span className="mt-0.5 text-[12px] flex-shrink-0" aria-hidden="true">
+                  {gap.prioridade === "critica" ? "🔴" : gap.prioridade === "atencao" ? "🟡" : "ℹ️"}
+                </span>
+                <p className={`text-[11.5px] leading-snug ${
+                  gap.prioridade === "critica" ? "text-terracotta-800" : gap.prioridade === "atencao" ? "text-amber-800" : "text-navy-600"
+                }`}>
+                  {gap.texto}
+                </p>
+              </div>
+            ))}
           </div>
         )}
 

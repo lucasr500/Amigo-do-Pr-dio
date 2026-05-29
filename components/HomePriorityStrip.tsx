@@ -111,6 +111,26 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           </p>
         )}
 
+        {/* Linha 3b: resumo últimos 30 dias */}
+        {sinceLastVisit && (sinceLastVisit.pendenciasConcluidasMes > 0 || sinceLastVisit.novasOcorrenciasMes > 0) && (
+          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-navy-400">
+            <span className="font-medium text-navy-400">Últimos 30d:</span>
+            {sinceLastVisit.pendenciasConcluidasMes > 0 && (
+              <span className="text-teal-600">
+                {sinceLastVisit.pendenciasConcluidasMes} resolvida{sinceLastVisit.pendenciasConcluidasMes > 1 ? "s" : ""}
+              </span>
+            )}
+            {sinceLastVisit.novasOcorrenciasMes > 0 && (
+              <span>
+                {sinceLastVisit.novasOcorrenciasMes} ocorrência{sinceLastVisit.novasOcorrenciasMes > 1 ? "s" : ""}
+              </span>
+            )}
+            {data && (
+              <span className="text-navy-400">Score {data.healthPercentage}%</span>
+            )}
+          </div>
+        )}
+
         {/* Linha 4: sync status discreto */}
         {syncLabel && (
           <p className="mt-1 text-[10.5px] text-navy-400">

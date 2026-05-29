@@ -8,8 +8,10 @@ import {
   getMemoriaAssistida,
   getDocumentos,
   getFuncionarios,
+  getManutencoes,
   getOcorrencias,
   getPendenciasAbertas,
+  getPendenciasConcluidas,
   getProfile,
   getWeeklyReviewState,
   getCurrentWeekKey,
@@ -17,6 +19,7 @@ import {
   type AssistedDateField,
 } from "./session";
 import { buildGuidanceItems } from "./guidance";
+import { contarStatusManutencoes } from "./recorrencias";
 
 export type HealthStatusKey =
   | "critico"
@@ -38,6 +41,8 @@ export type HealthScoreResult = {
   diagnosticPhrase: string;
   factors: HealthFactor[];
   suggestions: string[];
+  howToGain10Pts: string[];   // Ações específicas para ganhar ~10 pontos percentuais
+  biggestBottleneck: string;  // Única coisa que mais pesa no score atual
 };
 
 // Campos de rotinas operacionais monitoráveis
@@ -51,8 +56,8 @@ const ROUTINE_FIELDS: Array<keyof MemoriaOperacional> = [
   "ultimaAGO",
 ];
 
-// Máximo de pontos brutos — backup excluído por ausência de timestamp confiável
-const MAX_RAW = 105;
+// Máximo de pontos brutos — v2 com cobertura operacional
+const MAX_RAW = 123;
 
 // Pontua um campo de data essencial considerando precisão da AssistedDateField.
 // Fallback para string legada (dados pré-v5) tratados como precisão parcial.
@@ -107,9 +112,11 @@ export function computeHealthScore(): HealthScoreResult {
   const weekKey    = getCurrentWeekKey();
   const weekly     = getWeeklyReviewState();
 
-  const assistida  = getMemoriaAssistida();
-  const documentos = getDocumentos();
+  const assistida    = getMemoriaAssistida();
+  const documentos   = getDocumentos();
   const funcionarios = getFuncionarios();
+  const manutencoes  = getManutencoes();
+  const manutStatus  = manutencoes.length > 0 ? contarStatusManutencoes() : null;
 
   const now     = Date.now();
   const weekAgo = now - 7 * 86_400_000;
@@ -135,13 +142,21 @@ export function computeHealthScore(): HealthScoreResult {
   if (criticals.length === 0) raw += 15;
   if (atencaos.length === 0)  raw += 5;
 
-  // ── 3. Próximos passos — 15 pts ───────────────────────────────────────────
+  // ── 3. Próximos passos — até 18 pts ──────────────────────────────────────
   const stale     = pendencias.filter((p) => now - new Date(p.createdAt).getTime() > staleMs);
   const openCount = pendencias.length;
   if (stale.length === 0)     raw += 10;
   else if (stale.length <= 1) raw += 5;
   if (openCount <= 3)          raw += 5;
   else if (openCount <= 5)     raw += 2;
+
+  // Bônus por conclusão ativa no último mês (máx +3)
+  const cutoff30d = now - 30 * 86_400_000;
+  const recentResolved = getPendenciasConcluidas().filter(
+    (p) => p.completedAt && new Date(p.completedAt).getTime() >= cutoff30d
+  ).length;
+  if (recentResolved >= 3)      raw += 3;
+  else if (recentResolved >= 1) raw += 1;
 
   // ── 4. Revisão semanal — 10 pts ───────────────────────────────────────────
   const reviewedThisWeek = weekly.lastCompletedWeekKey === weekKey;
@@ -158,12 +173,11 @@ export function computeHealthScore(): HealthScoreResult {
   if (recentTracked.length > 0) raw += 5;
 
   // ── 7. Documentos essenciais — até 10 pts ────────────────────────────────
-  const TOTAL_DOCS = 14; // DOCUMENTOS_ESSENCIAIS_IDS.length — hardcoded to avoid import cycle
   const docTenho       = documentos.filter((d) => d.status === "tenho").length;
   const docNaoAplica   = documentos.filter((d) => d.status === "nao_se_aplica").length;
   const docRegistrados = documentos.length;
-  const docAplicaveis  = Math.max(1, TOTAL_DOCS - docNaoAplica);
-  const docPct         = docRegistrados > 0 ? docTenho / docAplicaveis : -1;
+  const docAtivos      = Math.max(1, docRegistrados - docNaoAplica);
+  const docPct         = docRegistrados > 0 ? docTenho / docAtivos : -1;
   let docPts = 0;
   if (docPct >= 0.7) docPts = 10;
   else if (docPct >= 0.4) docPts = 5;
@@ -181,6 +195,19 @@ export function computeHealthScore(): HealthScoreResult {
     funcPts = hasIssue ? 0 : 5;
   }
   raw += funcPts;
+
+  // ── 9. Cobertura operacional de manutenções — até 15 pts ─────────────────
+  let manutPts = 0;
+  if (manutStatus !== null) {
+    const total = manutStatus.total;
+    if (total > 0) {
+      if (manutStatus.atrasadas === 0) manutPts += 8;
+      else if (manutStatus.atrasadas <= 1) manutPts += 4;
+      const cobertos = manutStatus.emDia + manutStatus.proximas;
+      manutPts += Math.min(7, Math.round((cobertos / total) * 7));
+    }
+  }
+  raw += manutPts;
 
   const percentage     = Math.min(100, Math.round((raw / MAX_RAW) * 100));
   const statusKey      = statusFromPct(percentage);
@@ -282,7 +309,7 @@ export function computeHealthScore(): HealthScoreResult {
     factors.push({ label: `Documentos: ${docTenho} confirmados`, status: "ok" });
   } else {
     factors.push({
-      label: `Documentos: ${docTenho} confirmados de ${TOTAL_DOCS}`,
+      label: `Documentos: ${docTenho} de ${docAtivos} confirmados`,
       status: "partial",
     });
   }
@@ -298,6 +325,18 @@ export function computeHealthScore(): HealthScoreResult {
     ).length;
     factors.push({
       label: `Funcionários: ${issueCount} com férias a verificar`,
+      status: "missing",
+    });
+  }
+
+  // Manutenções
+  if (manutStatus === null || manutStatus.total === 0) {
+    factors.push({ label: "Manutenções recorrentes: não cadastradas", status: "partial" });
+  } else if (manutStatus.atrasadas === 0) {
+    factors.push({ label: `Manutenções: ${manutStatus.emDia + manutStatus.proximas}/${manutStatus.total} em dia`, status: "ok" });
+  } else {
+    factors.push({
+      label: `Manutenções: ${manutStatus.atrasadas} atrasada${manutStatus.atrasadas > 1 ? "s" : ""}`,
       status: "missing",
     });
   }
@@ -321,10 +360,69 @@ export function computeHealthScore(): HealthScoreResult {
     suggestions.push("Mapear situação dos documentos essenciais");
   if (!reviewedThisWeek && suggestions.length < 3)
     suggestions.push("Concluir revisão semanal");
-  if (filledRoutines < 3 && suggestions.length < 3)
-    suggestions.push("Registrar manutenções recorrentes");
+  if (manutStatus !== null && manutStatus.atrasadas > 0 && suggestions.length < 3)
+    suggestions.push("Atualizar manutenções recorrentes atrasadas");
+  else if ((manutStatus === null || manutStatus.total === 0) && filledRoutines < 3 && suggestions.length < 3)
+    suggestions.push("Cadastrar manutenções recorrentes");
   if (suggestions.length < 3)
     suggestions.push("Exportar backup dos dados");
+
+  // ── Orientação: como subir ~10 pontos ─────────────────────────────────────
+  // Cada ponto percentual = MAX_RAW / 100 ≈ 1.2 raw pts. Para +10 pct ≈ +12 raw.
+  const howToGain10Pts: string[] = [];
+
+  const missingEssentials = (!hasAVCB ? 1 : 0) + (!hasSeguro ? 1 : 0) + (!hasMandato ? 1 : 0);
+  const impreciseEssentials = (hasAVCB && !avcbExact ? 1 : 0) + (hasSeguro && !seguroExact ? 1 : 0) + (hasMandato && !mandatoExact ? 1 : 0);
+
+  if (missingEssentials > 0) {
+    const missing = [!hasAVCB && "AVCB", !hasSeguro && "seguro", !hasMandato && "mandato"].filter(Boolean);
+    howToGain10Pts.push(`Cadastrar ${missing.join(", ")} com data exata (+${missingEssentials * 10} pts brutos)`);
+  } else if (impreciseEssentials > 0) {
+    howToGain10Pts.push("Confirmar datas exatas dos essenciais: cada confirmação vale +3 pts brutos");
+  }
+
+  if (criticals.length > 0 && howToGain10Pts.length < 3) {
+    howToGain10Pts.push(`Resolver ${criticals.length} alerta${criticals.length > 1 ? "s" : ""} crítico${criticals.length > 1 ? "s" : ""} (+15 pts brutos se zerar)`);
+  }
+
+  if (!reviewedThisWeek && howToGain10Pts.length < 3) {
+    howToGain10Pts.push("Completar a revisão semanal (+10 pts brutos imediatos)");
+  }
+
+  if (stale.length > 0 && howToGain10Pts.length < 3) {
+    howToGain10Pts.push(`Limpar ${stale.length} próximo${stale.length > 1 ? "s" : ""} passo${stale.length > 1 ? "s" : ""} parado${stale.length > 1 ? "s" : ""} (+10 pts brutos)`);
+  }
+
+  if (manutStatus === null && howToGain10Pts.length < 3) {
+    howToGain10Pts.push("Cadastrar manutenções recorrentes e manter em dia (+até 15 pts brutos)");
+  } else if (manutStatus !== null && manutStatus.atrasadas > 0 && howToGain10Pts.length < 3) {
+    howToGain10Pts.push("Atualizar manutenções atrasadas (+até 15 pts brutos ao zerar)");
+  }
+
+  if (howToGain10Pts.length < 1) {
+    howToGain10Pts.push("Continue mantendo os dados atualizados e a revisão semanal em dia");
+  }
+
+  // ── Maior gargalo ─────────────────────────────────────────────────────────
+  let biggestBottleneck = "";
+  const maxRawMissing: Array<[number, string]> = [];
+
+  const essenciaisMissing = 30 - (avcbPts + seguroPts + mandatoPts);
+  if (essenciaisMissing > 0) maxRawMissing.push([essenciaisMissing, "Essenciais sem cadastro completo"]);
+
+  const alertasMissing = (criticals.length > 0 ? 15 : 0) + (atencaos.length > 0 ? 5 : 0);
+  if (alertasMissing > 0) maxRawMissing.push([alertasMissing, "Alertas críticos ou de atenção ativos"]);
+
+  const manutMissing = 15 - manutPts;
+  if (manutMissing > 5) maxRawMissing.push([manutMissing, "Manutenções recorrentes sem registro ou atrasadas"]);
+
+  const pendMissing = stale.length > 0 ? 10 : (openCount > 5 ? 5 : 0);
+  if (pendMissing > 0) maxRawMissing.push([pendMissing, "Próximos passos parados ou em excesso"]);
+
+  if (!reviewedThisWeek) maxRawMissing.push([10, "Revisão semanal não concluída esta semana"]);
+
+  maxRawMissing.sort((a, b) => b[0] - a[0]);
+  biggestBottleneck = maxRawMissing[0]?.[1] ?? "Nenhum gargalo significativo identificado";
 
   return {
     percentage,
@@ -333,5 +431,7 @@ export function computeHealthScore(): HealthScoreResult {
     diagnosticPhrase,
     factors: factors.slice(0, 6),
     suggestions: suggestions.slice(0, 3),
+    howToGain10Pts: howToGain10Pts.slice(0, 3),
+    biggestBottleneck,
   };
 }

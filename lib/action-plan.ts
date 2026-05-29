@@ -25,6 +25,11 @@ export type ActionItem = {
 export type ActionPlan = {
   generatedAt: string;
   items: ActionItem[];
+  // Agrupamentos por horizonte temporal — para exibição sequencial
+  agoraMesmo: ActionItem[];       // urgente — fazer hoje/esta semana
+  proximos30Dias: ActionItem[];   // este_mes — planejar este mês
+  proximos90Dias: ActionItem[];   // proximos_90_dias — planejar próximo trimestre
+  melhorasFuturas: ActionItem[];  // quando_possivel — melhorias sem urgência
 };
 
 const PRIORITY_ORDER: Record<ActionPriority, number> = {
@@ -274,5 +279,12 @@ export function buildActionPlan(): ActionPlan {
 
   items.sort((a, b) => PRIORITY_ORDER[a.prioridade] - PRIORITY_ORDER[b.prioridade]);
 
-  return { generatedAt: new Date().toISOString(), items };
+  return {
+    generatedAt: new Date().toISOString(),
+    items,
+    agoraMesmo:      items.filter((i) => i.prioridade === "urgente"),
+    proximos30Dias:  items.filter((i) => i.prioridade === "este_mes"),
+    proximos90Dias:  items.filter((i) => i.prioridade === "proximos_90_dias"),
+    melhorasFuturas: items.filter((i) => i.prioridade === "quando_possivel"),
+  };
 }

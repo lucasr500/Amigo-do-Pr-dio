@@ -326,6 +326,37 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                           </p>
                         )}
 
+                        {/* Se ignorar */}
+                        {item.consequencia && (
+                          <div className="mt-2.5 rounded-lg bg-terracotta-50/60 px-3 py-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-terracotta-500">Se ignorar</p>
+                            <p className="mt-0.5 text-[11.5px] leading-snug text-terracotta-800">{item.consequencia}</p>
+                          </div>
+                        )}
+
+                        {/* Próximo passo concreto */}
+                        {item.proximoPasso && (
+                          <div className="mt-2 rounded-lg bg-teal-50/60 px-3 py-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-teal-600">Próximo passo</p>
+                            <p className="mt-0.5 text-[11.5px] leading-snug text-teal-800">{item.proximoPasso}</p>
+                          </div>
+                        )}
+
+                        {/* Checklist dinâmico */}
+                        {item.checklist && item.checklist.length > 0 && (
+                          <div className="mt-2">
+                            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy-400">Como resolver</p>
+                            <div className="space-y-1">
+                              {item.checklist.map((step, i) => (
+                                <div key={i} className="flex items-start gap-2 text-[11px] text-navy-600">
+                                  <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-[9px] font-semibold text-navy-500">{i + 1}</span>
+                                  <span>{step}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {/* Ações principais */}
                         {!isResolving && (
                           <>

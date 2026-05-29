@@ -9,50 +9,100 @@ import {
   addAuditEntry,
   DOCUMENTOS_ESSENCIAIS_IDS,
   DOCUMENTO_LABEL,
+  DOCUMENTO_CATEGORIA,
+  DOCUMENTO_CRITICIDADE,
   type DocumentoEssencial,
   type DocumentoStatus,
   type DocumentoEssencialId,
+  type DocumentoCategoria,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 
 type Props = { onSaved?: () => void };
 
 const STATUS_LABEL: Record<DocumentoStatus, string> = {
-  tenho:           "Tenho",
-  nao_tenho:       "Não tenho",
-  precisa_localizar: "Preciso localizar",
-  nao_se_aplica:   "Não se aplica",
+  tenho:             "Tenho",
+  nao_tenho:         "Não tenho",
+  precisa_localizar: "Localizar",
+  nao_se_aplica:     "N/A",
 };
 
 const STATUS_BADGE: Record<DocumentoStatus, string> = {
-  tenho:           "bg-navy-50 text-navy-600 ring-navy-100",
-  nao_tenho:       "bg-terracotta-50 text-terracotta-700 ring-terracotta-100",
+  tenho:             "bg-navy-50 text-navy-600 ring-navy-100",
+  nao_tenho:         "bg-terracotta-50 text-terracotta-700 ring-terracotta-100",
   precisa_localizar: "bg-amber-50 text-amber-700 ring-amber-100",
-  nao_se_aplica:   "bg-navy-50 text-navy-400 ring-navy-100",
+  nao_se_aplica:     "bg-navy-50 text-navy-400 ring-navy-100",
+};
+
+const CATEGORIA_LABEL: Record<DocumentoCategoria, string> = {
+  seguranca:   "Segurança",
+  trabalhista: "Trabalhista",
+  juridico:    "Jurídico",
+  operacional: "Operacional",
+  fiscal:      "Fiscal",
+  manutencao:  "Manutenção",
+};
+
+const CATEGORIA_COR: Record<DocumentoCategoria, string> = {
+  seguranca:   "bg-terracotta-50 text-terracotta-700",
+  trabalhista: "bg-amber-50 text-amber-700",
+  juridico:    "bg-navy-50 text-navy-600",
+  operacional: "bg-teal-50 text-teal-700",
+  fiscal:      "bg-purple-50 text-purple-700",
+  manutencao:  "bg-orange-50 text-orange-700",
 };
 
 const PENDENCIA_TITULO: Partial<Record<DocumentoEssencialId, string>> = {
-  convencao:   "Localizar convenção condominial",
-  regimento:   "Localizar regimento interno",
-  ata_eleicao: "Encontrar ata de eleição do síndico vigente",
-  apolice_seguro: "Localizar apólice do seguro predial",
-  avcb_clcb:   "Localizar AVCB ou CLCB do condomínio",
-  contrato_elevador: "Localizar contrato de manutenção de elevadores",
-  contrato_limpeza: "Localizar contrato de limpeza",
-  contrato_portaria: "Localizar contrato de portaria / segurança",
-  laudos_tecnicos: "Localizar laudos técnicos relevantes",
-  extintores_comprovante: "Localizar comprovantes de manutenção de extintores",
-  caixa_agua_comprovante: "Localizar comprovante de limpeza da caixa d'água",
+  convencao:               "Localizar convenção condominial",
+  regimento:               "Localizar regimento interno",
+  ata_eleicao:             "Encontrar ata de eleição do síndico",
+  apolice_seguro:          "Localizar apólice do seguro predial",
+  avcb_clcb:               "Localizar AVCB ou CLCB do condomínio",
+  spda_laudo:              "Localizar laudo do SPDA / Para-raio",
+  brigada_certificado:     "Localizar certificado de brigada de incêndio",
+  contrato_elevador:       "Localizar contrato de manutenção de elevadores",
+  contrato_limpeza:        "Localizar contrato de limpeza",
+  contrato_portaria:       "Localizar contrato de portaria",
+  laudos_tecnicos:         "Localizar laudos técnicos relevantes",
+  extintores_comprovante:  "Localizar comprovante de manutenção de extintores",
+  caixa_agua_comprovante:  "Localizar comprovante de limpeza da caixa d'água",
   dedetizacao_comprovante: "Localizar comprovante de dedetização",
-  cct_funcionarios: "Localizar CCT aplicável aos funcionários",
-  controle_ferias: "Organizar controle de férias dos funcionários",
+  cct_funcionarios:        "Localizar CCT aplicável aos funcionários",
+  controle_ferias:         "Organizar controle de férias dos funcionários",
+  ppra_pgr:                "Localizar PPRA / PGR do condomínio",
+  pcmso:                   "Localizar PCMSO dos funcionários",
+  cnd_condominio:          "Verificar situação fiscal (CND) do condomínio",
+};
+
+const GRUPOS: DocumentoCategoria[] = ["juridico", "seguranca", "manutencao", "trabalhista", "operacional", "fiscal"];
+
+const GRUPO_DESCRICAO: Record<DocumentoCategoria, string> = {
+  juridico:    "Base legal do condomínio",
+  seguranca:   "Documentos obrigatórios de segurança",
+  manutencao:  "Contratos e laudos técnicos",
+  trabalhista: "Documentação de pessoal",
+  operacional: "Contratos e comprovantes operacionais",
+  fiscal:      "Situação fiscal e tributária",
+};
+
+const EMPTY_STATE_EXPERT: Record<DocumentoCategoria, string> = {
+  juridico:    "Convenção, regimento e ata de eleição são a base legal do condomínio. Sem eles, decisões em assembleia podem ser contestadas.",
+  seguranca:   "AVCB, SPDA e brigada de incêndio são exigências do Corpo de Bombeiros. A falta pode gerar interdição do prédio.",
+  manutencao:  "Contratos de elevador e laudos técnicos comprovam que a manutenção obrigatória está sendo feita. Protegem o síndico em caso de acidente.",
+  trabalhista: "CCT, PPRA/PGR e PCMSO são obrigações trabalhistas para quem tem funcionários. A ausência gera passivo e autuação.",
+  operacional: "Comprovantes de serviços periódicos demonstram que o condomínio está em ordem. Podem ser exigidos em auditoria de administradora.",
+  fiscal:      "CND indica que o condomínio está quite com obrigações fiscais. Necessária em financiamentos e algumas negociações.",
 };
 
 export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [grupoAberto, setGrupoAberto] = useState<DocumentoCategoria | null>(null);
   const [docs, setDocs] = useState<Record<string, DocumentoEssencial>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingStatus, setEditingStatus] = useState<DocumentoStatus | null>(null);
+  const [editingLink, setEditingLink] = useState("");
+  const [editingOnde, setEditingOnde] = useState("");
   const [pendenciaIds, setPendenciaIds] = useState<Set<string>>(new Set());
   const [savedFeedback, setSavedFeedback] = useState(false);
 
@@ -72,33 +122,55 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
   if (!hydrated) return null;
 
-  const counts = {
-    tenho: Object.values(docs).filter((d) => d.status === "tenho").length,
-    nao_tenho: Object.values(docs).filter((d) => d.status === "nao_tenho").length,
-    precisa_localizar: Object.values(docs).filter((d) => d.status === "precisa_localizar").length,
-    nao_se_aplica: Object.values(docs).filter((d) => d.status === "nao_se_aplica").length,
-    total: DOCUMENTOS_ESSENCIAIS_IDS.length,
-    cadastrados: Object.keys(docs).length,
+  const total = DOCUMENTOS_ESSENCIAIS_IDS.length;
+  const tenho = Object.values(docs).filter((d) => d.status === "tenho").length;
+  const naoTenho = Object.values(docs).filter((d) => d.status === "nao_tenho").length;
+  const precisa = Object.values(docs).filter((d) => d.status === "precisa_localizar").length;
+  const naoAplica = Object.values(docs).filter((d) => d.status === "nao_se_aplica").length;
+  const cadastrados = Object.keys(docs).length;
+
+  const criticosNaoConfirmados = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => {
+    const critico = DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica";
+    const doc = docs[id];
+    return critico && (!doc || (doc.status !== "tenho" && doc.status !== "nao_se_aplica"));
+  }).length;
+
+  const openEditor = (id: string) => {
+    const doc = docs[id];
+    setEditingId(id);
+    setEditingStatus(doc?.status ?? null);
+    setEditingOnde(doc?.ondeEsta ?? "");
+    setEditingLink(doc?.linkExterno ?? "");
   };
 
-  const setStatus = (id: string, status: DocumentoStatus) => {
+  const closeEditor = () => {
+    setEditingId(null);
+    setEditingStatus(null);
+    setEditingOnde("");
+    setEditingLink("");
+  };
+
+  const saveEditing = (id: string) => {
+    if (!editingStatus) return;
     const now = new Date().toISOString();
     const existing = docs[id];
     const updated: DocumentoEssencial = {
       id,
-      status,
+      status: editingStatus,
       updatedAt: now,
       ...(existing ? {
         vencimento: existing.vencimento,
         observacoes: existing.observacoes,
-        ondeEsta: existing.ondeEsta,
+        dataVencimento: existing.dataVencimento,
       } : {}),
+      ondeEsta: editingOnde.trim() || existing?.ondeEsta,
+      linkExterno: editingLink.trim() || existing?.linkExterno,
     };
     const next = { ...docs, [id]: updated };
     setDocs(next);
     upsertDocumento(updated);
 
-    if (status === "precisa_localizar" && !pendenciaIds.has(id)) {
+    if (editingStatus === "precisa_localizar" && !pendenciaIds.has(id)) {
       const titulo = PENDENCIA_TITULO[id as DocumentoEssencialId] ?? `Localizar: ${DOCUMENTO_LABEL[id as DocumentoEssencialId] ?? id}`;
       addPendencia({ titulo, categoria: "gestao", origem: "documento", matchedId: id });
       void trackEvent("pendencia_created_from_documento", { doc_id: id });
@@ -108,23 +180,24 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     addAuditEntry({
       category: "documento",
       action: `Documento atualizado: ${DOCUMENTO_LABEL[id as DocumentoEssencialId] ?? id}`,
-      detail: status,
-      impact: status === "tenho" ? "positive" : status === "nao_tenho" ? "negative" : "neutral",
+      detail: editingStatus,
+      impact: editingStatus === "tenho" ? "positive" : editingStatus === "nao_tenho" ? "negative" : "neutral",
     });
 
     setSavedFeedback(true);
     setTimeout(() => setSavedFeedback(false), 1500);
     onSaved?.();
+    closeEditor();
   };
 
   // ── Collapsed ──────────────────────────────────────────────────────────────
   if (!expanded) {
-    const pct = counts.cadastrados > 0
-      ? Math.round((counts.tenho / counts.total) * 100)
-      : null;
-    const subtitle = counts.cadastrados === 0
-      ? "Convenção, AVCB, seguro, ata de eleição e outros — clique para gerenciar"
-      : `${counts.tenho} documentos confirmados · ${counts.precisa_localizar} para localizar · ${counts.nao_tenho} ausentes`;
+    const pct = cadastrados > 0 ? Math.round((tenho / Math.max(1, total - naoAplica)) * 100) : null;
+    const subtitle = cadastrados === 0
+      ? "AVCB, seguro, convenção, brigada e outros — mapeie a documentação do prédio"
+      : criticosNaoConfirmados > 0
+      ? `${tenho} confirmados · ${criticosNaoConfirmados} documento${criticosNaoConfirmados > 1 ? "s" : ""} crítico${criticosNaoConfirmados > 1 ? "s" : ""} sem confirmar`
+      : `${tenho} confirmados · ${precisa} a localizar · ${naoTenho} ausentes`;
 
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
@@ -138,13 +211,15 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-navy-800">Documentos essenciais</p>
-            <p className="text-[11.5px] text-navy-400">{subtitle}</p>
+            <p className="text-[11.5px] text-navy-400 truncate">{subtitle}</p>
           </div>
           {pct !== null && (
-            <span className="shrink-0 text-[11px] font-semibold text-navy-500">{pct}% ok</span>
+            <span className={`shrink-0 text-[11px] font-semibold ${pct >= 70 ? "text-teal-600" : pct >= 40 ? "text-amber-600" : "text-terracotta-600"}`}>
+              {pct}%
+            </span>
           )}
           <span className="shrink-0 text-[11.5px] font-semibold text-navy-500">
-            {counts.cadastrados === 0 ? "Gerenciar →" : "Ver →"}
+            {cadastrados === 0 ? "Mapear →" : "Ver →"}
           </span>
         </button>
       </section>
@@ -158,8 +233,10 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-[13px] font-semibold text-navy-800">Documentos essenciais</p>
-            {savedFeedback && (
-              <p className="text-[11px] text-navy-500 animate-fade-in">✓ Salvo</p>
+            {savedFeedback ? (
+              <p className="text-[11px] text-teal-600 animate-fade-in">✓ Salvo</p>
+            ) : (
+              <p className="text-[11px] text-navy-400">{total} documentos em 6 categorias</p>
             )}
           </div>
           <button
@@ -171,99 +248,237 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           </button>
         </div>
 
-        {counts.cadastrados === 0 && (
-          <div className="mb-3 rounded-xl bg-navy-50/60 px-3.5 py-3">
+        {/* Resumo de cobertura */}
+        {cadastrados > 0 && (
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {tenho > 0 && (
+              <span className="inline-flex items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-[10.5px] font-medium text-navy-600 ring-1 ring-navy-100">
+                ✓ {tenho} confirmado{tenho !== 1 ? "s" : ""}
+              </span>
+            )}
+            {precisa > 0 && (
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-medium text-amber-700 ring-1 ring-amber-100">
+                ⟳ {precisa} a localizar
+              </span>
+            )}
+            {naoTenho > 0 && (
+              <span className="inline-flex items-center rounded-full bg-terracotta-50 px-2.5 py-0.5 text-[10.5px] font-medium text-terracotta-700 ring-1 ring-terracotta-100">
+                ✗ {naoTenho} ausente{naoTenho !== 1 ? "s" : ""}
+              </span>
+            )}
+            {criticosNaoConfirmados > 0 && (
+              <span className="inline-flex items-center rounded-full bg-terracotta-100 px-2.5 py-0.5 text-[10.5px] font-medium text-terracotta-800 ring-1 ring-terracotta-200">
+                ⚠ {criticosNaoConfirmados} crítico{criticosNaoConfirmados !== 1 ? "s" : ""} pendente{criticosNaoConfirmados !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Empty state especialista */}
+        {cadastrados === 0 && (
+          <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Registre o status de cada documento. Não precisa fazer upload — apenas indicar se tem, precisa localizar ou não se aplica ao seu condomínio.
+              Mapear o status dos documentos essenciais é o primeiro passo para saber o que o condomínio tem, o que precisa localizar e o que ainda não foi providenciado. Não é necessário fazer upload — apenas registrar a situação de cada um.
             </p>
           </div>
         )}
 
-        {/* Resumo */}
-        {counts.cadastrados > 0 && (
-          <div className="mb-3 flex gap-2 flex-wrap">
-            {counts.tenho > 0 && (
-              <span className="inline-flex items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-[10.5px] font-medium text-navy-600 ring-1 ring-navy-100">
-                ✓ {counts.tenho} confirmado{counts.tenho !== 1 ? "s" : ""}
-              </span>
-            )}
-            {counts.precisa_localizar > 0 && (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-medium text-amber-700 ring-1 ring-amber-100">
-                ⟳ {counts.precisa_localizar} a localizar
-              </span>
-            )}
-            {counts.nao_tenho > 0 && (
-              <span className="inline-flex items-center rounded-full bg-terracotta-50 px-2.5 py-0.5 text-[10.5px] font-medium text-terracotta-700 ring-1 ring-terracotta-100">
-                ✗ {counts.nao_tenho} ausente{counts.nao_tenho !== 1 ? "s" : ""}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Lista de documentos */}
+        {/* Grupos por categoria */}
         <div className="space-y-2">
-          {DOCUMENTOS_ESSENCIAIS_IDS.map((id) => {
-            const doc = docs[id];
-            const status = doc?.status;
-            const isEditing = editingId === id;
+          {GRUPOS.map((cat) => {
+            const idsGrupo = DOCUMENTOS_ESSENCIAIS_IDS.filter(
+              (id) => DOCUMENTO_CATEGORIA[id as DocumentoEssencialId] === cat
+            );
+            const tenhoGrupo = idsGrupo.filter((id) => docs[id]?.status === "tenho").length;
+            const precisaGrupo = idsGrupo.filter((id) => docs[id]?.status === "precisa_localizar").length;
+            const naoTenhoGrupo = idsGrupo.filter((id) => docs[id]?.status === "nao_tenho").length;
+            const cadastradosGrupo = idsGrupo.filter((id) => !!docs[id]).length;
+            const aberto = grupoAberto === cat;
 
             return (
-              <div key={id} className="rounded-xl border border-navy-50 bg-navy-50/30 p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-[12.5px] font-medium text-navy-800 leading-tight">
-                    {DOCUMENTO_LABEL[id]}
-                  </p>
-                  {status && !isEditing && (
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(id)}
-                      className={`shrink-0 inline-flex items-center rounded-full px-2 py-px text-[10px] font-medium ring-1 ${STATUS_BADGE[status]}`}
-                    >
-                      {STATUS_LABEL[status]}
-                    </button>
-                  )}
-                  {!status && !isEditing && (
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(id)}
-                      className="shrink-0 text-[11px] text-navy-400 hover:text-navy-600"
-                    >
-                      Registrar
-                    </button>
-                  )}
-                </div>
-
-                {isEditing && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {(["tenho", "nao_tenho", "precisa_localizar", "nao_se_aplica"] as DocumentoStatus[]).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => {
-                          setStatus(id, s);
-                          setEditingId(null);
-                        }}
-                        className={`rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition-all active:scale-95 ${
-                          status === s
-                            ? "bg-navy-700 text-white ring-navy-700"
-                            : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
-                        }`}
-                      >
-                        {STATUS_LABEL[s]}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(null)}
-                      className="px-2 text-[11px] text-navy-400 hover:text-navy-600"
-                    >
-                      ✕
-                    </button>
+              <div key={cat} className="rounded-xl border border-navy-50 overflow-hidden">
+                {/* Header do grupo */}
+                <button
+                  type="button"
+                  onClick={() => setGrupoAberto(aberto ? null : cat)}
+                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-navy-50/50 transition-colors"
+                >
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORIA_COR[cat]}`}>
+                    {CATEGORIA_LABEL[cat]}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11.5px] text-navy-500">{GRUPO_DESCRICAO[cat]}</p>
                   </div>
-                )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {cadastradosGrupo > 0 && (
+                      <span className="text-[10px] text-navy-400">
+                        {tenhoGrupo}/{idsGrupo.length}
+                      </span>
+                    )}
+                    {precisaGrupo > 0 && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+                    )}
+                    {naoTenhoGrupo > 0 && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-terracotta-400" aria-hidden="true" />
+                    )}
+                    <svg
+                      className={`h-3.5 w-3.5 text-navy-300 transition-transform ${aberto ? "rotate-90" : ""}`}
+                      viewBox="0 0 14 14"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </button>
 
-                {pendenciaIds.has(id) && status === "precisa_localizar" && (
-                  <p className="mt-1 text-[10px] text-amber-600">Pendência criada para lembrar de localizar</p>
+                {/* Itens do grupo */}
+                {aberto && (
+                  <div className="border-t border-navy-50 bg-navy-50/20 px-3 py-2 space-y-1.5">
+                    {/* Empty state especialista por categoria */}
+                    {cadastradosGrupo === 0 && (
+                      <p className="text-[11px] leading-relaxed text-navy-500 px-0.5 py-1">
+                        {EMPTY_STATE_EXPERT[cat]}
+                      </p>
+                    )}
+
+                    {idsGrupo.map((id) => {
+                      const docId = id as DocumentoEssencialId;
+                      const doc = docs[id];
+                      const status = doc?.status;
+                      const critico = DOCUMENTO_CRITICIDADE[docId] === "critica";
+                      const isEditing = editingId === id;
+                      const hasOnde = !!doc?.ondeEsta;
+                      const hasLink = !!doc?.linkExterno;
+
+                      return (
+                        <div key={id} className="rounded-lg bg-white px-3 py-2">
+                          {/* Linha principal: nome + badge */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-start gap-1.5 min-w-0 flex-1">
+                              {critico && (
+                                <span className="mt-0.5 shrink-0 text-[9px] font-bold text-terracotta-500 uppercase tracking-wide">★</span>
+                              )}
+                              <p className="text-[12px] font-medium text-navy-800 leading-snug">
+                                {DOCUMENTO_LABEL[docId]}
+                              </p>
+                            </div>
+                            {!isEditing && (
+                              status ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openEditor(id)}
+                                  className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${STATUS_BADGE[status]}`}
+                                >
+                                  {STATUS_LABEL[status]}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => openEditor(id)}
+                                  className="shrink-0 text-[10.5px] text-navy-400 hover:text-navy-600"
+                                >
+                                  Registrar
+                                </button>
+                              )
+                            )}
+                          </div>
+
+                          {/* Metadados rápidos (onde / link) quando não editando */}
+                          {!isEditing && (hasOnde || hasLink) && (
+                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+                              {hasOnde && (
+                                <span className="text-[10.5px] text-navy-400">
+                                  📂 {doc.ondeEsta}
+                                </span>
+                              )}
+                              {hasLink && (
+                                <span className="text-[10.5px] text-navy-400 truncate max-w-[160px]">
+                                  🔗 {doc.linkExterno}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Editor inline */}
+                          {isEditing && (
+                            <div className="mt-2.5 space-y-2.5">
+                              {/* Status buttons */}
+                              <div className="flex flex-wrap gap-1.5">
+                                {(["tenho", "nao_tenho", "precisa_localizar", "nao_se_aplica"] as DocumentoStatus[]).map((s) => (
+                                  <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setEditingStatus(s)}
+                                    className={`rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition-all active:scale-95 ${
+                                      editingStatus === s
+                                        ? "bg-navy-700 text-white ring-navy-700"
+                                        : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
+                                    }`}
+                                  >
+                                    {STATUS_LABEL[s]}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {/* Onde está */}
+                              <div>
+                                <label className="mb-1 block text-[10px] font-medium text-navy-500">
+                                  Onde está / localização <span className="text-navy-300">(opcional)</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  autoComplete="off"
+                                  value={editingOnde}
+                                  onChange={(e) => setEditingOnde(e.target.value)}
+                                  placeholder="Ex: Pasta jurídica, drive da administradora"
+                                  className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-400 focus:bg-white"
+                                />
+                              </div>
+
+                              {/* Link / referência */}
+                              <div>
+                                <label className="mb-1 block text-[10px] font-medium text-navy-500">
+                                  Link ou referência <span className="text-navy-300">(opcional)</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  autoComplete="off"
+                                  value={editingLink}
+                                  onChange={(e) => setEditingLink(e.target.value)}
+                                  placeholder="Ex: drive.google.com/... ou nome do arquivo"
+                                  className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-400 focus:bg-white"
+                                />
+                              </div>
+
+                              {/* Ações */}
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => saveEditing(id)}
+                                  disabled={!editingStatus}
+                                  className="rounded-full bg-navy-800 px-4 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-900 active:scale-95 disabled:opacity-40"
+                                >
+                                  Salvar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={closeEditor}
+                                  className="px-2 text-[11px] text-navy-400 hover:text-navy-600"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {pendenciaIds.has(id) && status === "precisa_localizar" && !isEditing && (
+                            <p className="mt-1 text-[10px] text-amber-600">Próximo passo criado</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             );
@@ -271,7 +486,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         </div>
 
         <p className="mt-3 text-[10px] leading-relaxed text-navy-400">
-          Documentos marcados como &ldquo;Preciso localizar&rdquo; geram um próximo passo automático. &ldquo;Não se aplica&rdquo; não prejudica a saúde operacional.
+          ★ = documentos críticos. &ldquo;Localizar&rdquo; cria próximo passo automático. &ldquo;N/A&rdquo; = não se aplica a este condomínio.
         </p>
       </div>
     </section>
