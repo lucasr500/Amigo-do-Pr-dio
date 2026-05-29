@@ -20,6 +20,7 @@ import {
   getMemoriaOperacional,
   getMemoriaAssistida,
   getProfile,
+  getLastBackupAt,
   type MemoriaOperacional,
   type CondominioProfile,
 } from "@/lib/session";
@@ -28,6 +29,7 @@ import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
+const DemoModeBanner = dynamic(() => import("@/components/DemoModeBanner"), { ssr: false });
 const FavoritesPanel = dynamic(() => import("@/components/FavoritesPanel"), { ssr: false });
 const HistoryPanel = dynamic(() => import("@/components/HistoryPanel"), { ssr: false });
 import GuidancePanel from "@/components/GuidancePanel";
@@ -98,6 +100,7 @@ const FuncionariosPanel = dynamic(() => import("@/components/FuncionariosPanel")
 const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
 const CalendarioOperacionalPanel = dynamic(() => import("@/components/CalendarioOperacionalPanel"), { ssr: false });
 const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
+const RelatorioSaudePanel = dynamic(() => import("@/components/RelatorioSaudePanel"), { ssr: false });
 // Aba Ferramentas — painéis de planejamento e decisão
 const CommandCenterPanel = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
@@ -106,6 +109,7 @@ const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: f
 const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
+const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
 
 // ── Saudação dinâmica ──────────────────────────────────────────────────────────
 
@@ -204,6 +208,8 @@ export default function HomePage() {
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showNotifSettings, setShowNotifSettings] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
+  const [showBackupNudge, setShowBackupNudge] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   const urgentCount = useMemo(() => {
@@ -224,6 +230,10 @@ export default function HomePage() {
       setProfileCompletion(computeProfileCompletion(prof, m));
       setCondoName(prof?.nomeCondominio ?? "");
     }
+    try { if (sessionStorage.getItem("amigo_demo_active") === "1") setIsDemo(true); } catch { /* noop */ }
+    const lastBackup = getLastBackupAt();
+    const backupStale = !lastBackup || (Date.now() - new Date(lastBackup).getTime()) > 30 * 86400000;
+    if (hasData && backupStale) setShowBackupNudge(true);
     if (isFirstRun()) setShowOnboarding(true);
     // Inicia scheduler local (notificações + health snapshot)
     const stopScheduler = startScheduler();
@@ -427,9 +437,23 @@ export default function HomePage() {
     navigateTab("condominio");
   };
 
+  const handleActivateDemo = async () => {
+    const { activateDemo } = await import("@/lib/demo");
+    activateDemo();
+    window.location.reload();
+  };
+
+  const handleExitDemo = async () => {
+    const { deactivateDemo } = await import("@/lib/demo");
+    deactivateDemo();
+    window.location.reload();
+  };
+
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
       <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
+
+        {isDemo && <DemoModeBanner onExit={handleExitDemo} />}
 
         {!(activeTab === "inicio" && subView) && (
           <Header
@@ -484,6 +508,7 @@ export default function HomePage() {
               <>
                 {/* Saudação dinâmica */}
                 <DynamicGreeting condoName={condoName} />
+                <PushPromptStrip />
                 <HomeSaudeCard
                   refreshKey={refreshKey}
                   onClick={() => navigateToSubView("saude")}
@@ -527,6 +552,23 @@ export default function HomePage() {
                     </button>
                   </div>
                 )}
+                {showBackupNudge && !isDemo && (
+                  <div className="px-5 pb-3 sm:px-6">
+                    <div className="flex items-center gap-3 rounded-[14px] border border-amber-200/80 bg-amber-50/70 px-4 py-3">
+                      <span className="flex-shrink-0 text-[13px]" aria-hidden="true">💾</span>
+                      <p className="min-w-0 flex-1 text-[12px] leading-snug text-amber-800">
+                        Faça um backup para proteger os dados do prédio.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { setShowBackupNudge(false); navigateTab("condominio"); }}
+                        className="flex-shrink-0 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-200 active:scale-95"
+                      >
+                        Exportar
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <GuidancePanel
                   onAsk={handleSuggestionSelect}
                   onResolved={() => setRefreshKey((k) => k + 1)}
@@ -543,7 +585,17 @@ export default function HomePage() {
                   onAssistente={() => setActiveTab("assistente")}
                   onSuggestionSelect={handleSuggestionSelect}
                 />
-                <GuidancePreview onSetup={handleScrollToMemoria} />
+                <div className="px-5 pb-1 sm:px-6">
+                  <button
+                    type="button"
+                    onClick={handleActivateDemo}
+                    className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-navy-100/70 bg-white/80 px-4 py-3 text-[12.5px] font-medium text-navy-600 transition-all hover:bg-white hover:shadow-sm active:scale-[0.98]"
+                  >
+                    <span aria-hidden="true" className="text-[13px]">👁️</span>
+                    Ver exemplo de prédio preenchido
+                  </button>
+                </div>
+                <GuidancePreview onSetup={handleScrollToMemoria} onAssistente={() => navigateTab("assistente")} />
               </>
             )}
 
@@ -862,6 +914,9 @@ export default function HomePage() {
                 onDone={() => setRefreshKey((k) => k + 1)}
               />
             </div>
+
+            {/* ── Relatório de saúde ────────────────────────────────── */}
+            <RelatorioSaudePanel />
 
             {/* ── Conta e dados ─────────────────────────────────────── */}
             {hasCondominioData && (

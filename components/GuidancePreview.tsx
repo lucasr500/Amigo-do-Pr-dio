@@ -13,6 +13,7 @@ import {
 
 type Props = {
   onSetup?: () => void;
+  onAssistente?: () => void;
 };
 
 type Step = {
@@ -53,7 +54,7 @@ function buildSteps(): Step[] {
   ];
 }
 
-export default function GuidancePreview({ onSetup }: Props) {
+export default function GuidancePreview({ onSetup, onAssistente }: Props) {
   const [steps, setSteps] = useState<Step[]>([]);
 
   useEffect(() => {
@@ -106,18 +107,29 @@ export default function GuidancePreview({ onSetup }: Props) {
         </div>
 
         <div className="mt-4 border-t border-navy-100/50 pt-3.5">
-          {onSetup && (
-            <button
-              type="button"
-              onClick={onSetup}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-navy-700 px-4 py-2 text-[12.5px] font-semibold text-cream-50 transition-all duration-200 hover:bg-navy-800 active:scale-[0.98]"
-            >
-              {doneCount > 0 ? "Continuar configurando" : "Configurar Meu prédio"}
-              <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {onSetup && (
+              <button
+                type="button"
+                onClick={onSetup}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-navy-700 px-4 py-2 text-[12.5px] font-semibold text-cream-50 transition-all duration-200 hover:bg-navy-800 active:scale-[0.98]"
+              >
+                {doneCount > 0 ? "Continuar configurando" : "Ativar monitoramento"}
+                <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            )}
+            {onAssistente && doneCount === 0 && (
+              <button
+                type="button"
+                onClick={onAssistente}
+                className="text-[12px] font-medium text-navy-500 hover:text-navy-700"
+              >
+                Ou faça uma pergunta →
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

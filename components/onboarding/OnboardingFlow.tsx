@@ -312,11 +312,23 @@ export default function OnboardingFlow({ onComplete }: Props) {
           ) : (
             <>
               <h2 className="mt-2 font-display text-[24px] font-semibold leading-snug text-navy-800">
-                Veja o que exige atenção no seu prédio.
+                Ative o monitoramento do seu prédio.
               </h2>
               <p className="mt-3 text-[13.5px] leading-relaxed text-navy-600">
-                Cadastre as datas essenciais e o app organiza alertas, pendências e saúde operacional — sem depender só da memória.
+                Cadastre as datas essenciais e o app acompanha prazos, destaca o que exige atenção e organiza pendências — automaticamente.
               </p>
+              <ul className="mt-3 space-y-1.5">
+                {[
+                  "Alertas de AVCB, seguro e mandato",
+                  "Saúde operacional calculada em tempo real",
+                  "Próximos passos priorizados",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[9px] text-emerald-700">✓</span>
+                    <span className="text-[12px] text-navy-600">{item}</span>
+                  </li>
+                ))}
+              </ul>
             </>
           )}
         </div>
@@ -326,7 +338,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
             onClick={() => setStep(2)}
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
           >
-            {isNewSindico ? "Começar o levantamento" : "Configurar alertas do prédio"}
+            {isNewSindico ? "Começar o levantamento" : "Ativar monitoramento"}
             <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -580,7 +592,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
         onClick={finish}
         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
       >
-        {isNewSindico ? "Ver meu plano de implantação" : filledDates > 0 ? "Ir para meu painel" : "Explorar mesmo assim"}
+        {isNewSindico ? "Ver meu plano de implantação" : filledDates > 0 ? "Abrir o monitoramento" : "Explorar mesmo assim"}
         <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

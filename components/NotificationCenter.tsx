@@ -10,6 +10,14 @@ import {
 } from "@/lib/session";
 import { isEnabled } from "@/lib/feature-flags";
 
+const ACTION_LABEL: Record<string, string> = {
+  open_memoria:          "Registrar no Meu prédio →",
+  open_funcionarios:     "Ver funcionários →",
+  open_documentos:       "Ver documentos →",
+  open_pendencias:       "Ver próximos passos →",
+  open_revisao_semanal:  "Fazer revisão →",
+};
+
 const SEVERITY_STYLE: Record<AppNotification["severity"], string> = {
   critical: "border-terracotta-200 bg-terracotta-50/60",
   warning:  "border-amber-200 bg-amber-50/60",
@@ -189,7 +197,7 @@ export default function NotificationCenter({ onClose, onAction }: Props) {
                         </p>
                         {n.actionKey && (
                           <p className="mt-1 text-[11px] font-medium text-navy-600">
-                            Ver →
+                            {ACTION_LABEL[n.actionKey] ?? "Ver →"}
                           </p>
                         )}
                       </button>

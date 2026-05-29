@@ -13,6 +13,7 @@ import {
   type Pendencia,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import { buildGuidanceEngine, type GuidanceEngineItem } from "@/lib/guidance-engine";
 
 type StatusItem = {
   label: string;
@@ -107,6 +108,7 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
   const [show, setShow] = useState(false);
   const [items, setItems] = useState<StatusItem[]>([]);
   const [resolvedThisMonth, setResolvedThisMonth] = useState<Pendencia[]>([]);
+  const [topActions, setTopActions] = useState<GuidanceEngineItem[]>([]);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -126,6 +128,8 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
     if (shouldShow) {
       setItems(built);
       setResolvedThisMonth(resolved);
+      const guidance = buildGuidanceEngine();
+      setTopActions(guidance.topTresHoje.slice(0, 3));
       setShow(true);
       void trackEvent("revisao_mensal_shown", { item_count: built.length });
       logInteraction("revisao-mensal-exibida", String(built.length));
@@ -182,6 +186,33 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
             </span>
           ))}
         </div>
+
+        {topActions.length > 0 && (
+          <div className="mb-3 rounded-xl border border-navy-100/60 bg-navy-50/40 px-3 py-2.5">
+            <p className="mb-2 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+              Ações prioritárias para este mês
+            </p>
+            <ul className="space-y-2">
+              {topActions.map((action) => (
+                <li key={action.id} className="flex items-start gap-2">
+                  <span
+                    className={`mt-[1px] flex-shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
+                      action.prioridade === "critico"
+                        ? "bg-terracotta-100 text-terracotta-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {action.prioridade === "critico" ? "!" : "→"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-medium leading-snug text-navy-700">{action.titulo}</p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-navy-500">{action.proximoPasso}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div className="mb-3 rounded-xl bg-navy-50/55 px-3 py-2.5">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
