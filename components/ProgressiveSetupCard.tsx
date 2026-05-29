@@ -3,6 +3,7 @@
 // Card de configuração progressiva — aparece quando o usuário tem dados parciais.
 // Mostra especificamente o que falta e o que será ativado ao preencher.
 // Não bloqueia o usuário; tem dismiss e responde ao refreshKey.
+// Fases 6, 7, 9: discovery hints + próximo passo + inferências de perfil.
 
 import { useEffect, useState } from "react";
 import { buildDataMaturity, type DataMaturityNextStep } from "@/lib/data-maturity";
@@ -23,23 +24,21 @@ function isDismissed(): boolean {
 }
 
 function dismiss(): void {
-  // Descarta por 4 horas (sessão de trabalho típica)
   sessionStorage.setItem(SESSION_DISMISS_KEY, String(Date.now() + 4 * 60 * 60 * 1000));
 }
 
 export default function ProgressiveSetupCard({ refreshKey, onNavigate }: Props) {
   const [nextStep, setNextStep] = useState<DataMaturityNextStep | null>(null);
+  const [discoveryHint, setDiscoveryHint] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    if (isDismissed()) { setDismissed(true); setHydrated(true); return; }
     const m = buildDataMaturity();
-    if (isDismissed()) {
-      setDismissed(true);
-    }
-    // Só mostra quando ainda há datas essenciais para preencher (maior impacto)
     const step = m.essentialDatesFilled < 3 ? m.nextStep : null;
     setNextStep(step);
+    setDiscoveryHint(step?.discoveryHint ?? null);
     setHydrated(true);
   }, [refreshKey]);
 
@@ -49,10 +48,7 @@ export default function ProgressiveSetupCard({ refreshKey, onNavigate }: Props) 
     ? getUnlockReasonForField(nextStep.campo)
     : nextStep.subtitulo;
 
-  const handleDismiss = () => {
-    dismiss();
-    setDismissed(true);
-  };
+  const handleDismiss = () => { dismiss(); setDismissed(true); };
 
   return (
     <div className="mx-5 mb-3 sm:mx-6">
@@ -78,11 +74,19 @@ export default function ProgressiveSetupCard({ refreshKey, onNavigate }: Props) 
             </svg>
           </button>
         </div>
+
+        {/* Phase 6: discovery hint — onde encontrar esta informação */}
+        {discoveryHint && (
+          <p className="mt-1.5 text-[10.5px] leading-snug text-navy-400">
+            <span className="font-medium">Onde encontrar:</span> {discoveryHint}
+          </p>
+        )}
+
         <div className="mt-2.5 flex items-center gap-3">
           <button
             type="button"
             onClick={() => onNavigate(nextStep.target)}
-            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-teal-600 px-4 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-teal-700 active:scale-[0.97]"
+            className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-teal-600 px-4 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-teal-700 active:scale-[0.97]"
           >
             Preencher agora
             <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden="true">

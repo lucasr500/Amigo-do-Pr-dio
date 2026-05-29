@@ -5,6 +5,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { buildCommandCenter, type CommandCenterResult, type CommandAction, type GuidanceEngineItem } from "@/lib/command-center";
+import { buildDataMaturity } from "@/lib/data-maturity";
 
 type Props = {
   refreshKey?: number;
@@ -124,6 +125,40 @@ function GuidanceTopItem({ item, rank }: { item: GuidanceEngineItem; rank: numbe
 }
 
 function EmptyState({ implantacaoPct }: { implantacaoPct: number }) {
+  const m = buildDataMaturity();
+  const unlocked = m.unlockedCapabilities;
+  const nextField = m.nextBestFields[0];
+
+  if (m.essentialDatesFilled === 0 && m.knownCount > 0) {
+    // Phase 11: usuário parcial — mostrar o que já funciona + o que falta
+    return (
+      <div className="rounded-xl bg-navy-50/60 px-4 py-4">
+        <p className="text-[12px] font-semibold text-navy-700">
+          O app já começou a trabalhar pelo seu prédio.
+        </p>
+        {unlocked.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {unlocked.slice(0, 3).map((cap) => (
+              <div key={cap} className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal-500" aria-hidden="true" />
+                <p className="text-[11px] text-navy-600">{cap}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        {nextField && (
+          <div className="mt-3 rounded-xl border border-navy-100 bg-white/70 px-3 py-2">
+            <p className="text-[10.5px] font-semibold text-navy-500">Para ativar mais</p>
+            <p className="mt-0.5 text-[12px] font-medium text-navy-800">{nextField.label}</p>
+            {nextField.unlocks && (
+              <p className="mt-0.5 text-[10.5px] text-teal-700">{nextField.unlocks}</p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl bg-navy-50/60 px-4 py-5 text-center">
       <p className="text-[13px] font-medium text-navy-700">

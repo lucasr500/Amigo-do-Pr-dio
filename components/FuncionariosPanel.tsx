@@ -9,6 +9,8 @@ import {
   addPendencia,
   getPendenciasAbertas,
   addAuditEntry,
+  getProfile,
+  saveProfile,
   type FuncionarioFerias,
   type FeriasFuncionarioStatus,
 } from "@/lib/session";
@@ -253,6 +255,8 @@ export default function FuncionariosPanel({ onSaved }: Props) {
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [hasPendencia, setHasPendencia] = useState(false);
+  // Phase 13: nível 1 — perfil conhece a resposta de "tem funcionários?"
+  const [hasFuncionariosProfile, setHasFuncionariosProfile] = useState<boolean | undefined>(undefined);
 
   const [draftNome, setDraftNome] = useState("");
   const [draftCargo, setDraftCargo] = useState("");
@@ -266,6 +270,8 @@ export default function FuncionariosPanel({ onSaved }: Props) {
     setFuncionarios(getFuncionarios());
     const pendencias = getPendenciasAbertas();
     setHasPendencia(pendencias.some((p) => p.origem === "funcionario" && p.matchedId === "ferias_geral"));
+    const prof = getProfile();
+    setHasFuncionariosProfile(prof?.hasFuncionarios);
     setHydrated(true);
   }, []);
 
@@ -427,10 +433,60 @@ export default function FuncionariosPanel({ onSaved }: Props) {
           </button>
         </div>
 
-        {funcionarios.length === 0 && !isFormActive && (
+        {/* Phase 13: nível 1 — triagem "tem funcionários?" */}
+        {funcionarios.length === 0 && !isFormActive && hasFuncionariosProfile === undefined && (
+          <div className="mb-3 rounded-[14px] border border-navy-100/60 bg-navy-50/50 px-4 py-3">
+            <p className="text-[12.5px] font-semibold text-navy-800">Seu condomínio tem funcionários próprios?</p>
+            <p className="mt-0.5 text-[11px] text-navy-500">Registrar funcionários ativa controle de férias e riscos trabalhistas.</p>
+            <div className="mt-2.5 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setAdding(true)}
+                className="inline-flex min-h-[36px] items-center rounded-full bg-navy-700 px-4 py-1.5 text-[12px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
+              >
+                Sim, vou cadastrar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const prof = getProfile();
+                  saveProfile({ ...(prof ?? {}), hasFuncionarios: false });
+                  setHasFuncionariosProfile(false);
+                  setExpanded(false);
+                  onSaved?.();
+                }}
+                className="inline-flex min-h-[36px] items-center rounded-full border border-navy-200 bg-white px-4 py-1.5 text-[12px] font-medium text-navy-600 transition-all hover:bg-navy-50 active:scale-[0.97]"
+              >
+                Não / Terceirizado
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Sem funcionários — perfil diz que não tem */}
+        {funcionarios.length === 0 && !isFormActive && hasFuncionariosProfile === false && (
+          <div className="mb-3 rounded-[14px] border border-navy-100/60 bg-navy-50/40 px-4 py-3">
+            <p className="text-[12px] text-navy-600">Perfil indica que não há funcionários próprios.</p>
+            <button
+              type="button"
+              onClick={() => {
+                const prof = getProfile();
+                saveProfile({ ...(prof ?? {}), hasFuncionarios: true });
+                setHasFuncionariosProfile(true);
+                onSaved?.();
+              }}
+              className="mt-1.5 text-[11px] text-navy-400 underline underline-offset-2 hover:text-navy-600"
+            >
+              Mudou — agora tem funcionários
+            </button>
+          </div>
+        )}
+
+        {/* Nota de contexto — perfil diz que tem, nenhum cadastrado ainda */}
+        {funcionarios.length === 0 && !isFormActive && hasFuncionariosProfile === true && (
           <div className="mb-3 rounded-xl bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Registrar funcionários, data de admissão e histórico de férias permite ao app identificar riscos trabalhistas e gerar contexto operacional. Férias vencidas há mais de 12 meses geram passivo — o app avisa antes que vire problema.
+              Registre data de admissão e histórico de férias. Férias vencidas há mais de 12 meses geram passivo trabalhista — o app avisa antes que vire problema.
             </p>
           </div>
         )}
