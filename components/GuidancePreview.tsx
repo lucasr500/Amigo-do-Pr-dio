@@ -38,17 +38,17 @@ function buildSteps(): Step[] {
   return [
     {
       label: "Datas essenciais (AVCB, seguro, mandato)",
-      detail: "Ativa alertas de prazo e o painel de saúde operacional.",
+      detail: "AVCB vencido gera autuação, multa e risco de interdição. Sem cadastro, o app não consegue alertar.",
       done: hasDates,
     },
     {
       label: "Funcionários e situação de férias",
-      detail: "Previne riscos trabalhistas e passivos com férias vencidas.",
+      detail: "Férias vencidas acumulam passivo trabalhista — o síndico responde pessoalmente pela irregularidade.",
       done: hasFuncs,
     },
     {
       label: "Documentos essenciais do condomínio",
-      detail: "Mantém convenção, laudos e contratos organizados e rastreáveis.",
+      detail: "Convenção, laudos e contratos inacessíveis atrasam decisões urgentes e expõem o condomínio juridicamente.",
       done: hasDocs,
     },
   ];
@@ -67,7 +67,7 @@ export default function GuidancePreview({ onSetup, onAssistente }: Props) {
     <section className="px-5 pb-4 sm:px-6">
       <div className="mb-2.5 flex items-center gap-2">
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-          Para começar
+          O que seu prédio corre risco sem monitorar
         </p>
         {doneCount > 0 && (
           <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-px text-[9.5px] font-semibold uppercase tracking-[0.07em] text-emerald-600">
@@ -114,7 +114,7 @@ export default function GuidancePreview({ onSetup, onAssistente }: Props) {
                 onClick={onSetup}
                 className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-navy-700 px-4 py-2 text-[12.5px] font-semibold text-cream-50 transition-all duration-200 hover:bg-navy-800 active:scale-[0.98]"
               >
-                {doneCount > 0 ? "Continuar configurando" : "Ativar monitoramento"}
+                {doneCount > 0 ? "Continuar ativando alertas" : "Ativar monitoramento de risco"}
                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -126,7 +126,7 @@ export default function GuidancePreview({ onSetup, onAssistente }: Props) {
                 onClick={onAssistente}
                 className="text-[12px] font-medium text-navy-500 hover:text-navy-700"
               >
-                Ou faça uma pergunta →
+                Tenho uma dúvida urgente →
               </button>
             )}
           </div>

@@ -105,6 +105,7 @@ const RelatorioSaudePanel = dynamic(() => import("@/components/RelatorioSaudePan
 const CommandCenterPanel = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
 const HomePriorityStrip = dynamic(() => import("@/components/HomePriorityStrip"), { ssr: false });
+const RiskPreviewStrip = dynamic(() => import("@/components/RiskPreviewStrip"), { ssr: false });
 const AccountPanel = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
 const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
@@ -508,7 +509,6 @@ export default function HomePage() {
               <>
                 {/* Saudação dinâmica */}
                 <DynamicGreeting condoName={condoName} />
-                <PushPromptStrip />
                 <HomeSaudeCard
                   refreshKey={refreshKey}
                   onClick={() => navigateToSubView("saude")}
@@ -528,6 +528,7 @@ export default function HomePage() {
                   }}
                   onOpenNotifications={() => setShowNotificationCenter(true)}
                 />
+                <PushPromptStrip />
                 {urgentCount > 0 && (
                   <div className="px-5 pb-3 sm:px-6">
                     <button
@@ -582,17 +583,24 @@ export default function HomePage() {
               <>
                 <Hero
                   onSetup={handleScrollToMemoria}
-                  onAssistente={() => setActiveTab("assistente")}
+                  onAssistente={() => handleSuggestionSelect("O que o síndico precisa monitorar no condomínio?")}
                   onSuggestionSelect={handleSuggestionSelect}
                 />
-                <div className="px-5 pb-1 sm:px-6">
+                <RiskPreviewStrip onAssistente={handleSuggestionSelect} />
+                <div className="px-5 pb-3 sm:px-6">
                   <button
                     type="button"
                     onClick={handleActivateDemo}
-                    className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-navy-100/70 bg-white/80 px-4 py-3 text-[12.5px] font-medium text-navy-600 transition-all hover:bg-white hover:shadow-sm active:scale-[0.98]"
+                    className="flex w-full items-center gap-3 rounded-[16px] border border-amber-200/70 bg-amber-50/60 px-4 py-3.5 text-left transition-all hover:bg-amber-50 hover:border-amber-300 active:scale-[0.98]"
                   >
-                    <span aria-hidden="true" className="text-[13px]">👁️</span>
-                    Ver exemplo de prédio preenchido
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-[16px]" aria-hidden="true">👁️</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-semibold text-navy-800">Ver alertas de um prédio real em risco</p>
+                      <p className="mt-0.5 text-[11.5px] text-navy-500">Exemplo com AVCB vencido, seguro próximo e pendências ativas</p>
+                    </div>
+                    <svg className="h-4 w-4 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                 </div>
                 <GuidancePreview onSetup={handleScrollToMemoria} onAssistente={() => navigateTab("assistente")} />

@@ -57,10 +57,42 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
 
   if (!hydrated) return <div className="mx-5 h-[58px] animate-pulse rounded-[16px] bg-navy-50/80 sm:mx-6" />;
 
-  // Phase 10 — estado parcial: usuário tem algum dado mas sem datas essenciais
+  // Estado parcial: usuário tem algum dado mas sem datas essenciais
   if (!data || data.riskLevel === "sem-dados") {
     const maturity = buildDataMaturity();
-    if (maturity.knownCount === 0) return null;
+
+    // Zero dados — teaser de risco em vez de null
+    if (maturity.knownCount === 0) {
+      return (
+        <section className="px-5 pb-3 sm:px-6">
+          <div className="rounded-[16px] border border-navy-100 bg-navy-50/40 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2 w-2 flex-shrink-0 rounded-full bg-navy-300" aria-hidden="true" />
+              <p className="flex-1 min-w-0 text-[12px] font-medium leading-snug text-navy-600">
+                Monitoramento inativo — nenhuma data cadastrada
+              </p>
+            </div>
+            <p className="mt-1.5 text-[10.5px] leading-relaxed text-navy-400">
+              Com as datas cadastradas, o app detecta AVCB vencido, seguro próximo ao vencimento e mandato expirado automaticamente.
+            </p>
+            <button
+              type="button"
+              onClick={() => onNavigate?.("condominio")}
+              className="mt-2 flex min-h-[44px] w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold leading-snug text-navy-800">Ativar monitoramento de risco</p>
+                <p className="mt-0.5 text-[10.5px] leading-snug text-navy-500">Cadastre AVCB, seguro ou mandato para começar</p>
+              </div>
+              <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </section>
+      );
+    }
+
     const activeCount = maturity.unlockedCapabilities.length;
     const nextField   = maturity.nextBestFields[0];
     return (

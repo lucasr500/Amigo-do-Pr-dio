@@ -116,7 +116,7 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
               Saúde operacional
             </p>
             <p className="mt-0.5 text-[12px] leading-snug text-navy-400">
-              Adicione prazos para ativar o monitoramento.
+              Sem dados, o app não alerta sobre AVCB vencido ou seguro prestes a expirar.
             </p>
           </div>
           <svg className="h-4 w-4 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">

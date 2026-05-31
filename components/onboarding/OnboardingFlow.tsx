@@ -329,6 +329,9 @@ export default function OnboardingFlow({ onComplete }: Props) {
                   </li>
                 ))}
               </ul>
+              <p className="mt-3 border-l-2 border-terracotta-300 pl-3 text-[12px] leading-relaxed text-navy-500">
+                Síndicos sem alertas ativos geralmente descobrem o problema depois da multa ou da interdição.
+              </p>
             </>
           )}
         </div>
