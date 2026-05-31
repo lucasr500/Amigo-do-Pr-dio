@@ -2,6 +2,7 @@
 // Lazy-loaded: o SDK nunca entra no bundle inicial.
 
 import type { UserBackup } from "@/lib/session";
+import { SESSION_SCHEMA_VERSION } from "@/lib/session";
 
 export interface SnapshotPayload {
   user_id: string;
@@ -74,7 +75,7 @@ export function buildSnapshot(userId: string, backup: UserBackup): SnapshotPaylo
   return {
     user_id: userId,
     payload: backup,
-    version: 5,
+    version: SESSION_SCHEMA_VERSION,
     device_hint:
       typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 80) : null,
   };
