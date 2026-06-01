@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { isEnabled } from "@/lib/feature-flags";
-import { getSyncStatus, formatLastSync, type SyncStatus } from "@/lib/sync/syncStatus";
+import { getSyncStatus, formatLastSync, setSyncReadyToSync, type SyncStatus } from "@/lib/sync/syncStatus";
 import { getUserBackupJson, type UserBackup } from "@/lib/session";
+import type { RemoteSnapshotMeta } from "@/lib/sync/syncEngine";
 
 type MigrationStep = "idle" | "sending" | "sent" | "error";
 
@@ -12,9 +13,30 @@ type Props = {
   onRefresh?: () => void;
 };
 
+const STATE_LABEL: Record<string, string> = {
+  idle:          "Dados locais neste dispositivo",
+  local_only:    "Dados locais neste dispositivo",
+  ready_to_sync: "Pronto para salvar na nuvem",
+  syncing:       "Sincronizando…",
+  synced:        "Backup salvo na nuvem",
+  error:         "Erro ao sincronizar",
+  offline:       "Offline — backup pendente",
+};
+
+const STATE_COLOR: Record<string, string> = {
+  idle:          "text-navy-400",
+  local_only:    "text-navy-400",
+  ready_to_sync: "text-teal-500",
+  syncing:       "text-teal-500",
+  synced:        "text-teal-600",
+  error:         "text-red-500",
+  offline:       "text-amber-500",
+};
+
 export default function AccountPanel({ onRefresh }: Props) {
   const { mode, user, isAuthenticated, sendMagicLink, signOut } = useAuth();
   const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
+  const [remoteMeta, setRemoteMeta] = useState<RemoteSnapshotMeta | null>(null);
   const [email, setEmail] = useState("");
   const [migStep, setMigStep] = useState<MigrationStep>("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -24,9 +46,26 @@ export default function AccountPanel({ onRefresh }: Props) {
   const authEnabled = isEnabled("auth_enabled");
   const syncEnabled = isEnabled("sync_enabled");
 
+  // Carrega status local e metadados remotos ao montar (usuário autenticado)
   useEffect(() => {
-    setSyncStatus(getSyncStatus());
-  }, []);
+    const local = getSyncStatus();
+    setSyncStatus(local);
+
+    if (!isAuthenticated || !user || user.type !== "authenticated") return;
+
+    // Se nunca sincronizou neste dispositivo, marca como ready_to_sync
+    if (local.state === "idle") {
+      setSyncReadyToSync();
+      setSyncStatus(getSyncStatus());
+    }
+
+    // Verifica se existe backup remoto (sem baixar payload)
+    (async () => {
+      const { checkRemoteSnapshot } = await import("@/lib/sync/syncEngine");
+      const meta = await checkRemoteSnapshot(user.id);
+      setRemoteMeta(meta);
+    })();
+  }, [isAuthenticated, user]);
 
   async function handleSendMagicLink() {
     if (!email.trim() || !email.includes("@")) {
@@ -52,14 +91,21 @@ export default function AccountPanel({ onRefresh }: Props) {
       const { uploadSnapshot } = await import("@/lib/sync/syncEngine");
       const { setSyncSyncing, setSyncSynced, setSyncError } = await import("@/lib/sync/syncStatus");
       setSyncSyncing();
+      setSyncStatus(getSyncStatus());
+
       const backup = JSON.parse(getUserBackupJson()) as UserBackup;
       const result = await uploadSnapshot(user.id, backup);
+
       if (result.ok) {
         setSyncSynced();
-        setSyncFeedback("Dados sincronizados com sucesso.");
+        setSyncFeedback("Backup salvo na nuvem com sucesso.");
+        // Atualiza meta remota após upload bem-sucedido
+        const { checkRemoteSnapshot } = await import("@/lib/sync/syncEngine");
+        const meta = await checkRemoteSnapshot(user.id);
+        setRemoteMeta(meta);
       } else {
         setSyncError(result.error ?? "Erro desconhecido");
-        setSyncFeedback(result.error ?? "Falha na sincronização.");
+        setSyncFeedback(result.error ?? "Falha ao salvar backup.");
       }
       setSyncStatus(getSyncStatus());
       onRefresh?.();
@@ -71,23 +117,8 @@ export default function AccountPanel({ onRefresh }: Props) {
   async function handleSignOut() {
     await signOut();
     setSyncStatus(getSyncStatus());
+    setRemoteMeta(null);
   }
-
-  const stateLabel: Record<string, string> = {
-    idle: "Nunca sincronizado",
-    syncing: "Sincronizando…",
-    synced: "Sincronizado",
-    error: "Erro na última sincronização",
-    offline: "Offline",
-  };
-
-  const stateColor: Record<string, string> = {
-    idle: "text-navy-400",
-    syncing: "text-teal-500",
-    synced: "text-teal-600",
-    error: "text-red-500",
-    offline: "text-amber-500",
-  };
 
   if (mode === "loading") {
     return (
@@ -109,7 +140,7 @@ export default function AccountPanel({ onRefresh }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[14px] font-semibold text-navy-800 truncate">{user.email}</p>
-              <p className="text-[11px] font-medium text-teal-600">Conta ativa</p>
+              <p className="text-[11px] font-medium text-teal-600">Conta conectada</p>
             </div>
             <button
               type="button"
@@ -135,35 +166,60 @@ export default function AccountPanel({ onRefresh }: Props) {
         )}
       </div>
 
-      {/* ── Status de sincronização (autenticado + sync habilitado) ── */}
-      {isAuthenticated && syncEnabled && syncStatus && (
+      {/* ── Proteção de dados na nuvem (autenticado) ── */}
+      {isAuthenticated && authEnabled && user?.type === "authenticated" && syncStatus && (
         <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[13px] font-semibold text-navy-700">Sincronização na nuvem</p>
-              <p className={`text-[11px] font-medium ${stateColor[syncStatus.state] ?? "text-navy-400"}`}>
-                {stateLabel[syncStatus.state] ?? syncStatus.state}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleManualSync}
-              disabled={syncing}
-              className="rounded-xl bg-teal-600 px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
-            >
-              {syncing ? "Sincronizando…" : "Sincronizar agora"}
-            </button>
+          <div>
+            <p className="text-[13px] font-semibold text-navy-700">Proteção de dados</p>
+            <p className={`text-[11px] font-medium mt-0.5 ${STATE_COLOR[syncStatus.state] ?? "text-navy-400"}`}>
+              {STATE_LABEL[syncStatus.state] ?? syncStatus.state}
+              {syncStatus.state === "error" && syncStatus.errorMsg
+                ? `: ${syncStatus.errorMsg}`
+                : null}
+            </p>
           </div>
-          {syncStatus.lastSyncAt && (
+
+          {/* Data do último backup (local ou remoto) */}
+          {syncStatus.state === "synced" && syncStatus.lastSyncAt && (
             <p className="text-[11px] text-navy-400">
-              Último sync: {formatLastSync(syncStatus.lastSyncAt)}
+              Último backup: {formatLastSync(syncStatus.lastSyncAt)}
             </p>
           )}
+          {syncStatus.state !== "synced" && remoteMeta?.exists && remoteMeta.updatedAt && (
+            <p className="text-[11px] text-navy-400">
+              Backup na nuvem: {formatLastSync(remoteMeta.updatedAt)}
+              {remoteMeta.version != null ? ` · v${remoteMeta.version}` : ""}
+            </p>
+          )}
+
+          {/* Aviso de restauração disponível */}
+          {remoteMeta?.exists && (
+            <p className="text-[11px] text-navy-500 leading-relaxed rounded-xl bg-navy-50 px-3 py-2">
+              Existe um backup na nuvem. Restaurar substituirá os dados locais e exigirá confirmação.
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={syncing}
+            className="w-full rounded-xl bg-teal-600 py-2.5 text-[13px] font-semibold text-white hover:bg-teal-700 disabled:opacity-50 transition-colors"
+          >
+            {syncing ? "Salvando…" : "Salvar backup na nuvem"}
+          </button>
+
           {syncFeedback && (
             <p className={`text-[11px] ${syncFeedback.includes("sucesso") ? "text-teal-600" : "text-red-500"}`}>
               {syncFeedback}
             </p>
           )}
+        </div>
+      )}
+
+      {/* ── Auto-sync status (quando sync_enabled ativo) ── */}
+      {isAuthenticated && syncEnabled && syncStatus && syncStatus.state === "syncing" && (
+        <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+          <p className="text-[12px] text-teal-500 font-medium">Sincronização automática em andamento…</p>
         </div>
       )}
 

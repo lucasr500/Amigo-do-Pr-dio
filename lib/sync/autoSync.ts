@@ -18,6 +18,12 @@ interface SyncJob {
   enqueuedAt: string;
 }
 
+function devLog(msg: string, data?: Record<string, unknown>): void {
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[autoSync] ${msg}`, data ?? "");
+  }
+}
+
 function readQueue(): SyncJob | null {
   if (typeof window === "undefined") return null;
   try {
@@ -51,9 +57,11 @@ async function executeSync(userId: string): Promise<boolean> {
       setSyncSynced();
       writeQueue(null);
       retryCount = 0;
+      devLog("sync ok", { userId: userId.slice(0, 8) + "…" });
       return true;
     } else {
       setSyncError(result.error ?? "Erro desconhecido.");
+      devLog("sync failed", { error: result.error });
       return false;
     }
   } catch (e) {
@@ -64,13 +72,15 @@ async function executeSync(userId: string): Promise<boolean> {
 
 async function retryLoop(userId: string): Promise<void> {
   if (retryCount >= MAX_RETRIES) {
+    devLog("max retries reached, giving up");
     retryCount = 0;
     return;
   }
   retryCount++;
+  devLog("retry", { attempt: retryCount });
   await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * retryCount));
   const ok = await executeSync(userId);
-  if (!ok) retryLoop(userId);
+  if (!ok) await retryLoop(userId);
 }
 
 // Chama após qualquer mutação de dados.
@@ -95,6 +105,7 @@ export async function flushPendingSync(): Promise<void> {
   if (!isEnabled("sync_enabled")) return;
   const job = readQueue();
   if (!job) return;
+  devLog("flushing pending job", { enqueuedAt: job.enqueuedAt });
   await executeSync(job.userId);
 }
 
@@ -102,6 +113,7 @@ export async function flushPendingSync(): Promise<void> {
 export function startOnlineListener(): () => void {
   if (typeof window === "undefined") return () => {};
   const handler = () => {
+    if (!isEnabled("sync_enabled")) return;
     const job = readQueue();
     if (job) executeSync(job.userId);
   };

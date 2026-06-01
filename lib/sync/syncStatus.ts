@@ -2,7 +2,7 @@
 
 const KEY = "amigo_sync_status";
 
-export type SyncState = "idle" | "syncing" | "synced" | "error" | "offline";
+export type SyncState = "idle" | "local_only" | "ready_to_sync" | "syncing" | "synced" | "error" | "offline";
 
 export interface SyncStatus {
   state: SyncState;
@@ -32,6 +32,14 @@ function write(status: SyncStatus): void {
 
 export function getSyncStatus(): SyncStatus {
   return read();
+}
+
+export function setSyncLocalOnly(): void {
+  write({ state: "local_only", lastSyncAt: read().lastSyncAt, errorMsg: null });
+}
+
+export function setSyncReadyToSync(): void {
+  write({ state: "ready_to_sync", lastSyncAt: read().lastSyncAt, errorMsg: null });
 }
 
 export function setSyncSyncing(): void {
