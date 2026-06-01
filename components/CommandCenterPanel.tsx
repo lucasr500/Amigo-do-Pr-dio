@@ -240,10 +240,12 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
             <div>
               <p className="text-[13px] font-semibold text-navy-800">Centro de comando</p>
               <p className="text-[10.5px] text-navy-400">
-                {data.allActions.length === 0
-                  ? "Nenhuma ação identificada"
-                  : `${data.allActions.length} ação${data.allActions.length !== 1 ? "ões" : ""} · ${riskCfg.label}`}
-                {data.implantacaoPct < 80 && (
+                {data.riskLevel === "sem-dados"
+                  ? "Visão completa disponível após cadastrar os dados essenciais"
+                  : data.allActions.length === 0
+                    ? "Nenhuma ação identificada"
+                    : `${data.allActions.length} ação${data.allActions.length !== 1 ? "ões" : ""} · ${riskCfg.label}`}
+                {data.riskLevel !== "sem-dados" && data.implantacaoPct < 80 && (
                   <span className="ml-1.5 text-[10px] text-navy-300">· configuração {data.implantacaoPct}%</span>
                 )}
               </p>

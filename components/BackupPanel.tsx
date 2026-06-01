@@ -130,14 +130,13 @@ export default function BackupPanel({ onImported }: Props) {
             Seus dados
           </p>
           <p className="mt-0.5 text-[13px] font-semibold text-navy-800">
-            Backup do condomínio
+            Cópia de segurança
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
-            Seus dados ficam salvos neste dispositivo. Enquanto não há login, o
-            backup protege suas informações e permite restaurar em outro aparelho.
+            Seus dados ficam salvos neste dispositivo. Baixar uma cópia protege contra perda ao trocar de celular ou limpar o navegador.
           </p>
           <p className="mt-2 text-[11px] leading-relaxed text-navy-400">
-            Exporte regularmente — especialmente antes de trocar de celular, limpar o navegador ou usar em outro dispositivo. O arquivo exportado é local; guarde em um lugar seguro (e-mail, nuvem ou galeria).
+            Guarde o arquivo em lugar seguro — e-mail, nuvem pessoal ou galeria. Ele pode ser restaurado a qualquer momento, mesmo sem internet.
           </p>
           <p className="mt-2 text-[11px] text-navy-400">
             {lastBackupAt
@@ -195,8 +194,8 @@ export default function BackupPanel({ onImported }: Props) {
               </svg>
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-[12.5px] font-medium text-navy-800">Exportar dados</p>
-              <p className="text-[11px] text-navy-400">Backup v5: memória, documentos, funcionários, próximos passos, ocorrências e agenda</p>
+              <p className="text-[12.5px] font-medium text-navy-800">Baixar cópia de segurança</p>
+              <p className="text-[11px] text-navy-400">Inclui agenda, documentos, funcionários, pendências e histórico</p>
             </div>
             <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -231,9 +230,9 @@ export default function BackupPanel({ onImported }: Props) {
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-[12.5px] font-medium text-navy-800">
-                  {sharing ? "Compartilhando…" : "Compartilhar backup"}
+                  {sharing ? "Enviando…" : "Enviar por e-mail ou mensagem"}
                 </p>
-                <p className="text-[11px] text-navy-400">Enviar arquivo via WhatsApp, e-mail ou nuvem</p>
+                <p className="text-[11px] text-navy-400">Compartilhe por e-mail, mensagem ou salvando em outra nuvem</p>
               </div>
               <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -251,8 +250,8 @@ export default function BackupPanel({ onImported }: Props) {
                 </svg>
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-[12.5px] font-medium text-navy-800">Restaurar backup</p>
-                <p className="text-[11px] text-navy-400">Selecione um arquivo .json exportado anteriormente</p>
+                <p className="text-[12.5px] font-medium text-navy-800">Restaurar de arquivo</p>
+                <p className="text-[11px] text-navy-400">Selecione o arquivo de backup baixado anteriormente</p>
               </div>
               <input
                 ref={fileInputRef}

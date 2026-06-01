@@ -11,7 +11,7 @@ import {
   HEALTH_SHORT_PHRASE,
   hasMinimumHealthData as checkMinHealth,
 } from "@/lib/health-config";
-import { getMemoriaOperacional } from "@/lib/session";
+import { getMemoriaOperacional, getMemoriaAssistida } from "@/lib/session";
 import { getHealthHistoryStats } from "@/lib/health-history";
 
 function hasMinimumHealthData(): boolean {
@@ -61,15 +61,25 @@ type TrendBadge = { label: string; color: string } | null;
 
 type Props = { refreshKey?: number; onClick?: () => void };
 
+function checkMissingEssentials(): boolean {
+  const ma = getMemoriaAssistida();
+  const mo = getMemoriaOperacional();
+  const avcbMissing = !mo.vencimentoAVCB && (!ma.avcb || ma.avcb.status === "unknown" || ma.avcb.status === "to_discover");
+  const seguroMissing = !mo.vencimentoSeguro && (!ma.seguro || ma.seguro.status === "unknown" || ma.seguro.status === "to_discover");
+  return avcbMissing || seguroMissing;
+}
+
 export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
   const [result, setResult]     = useState<HealthScoreResult | null>(null);
   const [hasData, setHasData]   = useState(false);
   const [trendBadge, setTrendBadge] = useState<TrendBadge>(null);
+  const [missingEssentials, setMissingEssentials] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     setHasData(hasMinimumHealthData());
     setResult(computeHealthScore());
+    setMissingEssentials(checkMissingEssentials());
 
     const stats = getHealthHistoryStats();
     if (stats.trend === "up" && stats.previousWeek !== null) {
@@ -142,15 +152,25 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
         <RingIndicator pct={result.percentage} color={ringColor} />
 
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold leading-snug text-navy-800">
-            Saúde operacional
-          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-[14px] font-semibold leading-snug text-navy-800">
+              Saúde operacional
+            </p>
+            {missingEssentials && (
+              <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[9.5px] font-semibold text-amber-600 ring-1 ring-amber-200/80">
+                Dados incompletos
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-[12px] leading-snug text-navy-600">{phrase}</p>
           {trendBadge && (
             <p className={`mt-0.5 text-[10.5px] font-medium ${trendBadge.color}`}>
               {trendBadge.label}
             </p>
           )}
+          <p className="mt-1 text-[10px] text-navy-400">
+            Mede organização dos dados. Não indica regularidade jurídica.
+          </p>
         </div>
 
         <svg

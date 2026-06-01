@@ -61,20 +61,45 @@ export default function GuidancePreview({ onSetup, onAssistente }: Props) {
     setSteps(buildSteps());
   }, []);
 
-  const doneCount = steps.filter((s) => s.done).length;
+  const doneCount    = steps.filter((s) => s.done).length;
+  const pendingCount = steps.filter((s) => !s.done).length;
 
   return (
     <section className="px-5 pb-4 sm:px-6">
-      <div className="mb-2.5 flex items-center gap-2">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-          O que seu prédio corre risco sem monitorar
-        </p>
+      {/* Header "Radar de Riscos" */}
+      <div className="mb-1 flex items-center justify-between">
+        <div>
+          <p className="text-[13px] font-semibold text-navy-800">Radar de Riscos</p>
+          <p className="text-[11px] text-navy-400 mt-0.5">
+            O que merece atenção antes de virar problema
+          </p>
+        </div>
         {doneCount > 0 && (
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-px text-[9.5px] font-semibold uppercase tracking-[0.07em] text-emerald-600">
-            {doneCount} de 3 feito{doneCount > 1 ? "s" : ""}
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-px text-[9.5px] font-semibold text-emerald-600">
+            {doneCount} de 3 ativo{doneCount > 1 ? "s" : ""}
           </span>
         )}
       </div>
+
+      {/* Métricas rápidas */}
+      {(doneCount > 0 || pendingCount > 0) && (
+        <div className="mb-2.5 flex items-center gap-1.5 text-[10.5px] text-navy-400">
+          {doneCount > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 flex-shrink-0" aria-hidden="true" />
+              {doneCount} monitorado{doneCount > 1 ? "s" : ""}
+            </span>
+          )}
+          {doneCount > 0 && pendingCount > 0 && <span aria-hidden="true">·</span>}
+          {pendingCount > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" aria-hidden="true" />
+              {pendingCount} sem informação
+            </span>
+          )}
+        </div>
+      )}
+
 
       <div className="rounded-[18px] border border-navy-100/70 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_4px_12px_-6px_rgba(31,49,71,0.07)]">
         <div className="space-y-3">

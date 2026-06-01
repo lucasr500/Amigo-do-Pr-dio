@@ -14,13 +14,13 @@ type Props = {
 };
 
 const STATE_LABEL: Record<string, string> = {
-  idle:          "Dados locais neste dispositivo",
-  local_only:    "Dados locais neste dispositivo",
+  idle:          "Dados salvos localmente",
+  local_only:    "Dados salvos localmente",
   ready_to_sync: "Pronto para salvar na nuvem",
-  syncing:       "Sincronizando…",
-  synced:        "Backup salvo na nuvem",
-  error:         "Erro ao sincronizar",
-  offline:       "Offline — backup pendente",
+  syncing:       "Salvando backup…",
+  synced:        "Backup salvo com sucesso",
+  error:         "Não foi possível salvar agora",
+  offline:       "Sem conexão — backup pendente",
 };
 
 const STATE_COLOR: Record<string, string> = {
@@ -151,16 +151,18 @@ export default function AccountPanel({ onRefresh }: Props) {
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-start gap-3">
             <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-navy-400">
               <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none">
                 <circle cx="10" cy="7" r="3" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-[14px] font-semibold text-navy-700">Modo local</p>
-              <p className="text-[11px] text-navy-400">Dados salvos neste dispositivo</p>
+              <p className="text-[11px] text-navy-400 leading-relaxed mt-0.5">
+                Seus dados ficam salvos neste dispositivo. Entre com seu e-mail para ativar o backup em nuvem.
+              </p>
             </div>
           </div>
         )}
@@ -195,7 +197,7 @@ export default function AccountPanel({ onRefresh }: Props) {
           {/* Aviso de restauração disponível */}
           {remoteMeta?.exists && (
             <p className="text-[11px] text-navy-500 leading-relaxed rounded-xl bg-navy-50 px-3 py-2">
-              Existe um backup na nuvem. Restaurar substituirá os dados locais e exigirá confirmação.
+              Restaurar este backup substituiria os dados deste dispositivo. Faça isso apenas se necessário e após salvar uma cópia local.
             </p>
           )}
 
@@ -209,8 +211,10 @@ export default function AccountPanel({ onRefresh }: Props) {
           </button>
 
           {syncFeedback && (
-            <p className={`text-[11px] ${syncFeedback.includes("sucesso") ? "text-teal-600" : "text-red-500"}`}>
-              {syncFeedback}
+            <p className={`text-[11px] leading-relaxed ${syncFeedback.includes("sucesso") ? "text-teal-600" : "text-red-500"}`}>
+              {syncFeedback.includes("sucesso")
+                ? syncFeedback
+                : "Não foi possível salvar agora. Seus dados locais continuam seguros neste dispositivo."}
             </p>
           )}
         </div>

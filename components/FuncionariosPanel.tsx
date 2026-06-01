@@ -579,6 +579,9 @@ export default function FuncionariosPanel({ onSaved }: Props) {
         <p className="mt-3 text-[10px] leading-relaxed text-navy-400">
           Férias vencidas há mais de 12 meses geram passivo trabalhista. Registre as datas de admissão e última fruição para acompanhamento preventivo.
         </p>
+        <p className="mt-1 text-[10px] leading-relaxed text-navy-400">
+          Informações trabalhistas são apoio de organização. Confirme prazos, contratos e obrigações com a contabilidade ou assessoria competente do condomínio.
+        </p>
       </div>
     </section>
   );

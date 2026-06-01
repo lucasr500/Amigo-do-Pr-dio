@@ -409,13 +409,32 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
         </div>
       )}
 
+      {/* ── Microconquista (aba Concluídas) ─────────────────────────── */}
+      {activeFilter === "Concluídas" && (() => {
+        const thisMonthStr = new Date().toISOString().slice(0, 7);
+        const resolvedThisMonth = concluidas.filter((p) => p.completedAt?.startsWith(thisMonthStr)).length;
+        if (resolvedThisMonth === 0) return null;
+        return (
+          <div className="px-5 pb-2 sm:px-6">
+            <div className="flex items-center gap-2 rounded-xl bg-teal-50 px-3.5 py-2.5 ring-1 ring-teal-100">
+              <svg className="h-4 w-4 flex-shrink-0 text-teal-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <p className="text-[12px] font-medium text-teal-700">
+                Você resolveu {resolvedThisMonth} {resolvedThisMonth === 1 ? "item" : "itens"} este mês
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Lista de pendências ──────────────────────────────────────── */}
       <div className="space-y-3 px-5 pb-8 sm:px-6">
         {displayItems.length === 0 ? (
           <div className="rounded-[18px] border border-navy-100/70 bg-white px-4 py-6 shadow-card">
             {activeFilter === "Todas" && (
               <div className="text-center">
-                <p className="text-[13px] font-semibold text-navy-700">Nenhuma pendência aberta.</p>
+                <p className="text-[13px] font-semibold text-navy-700">Nenhuma pendência crítica no momento.</p>
                 <p className="mt-1.5 mx-auto max-w-[280px] text-[12px] leading-relaxed text-navy-400">
                   Quando surgir algo para acompanhar, crie uma pendência e mantenha o controle por aqui.
                 </p>

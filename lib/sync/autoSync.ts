@@ -43,6 +43,7 @@ function writeQueue(job: SyncJob | null): void {
 }
 
 async function executeSync(userId: string): Promise<boolean> {
+  if (!isEnabled("sync_enabled")) return false;
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     setSyncOffline();
     return false;

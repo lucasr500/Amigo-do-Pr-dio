@@ -604,6 +604,9 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         <p className="mt-3 text-[10px] leading-relaxed text-navy-400">
           ★ = documentos críticos. &ldquo;Localizar&rdquo; cria próximo passo automático. &ldquo;N/A&rdquo; = não se aplica a este condomínio.
         </p>
+        <p className="mt-1 text-[10px] leading-relaxed text-navy-400">
+          Esta lista ajuda a organizar documentos. Não substitui as exigências específicas do município, Corpo de Bombeiros, seguradora ou administradora.
+        </p>
       </div>
     </section>
   );

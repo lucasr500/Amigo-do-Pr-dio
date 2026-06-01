@@ -14,6 +14,7 @@ import {
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { buildGuidanceEngine, type GuidanceEngineItem } from "@/lib/guidance-engine";
+import { computeHealthScore } from "@/lib/health-score";
 
 type StatusItem = {
   label: string;
@@ -110,6 +111,7 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
   const [resolvedThisMonth, setResolvedThisMonth] = useState<Pendencia[]>([]);
   const [topActions, setTopActions] = useState<GuidanceEngineItem[]>([]);
   const [dismissed, setDismissed] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const meta = getSessionMeta();
@@ -144,6 +146,72 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
   const attentionCount = items.filter((i) => i.status !== "ok").length;
 
   const mes = new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+  const STATUS_LABEL: Record<StatusItem["status"], string> = {
+    ok: "Em ordem",
+    atencao: "Atenção",
+    revisar: "Revisar",
+    vencido: "Vencido",
+  };
+
+  function buildMonthlyReportText(): string {
+    const profile = getProfile();
+    const nome = profile?.nomeCondominio ?? "Condomínio";
+    const health = computeHealthScore();
+    const statusPhrase =
+      health.statusKey === "tudo-em-ordem"    ? "Tudo em ordem"
+      : health.statusKey === "bem-acompanhado" ? "Bem acompanhado"
+      : health.statusKey === "em-evolucao"     ? "Em evolução"
+      : health.statusKey === "atencao"         ? "Atenção necessária"
+      : "Crítico";
+
+    const lines: string[] = [
+      `RESUMO OPERACIONAL — ${nome.toUpperCase()} — ${mes.toUpperCase()}`,
+      "",
+      "SITUAÇÃO GERAL",
+      `Saúde operacional: ${health.percentage}% (${statusPhrase})`,
+      "",
+      "ITENS REVISADOS",
+      ...items.map((it) => `• ${it.icon} ${it.label}: ${STATUS_LABEL[it.status]}`),
+    ];
+
+    if (resolvedThisMonth.length > 0) {
+      lines.push("", "RESOLVIDO ESTE MÊS");
+      resolvedThisMonth.forEach((p) => lines.push(`✓ ${shortTitle(p.titulo)}`));
+    }
+
+    if (topActions.length > 0) {
+      lines.push("", "PRÓXIMAS PRIORIDADES");
+      topActions.forEach((a, i) => lines.push(`${i + 1}. ${a.titulo}`));
+    }
+
+    lines.push(
+      "",
+      "---",
+      `Gerado pelo Amigo do Prédio em ${new Date().toLocaleDateString("pt-BR")}`,
+      "Revise antes de compartilhar.",
+    );
+
+    return lines.join("\n");
+  }
+
+  async function handleCopyReport() {
+    const text = buildMonthlyReportText();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  }
 
   const handleDone = () => {
     recordRevisaoMensal();
@@ -234,13 +302,35 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
           )}
         </div>
 
-        <div className="flex items-center gap-3 border-t border-navy-50 pt-3">
+        <div className="flex flex-wrap items-center gap-3 border-t border-navy-50 pt-3">
           <button
             type="button"
             onClick={handleDone}
             className="rounded-xl bg-navy-700 px-4 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-navy-800 active:scale-95"
           >
             Revisão concluída
+          </button>
+          <button
+            type="button"
+            onClick={handleCopyReport}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-navy-100 bg-white px-3.5 py-1.5 text-[12px] font-medium text-navy-600 transition-colors hover:bg-navy-50 active:scale-95"
+          >
+            {copied ? (
+              <>
+                <svg className="h-3 w-3 text-teal-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="text-teal-600">Copiado!</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M3 11V4a1 1 0 011-1h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Copiar resumo
+              </>
+            )}
           </button>
           <button
             type="button"
