@@ -360,7 +360,7 @@ export default function Response({
     setShowToast(false);
     setSavedPendenciaId(null);
     setFeedbackGiven(null);
-  }, [answer, isLoading]);
+  }, [answer, entry, isLoading]);
 
   // Scroll suave até a resposta quando ela aparece
   useEffect(() => {
@@ -381,7 +381,7 @@ export default function Response({
       context_type: localContextNotice.contextType,
       has_memoria: true,
     });
-  }, [entry, localContextNotice?.contextType]);
+  }, [entry, localContextNotice]);
 
   const handleCopy = async () => {
     if (!answer) return;

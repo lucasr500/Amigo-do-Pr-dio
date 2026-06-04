@@ -133,12 +133,16 @@ export default function BackupPanel({ onImported }: Props) {
             Backup do condomínio
           </p>
           <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
-            Seus dados ficam salvos neste dispositivo. Enquanto não há login, o
-            backup protege suas informações e permite restaurar em outro aparelho.
+            Seus dados ficam salvos neste dispositivo. O backup JSON cria uma cópia manual para restaurar depois; ele não promete sincronização automática.
           </p>
           <p className="mt-2 text-[11px] leading-relaxed text-navy-400">
-            Exporte regularmente — especialmente antes de trocar de celular, limpar o navegador ou usar em outro dispositivo. O arquivo exportado é local; guarde em um lugar seguro (e-mail, nuvem ou galeria).
+            Exporte regularmente. O arquivo pode conter dados sensíveis do condomínio, pendências, agenda, documentos e financeiro; guarde em local seguro.
           </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <span className="rounded-full bg-navy-50 px-2.5 py-1 text-[10.5px] font-medium text-navy-500">Local neste dispositivo</span>
+            <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10.5px] font-medium text-amber-700">Sync automático não garantido</span>
+            <span className="rounded-full bg-teal-50 px-2.5 py-1 text-[10.5px] font-medium text-teal-700">Backup manual disponível</span>
+          </div>
           <p className="mt-2 text-[11px] text-navy-400">
             {lastBackupAt
               ? `Último backup: ${new Date(lastBackupAt).toLocaleDateString("pt-BR")} às ${new Date(lastBackupAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
@@ -196,7 +200,7 @@ export default function BackupPanel({ onImported }: Props) {
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-[12.5px] font-medium text-navy-800">Exportar dados</p>
-              <p className="text-[11px] text-navy-400">Backup v5: memória, documentos, funcionários, próximos passos, ocorrências e agenda</p>
+              <p className="text-[11px] text-navy-400">Backup v7: memória, documentos, funcionários, pendências, ocorrências, agenda e financeiro local</p>
             </div>
             <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -282,9 +286,10 @@ export default function BackupPanel({ onImported }: Props) {
                 {importState.summary.pendenciasCount != null && importState.summary.pendenciasCount > 0 && ` · ${importState.summary.pendenciasCount} próximo${importState.summary.pendenciasCount > 1 ? "s passos" : " passo"}`}
                 {importState.summary.ocorrenciasCount != null && importState.summary.ocorrenciasCount > 0 && ` · ${importState.summary.ocorrenciasCount} ocorrência${importState.summary.ocorrenciasCount > 1 ? "s" : ""}`}
                 {importState.summary.agendaCount != null && importState.summary.agendaCount > 0 && ` · ${importState.summary.agendaCount} evento${importState.summary.agendaCount > 1 ? "s" : ""} na agenda`}
+                {importState.summary.financialSnapshotsCount != null && importState.summary.financialSnapshotsCount > 0 && ` · ${importState.summary.financialSnapshotsCount} resumo${importState.summary.financialSnapshotsCount > 1 ? "s" : ""} financeiro${importState.summary.financialSnapshotsCount > 1 ? "s" : ""}`}
               </p>
               <p className="text-[11px] text-amber-600 mb-3">
-                Os dados atuais do dispositivo serão substituídos.
+                Os dados atuais deste dispositivo serão substituídos. Exporte um backup atual antes se quiser preservar o estado de agora.
               </p>
               <div className="flex items-center gap-2">
                 <button

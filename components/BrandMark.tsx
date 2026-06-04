@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 type BrandMarkProps = {
   className?: string;
   rounded?: string;
@@ -14,9 +16,11 @@ export default function BrandMark({
       className={`inline-flex items-center justify-center overflow-hidden bg-[#234B63] ${rounded} ${className}`}
       aria-hidden="true"
     >
-      <img
+      <Image
         src="/brand/logo-oficial.png"
         alt=""
+        width={96}
+        height={96}
         className="h-full w-full object-cover"
         draggable={false}
       />

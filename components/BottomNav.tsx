@@ -126,7 +126,7 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
               <button
                 type="button"
                 aria-label="Ações do síndico"
-                aria-selected={plusActive}
+                aria-pressed={plusActive}
                 onClick={() => onChange("ferramentas")}
                 className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-all duration-150 active:scale-[0.93] ${
                   plusActive

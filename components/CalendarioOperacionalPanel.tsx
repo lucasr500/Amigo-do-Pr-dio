@@ -10,7 +10,6 @@ import {
   getAgendaEvents,
   getFuncionarios,
   getManutencoes,
-  getProfile,
   type ManutencaoCriticidade,
 } from "@/lib/session";
 import {
@@ -19,7 +18,6 @@ import {
   inicializarManutencoesPadrao,
   type EventoCalendario,
 } from "@/lib/recorrencias";
-import { ate } from "@/lib/urgency";
 
 type Props = { refreshKey?: number };
 
@@ -128,8 +126,6 @@ export default function CalendarioOperacionalPanel({ refreshKey }: Props) {
     if (!hydrated) return [];
 
     const hoje = new Date().toISOString().slice(0, 10);
-    const profile = getProfile();
-
     // Garante que manutenções padrão existam para o calendário
     const manutencoesSalvas = getManutencoes();
     if (manutencoesSalvas.length === 0) {

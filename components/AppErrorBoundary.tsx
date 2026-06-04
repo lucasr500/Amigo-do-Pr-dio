@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, ReactNode } from "react";
 
 type Props = { children: ReactNode };
 type State = { hasError: boolean };
@@ -15,7 +15,7 @@ export default class AppErrorBoundary extends Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(_error: Error, _info: ErrorInfo) {
+  componentDidCatch() {
     // Silencioso — erro não contém PII; não envia stack para telemetria
   }
 

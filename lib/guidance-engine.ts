@@ -20,8 +20,8 @@ import {
   DOCUMENTOS_ESSENCIAIS_IDS,
   type DocumentoEssencialId,
 } from "./session";
-import { ate, desde, past } from "./urgency";
-import { contarStatusManutencoes, temManutencaoCriticaAtrasada } from "./recorrencias";
+import { desde, past } from "./urgency";
+import { temManutencaoCriticaAtrasada } from "./recorrencias";
 import { PLAYBOOKS, MICRO_GUIDANCE_BY_CATEGORY } from "./action-library";
 
 export type GuidanceEnginePriority =
@@ -66,14 +66,6 @@ function daysUntil(iso: string | undefined): number | null {
   if (isNaN(d.getTime())) return null;
   const now = new Date(); now.setHours(0, 0, 0, 0);
   return Math.floor((d.getTime() - now.getTime()) / 86_400_000);
-}
-
-function daysSince(iso: string | undefined): number | null {
-  if (!iso) return null;
-  const d = toLocalDate(iso);
-  if (isNaN(d.getTime())) return null;
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-  return Math.floor((now.getTime() - d.getTime()) / 86_400_000);
 }
 
 export function buildGuidanceEngine(): GuidanceEngineResult {

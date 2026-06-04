@@ -10,6 +10,11 @@
 export const SESSION_SCHEMA_VERSION = 8;
 
 import { ate, desde, past } from "./urgency";
+import {
+  getFinancialSnapshots,
+  saveFinancialSnapshots,
+  type MonthlyFinancialSnapshot,
+} from "./financial";
 
 // Espelha o schema escrito por logQuery() em data.ts
 export type QueryLog = {
@@ -460,6 +465,7 @@ export function getSessionMeta(): SessionMeta {
 
 // Chamado uma vez por abertura do app. Retorna dias desde a sessão anterior.
 export function recordSessionOpen(): number | null {
+  migrateSessionData();
   const prev = getSessionMeta();
   const daysSinceLast = prev.lastOpenedAt
     ? Math.floor((Date.now() - new Date(prev.lastOpenedAt).getTime()) / 86400000)
@@ -554,6 +560,7 @@ export type PendenciaPrioridade = "critica" | "alta" | "media" | "baixa";
 export type Pendencia = {
   id: string;
   titulo: string;
+  descricao?: string;
   categoria?: string;
   origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario" | "comunicado";
   matchedId?: string | null;
@@ -562,11 +569,48 @@ export type Pendencia = {
   completedAt?: string;
   dueDate?: string;
   prioridade?: PendenciaPrioridade;          // v8+
+  responsavel?: string;                      // v9+
+  origemDetalhe?: string;                    // v9+
+  linkedType?: "agenda" | "documento" | "financeiro" | "ocorrencia" | "assistente";
+  linkedId?: string | null;
   observacaoResolucao?: string;              // v8+ — preenchido ao concluir
 };
 
+export function normalizePendencia(raw: Partial<Pendencia>): Pendencia {
+  const now = new Date().toISOString();
+  const status = raw.status === "concluida" ? "concluida" : "aberta";
+  const prioridade: PendenciaPrioridade =
+    raw.prioridade === "critica" ||
+    raw.prioridade === "alta" ||
+    raw.prioridade === "media" ||
+    raw.prioridade === "baixa"
+      ? raw.prioridade
+      : raw.origem === "guidance"
+        ? "alta"
+        : "media";
+
+  return {
+    id: raw.id || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    titulo: raw.titulo?.trim() || "Pendência sem título",
+    descricao: raw.descricao?.trim() || undefined,
+    categoria: raw.categoria || "operacional",
+    origem: raw.origem || "manual",
+    matchedId: raw.matchedId ?? null,
+    status,
+    createdAt: raw.createdAt || now,
+    completedAt: status === "concluida" ? raw.completedAt || now : raw.completedAt,
+    dueDate: raw.dueDate || undefined,
+    prioridade,
+    responsavel: raw.responsavel?.trim() || undefined,
+    origemDetalhe: raw.origemDetalhe?.trim() || undefined,
+    linkedType: raw.linkedType,
+    linkedId: raw.linkedId ?? null,
+    observacaoResolucao: raw.observacaoResolucao?.trim() || undefined,
+  };
+}
+
 export function getPendencias(): Pendencia[] {
-  return safeRead<Pendencia[]>(KEYS.PENDENCIAS, []);
+  return safeRead<Partial<Pendencia>[]>(KEYS.PENDENCIAS, []).map(normalizePendencia);
 }
 
 export function addPendencia(
@@ -602,11 +646,20 @@ export function completePendencia(id: string, observacao?: string): void {
 
 export function updatePendencia(
   id: string,
-  patch: Partial<Pick<Pendencia, "prioridade" | "dueDate" | "titulo">>
+  patch: Partial<Omit<Pendencia, "id" | "createdAt">>
 ): void {
   safeWrite(
     KEYS.PENDENCIAS,
     getPendencias().map((p) => (p.id === id ? { ...p, ...patch } : p))
+  );
+}
+
+export function reopenPendencia(id: string): void {
+  safeWrite(
+    KEYS.PENDENCIAS,
+    getPendencias().map((p) =>
+      p.id === id ? { ...p, status: "aberta" as const, completedAt: undefined, observacaoResolucao: undefined } : p
+    )
   );
 }
 
@@ -641,20 +694,61 @@ export type AgendaEventType =
   | "retorno"
   | "outro";
 
+export type AgendaRecurrence =
+  | "nenhuma"
+  | "semanal"
+  | "mensal"
+  | "trimestral"
+  | "semestral"
+  | "anual";
+
 export type AgendaEvent = {
   id: string;
   title: string;
   date: string; // YYYY-MM-DD
   type: AgendaEventType;
   note?: string;
+  responsavel?: string;
+  prioridade?: PendenciaPrioridade;
+  recurrence?: AgendaRecurrence;
+  templateId?: string;
+  source?: "manual" | "template";
   linkedPendenciaId?: string;
   completedAt?: string;
   createdAt: string;
   updatedAt?: string;
 };
 
+export function normalizeAgendaEvent(raw: Partial<AgendaEvent>): AgendaEvent {
+  const now = new Date().toISOString();
+  const recurrence: AgendaRecurrence =
+    raw.recurrence === "semanal" ||
+    raw.recurrence === "mensal" ||
+    raw.recurrence === "trimestral" ||
+    raw.recurrence === "semestral" ||
+    raw.recurrence === "anual"
+      ? raw.recurrence
+      : "nenhuma";
+  return {
+    id: raw.id || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    title: raw.title?.trim() || "Evento sem título",
+    date: raw.date || todayISO(),
+    type: raw.type || "outro",
+    note: raw.note?.trim() || undefined,
+    responsavel: raw.responsavel?.trim() || undefined,
+    prioridade: raw.prioridade || "media",
+    recurrence,
+    templateId: raw.templateId,
+    source: raw.source || "manual",
+    linkedPendenciaId: raw.linkedPendenciaId,
+    completedAt: raw.completedAt,
+    createdAt: raw.createdAt || now,
+    updatedAt: raw.updatedAt,
+  };
+}
+
 export function getAgendaEvents(): AgendaEvent[] {
-  return safeRead<AgendaEvent[]>(KEYS.AGENDA, []);
+  return safeRead<Partial<AgendaEvent>[]>(KEYS.AGENDA, []).map(normalizeAgendaEvent);
 }
 
 export function addAgendaEvent(
@@ -684,7 +778,23 @@ export function updateAgendaEvent(
 }
 
 export function completeAgendaEvent(id: string): void {
-  updateAgendaEvent(id, { completedAt: new Date().toISOString() });
+  const event = getAgendaEventById(id);
+  const completedAt = new Date().toISOString();
+  updateAgendaEvent(id, { completedAt });
+
+  if (!event || !event.recurrence || event.recurrence === "nenhuma") return;
+  const nextDate = getNextOccurrenceDate(event.date, event.recurrence);
+  addAgendaEvent({
+    title: event.title,
+    date: nextDate,
+    type: event.type,
+    note: event.note,
+    responsavel: event.responsavel,
+    prioridade: event.prioridade,
+    recurrence: event.recurrence,
+    templateId: event.templateId,
+    source: event.source,
+  });
 }
 
 export function deleteAgendaEvent(id: string): void {
@@ -706,6 +816,23 @@ export function getUpcomingAgendaEvents(limitDays = 90): AgendaEvent[] {
 
 export function getAgendaEventById(id: string): AgendaEvent | null {
   return getAgendaEvents().find((e) => e.id === id) ?? null;
+}
+
+export function getNextOccurrenceDate(date: string, recurrence: AgendaRecurrence): string {
+  const d = new Date(`${date}T12:00:00`);
+  if (recurrence === "semanal") d.setDate(d.getDate() + 7);
+  if (recurrence === "mensal") d.setMonth(d.getMonth() + 1);
+  if (recurrence === "trimestral") d.setMonth(d.getMonth() + 3);
+  if (recurrence === "semestral") d.setMonth(d.getMonth() + 6);
+  if (recurrence === "anual") d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+export function migrateSessionData(): void {
+  if (typeof window === "undefined") return;
+  safeWrite(KEYS.PENDENCIAS, getPendencias().map(normalizePendencia));
+  safeWrite(KEYS.AGENDA, getAgendaEvents().map(normalizeAgendaEvent));
+  saveFinancialSnapshots(getFinancialSnapshots());
 }
 
 // ─── Ocorrências leves ───────────────────────────────────────────────────────
@@ -1524,9 +1651,10 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v2 — idem + pendências (amigo_pendencias)
 //   v3 — idem + ocorrências leves (amigo_ocorrencias)
 //   v4 — idem + agenda do prédio (amigo_agenda)
+//   v7 — idem + resumo financeiro local (amigo_financial_snapshots)
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4" | "5" | "6";
+  version: "1" | "2" | "3" | "4" | "5" | "6" | "7";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
@@ -1541,17 +1669,18 @@ export type UserBackup = {
   funcionarios?: FuncionarioFerias[]; // v5+
   implantacaoMode?: ImplantacaoMode; // v5+
   manutencoes?: ManutencaoRecorrente[]; // v6+
+  financialSnapshots?: MonthlyFinancialSnapshot[]; // v7+
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number; financialSnapshotsCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "6",
+    version: "7",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1566,6 +1695,7 @@ export function exportUserData(): void {
     funcionarios: getFuncionarios(),
     implantacaoMode: getImplantacaoMode() ?? undefined,
     manutencoes: getManutencoes(),
+    financialSnapshots: getFinancialSnapshots(),
   };
 
   try {
@@ -1585,7 +1715,7 @@ export function exportUserData(): void {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "6",
+    version: "7",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1600,12 +1730,13 @@ export function getUserBackupJson(): string {
     funcionarios: getFuncionarios(),
     implantacaoMode: getImplantacaoMode() ?? undefined,
     manutencoes: getManutencoes(),
+    financialSnapshots: getFinancialSnapshots(),
   };
   return JSON.stringify(payload, null, 2);
 }
 
 // Valida o backup sem escrever no localStorage — usado para mostrar preview antes da confirmação.
-// Aceita v1–v5 (versões acumulativas com funcionalidades adicionais).
+// Aceita v1–v7 (versões acumulativas com funcionalidades adicionais).
 export function parseAndValidateUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1620,7 +1751,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1636,11 +1767,14 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
+    }
+    if (d.version === "7" && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+      return { success: false, error: "Dados financeiros corrompidos no arquivo." };
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -1648,17 +1782,18 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6";
-    const isV5plus = d.version === "5" || d.version === "6";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7";
 
     const pendenciasCount = isV2plus && Array.isArray(d.pendencias) ? (d.pendencias as Pendencia[]).length : undefined;
     const ocorrenciasCount = isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length : undefined;
     const agendaCount = isV4plus && Array.isArray(d.agenda) ? (d.agenda as AgendaEvent[]).length : undefined;
     const documentosCount = isV5plus && Array.isArray(d.documentos) ? (d.documentos as DocumentoEssencial[]).length : undefined;
     const funcionariosCount = isV5plus && Array.isArray(d.funcionarios) ? (d.funcionarios as FuncionarioFerias[]).length : undefined;
-    const manutencoesCount = d.version === "6" && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
+    const manutencoesCount = (d.version === "6" || d.version === "7") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
+    const financialSnapshotsCount = d.version === "7" && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
 
     return {
       success: true,
@@ -1672,6 +1807,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
         documentosCount,
         funcionariosCount,
         manutencoesCount,
+        financialSnapshotsCount,
       },
     };
   } catch {
@@ -1679,7 +1815,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
   }
 }
 
-// Importa backup v1–v6. Retrocompatível com todas as versões anteriores.
+// Importa backup v1–v7. Retrocompatível com todas as versões anteriores.
 export function importUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1694,7 +1830,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1710,11 +1846,14 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
+    }
+    if (d.version === "7" && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+      return { success: false, error: "Dados financeiros corrompidos no arquivo." };
     }
 
     if (d.profile) {
@@ -1726,10 +1865,10 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6";
-    const isV5plus = d.version === "5" || d.version === "6";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7";
 
     let pendenciasCount: number | undefined;
     if (isV2plus && Array.isArray(d.pendencias)) {
@@ -1780,11 +1919,19 @@ export function importUserData(jsonString: string): ImportResult {
       try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
 
-    if (d.version === "6" && Array.isArray(d.manutencoes)) {
+    if ((d.version === "6" || d.version === "7") && Array.isArray(d.manutencoes)) {
       safeWrite(KEYS.MANUTENCOES, d.manutencoes);
       manutencoesCount = (d.manutencoes as ManutencaoRecorrente[]).length;
     } else {
       try { localStorage.removeItem(KEYS.MANUTENCOES); } catch { /* noop */ }
+    }
+
+    let financialSnapshotsCount: number | undefined;
+    if (d.version === "7" && Array.isArray(d.financialSnapshots)) {
+      saveFinancialSnapshots(d.financialSnapshots as MonthlyFinancialSnapshot[]);
+      financialSnapshotsCount = (d.financialSnapshots as MonthlyFinancialSnapshot[]).length;
+    } else {
+      saveFinancialSnapshots([]);
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -1804,6 +1951,7 @@ export function importUserData(jsonString: string): ImportResult {
         documentosCount,
         funcionariosCount,
         manutencoesCount,
+        financialSnapshotsCount,
       },
     };
   } catch {

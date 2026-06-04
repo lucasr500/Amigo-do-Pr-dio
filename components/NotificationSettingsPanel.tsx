@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isEnabled, setFlag } from "@/lib/feature-flags";
+import { setFlag } from "@/lib/feature-flags";
 import { isPushSupported, getStoredSubscription, registerPush, unregisterPush } from "@/lib/push/pushManager";
 
 const PREFS_KEY = "amigo_notif_prefs";

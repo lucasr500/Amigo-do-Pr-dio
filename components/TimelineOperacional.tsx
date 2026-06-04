@@ -89,10 +89,6 @@ function formatDaysUntil(date: Date): string {
   return `Em ${m} meses`;
 }
 
-function formatMonthLabel(date: Date): string {
-  return date.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-}
-
 type BuildResult = { upcoming: TimelineEvent[]; past: TimelineEvent[] };
 
 function buildTimeline(): BuildResult {
@@ -355,7 +351,7 @@ export default function TimelineOperacional({ refreshKey }: TimelineOperacionalP
   useEffect(() => {
     refresh();
     setHydrated(true);
-  }, [refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   function handleStatusChange(id: string, status: OcorrenciaStatus) {
     updateOcorrencia(id, { statusOcorrencia: status });

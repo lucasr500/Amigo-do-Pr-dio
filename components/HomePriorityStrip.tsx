@@ -167,6 +167,11 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
               <p className={`text-[12px] font-semibold leading-snug ${hasUrgent ? "text-terracotta-800" : "text-navy-800"}`}>
                 {topAction.titulo}
               </p>
+              {(topAction.motivo || topAction.impacto) && (
+                <p className="mt-0.5 line-clamp-2 text-[10.5px] leading-snug text-navy-500">
+                  {topAction.motivo}{topAction.impacto ? ` Impacto: ${topAction.impacto}` : ""}
+                </p>
+              )}
               {!hasUrgent && sinceLastVisit && data && data.guidanceTopTres[0] && (
                 <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-navy-500">
                   {data.guidanceTopTres[0].proximoPasso}
@@ -177,6 +182,30 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
               <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+        )}
+
+        {data.todayFocus.length > 0 && (
+          <div className="mt-2 rounded-xl bg-white/45 px-3 py-2">
+            <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-navy-400">
+              3 coisas para olhar hoje
+            </p>
+            <div className="mt-1.5 space-y-1.5">
+              {data.todayFocus.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onNavigate?.(item.target)}
+                  className="flex w-full items-start gap-2 rounded-lg px-1 py-1 text-left hover:bg-white/60"
+                >
+                  <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-navy-300" aria-hidden="true" />
+                  <span className="min-w-0">
+                    <span className="block text-[11.5px] font-medium leading-snug text-navy-700">{item.title}</span>
+                    <span className="line-clamp-1 text-[10.5px] leading-snug text-navy-400">{item.reason}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Linha 3: contexto desde última visita */}

@@ -3,7 +3,7 @@
 // Painel de comando central — agrega ações urgentes, pendências, documentos,
 // férias e notificações em um único painel coeso. Substitui PlanoAcaoPanel.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { buildCommandCenter, type CommandCenterResult, type CommandAction, type GuidanceEngineItem } from "@/lib/command-center";
 import { buildDataMaturity } from "@/lib/data-maturity";
 

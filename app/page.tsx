@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import AskInput from "@/components/AskInput";
+import DynamicGreeting from "@/components/DynamicGreeting";
 import type { Topic, AnswerResult } from "@/lib/data";
 import {
   incrementUsage,
@@ -12,8 +13,6 @@ import {
   recordSessionOpen,
   hasMemoriaOperacional,
   hasProfile,
-  computeCondominioHealth,
-  CondominioHealthStatus,
   addPendencia,
   getPendenciasAbertas,
   isFirstRun,
@@ -99,8 +98,11 @@ const MemoriaPanel = dynamic(() => import("@/components/MemoriaPanel"), { ssr: f
 const FuncionariosPanel = dynamic(() => import("@/components/FuncionariosPanel"), { ssr: false });
 const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
 const CalendarioOperacionalPanel = dynamic(() => import("@/components/CalendarioOperacionalPanel"), { ssr: false });
+const FinancialPanel = dynamic(() => import("@/components/FinancialPanel"), { ssr: false });
+const LocalDataIntegrityPanel = dynamic(() => import("@/components/LocalDataIntegrityPanel"), { ssr: false });
 const ImplantacaoChecklist = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
 const RelatorioSaudePanel = dynamic(() => import("@/components/RelatorioSaudePanel"), { ssr: false });
+const MonthlyOperationalSummaryPanel = dynamic(() => import("@/components/MonthlyOperationalSummaryPanel"), { ssr: false });
 // Aba Ferramentas — painéis de planejamento e decisão
 const CommandCenterPanel = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
@@ -112,61 +114,7 @@ const NotificationSettingsPanel = dynamic(() => import("@/components/Notificatio
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
 const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
 
-// ── Saudação dinâmica ──────────────────────────────────────────────────────────
-
-function buildGreeting(condoName?: string): string {
-  const h = new Date().getHours();
-  const day = new Date().getDay(); // 0=dom, 5=sex, 6=sáb
-  const condo = condoName ? ` — ${condoName}` : "";
-
-  // Sexta-feira: mensagem contextual discreta
-  if (day === 5 && h >= 14 && h < 22) return `Boa sexta-feira, síndico${condo}`;
-
-  // Horário
-  if (h >= 5 && h < 12)  return `Bom dia, síndico${condo}`;
-  if (h >= 12 && h < 18) return `Boa tarde, síndico${condo}`;
-  return `Boa noite, síndico${condo}`;
-}
-
-function DynamicGreeting({ condoName }: { condoName: string }) {
-  const greeting = buildGreeting(condoName || undefined);
-  return (
-    <div className="px-5 pb-2 pt-1 sm:px-6">
-      <p className="text-[15px] font-semibold leading-snug text-navy-800">{greeting}</p>
-    </div>
-  );
-}
-
-// ── Urgency + profile completion helpers ───────────────────────────────────────
-
-type UrgentItem = {
-  type: "avcb" | "seguro" | "mandato";
-  label: string;
-  urgency: "expired" | "critical" | "warning";
-  daysLeft: number;
-};
-
-function _daysUntilDate(dateStr: string): number {
-  const t = new Date(`${dateStr}T00:00:00`);
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-  return Math.ceil((t.getTime() - now.getTime()) / 86_400_000);
-}
-
-function computeUrgentItem(m: MemoriaOperacional): UrgentItem | null {
-  const candidates: UrgentItem[] = [];
-  const check = (dateStr: string | undefined, type: UrgentItem["type"], label: string) => {
-    if (!dateStr) return;
-    const d = _daysUntilDate(dateStr);
-    if (d > 30) return;
-    const urgency: UrgentItem["urgency"] = d < 0 ? "expired" : d <= 7 ? "critical" : "warning";
-    candidates.push({ type, label, urgency, daysLeft: d });
-  };
-  check(m.vencimentoAVCB, "avcb", "AVCB");
-  check(m.vencimentoSeguro, "seguro", "Seguro condominial");
-  check(m.fimMandatoSindico, "mandato", "Mandato do síndico");
-  if (candidates.length === 0) return null;
-  return candidates.sort((a, b) => a.daysLeft - b.daysLeft)[0];
-}
+// ── Profile completion helpers ────────────────────────────────────────────────
 
 function computeProfileCompletion(prof: CondominioProfile | null, m: MemoriaOperacional): number {
   const a = getMemoriaAssistida();
@@ -194,7 +142,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [hasCondominioData, setHasCondominioData] = useState(false);
-  const [healthStatus, setHealthStatus] = useState<CondominioHealthStatus | null>(null);
   const [activeTab, setActiveTab] = useState<AppTab>("inicio");
   const [shouldExpandMemoria, setShouldExpandMemoria] = useState(false);
   const [pendingToolAnchor, setPendingToolAnchor] = useState<ToolAnchor | null>(null);
@@ -213,10 +160,8 @@ export default function HomePage() {
   const [showBackupNudge, setShowBackupNudge] = useState(false);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
-  const urgentCount = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    return getPendenciasAbertas().filter((p) => !!p.dueDate && p.dueDate <= today).length;
-  }, [refreshKey]);
+  const today = new Date().toISOString().slice(0, 10);
+  const urgentCount = getPendenciasAbertas().filter((p) => !!p.dueDate && p.dueDate <= today).length;
 
   useEffect(() => {
     (window as unknown as Record<string, unknown>).__amigoDoPredioExport = exportTelemetry;
@@ -225,7 +170,6 @@ export default function HomePage() {
     const hasData = hasMemoriaOperacional() || hasProfile();
     setHasCondominioData(hasData);
     if (hasData) {
-      setHealthStatus(computeCondominioHealth().status);
       const m = getMemoriaOperacional();
       const prof = getProfile();
       setProfileCompletion(computeProfileCompletion(prof, m));
@@ -250,7 +194,6 @@ export default function HomePage() {
     const hasData = hasMemoriaOperacional() || hasProfile();
     setHasCondominioData(hasData);
     if (hasData) {
-      setHealthStatus(computeCondominioHealth().status);
       const m = getMemoriaOperacional();
       const prof = getProfile();
       setProfileCompletion(computeProfileCompletion(prof, m));
@@ -422,10 +365,6 @@ export default function HomePage() {
   const handleNavigateToFerramentas = (anchor: ToolAnchor = "comunicado") => {
     setPendingToolAnchor(anchor);
     navigateTab("ferramentas");
-  };
-
-  const handleNavigateToAgenda = () => {
-    navigateTab("agenda");
   };
 
   // Chamado pela bridge do OnboardingProfile: expande MemoriaPanel automaticamente
@@ -925,6 +864,16 @@ export default function HomePage() {
 
             {/* ── Relatório de saúde ────────────────────────────────── */}
             <RelatorioSaudePanel />
+            <MonthlyOperationalSummaryPanel />
+
+            {/* ── Financeiro operacional ────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Financeiro</p>
+                <p className="mt-0.5 text-[11px] text-navy-400">Caixa, contas e riscos simples para acompanhamento local.</p>
+              </div>
+            )}
+            <FinancialPanel onSaved={() => setRefreshKey((k) => k + 1)} />
 
             {/* ── Conta e dados ─────────────────────────────────────── */}
             {hasCondominioData && (
@@ -940,6 +889,7 @@ export default function HomePage() {
             </section>
 
             {/* Backup e restauração */}
+            <LocalDataIntegrityPanel refreshKey={refreshKey} />
             <BackupPanel onImported={() => setRefreshKey((k) => k + 1)} />
 
             {/* Notificações */}

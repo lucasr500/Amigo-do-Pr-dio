@@ -17,6 +17,7 @@ import {
   type DocumentoCategoria,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import EmptyState from "@/components/ui/EmptyState";
 import { getWhereToFind } from "@/lib/discovery-hints";
 
 type Props = { onSaved?: () => void };
@@ -241,8 +242,8 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           onClick={() => setExpanded(true)}
           className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
-          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]" aria-hidden="true">
-            📁
+          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[10px] font-bold text-navy-500" aria-hidden="true">
+            DOC
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-navy-800">Documentos essenciais</p>
@@ -306,6 +307,17 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                 ⚠ {criticosNaoConfirmados} crítico{criticosNaoConfirmados !== 1 ? "s" : ""} pendente{criticosNaoConfirmados !== 1 ? "s" : ""}
               </span>
             )}
+          </div>
+        )}
+
+        {cadastrados === 0 && (
+          <div className="mb-3">
+            <EmptyState
+              title="Documentos essenciais ainda não revisados."
+              description="Marque o que está regular, pendente ou vencido para o app priorizar riscos do condomínio."
+              actionLabel="Começar pelo AVCB"
+              onAction={() => quickSave("avcb_clcb", "precisa_localizar")}
+            />
           </div>
         )}
 

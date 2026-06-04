@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import {
   getProfile,
   addPendencia,
-  getComunicadoHistory,
-  addComunicadoHistory,
-  type ComunicadoHistoryEntry,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { COMUNICADO_TEMPLATES, ComunicadoId } from "@/lib/comunicados";

@@ -8,7 +8,6 @@ import {
   getFuncionarios,
   getPendenciasAbertas,
   getProfile,
-  DOCUMENTOS_ESSENCIAIS_IDS,
 } from "./session";
 import { buildGuidanceItems } from "./guidance";
 

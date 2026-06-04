@@ -80,12 +80,6 @@ function countFilledDates(m: MemoriaDraft): number {
   return [m.vencimentoAVCB, m.vencimentoSeguro, m.fimMandatoSindico].filter(Boolean).length;
 }
 
-function addDays(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function OnboardingFlow({ onComplete }: Props) {

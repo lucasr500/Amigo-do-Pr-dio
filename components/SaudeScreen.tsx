@@ -17,12 +17,10 @@ import {
 } from "@/lib/health-config";
 import {
   getMemoriaOperacional,
-  getProfile,
   getAgendaEvents,
   getPendenciasConcluidas,
   getAuditLog,
   type MemoriaOperacional,
-  type CondominioProfile,
 } from "@/lib/session";
 import { getHealthHistoryStats, type HealthHistoryStats } from "@/lib/health-history";
 import { trackEvent } from "@/lib/telemetry";
@@ -76,8 +74,7 @@ type MonitoredArea = {
 
 function computeAreas(
   result: HealthScoreResult,
-  m: MemoriaOperacional,
-  profile: CondominioProfile | null
+  m: MemoriaOperacional
 ): MonitoredArea[] {
   // factors[0]: essentials (AVCB, seguro, mandato)
   const ef = result.factors[0];
@@ -269,10 +266,9 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
   useEffect(() => {
     const r       = computeHealthScore();
     const m       = getMemoriaOperacional();
-    const profile = getProfile();
     setHasData(hasMinimumHealthData());
     setResult(r);
-    setAreas(computeAreas(r, m, profile));
+    setAreas(computeAreas(r, m));
     setRecords(buildLastRecords());
     setHistStats(getHealthHistoryStats());
     setHydrated(true);

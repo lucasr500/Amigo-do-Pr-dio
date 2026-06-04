@@ -4,14 +4,18 @@ import { useState, useEffect, useRef } from "react";
 import {
   getAgendaEvents,
   addAgendaEvent,
+  updateAgendaEvent,
   completeAgendaEvent,
   deleteAgendaEvent,
   addPendencia,
   type AgendaEvent,
   type AgendaEventType,
+  type AgendaRecurrence,
+  type Pendencia,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { ate } from "@/lib/urgency";
+import EmptyState from "@/components/ui/EmptyState";
 
 const TYPE_LABELS: Record<AgendaEventType, string> = {
   assembleia: "Assembleia",
@@ -30,20 +34,57 @@ const TYPE_LABELS: Record<AgendaEventType, string> = {
 };
 
 const TYPE_ICONS: Record<AgendaEventType, string> = {
-  assembleia: "🏛️",
-  manutencao: "🔧",
-  dedetizacao: "🪲",
-  caixa_agua: "💧",
-  extintores: "🧯",
-  vistoria: "🔍",
-  obra: "🏗️",
-  cobranca: "💰",
-  reuniao: "🤝",
-  fornecedor: "📦",
-  comunicado: "📢",
-  retorno: "↩️",
-  outro: "📅",
+  assembleia: "AG",
+  manutencao: "MT",
+  dedetizacao: "DD",
+  caixa_agua: "CA",
+  extintores: "EX",
+  vistoria: "VI",
+  obra: "OB",
+  cobranca: "CB",
+  reuniao: "RN",
+  fornecedor: "FN",
+  comunicado: "CM",
+  retorno: "RT",
+  outro: "EV",
 };
+
+const RECURRENCE_LABELS: Record<AgendaRecurrence, string> = {
+  nenhuma: "Sem recorrência",
+  semanal: "Semanal",
+  mensal: "Mensal",
+  trimestral: "Trimestral",
+  semestral: "Semestral",
+  anual: "Anual",
+};
+
+const PRIORITY_LABELS: Record<NonNullable<Pendencia["prioridade"]>, string> = {
+  critica: "Crítica",
+  alta: "Alta",
+  media: "Média",
+  baixa: "Baixa",
+};
+
+const OPERATIONAL_TEMPLATES: Array<{
+  id: string;
+  title: string;
+  type: AgendaEventType;
+  recurrence: AgendaRecurrence;
+  prioridade: NonNullable<Pendencia["prioridade"]>;
+  note: string;
+}> = [
+  { id: "ago", title: "AGO", type: "assembleia", recurrence: "anual", prioridade: "alta", note: "Assembleia geral ordinária e prestação de contas." },
+  { id: "age", title: "Assembleia extraordinária", type: "assembleia", recurrence: "nenhuma", prioridade: "media", note: "Definir pauta, convocação e documentação." },
+  { id: "caixa_agua", title: "Limpeza da caixa d'água", type: "caixa_agua", recurrence: "semestral", prioridade: "alta", note: "Confirmar execução, comprovante e comunicação aos moradores." },
+  { id: "dedetizacao", title: "Dedetização", type: "dedetizacao", recurrence: "semestral", prioridade: "media", note: "Agendar fornecedor e orientar moradores." },
+  { id: "elevador", title: "Manutenção de elevador", type: "manutencao", recurrence: "mensal", prioridade: "alta", note: "Registrar visita técnica e pendências do fornecedor." },
+  { id: "extintores", title: "Extintores", type: "extintores", recurrence: "anual", prioridade: "alta", note: "Verificar validade, recarga e comprovante." },
+  { id: "seguro", title: "Seguro do condomínio", type: "vistoria", recurrence: "anual", prioridade: "critica", note: "Renovar apólice antes do vencimento." },
+  { id: "avcb", title: "AVCB / laudo equivalente", type: "vistoria", recurrence: "anual", prioridade: "critica", note: "Confirmar validade, laudos e próximos passos." },
+  { id: "bombas", title: "Inspeção de bombas", type: "manutencao", recurrence: "trimestral", prioridade: "media", note: "Checar bombas, registros e sinais de falha." },
+  { id: "prestacao", title: "Prestação de contas", type: "reuniao", recurrence: "mensal", prioridade: "media", note: "Conferir saldo, despesas, inadimplência e comprovantes." },
+  { id: "contrato", title: "Vencimento de contrato", type: "fornecedor", recurrence: "anual", prioridade: "media", note: "Avaliar renovação, reajuste e escopo do fornecedor." },
+];
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -76,11 +117,26 @@ function urgencyLabel(iso: string): string {
   return formatEventDate(iso);
 }
 
+function weekDayLabel(iso: string): string {
+  const days = ate(iso);
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Amanhã";
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
 type FormState = {
   title: string;
   date: string;
   type: AgendaEventType;
   note: string;
+  responsavel: string;
+  prioridade: NonNullable<Pendencia["prioridade"]>;
+  recurrence: AgendaRecurrence;
+  templateId?: string;
   createStep: boolean;
 };
 
@@ -89,6 +145,10 @@ const EMPTY_FORM: FormState = {
   date: "",
   type: "outro",
   note: "",
+  responsavel: "",
+  prioridade: "media",
+  recurrence: "nenhuma",
+  templateId: undefined,
   createStep: false,
 };
 
@@ -102,6 +162,7 @@ export default function AgendaPredio({ onSaved }: Props) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -123,18 +184,34 @@ export default function AgendaPredio({ onSaved }: Props) {
 
     const daysUntil = ate(form.date);
 
-    const saved = addAgendaEvent({
+    const payload = {
       title: form.title.trim(),
       date: form.date,
       type: form.type,
       note: form.note.trim() || undefined,
-    });
+      responsavel: form.responsavel.trim() || undefined,
+      prioridade: form.prioridade,
+      recurrence: form.recurrence,
+      templateId: form.templateId,
+      source: form.templateId ? "template" as const : "manual" as const,
+    };
+
+    const saved = editingId
+      ? (updateAgendaEvent(editingId, payload), events.find((e) => e.id === editingId) ?? null)
+      : addAgendaEvent(payload);
 
     if (form.createStep) {
-      addPendencia({
+      const step = addPendencia({
         titulo: `Agenda: ${form.title.trim()}`,
         origem: "agenda",
+        categoria: form.type === "cobranca" ? "financeiro" : "operacional",
+        dueDate: form.date,
+        prioridade: form.prioridade,
+        responsavel: form.responsavel.trim() || undefined,
+        linkedType: "agenda",
+        linkedId: editingId ?? saved?.id ?? null,
       });
+      if (!editingId && saved) updateAgendaEvent(saved.id, { linkedPendenciaId: step.id });
     }
 
     trackEvent("agenda_event_created", {
@@ -142,9 +219,13 @@ export default function AgendaPredio({ onSaved }: Props) {
       days_until: isNaN(daysUntil) ? null : daysUntil,
       has_note: form.note.trim().length > 0,
       has_linked_step: form.createStep,
+      has_recurrence: form.recurrence !== "nenhuma",
+      has_template: !!form.templateId,
+      mode: editingId ? "edit" : "create",
     });
 
     setForm(EMPTY_FORM);
+    setEditingId(null);
     setShowForm(false);
     reload();
     onSaved?.();
@@ -170,6 +251,54 @@ export default function AgendaPredio({ onSaved }: Props) {
     deleteAgendaEvent(id);
     trackEvent("agenda_event_deleted", { type: event.type });
     setConfirmDeleteId(null);
+    reload();
+    onSaved?.();
+  }
+
+  function openEdit(e: AgendaEvent) {
+    setEditingId(e.id);
+    setForm({
+      title: e.title,
+      date: e.date,
+      type: e.type,
+      note: e.note ?? "",
+      responsavel: e.responsavel ?? "",
+      prioridade: e.prioridade ?? "media",
+      recurrence: e.recurrence ?? "nenhuma",
+      templateId: e.templateId,
+      createStep: false,
+    });
+    setShowForm(true);
+  }
+
+  function applyTemplate(templateId: string) {
+    const template = OPERATIONAL_TEMPLATES.find((item) => item.id === templateId);
+    if (!template) return;
+    setForm((f) => ({
+      ...f,
+      title: template.title,
+      type: template.type,
+      note: template.note,
+      prioridade: template.prioridade,
+      recurrence: template.recurrence,
+      templateId: template.id,
+    }));
+    setShowForm(true);
+  }
+
+  function createPendenciaFromEvent(e: AgendaEvent) {
+    const step = addPendencia({
+      titulo: `Resolver evento vencido: ${e.title}`,
+      descricao: e.note || "Evento da agenda está vencido e precisa de encaminhamento.",
+      origem: "agenda",
+      categoria: e.type === "cobranca" ? "financeiro" : "operacional",
+      dueDate: todayISO(),
+      prioridade: e.prioridade === "baixa" ? "media" : e.prioridade ?? "alta",
+      responsavel: e.responsavel,
+      linkedType: "agenda",
+      linkedId: e.id,
+    });
+    updateAgendaEvent(e.id, { linkedPendenciaId: step.id });
     reload();
     onSaved?.();
   }
@@ -209,6 +338,13 @@ export default function AgendaPredio({ onSaved }: Props) {
     summaryParts.push(`${futureCount} futur${futureCount !== 1 ? "os" : "o"}`);
 
   const canSave = form.title.trim().length > 0 && form.date.length > 0;
+  const weekEvents = [...todayEvts, ...next7].sort((a, b) => a.date.localeCompare(b.date));
+  const weekGroups = weekEvents.reduce<Array<{ date: string; events: AgendaEvent[] }>>((groups, event) => {
+    const current = groups.find((group) => group.date === event.date);
+    if (current) current.events.push(event);
+    else groups.push({ date: event.date, events: [event] });
+    return groups;
+  }, []);
 
   function renderEventCard(e: AgendaEvent, cardClass: string) {
     return (
@@ -217,13 +353,37 @@ export default function AgendaPredio({ onSaved }: Props) {
         className={`flex items-start justify-between gap-3 rounded-[14px] border px-4 py-3 ${cardClass}`}
       >
         <div className="flex min-w-0 items-start gap-2.5">
-          <span className="mt-0.5 shrink-0 text-base">{TYPE_ICONS[e.type]}</span>
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy-50 text-[10px] font-bold text-navy-500">
+            {TYPE_ICONS[e.type]}
+          </span>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-medium text-navy-800">{e.title}</p>
             <p className="mt-0.5 text-[11.5px]">
               <span className={urgencyTextClass(e.date)}>{urgencyLabel(e.date)}</span>
               <span className="text-navy-400"> · {TYPE_LABELS[e.type]}</span>
             </p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {e.prioridade && (
+                <span className="rounded-full bg-navy-50 px-2 py-0.5 text-[10.5px] font-medium text-navy-500">
+                  {PRIORITY_LABELS[e.prioridade]}
+                </span>
+              )}
+              {e.responsavel && (
+                <span className="rounded-full bg-sage-100/70 px-2 py-0.5 text-[10.5px] font-medium text-navy-600">
+                  Resp. {e.responsavel}
+                </span>
+              )}
+              {e.recurrence && e.recurrence !== "nenhuma" && (
+                <span className="rounded-full bg-cream-100 px-2 py-0.5 text-[10.5px] font-medium text-navy-500">
+                  {RECURRENCE_LABELS[e.recurrence]}
+                </span>
+              )}
+              {e.linkedPendenciaId && (
+                <span className="rounded-full bg-terracotta-50 px-2 py-0.5 text-[10.5px] font-medium text-terracotta-700">
+                  Pendência criada
+                </span>
+              )}
+            </div>
             {e.note && (
               <p className="mt-1 line-clamp-2 text-[11px] text-navy-400">{e.note}</p>
             )}
@@ -257,6 +417,22 @@ export default function AgendaPredio({ onSaved }: Props) {
               >
                 Concluir
               </button>
+              {ate(e.date) < 0 && !e.linkedPendenciaId && (
+                <button
+                  type="button"
+                  onClick={() => createPendenciaFromEvent(e)}
+                  className="rounded border border-terracotta-200 bg-terracotta-50 px-2 py-1 text-[11.5px] font-medium text-terracotta-700 transition-colors hover:bg-terracotta-100"
+                >
+                  Virar pendência
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => openEdit(e)}
+                className="rounded border border-navy-100 px-2 py-1 text-[11.5px] text-navy-500 hover:text-navy-700"
+              >
+                Editar
+              </button>
               <button
                 type="button"
                 onClick={() => setConfirmDeleteId(e.id)}
@@ -288,7 +464,7 @@ export default function AgendaPredio({ onSaved }: Props) {
           {!showForm && (
             <button
               type="button"
-              onClick={() => setShowForm(true)}
+              onClick={() => { setEditingId(null); setForm(EMPTY_FORM); setShowForm(true); }}
               className="inline-flex items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-semibold text-cream-50 transition-all hover:bg-navy-800 active:scale-[0.97]"
             >
               <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -306,9 +482,39 @@ export default function AgendaPredio({ onSaved }: Props) {
           </div>
         )}
 
+        {!showForm && (
+          <div className="space-y-2 rounded-[14px] border border-navy-100 bg-white px-3.5 py-3">
+            <p className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-navy-400">
+              Templates operacionais
+            </p>
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-0.5">
+              {OPERATIONAL_TEMPLATES.slice(0, 8).map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => applyTemplate(template.id)}
+                  className="flex-shrink-0 rounded-full border border-navy-100 bg-navy-50/60 px-3 py-1.5 text-[11.5px] font-medium text-navy-600 transition-colors hover:bg-navy-100"
+                >
+                  {template.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Form */}
         {showForm && (
           <div ref={formRef} className="space-y-3 rounded-[14px] border border-navy-100 bg-navy-50/40 p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[12.5px] font-semibold text-navy-800">
+                {editingId ? "Editar evento" : "Novo evento"}
+              </p>
+              {form.templateId && (
+                <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-navy-500">
+                  Template aplicado
+                </span>
+              )}
+            </div>
             <div className="space-y-1">
               <label className="text-[11.5px] font-medium text-navy-600">Descrição</label>
               <input
@@ -346,6 +552,44 @@ export default function AgendaPredio({ onSaved }: Props) {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="space-y-1">
+                <label className="text-[11.5px] font-medium text-navy-600">Responsável</label>
+                <input
+                  type="text"
+                  value={form.responsavel}
+                  onChange={(e) => setForm((f) => ({ ...f, responsavel: e.target.value }))}
+                  placeholder="Síndico, zelador..."
+                  maxLength={60}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11.5px] font-medium text-navy-600">Prioridade</label>
+                <select
+                  value={form.prioridade}
+                  onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value as FormState["prioridade"] }))}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                >
+                  {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11.5px] font-medium text-navy-600">Recorrência</label>
+                <select
+                  value={form.recurrence}
+                  onChange={(e) => setForm((f) => ({ ...f, recurrence: e.target.value as AgendaRecurrence }))}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                >
+                  {(Object.keys(RECURRENCE_LABELS) as AgendaRecurrence[]).map((r) => (
+                    <option key={r} value={r}>{RECURRENCE_LABELS[r]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-1">
               <label className="text-[11.5px] font-medium text-navy-600">Observação (opcional)</label>
               <textarea
@@ -375,11 +619,11 @@ export default function AgendaPredio({ onSaved }: Props) {
                 disabled={!canSave}
                 className="flex-1 rounded-xl bg-navy-700 py-2 text-[13px] font-semibold text-cream-50 transition-colors hover:bg-navy-800 disabled:bg-navy-200 disabled:text-navy-400"
               >
-                Salvar evento
+                {editingId ? "Salvar alterações" : "Salvar evento"}
               </button>
               <button
                 type="button"
-                onClick={() => { setShowForm(false); setForm(EMPTY_FORM); }}
+                onClick={() => { setShowForm(false); setForm(EMPTY_FORM); setEditingId(null); }}
                 className="rounded-xl border border-navy-100 bg-white px-4 py-2 text-[13px] text-navy-500 transition-colors hover:border-navy-200 hover:text-navy-700"
               >
                 Cancelar
@@ -390,9 +634,60 @@ export default function AgendaPredio({ onSaved }: Props) {
 
         {/* Empty state */}
         {pending.length === 0 && !showForm && (
-          <p className="py-4 text-center text-[12.5px] text-navy-400">
-            Nenhum evento agendado. Adicione datas importantes do prédio.
-          </p>
+          <EmptyState
+            title="Nenhum evento agendado."
+            description="Cadastre a próxima manutenção, assembleia ou vencimento importante para ativar a agenda operacional."
+            actionLabel="Criar evento"
+            onAction={() => { setEditingId(null); setForm(EMPTY_FORM); setShowForm(true); }}
+          />
+        )}
+
+        {!showForm && pending.length > 0 && (
+          <div className="space-y-3 rounded-[16px] border border-navy-100 bg-white px-3.5 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+                  Esta semana
+                </p>
+                <p className="mt-0.5 text-[11.5px] text-navy-500">
+                  Visão simples dos próximos 7 dias. Recorrência gera uma nova ocorrência ao concluir.
+                </p>
+              </div>
+              {overdue.length > 0 && (
+                <span className="rounded-full bg-terracotta-50 px-2.5 py-1 text-[10.5px] font-semibold text-terracotta-700">
+                  {overdue.length} atrasado{overdue.length > 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            {weekGroups.length === 0 ? (
+              <EmptyState
+                title="Nenhum evento nos próximos 7 dias."
+                description="Use um template para agendar manutenção, assembleia ou vencimento relevante."
+                actionLabel="Usar template"
+                onAction={() => applyTemplate(OPERATIONAL_TEMPLATES[0].id)}
+              />
+            ) : (
+              <div className="space-y-3">
+                {weekGroups.map((group) => (
+                  <div key={group.date}>
+                    <p className="mb-1.5 text-[11px] font-semibold capitalize text-navy-500">
+                      {weekDayLabel(group.date)}
+                    </p>
+                    <ul className="space-y-2">
+                      {group.events.map((event) =>
+                        renderEventCard(
+                          event,
+                          event.prioridade === "critica" || event.prioridade === "alta"
+                            ? "border-amber-200 bg-amber-50/20"
+                            : "border-navy-100 bg-white"
+                        )
+                      )}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Eventos agrupados por status */}

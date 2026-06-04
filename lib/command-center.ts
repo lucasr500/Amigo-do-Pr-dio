@@ -8,6 +8,7 @@ export type { GuidanceEngineItem } from "./guidance-engine";
 import {
   getNotifications,
   getPendenciasAbertas,
+  getAgendaEvents,
   getDocumentos,
   getFuncionarios,
   getManutencoes,
@@ -24,12 +25,26 @@ import {
 import { computeHealthScore } from "@/lib/health-score";
 import { STALE_TASK_DAYS } from "@/lib/health-config";
 import { contarStatusManutencoes, temManutencaoCriticaAtrasada } from "@/lib/recorrencias";
+import { getFinancialSummary } from "@/lib/financial";
+import { buildLocalIntegrityReport } from "@/lib/local-integrity";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
 
 export type CommandAction = ActionItem & {
   sourceModule?: string; // "avcb" | "seguro" | "funcionarios" | "documentos" | "pendencias" | "rotina"
   resolveTarget?: "condominio" | "ferramentas" | "agenda" | "pendencias"; // aba para resolver
+  motivo?: string;
+  impacto?: string;
+  cta?: string;
+  origemDados?: string;
+  scoreImpact?: string;
+};
+
+export type DailyFocusItem = {
+  id: string;
+  title: string;
+  reason: string;
+  target: "condominio" | "ferramentas" | "agenda" | "pendencias";
 };
 
 export type CorrelacaoGap = {
@@ -66,6 +81,7 @@ export type CommandCenterResult = {
   guidanceTopRisco: GuidanceEngineItem | null;
   guidanceMaiorLacuna: GuidanceEngineItem | null;
   guidanceMaiorMelhoria: GuidanceEngineItem | null;
+  todayFocus: DailyFocusItem[];
 };
 
 function buildResolveTarget(item: ActionItem): CommandAction["resolveTarget"] {
@@ -219,6 +235,7 @@ export function buildCommandCenter(): CommandCenterResult {
   const plan      = buildActionPlan();
   const health    = computeHealthScore();
   const pending   = getPendenciasAbertas();
+  const agenda    = getAgendaEvents();
   const docs      = getDocumentos();
   const funcs     = getFuncionarios();
   const allNotifs = getNotifications().filter((n) => !n.dismissed);
@@ -228,10 +245,52 @@ export function buildCommandCenter(): CommandCenterResult {
     ...item,
     sourceModule: buildSourceModule(item),
     resolveTarget: buildResolveTarget(item),
+    motivo: item.descricao || "Este item aparece porque os dados locais indicam risco ou lacuna operacional.",
+    impacto: item.prioridade === "urgente" ? "Reduz risco imediato e melhora a previsibilidade da rotina." : "Melhora a organização e evita esquecimento de prazos.",
+    cta: "Resolver agora",
+    origemDados: buildSourceModule(item),
+    scoreImpact: item.prioridade === "urgente" ? "Pode melhorar o score operacional." : undefined,
   }));
 
-  const urgentActions   = actions.filter((a) => a.prioridade === "urgente");
-  const thisWeekActions = actions.filter((a) => a.prioridade === "este_mes");
+  const financialSummary = getFinancialSummary();
+  const integrity = buildLocalIntegrityReport();
+  for (const alert of financialSummary.alerts) {
+    actions.push({
+      id: alert.id,
+      titulo: alert.title,
+      descricao: alert.reason,
+      prioridade: alert.severity === "critical" ? "urgente" : "este_mes",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: alert.reason,
+      impacto: alert.impact,
+      cta: "Revisar financeiro",
+      origemDados: "financeiro",
+    });
+  }
+  for (const issue of integrity.issues.filter((item) => item.severity === "critical" || item.severity === "warning").slice(0, 3)) {
+    actions.push({
+      id: `integrity_${issue.id}`,
+      titulo: issue.title,
+      descricao: issue.detail,
+      prioridade: issue.severity === "critical" ? "urgente" : "este_mes",
+      categoria: issue.module === "financeiro" ? "financeiro" : "gestao",
+      sourceModule: "integridade",
+      resolveTarget: issue.module === "agenda" ? "agenda" : issue.module === "pendencias" ? "pendencias" : "condominio",
+      motivo: issue.detail,
+      impacto: "Aumenta confiabilidade dos dados locais e reduz risco de decisão com informação incompleta.",
+      cta: "Revisar dados locais",
+      origemDados: "integridade-local",
+    });
+  }
+
+  const sortedActions = [...actions].sort((a, b) => {
+    const order: Record<ActionPriority, number> = { urgente: 0, este_mes: 1, proximos_90_dias: 2, quando_possivel: 3 };
+    return order[a.prioridade] - order[b.prioridade];
+  });
+  const urgentActions   = sortedActions.filter((a) => a.prioridade === "urgente");
+  const thisWeekActions = sortedActions.filter((a) => a.prioridade === "este_mes");
   const topPriority     = urgentActions[0] ?? thisWeekActions[0] ?? null;
 
   const criticalNotifications = allNotifs.filter((n) => n.severity === "critical");
@@ -247,14 +306,68 @@ export function buildCommandCenter(): CommandCenterResult {
   const correlacoes      = buildCorrelacoes();
   const engine           = buildGuidanceEngine();
 
+  const overdueAgenda = agenda.filter((event) => !event.completedAt && event.date < new Date().toISOString().slice(0, 10));
+  const nextAgenda = agenda
+    .filter((event) => !event.completedAt && event.date >= new Date().toISOString().slice(0, 10))
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+  const todayFocus: DailyFocusItem[] = [];
+  if (topPriority) {
+    todayFocus.push({
+      id: `top_${topPriority.id}`,
+      title: topPriority.titulo,
+      reason: topPriority.motivo || topPriority.descricao || "É a ação com maior prioridade no momento.",
+      target: topPriority.resolveTarget ?? "condominio",
+    });
+  }
+  if (overdueAgenda.length > 0) {
+    todayFocus.push({
+      id: "agenda_overdue",
+      title: `${overdueAgenda.length} evento${overdueAgenda.length > 1 ? "s" : ""} vencido${overdueAgenda.length > 1 ? "s" : ""} na agenda`,
+      reason: "Evento vencido sem fechamento vira ruído operacional e pode esconder manutenção pendente.",
+      target: "agenda",
+    });
+  } else if (nextAgenda) {
+    todayFocus.push({
+      id: "agenda_next",
+      title: `Próximo evento: ${nextAgenda.title}`,
+      reason: `Está agendado para ${nextAgenda.date}; confira responsável e próximos passos.`,
+      target: "agenda",
+    });
+  }
+  if (financialSummary.alerts[0]) {
+    todayFocus.push({
+      id: `finance_${financialSummary.alerts[0].id}`,
+      title: financialSummary.alerts[0].title,
+      reason: financialSummary.alerts[0].reason,
+      target: "condominio",
+    });
+  }
+  if (integrity.issues[0]) {
+    todayFocus.push({
+      id: `integrity_${integrity.issues[0].id}`,
+      title: integrity.issues[0].title,
+      reason: integrity.issues[0].detail,
+      target: integrity.issues[0].module === "agenda" ? "agenda" : integrity.issues[0].module === "pendencias" ? "pendencias" : "condominio",
+    });
+  }
+  if (missingDocs > 0) {
+    todayFocus.push({
+      id: "docs_missing_focus",
+      title: `${missingDocs} documento${missingDocs > 1 ? "s" : ""} a regularizar`,
+      reason: "Documentos sem status reduzem confiança e limitam a leitura de risco do app.",
+      target: "condominio",
+    });
+  }
+
   const riskLevel: RiskLevel = (() => {
     const m = getMemoriaOperacional();
     const a = getMemoriaAssistida();
     const hasLegacy   = !!(m.vencimentoAVCB || m.vencimentoSeguro || m.fimMandatoSindico);
     const hasAssisted = !!(a.avcb || a.seguro || a.mandato);
     if (!hasLegacy && !hasAssisted) return "sem-dados";
-    if (urgentActions.length > 0 || criticalNotifications.length > 0) return "critico";
-    if (warningNotifications.length > 0 || stalePendencias > 0 || missingDocs > 2) return "atencao";
+    if (urgentActions.length > 0 || criticalNotifications.length > 0 || financialSummary.cashRisk === "critico" || overdueAgenda.length > 0 || integrity.status === "critical") return "critico";
+    if (warningNotifications.length > 0 || stalePendencias > 0 || missingDocs > 2 || integrity.status === "warning") return "atencao";
     return "estavel";
   })();
 
@@ -309,7 +422,7 @@ export function buildCommandCenter(): CommandCenterResult {
     topPriority,
     urgentActions,
     thisWeekActions,
-    allActions: actions,
+    allActions: sortedActions,
     criticalNotifications,
     warningNotifications,
     unreadCount,
@@ -330,5 +443,6 @@ export function buildCommandCenter(): CommandCenterResult {
     guidanceTopRisco: engine.topRisco,
     guidanceMaiorLacuna: engine.maiorLacuna,
     guidanceMaiorMelhoria: engine.maiorMelhoria,
+    todayFocus: todayFocus.slice(0, 3),
   };
 }

@@ -174,12 +174,10 @@ function buildChecklist(mode: ImplantacaoMode | null): Section[] {
 export default function ImplantacaoChecklist({ onNavigate }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [mode, setMode] = useState<ImplantacaoMode | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
 
   useEffect(() => {
     const m = getImplantacaoMode();
-    setMode(m);
     setSections(buildChecklist(m));
     setHydrated(true);
   }, []);
