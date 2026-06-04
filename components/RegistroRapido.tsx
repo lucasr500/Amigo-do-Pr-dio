@@ -5,6 +5,9 @@ import {
   addOcorrencia,
   addPendencia,
   markOcorrenciaMessageGenerated,
+  getOcorrenciasCount,
+  canAddOcorrencia,
+  OCORRENCIAS_LIMIT,
   type Ocorrencia,
   type OcorrenciaTipo,
   type OcorrenciaPrioridade,
@@ -101,10 +104,14 @@ export default function RegistroRapido({ onSaved }: Props) {
     setShowAdvanced(false); setShowMoreTipos(false); setTipo("barulho");
   };
 
-  const canSave = descricao.trim().length > 0 || titulo.trim().length > 0;
+  const ocorrenciasCount = getOcorrenciasCount();
+  const isAtLimit = !canAddOcorrencia();
+  const isNearLimit = ocorrenciasCount >= OCORRENCIAS_LIMIT - 10;
+
+  const canSave = (descricao.trim().length > 0 || titulo.trim().length > 0) && !isAtLimit;
 
   const handleSave = () => {
-    if (!canSave) return;
+    if (!canSave || isAtLimit) return;
     // Use tipo label as description when user left it blank (tipo-only quick register)
     const cleanDescription = descricao.trim() || TIPO_LABEL[tipo];
     const occurrence = addOcorrencia({
@@ -382,6 +389,22 @@ export default function RegistroRapido({ onSaved }: Props) {
             </span>
           </label>
 
+          {isAtLimit && (
+            <div className="flex items-start gap-2 rounded-xl border border-terracotta-200 bg-terracotta-50/80 px-3 py-2.5">
+              <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-terracotta-500" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <p className="text-[11.5px] leading-snug text-terracotta-800">
+                Limite de {OCORRENCIAS_LIMIT} ocorrências atingido. As mais antigas serão compactadas automaticamente.
+              </p>
+            </div>
+          )}
+          {isNearLimit && !isAtLimit && (
+            <p className="text-[11px] text-amber-600">
+              {ocorrenciasCount}/{OCORRENCIAS_LIMIT} ocorrências registradas.
+            </p>
+          )}
           <button
             type="button"
             onClick={handleSave}

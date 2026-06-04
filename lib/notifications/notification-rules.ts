@@ -10,6 +10,8 @@ import {
   getPendenciasAbertas,
   getWeeklyReviewState,
   getCurrentWeekKey,
+  getMovimentacoes,
+  getSaldoAtual,
   DOCUMENTOS_ESSENCIAIS_IDS,
 } from "@/lib/session";
 import type { AppNotification } from "@/lib/session";
@@ -20,16 +22,17 @@ type NotificationCandidate = Omit<AppNotification, "id" | "createdAt" | "read" |
 // Cooldown mínimo em ms entre re-geração do mesmo tipo de notificação.
 // Previne spam ao reabrir o app várias vezes no mesmo dia.
 const COOLDOWN_MS: Record<NotificationType, number> = {
-  critical_deadline:      6 * 3_600_000,  // 6 horas
-  weekly_review:          24 * 3_600_000, // 24 horas
-  monthly_review:         7 * 24 * 3_600_000, // 7 dias
-  overdue_document:       7 * 24 * 3_600_000, // 7 dias
-  overdue_vacation:       3 * 24 * 3_600_000, // 3 dias
-  implementation_gap:     7 * 24 * 3_600_000, // 7 dias
-  health_drop:            24 * 3_600_000, // 24 horas
-  stale_pending:          3 * 24 * 3_600_000, // 3 dias
-  routine_overdue:        7 * 24 * 3_600_000, // 7 dias
-  onboarding_incomplete:  7 * 24 * 3_600_000, // 7 dias
+  critical_deadline:      6 * 3_600_000,        // 6 horas
+  weekly_review:          24 * 3_600_000,       // 24 horas
+  monthly_review:         7 * 24 * 3_600_000,   // 7 dias
+  overdue_document:       7 * 24 * 3_600_000,   // 7 dias
+  overdue_vacation:       3 * 24 * 3_600_000,   // 3 dias
+  implementation_gap:     7 * 24 * 3_600_000,   // 7 dias
+  health_drop:            24 * 3_600_000,       // 24 horas
+  stale_pending:          3 * 24 * 3_600_000,   // 3 dias
+  routine_overdue:        7 * 24 * 3_600_000,   // 7 dias
+  onboarding_incomplete:  7 * 24 * 3_600_000,   // 7 dias
+  financial_alert:        7 * 24 * 3_600_000,   // 7 dias
 };
 
 export type CooldownMap = Partial<Record<string, number>>; // tipo → lastGeneratedMs
@@ -199,6 +202,54 @@ export function evaluateNotificationRules(
       sourceModule: "memoria",
       actionKey: "open_memoria",
     });
+  }
+
+  // ── Regras 8–10: Financeiro ───────────────────────────────────────────────
+  const movimentacoes = getMovimentacoes();
+
+  // Regra 8: Nenhum dado financeiro registrado (informativo)
+  const finSemDadosKey = "financial_alert:sem_dados";
+  if (movimentacoes.length === 0 && !isCoolingDown("financial_alert", finSemDadosKey, cooldownMap)) {
+    candidates.push({
+      type: "financial_alert",
+      severity: "info",
+      title: "Módulo financeiro disponível",
+      body: "Registre receitas e despesas para ativar o monitoramento da saúde financeira do condomínio.",
+      sourceModule: "financeiro",
+      actionKey: "open_financeiro",
+    });
+  }
+
+  // Regra 9: Dados financeiros desatualizados (> 60 dias sem movimentação)
+  if (movimentacoes.length > 0) {
+    const sorted    = [...movimentacoes].sort((a, b) => b.data.localeCompare(a.data));
+    const ultima    = sorted[0].data;
+    const diasSince = daysSince(ultima) ?? 0;
+    const finStaleKey = "financial_alert:stale";
+    if (diasSince > 60 && !isCoolingDown("financial_alert", finStaleKey, cooldownMap)) {
+      candidates.push({
+        type: "financial_alert",
+        severity: "warning",
+        title: `Financeiro desatualizado há ${diasSince} dias`,
+        body: "Registre movimentações recentes para manter o monitoramento financeiro ativo.",
+        sourceModule: "financeiro",
+        actionKey: "open_financeiro",
+      });
+    }
+
+    // Regra 10: Saldo negativo
+    const saldo = getSaldoAtual();
+    const finNegKey = "financial_alert:negativo";
+    if (saldo < 0 && !isCoolingDown("financial_alert", finNegKey, cooldownMap)) {
+      candidates.push({
+        type: "financial_alert",
+        severity: "critical",
+        title: "Saldo financeiro negativo",
+        body: "As despesas registradas superam as receitas. Revise os lançamentos e a arrecadação.",
+        sourceModule: "financeiro",
+        actionKey: "open_financeiro",
+      });
+    }
   }
 
   // Filtra notificações que já existem e não estão dismissed (evita duplicatas visuais)

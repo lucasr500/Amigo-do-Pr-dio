@@ -11,7 +11,8 @@ export type NotificationType =
   | "health_drop"            // Health Score caiu significativamente
   | "stale_pending"          // próximo passo parado >21 dias
   | "routine_overdue"        // manutenção rotineira atrasada
-  | "onboarding_incomplete"; // onboarding não finalizado
+  | "onboarding_incomplete"  // onboarding não finalizado
+  | "financial_alert";       // alerta financeiro (saldo, caixa, dados desatualizados)
 
 export type NotificationSeverity = "info" | "warning" | "critical";
 

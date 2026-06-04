@@ -9,8 +9,9 @@ const FLAG_KEY = "amigo_feature_flags";
 const FLAG_DEFAULTS = {
   notifications_enabled:    true,   // Central de notificações internas
   health_history_enabled:   true,   // Histórico do Health Score
-  sync_enabled:             false,  // Sync com Supabase — desativado por default (ativar via localStorage para teste)
-  auth_enabled:             true,   // Login/conta — ativo
+  cloud_backup_enabled:     true,   // Backup manual em nuvem (requer auth_enabled + conta)
+  sync_enabled:             false,  // Auto-sync contínuo — desativado por padrão
+  auth_enabled:             true,   // Login/conta via magic link — ativo
   multi_device_enabled:     false,  // Multi-device sync (futuro)
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental

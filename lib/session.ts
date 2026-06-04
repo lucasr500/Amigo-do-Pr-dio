@@ -7,7 +7,7 @@
 //
 // Versão do schema de dados: SESSION_SCHEMA_VERSION
 // Incrementar aqui ao adicionar campos incompatíveis.
-export const SESSION_SCHEMA_VERSION = 8;
+export const SESSION_SCHEMA_VERSION = 9;
 
 import { ate, desde, past } from "./urgency";
 
@@ -130,6 +130,22 @@ export type DocumentoEssencial = {
   nomeArquivo?: string;      // nome descritivo do arquivo físico ou digital
 };
 
+// ─── Movimentações financeiras ────────────────────────────────────────────────
+// Registro simples de receitas e despesas operacionais do condomínio.
+// Sem ERP, sem integração bancária, sem cobrança — apenas visibilidade financeira básica.
+
+export type MovimentacaoFinanceira = {
+  id: string;
+  data: string;          // YYYY-MM-DD
+  valor: number;         // em reais (sempre positivo; tipo define se é + ou -)
+  tipo: "receita" | "despesa";
+  categoria: string;     // ver lib/financial-categories.ts
+  observacao?: string;
+  origem: "manual";
+  createdAt: string;
+  updatedAt?: string;
+};
+
 // ─── Manutenções recorrentes ─────────────────────────────────────────────────
 // Engine de recorrência operacional. Cada item representa uma manutenção
 // obrigatória ou recomendada, com frequência e histórico de execução.
@@ -206,6 +222,7 @@ const KEYS = {
   DOCUMENTOS:           "amigo_documentos",
   FUNCIONARIOS:         "amigo_funcionarios",
   MANUTENCOES:          "amigo_manutencoes",
+  MOVIMENTACOES:        "amigo_financeiro",
   IMPLANTACAO_MODE:     "amigo_implantacao_mode",
   SESSION_META:         "amigo_session_meta",
   RESOLUTION_EVENTS:    "amigo_resolution_events",
@@ -220,6 +237,11 @@ const KEYS = {
   HEALTH_HISTORY:        "amigo_health_history",
   AUDIT_LOG:             "amigo_audit_log",
 } as const;
+
+// ─── Limites de coleções ──────────────────────────────────────────────────────
+// Exportados para a UI mostrar avisos progressivos antes do truncamento.
+export const PENDENCIAS_LIMIT = 50;
+export const OCORRENCIAS_LIMIT = 80;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -622,6 +644,14 @@ export function getPendenciasConcluidas(): Pendencia[] {
   return getPendencias().filter((p) => p.status === "concluida");
 }
 
+export function getPendenciasCount(): number {
+  return getPendencias().length;
+}
+
+export function canAddPendencia(): boolean {
+  return getPendencias().length < PENDENCIAS_LIMIT;
+}
+
 // ─── Agenda do prédio ────────────────────────────────────────────────────────
 // Lista leve de eventos operacionais futuros. Sem recorrência, sem push,
 // sem calendário mensal — apenas registro e acompanhamento local.
@@ -751,6 +781,14 @@ export function getOcorrencias(): Ocorrencia[] {
   return safeRead<Ocorrencia[]>(KEYS.OCORRENCIAS, []);
 }
 
+export function getOcorrenciasCount(): number {
+  return getOcorrencias().length;
+}
+
+export function canAddOcorrencia(): boolean {
+  return getOcorrencias().length < OCORRENCIAS_LIMIT;
+}
+
 export function addOcorrencia(
   o: Omit<Ocorrencia, "id" | "createdAt">
 ): Ocorrencia {
@@ -869,13 +907,27 @@ export function getStorageSizeKB(): number {
 
 // ─── Limpeza de dados locais ─────────────────────────────────────────────────
 // Remove todas as chaves próprias do app. Usado pelo reset seguro em BackupPanel.
-// Não altera schema de backup — nenhum dado é exportado ou modificado, apenas removido.
+// Também limpa snapshots e registry multi-condomínio.
 export function clearAllData(): void {
   if (typeof window === "undefined") return;
   try {
+    // Remove chaves principais do app
     Object.values(KEYS).forEach((key) => {
       localStorage.removeItem(key);
     });
+    // Remove chaves multi-condomínio (snapshots + registry)
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key === "amigo_condominios" ||
+        key === "amigo_active_condo" ||
+        key.startsWith("amigo_condo_")
+      )) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
   } catch {
     // localStorage indisponível
   }
@@ -1222,6 +1274,74 @@ export function deleteManutencao(id: string): void {
   saveManutencoes(getManutencoes().filter((m) => m.id !== id));
 }
 
+// ─── Movimentações financeiras ────────────────────────────────────────────────
+
+export const MOVIMENTACOES_LIMIT = 500;
+
+export function getMovimentacoes(): MovimentacaoFinanceira[] {
+  return safeRead<MovimentacaoFinanceira[]>(KEYS.MOVIMENTACOES, []);
+}
+
+export function saveMovimentacoes(list: MovimentacaoFinanceira[]): void {
+  safeWrite(KEYS.MOVIMENTACOES, list.slice(-MOVIMENTACOES_LIMIT));
+}
+
+export function addMovimentacao(
+  m: Omit<MovimentacaoFinanceira, "id" | "createdAt" | "origem">
+): MovimentacaoFinanceira {
+  const all = getMovimentacoes();
+  const nova: MovimentacaoFinanceira = {
+    ...m,
+    id:        `fin_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    origem:    "manual",
+    createdAt: new Date().toISOString(),
+  };
+  all.push(nova);
+  saveMovimentacoes(all);
+  return nova;
+}
+
+export function updateMovimentacao(
+  id: string,
+  changes: Partial<Omit<MovimentacaoFinanceira, "id" | "createdAt" | "origem">>
+): void {
+  saveMovimentacoes(
+    getMovimentacoes().map((m) =>
+      m.id === id ? { ...m, ...changes, updatedAt: new Date().toISOString() } : m
+    )
+  );
+}
+
+export function deleteMovimentacao(id: string): void {
+  saveMovimentacoes(getMovimentacoes().filter((m) => m.id !== id));
+}
+
+export function getMovimentacoesUltimosMeses(n: number): MovimentacaoFinanceira[] {
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - n);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+  return getMovimentacoes()
+    .filter((m) => m.data >= cutoffStr)
+    .sort((a, b) => b.data.localeCompare(a.data));
+}
+
+export function getReceitasPeriodo(startDate: string, endDate: string): MovimentacaoFinanceira[] {
+  return getMovimentacoes()
+    .filter((m) => m.tipo === "receita" && m.data >= startDate && m.data <= endDate);
+}
+
+export function getDespesasPeriodo(startDate: string, endDate: string): MovimentacaoFinanceira[] {
+  return getMovimentacoes()
+    .filter((m) => m.tipo === "despesa" && m.data >= startDate && m.data <= endDate);
+}
+
+export function getSaldoAtual(): number {
+  return getMovimentacoes().reduce(
+    (sum, m) => (m.tipo === "receita" ? sum + m.valor : sum - m.valor),
+    0
+  );
+}
+
 // ─── Férias de funcionários ──────────────────────────────────────────────────
 
 export function getFuncionarios(): FuncionarioFerias[] {
@@ -1514,6 +1634,84 @@ export function computeCondominioHealth(): CondominioHealth {
   return { status, alertCount, atencaoCount, okCount, totalMonitored, label, summary, executiveSummary };
 }
 
+// ─── Validação interna de backup ─────────────────────────────────────────────
+// Fonte única de verdade — usada por parseAndValidateUserData e importUserData.
+
+type VersionFlags = {
+  version: UserBackup["version"];
+  isV2plus: boolean;
+  isV3plus: boolean;
+  isV4plus: boolean;
+  isV5plus: boolean;
+  isV7: boolean;
+};
+
+type BackupValidationOk = { ok: true; d: Record<string, unknown>; flags: VersionFlags };
+type BackupValidationErr = { ok: false; error: string };
+
+function validateBackupJson(jsonString: string): BackupValidationOk | BackupValidationErr {
+  try {
+    const data = JSON.parse(jsonString) as unknown;
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return { ok: false, error: "Arquivo inválido. Verifique se é um backup do Amigo do Prédio." };
+    }
+    const d = data as Record<string, unknown>;
+    if (d.app !== "amigo-do-predio") {
+      return { ok: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
+    }
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7") {
+      return { ok: false, error: "Versão do backup incompatível." };
+    }
+    if (d.profile !== null && d.profile !== undefined && (typeof d.profile !== "object" || Array.isArray(d.profile))) {
+      return { ok: false, error: "Dados de perfil corrompidos no arquivo." };
+    }
+    if (!d.memoria || typeof d.memoria !== "object" || Array.isArray(d.memoria)) {
+      return { ok: false, error: "Dados de memória corrompidos no arquivo." };
+    }
+    if (!Array.isArray(d.favorites)) {
+      return { ok: false, error: "Dados de favoritos corrompidos no arquivo." };
+    }
+    if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
+      return { ok: false, error: "Dados de checklists corrompidos no arquivo." };
+    }
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7";
+    const isV7     = d.version === "7";
+    if (isV3plus && !Array.isArray(d.ocorrencias)) {
+      return { ok: false, error: "Dados de ocorrências corrompidos no arquivo." };
+    }
+    if (isV4plus && !Array.isArray(d.agenda)) {
+      return { ok: false, error: "Dados de agenda corrompidos no arquivo." };
+    }
+    return {
+      ok: true,
+      d,
+      flags: { version: d.version as UserBackup["version"], isV2plus, isV3plus, isV4plus, isV5plus, isV7 },
+    };
+  } catch {
+    return { ok: false, error: "Arquivo corrompido ou formato inválido." };
+  }
+}
+
+function buildImportSummary(d: Record<string, unknown>, flags: VersionFlags): NonNullable<Extract<ImportResult, { success: true }>["summary"]> {
+  const profile = d.profile as CondominioProfile | null;
+  const memoria = d.memoria as MemoriaOperacional;
+  return {
+    nomeCondominio:    profile?.nomeCondominio,
+    memoriaCount:      Object.values(memoria).filter((v) => v !== undefined && v !== "").length,
+    favoritesCount:    (d.favorites as FavoriteEntry[]).length,
+    pendenciasCount:   flags.isV2plus && Array.isArray(d.pendencias)  ? (d.pendencias  as Pendencia[]).length          : undefined,
+    ocorrenciasCount:  flags.isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length         : undefined,
+    agendaCount:       flags.isV4plus && Array.isArray(d.agenda)      ? (d.agenda      as AgendaEvent[]).length         : undefined,
+    documentosCount:   flags.isV5plus && Array.isArray(d.documentos)  ? (d.documentos  as DocumentoEssencial[]).length  : undefined,
+    funcionariosCount: flags.isV5plus && Array.isArray(d.funcionarios)? (d.funcionarios as FuncionarioFerias[]).length  : undefined,
+    manutencoesCount:    (flags.version === "6" || flags.version === "7") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined,
+    movimentacoesCount:  flags.isV7 && Array.isArray(d.movimentacoes) ? (d.movimentacoes as MovimentacaoFinanceira[]).length : undefined,
+  };
+}
+
 // ─── Backup e restauração de dados do usuário ────────────────────────────────
 // Exporta os dados operacionais do síndico (perfil, memória, favoritos, checklists, pendências, ocorrências).
 // Diferente de exportTelemetry (que exporta dados de uso/análise), este backup é
@@ -1526,32 +1724,33 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v4 — idem + agenda do prédio (amigo_agenda)
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4" | "5" | "6";
+  version: "1" | "2" | "3" | "4" | "5" | "6" | "7";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
   memoria: MemoriaOperacional;
   favorites: FavoriteEntry[];
   checklists: ChecklistStorage;
-  pendencias?: Pendencia[]; // v2+
-  ocorrencias?: Ocorrencia[]; // v3+
-  agenda?: AgendaEvent[]; // v4+
-  memoriaAssistida?: MemoriaAssistida; // v5+
-  documentos?: DocumentoEssencial[]; // v5+
-  funcionarios?: FuncionarioFerias[]; // v5+
-  implantacaoMode?: ImplantacaoMode; // v5+
-  manutencoes?: ManutencaoRecorrente[]; // v6+
+  pendencias?: Pendencia[];                   // v2+
+  ocorrencias?: Ocorrencia[];                 // v3+
+  agenda?: AgendaEvent[];                     // v4+
+  memoriaAssistida?: MemoriaAssistida;         // v5+
+  documentos?: DocumentoEssencial[];           // v5+
+  funcionarios?: FuncionarioFerias[];          // v5+
+  implantacaoMode?: ImplantacaoMode;           // v5+
+  manutencoes?: ManutencaoRecorrente[];        // v6+
+  movimentacoes?: MovimentacaoFinanceira[];    // v7+
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number; movimentacoesCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "6",
+    version: "7",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1566,6 +1765,7 @@ export function exportUserData(): void {
     funcionarios: getFuncionarios(),
     implantacaoMode: getImplantacaoMode() ?? undefined,
     manutencoes: getManutencoes(),
+    movimentacoes: getMovimentacoes(),
   };
 
   try {
@@ -1585,7 +1785,7 @@ export function exportUserData(): void {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "6",
+    version: "7",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1600,215 +1800,84 @@ export function getUserBackupJson(): string {
     funcionarios: getFuncionarios(),
     implantacaoMode: getImplantacaoMode() ?? undefined,
     manutencoes: getManutencoes(),
+    movimentacoes: getMovimentacoes(),
   };
   return JSON.stringify(payload, null, 2);
 }
 
 // Valida o backup sem escrever no localStorage — usado para mostrar preview antes da confirmação.
-// Aceita v1–v5 (versões acumulativas com funcionalidades adicionais).
 export function parseAndValidateUserData(jsonString: string): ImportResult {
-  try {
-    const data = JSON.parse(jsonString) as unknown;
-
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
-      return { success: false, error: "Arquivo inválido. Verifique se é um backup do Amigo do Prédio." };
-    }
-
-    const d = data as Record<string, unknown>;
-
-    if (d.app !== "amigo-do-predio") {
-      return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
-    }
-
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6") {
-      return { success: false, error: "Versão do backup incompatível." };
-    }
-
-    if (d.profile !== null && d.profile !== undefined && (typeof d.profile !== "object" || Array.isArray(d.profile))) {
-      return { success: false, error: "Dados de perfil corrompidos no arquivo." };
-    }
-    if (!d.memoria || typeof d.memoria !== "object" || Array.isArray(d.memoria)) {
-      return { success: false, error: "Dados de memória corrompidos no arquivo." };
-    }
-    if (!Array.isArray(d.favorites)) {
-      return { success: false, error: "Dados de favoritos corrompidos no arquivo." };
-    }
-    if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
-      return { success: false, error: "Dados de checklists corrompidos no arquivo." };
-    }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.ocorrencias)) {
-      return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
-    }
-    if ((d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.agenda)) {
-      return { success: false, error: "Dados de agenda corrompidos no arquivo." };
-    }
-
-    const profile = d.profile as CondominioProfile | null;
-    const memoria = d.memoria as MemoriaOperacional;
-    const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
-    const favoritesCount = (d.favorites as FavoriteEntry[]).length;
-
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6";
-    const isV5plus = d.version === "5" || d.version === "6";
-
-    const pendenciasCount = isV2plus && Array.isArray(d.pendencias) ? (d.pendencias as Pendencia[]).length : undefined;
-    const ocorrenciasCount = isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length : undefined;
-    const agendaCount = isV4plus && Array.isArray(d.agenda) ? (d.agenda as AgendaEvent[]).length : undefined;
-    const documentosCount = isV5plus && Array.isArray(d.documentos) ? (d.documentos as DocumentoEssencial[]).length : undefined;
-    const funcionariosCount = isV5plus && Array.isArray(d.funcionarios) ? (d.funcionarios as FuncionarioFerias[]).length : undefined;
-    const manutencoesCount = d.version === "6" && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
-
-    return {
-      success: true,
-      summary: {
-        nomeCondominio: profile?.nomeCondominio,
-        memoriaCount,
-        favoritesCount,
-        pendenciasCount,
-        ocorrenciasCount,
-        agendaCount,
-        documentosCount,
-        funcionariosCount,
-        manutencoesCount,
-      },
-    };
-  } catch {
-    return { success: false, error: "Arquivo corrompido ou formato inválido." };
-  }
+  const v = validateBackupJson(jsonString);
+  if (!v.ok) return { success: false, error: v.error };
+  return { success: true, summary: buildImportSummary(v.d, v.flags) };
 }
 
 // Importa backup v1–v6. Retrocompatível com todas as versões anteriores.
 export function importUserData(jsonString: string): ImportResult {
-  try {
-    const data = JSON.parse(jsonString) as unknown;
+  const v = validateBackupJson(jsonString);
+  if (!v.ok) return { success: false, error: v.error };
 
-    if (!data || typeof data !== "object" || Array.isArray(data)) {
-      return { success: false, error: "Arquivo inválido. Verifique se é um backup do Amigo do Prédio." };
-    }
+  const { d, flags } = v;
 
-    const d = data as Record<string, unknown>;
+  if (d.profile) {
+    safeWrite(KEYS.PROFILE, d.profile);
+  } else if (d.profile === null) {
+    try { localStorage.removeItem(KEYS.PROFILE); } catch { /* noop */ }
+  }
+  safeWrite(KEYS.MEMORIA, d.memoria);
+  safeWrite(KEYS.FAVORITES, d.favorites);
+  safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    if (d.app !== "amigo-do-predio") {
-      return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
-    }
-
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6") {
-      return { success: false, error: "Versão do backup incompatível." };
-    }
-
-    if (d.profile !== null && d.profile !== undefined && (typeof d.profile !== "object" || Array.isArray(d.profile))) {
-      return { success: false, error: "Dados de perfil corrompidos no arquivo." };
-    }
-    if (!d.memoria || typeof d.memoria !== "object" || Array.isArray(d.memoria)) {
-      return { success: false, error: "Dados de memória corrompidos no arquivo." };
-    }
-    if (!Array.isArray(d.favorites)) {
-      return { success: false, error: "Dados de favoritos corrompidos no arquivo." };
-    }
-    if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
-      return { success: false, error: "Dados de checklists corrompidos no arquivo." };
-    }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.ocorrencias)) {
-      return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
-    }
-    if ((d.version === "4" || d.version === "5" || d.version === "6") && !Array.isArray(d.agenda)) {
-      return { success: false, error: "Dados de agenda corrompidos no arquivo." };
-    }
-
-    if (d.profile) {
-      safeWrite(KEYS.PROFILE, d.profile);
-    } else if (d.profile === null) {
-      try { localStorage.removeItem(KEYS.PROFILE); } catch { /* noop */ }
-    }
-    safeWrite(KEYS.MEMORIA, d.memoria);
-    safeWrite(KEYS.FAVORITES, d.favorites);
-    safeWrite(KEYS.CHECKLISTS, d.checklists);
-
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6";
-    const isV5plus = d.version === "5" || d.version === "6";
-
-    let pendenciasCount: number | undefined;
-    if (isV2plus && Array.isArray(d.pendencias)) {
-      safeWrite(KEYS.PENDENCIAS, d.pendencias);
-      pendenciasCount = (d.pendencias as Pendencia[]).length;
-    }
-
-    let ocorrenciasCount: number | undefined;
-    if (isV3plus && Array.isArray(d.ocorrencias)) {
-      safeWrite(KEYS.OCORRENCIAS, d.ocorrencias);
-      ocorrenciasCount = (d.ocorrencias as Ocorrencia[]).length;
-    } else {
-      try { localStorage.removeItem(KEYS.OCORRENCIAS); } catch { /* noop */ }
-    }
-
-    let agendaCount: number | undefined;
-    if (isV4plus && Array.isArray(d.agenda)) {
-      safeWrite(KEYS.AGENDA, d.agenda);
-      agendaCount = (d.agenda as AgendaEvent[]).length;
-    } else {
-      try { localStorage.removeItem(KEYS.AGENDA); } catch { /* noop */ }
-    }
-
-    let documentosCount: number | undefined;
-    let funcionariosCount: number | undefined;
-    let manutencoesCount: number | undefined;
-    if (isV5plus) {
-      if (Array.isArray(d.documentos)) {
-        safeWrite(KEYS.DOCUMENTOS, d.documentos);
-        documentosCount = (d.documentos as DocumentoEssencial[]).length;
-      } else {
-        try { localStorage.removeItem(KEYS.DOCUMENTOS); } catch { /* noop */ }
-      }
-      if (Array.isArray(d.funcionarios)) {
-        safeWrite(KEYS.FUNCIONARIOS, d.funcionarios);
-        funcionariosCount = (d.funcionarios as FuncionarioFerias[]).length;
-      } else {
-        try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
-      }
-      if (d.memoriaAssistida && typeof d.memoriaAssistida === "object" && !Array.isArray(d.memoriaAssistida)) {
-        safeWrite(KEYS.MEMORIA_ASSISTIDA, d.memoriaAssistida);
-      }
-      if (d.implantacaoMode && typeof d.implantacaoMode === "string") {
-        safeWrite(KEYS.IMPLANTACAO_MODE, d.implantacaoMode);
-      }
+  if (flags.isV2plus && Array.isArray(d.pendencias)) {
+    safeWrite(KEYS.PENDENCIAS, d.pendencias);
+  }
+  if (flags.isV3plus && Array.isArray(d.ocorrencias)) {
+    safeWrite(KEYS.OCORRENCIAS, d.ocorrencias);
+  } else {
+    try { localStorage.removeItem(KEYS.OCORRENCIAS); } catch { /* noop */ }
+  }
+  if (flags.isV4plus && Array.isArray(d.agenda)) {
+    safeWrite(KEYS.AGENDA, d.agenda);
+  } else {
+    try { localStorage.removeItem(KEYS.AGENDA); } catch { /* noop */ }
+  }
+  if (flags.isV5plus) {
+    if (Array.isArray(d.documentos)) {
+      safeWrite(KEYS.DOCUMENTOS, d.documentos);
     } else {
       try { localStorage.removeItem(KEYS.DOCUMENTOS); } catch { /* noop */ }
+    }
+    if (Array.isArray(d.funcionarios)) {
+      safeWrite(KEYS.FUNCIONARIOS, d.funcionarios);
+    } else {
       try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
-
-    if (d.version === "6" && Array.isArray(d.manutencoes)) {
-      safeWrite(KEYS.MANUTENCOES, d.manutencoes);
-      manutencoesCount = (d.manutencoes as ManutencaoRecorrente[]).length;
-    } else {
-      try { localStorage.removeItem(KEYS.MANUTENCOES); } catch { /* noop */ }
+    if (d.memoriaAssistida && typeof d.memoriaAssistida === "object" && !Array.isArray(d.memoriaAssistida)) {
+      safeWrite(KEYS.MEMORIA_ASSISTIDA, d.memoriaAssistida);
     }
-
-    const profile = d.profile as CondominioProfile | null;
-    const memoria = d.memoria as MemoriaOperacional;
-    const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
-    const favoritesCount = (d.favorites as FavoriteEntry[]).length;
-
-    return {
-      success: true,
-      summary: {
-        nomeCondominio: profile?.nomeCondominio,
-        memoriaCount,
-        favoritesCount,
-        pendenciasCount,
-        ocorrenciasCount,
-        agendaCount,
-        documentosCount,
-        funcionariosCount,
-        manutencoesCount,
-      },
-    };
-  } catch {
-    return { success: false, error: "Arquivo corrompido ou formato inválido." };
+    if (d.implantacaoMode && typeof d.implantacaoMode === "string") {
+      safeWrite(KEYS.IMPLANTACAO_MODE, d.implantacaoMode);
+    }
+  } else {
+    try { localStorage.removeItem(KEYS.DOCUMENTOS); } catch { /* noop */ }
+    try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
   }
+  if ((flags.version === "6" || flags.version === "7") && Array.isArray(d.manutencoes)) {
+    safeWrite(KEYS.MANUTENCOES, d.manutencoes);
+  } else {
+    try { localStorage.removeItem(KEYS.MANUTENCOES); } catch { /* noop */ }
+  }
+
+  if (flags.isV7 && Array.isArray(d.movimentacoes)) {
+    safeWrite(KEYS.MOVIMENTACOES, d.movimentacoes);
+  } else {
+    try { localStorage.removeItem(KEYS.MOVIMENTACOES); } catch { /* noop */ }
+  }
+
+  // Após restore bem-sucedido, registrar como backup recente para evitar falso positivo no nudge.
+  recordBackupAt();
+
+  return { success: true, summary: buildImportSummary(d, flags) };
 }
 
 // ─── Exportação de telemetria ─────────────────────────────────────────────────

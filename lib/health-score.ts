@@ -15,6 +15,8 @@ import {
   getProfile,
   getWeeklyReviewState,
   getCurrentWeekKey,
+  getMovimentacoes,
+  getSaldoAtual,
   type MemoriaOperacional,
   type AssistedDateField,
 } from "./session";
@@ -56,8 +58,8 @@ const ROUTINE_FIELDS: Array<keyof MemoriaOperacional> = [
   "ultimaAGO",
 ];
 
-// Máximo de pontos brutos — v2 com cobertura operacional
-const MAX_RAW = 123;
+// Máximo de pontos brutos — v3 com seção financeira (+ 8 pts)
+const MAX_RAW = 131;
 
 // Pontua um campo de data essencial considerando precisão da AssistedDateField.
 // Fallback para string legada (dados pré-v5) tratados como precisão parcial.
@@ -209,6 +211,31 @@ export function computeHealthScore(): HealthScoreResult {
   }
   raw += manutPts;
 
+  // ── 10. Financeiro — até 8 pts (peso moderado) ───────────────────────────
+  const movimentacoes     = getMovimentacoes();
+  let financeiroPts = 0;
+  if (movimentacoes.length > 0) {
+    financeiroPts += 2; // tem dados financeiros
+    const sorted = [...movimentacoes].sort((a, b) => b.data.localeCompare(a.data));
+    const ultimaData = sorted[0].data;
+    const diasSemDados = Math.floor((Date.now() - new Date(ultimaData).getTime()) / 86400000);
+    if (diasSemDados <= 30) financeiroPts += 2; // dados recentes
+    const saldo = getSaldoAtual();
+    if (saldo > 0)   financeiroPts += 2; // saldo positivo
+    if (saldo >= 0) {
+      // Caixa > 2 meses
+      const cutoff90 = new Date(); cutoff90.setDate(cutoff90.getDate() - 90);
+      const c90str = cutoff90.toISOString().slice(0, 10);
+      const today = new Date().toISOString().slice(0, 10);
+      const desp90 = movimentacoes
+        .filter((m) => m.tipo === "despesa" && m.data >= c90str && m.data <= today)
+        .reduce((s, m) => s + m.valor, 0);
+      const mediaMensal = desp90 / 3;
+      if (mediaMensal > 0 && saldo / mediaMensal >= 2) financeiroPts += 2;
+    }
+  }
+  raw += financeiroPts;
+
   const percentage     = Math.min(100, Math.round((raw / MAX_RAW) * 100));
   const statusKey      = statusFromPct(percentage);
   const statusLabel    = STATUS_LABELS[statusKey];
@@ -339,6 +366,15 @@ export function computeHealthScore(): HealthScoreResult {
       label: `Manutenções: ${manutStatus.atrasadas} atrasada${manutStatus.atrasadas > 1 ? "s" : ""}`,
       status: "missing",
     });
+  }
+
+  // Financeiro
+  if (movimentacoes.length === 0) {
+    factors.push({ label: "Financeiro: sem registros", status: "partial" });
+  } else if (financeiroPts >= 6) {
+    factors.push({ label: "Financeiro: dados recentes e saldo positivo", status: "ok" });
+  } else {
+    factors.push({ label: `Financeiro: ${financeiroPts}/8 pts`, status: "partial" });
   }
 
   // ── Sugestões (máx 3) ─────────────────────────────────────────────────────

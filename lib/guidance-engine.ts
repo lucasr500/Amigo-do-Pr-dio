@@ -16,6 +16,8 @@ import {
   getFuncionarios,
   getManutencoes,
   getProfile,
+  getMovimentacoes,
+  getSaldoAtual,
   DOCUMENTO_CRITICIDADE,
   DOCUMENTOS_ESSENCIAIS_IDS,
   type DocumentoEssencialId,
@@ -34,7 +36,7 @@ export type GuidanceEngineItem = {
   id: string;
   icon: string;
   titulo: string;
-  categoria: "legal" | "trabalhista" | "operacional" | "gestao" | "documentos";
+  categoria: "legal" | "trabalhista" | "operacional" | "gestao" | "documentos" | "financeiro";
   prioridade: GuidanceEnginePriority;
   contexto: string;       // Por que isso importa
   consequencia: string;   // O que acontece se ignorar
@@ -446,6 +448,68 @@ export function buildGuidanceEngine(): GuidanceEngineResult {
       checklist: PLAYBOOKS.documento_critico_ausente.checklist,
       playbookId: "documento_critico_ausente",
     });
+  }
+
+  // ── Financeiro ───────────────────────────────────────────────────────────
+  const movimentacoes = getMovimentacoes();
+  if (movimentacoes.length === 0) {
+    add({
+      id: "eng_financeiro_sem_dados",
+      icon: "💰",
+      titulo: "Módulo financeiro inativo",
+      categoria: "financeiro",
+      prioridade: "melhoria",
+      contexto: "O módulo financeiro permite monitorar receitas, despesas e a saúde do caixa do condomínio.",
+      consequencia: "Sem dados financeiros, não é possível antecipar crises de caixa ou verificar tendências.",
+      proximoPasso: "Acesse a aba Financeiro e registre ao menos as receitas e despesas do mês atual.",
+      checklist: [
+        "Abrir a aba Financeiro",
+        "Registrar as cotas condominiais recebidas",
+        "Registrar as principais despesas do mês",
+        "Verificar o saldo calculado automaticamente",
+      ],
+    });
+  } else {
+    const saldo = getSaldoAtual();
+    if (saldo < 0) {
+      add({
+        id: "eng_financeiro_saldo_negativo",
+        icon: "💰",
+        titulo: "Saldo financeiro negativo",
+        categoria: "financeiro",
+        prioridade: "importante",
+        contexto: "O saldo acumulado registrado é negativo, indicando que as despesas superam as receitas nos registros do app.",
+        consequencia: "Um caixa negativo sem ação pode levar ao atraso de pagamentos e comprometer contratos do condomínio.",
+        proximoPasso: "Verifique se há receitas não registradas e analise as despesas recorrentes com maior impacto.",
+        checklist: [
+          "Comparar receitas registradas com cotas previstas",
+          "Identificar despesas que cresceram acima do habitual",
+          "Verificar se há acordos ou rateios a registrar",
+          "Avaliar opções de reforço de caixa com o conselho",
+        ],
+      });
+    } else {
+      const sorted   = [...movimentacoes].sort((a, b) => b.data.localeCompare(a.data));
+      const ultima   = sorted[0].data;
+      const diasDead = Math.floor((Date.now() - new Date(ultima).getTime()) / 86400000);
+      if (diasDead > 45) {
+        add({
+          id: "eng_financeiro_desatualizado",
+          icon: "💰",
+          titulo: "Dados financeiros desatualizados",
+          categoria: "financeiro",
+          prioridade: "planejamento",
+          contexto: `A última movimentação financeira foi registrada há ${diasDead} dias.`,
+          consequencia: "Dados desatualizados impedem o cálculo correto da saúde financeira e da reserva de caixa.",
+          proximoPasso: "Acesse a aba Financeiro e registre as movimentações dos últimos meses.",
+          checklist: [
+            "Verificar extratos bancários do condomínio",
+            "Registrar receitas e despesas pendentes",
+            "Conferir se o saldo calculado bate com a conta do condomínio",
+          ],
+        });
+      }
+    }
   }
 
   // ── Ordenação e agrupamento ───────────────────────────────────────────────

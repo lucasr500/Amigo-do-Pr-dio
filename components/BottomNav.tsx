@@ -1,6 +1,6 @@
 "use client";
 
-export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio";
+export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio" | "financeiro";
 
 function IconHome({ active }: { active: boolean }) {
   return (
@@ -53,6 +53,16 @@ function IconAccount({ active }: { active: boolean }) {
   );
 }
 
+function IconWallet({ active }: { active: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <rect x="2" y="5" width="16" height="11" rx="2" stroke="currentColor" strokeWidth={active ? 2.2 : 1.5} />
+      <path d="M2 9h16" stroke="currentColor" strokeWidth={active ? 2.2 : 1.5} strokeLinecap="round" />
+      <circle cx="14" cy="12.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
 type TabItem = {
   id: AppTab;
   label: string;
@@ -65,8 +75,9 @@ const LEFT_TABS: TabItem[] = [
 ];
 
 const RIGHT_TABS: TabItem[] = [
-  { id: "assistente", label: "Assistente", Icon: IconChat },
-  { id: "condominio", label: "Meu prédio", Icon: IconAccount },
+  { id: "assistente",  label: "Assistente",  Icon: IconChat },
+  { id: "financeiro",  label: "Financeiro",  Icon: IconWallet },
+  { id: "condominio",  label: "Prédio",      Icon: IconAccount },
 ];
 
 type Props = {

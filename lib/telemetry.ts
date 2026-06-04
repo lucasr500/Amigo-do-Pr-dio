@@ -110,7 +110,9 @@ export type TelemetryEvent =
   | "pendencia_created_from_funcionario"
   | "funcionario_added"
   | "saude_kb_question_tap"
-  | "ocorrencia_to_pendencia";
+  | "ocorrencia_to_pendencia"
+  | "movimentacao_adicionada"
+  | "movimentacao_deletada";
 
 type QueuedEvent = {
   event: string;

@@ -28,6 +28,7 @@ import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
+import { migrateToMultiCondo } from "@/lib/condominios";
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const DemoModeBanner = dynamic(() => import("@/components/DemoModeBanner"), { ssr: false });
 const FavoritesPanel = dynamic(() => import("@/components/FavoritesPanel"), { ssr: false });
@@ -49,6 +50,15 @@ type ToolAnchor =
   | "agenda-predio";
 
 type ToolGroup = "rotina" | "comunicados" | "simuladores" | "checklists" | "temas";
+type CondominioSubTab = "perfil" | "documentos" | "pessoas" | "historico" | "conta";
+
+const CONDO_SUB_TABS: Array<{ id: CondominioSubTab; label: string }> = [
+  { id: "perfil",     label: "Perfil" },
+  { id: "documentos", label: "Documentos" },
+  { id: "pessoas",    label: "Pessoas" },
+  { id: "historico",  label: "Histórico" },
+  { id: "conta",      label: "Conta" },
+];
 
 const ANCHOR_TO_GROUP: Partial<Record<ToolAnchor, ToolGroup>> = {
   "registro-rapido": "rotina",
@@ -111,6 +121,17 @@ const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), 
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
 const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
+const CondominioSelector = dynamic(() => import("@/components/CondominioSelector"), { ssr: false });
+const FinancialHealthCard = dynamic(() => import("@/components/FinancialHealthCard"), { ssr: false });
+const FinancialQuickAdd   = dynamic(() => import("@/components/FinancialQuickAdd"),   { ssr: false });
+const FinancialTimeline   = dynamic(() => import("@/components/FinancialTimeline"),   { ssr: false });
+const FinancialMemoryCard = dynamic(() => import("@/components/FinancialMemoryCard"), { ssr: false });
+const MemoriaDoPredioBanner = dynamic(() => import("@/components/MemoriaDoPredioBanner"), { ssr: false });
+const HabitScoreCard = dynamic(() => import("@/components/HabitScoreCard"), { ssr: false });
+const FeedbackHub = dynamic(() => import("@/components/FeedbackHub"), { ssr: false });
+const ReleaseHealth = dynamic(() => import("@/components/ReleaseHealth"), { ssr: false });
+const PushDiagnosticPanel = dynamic(() => import("@/components/PushDiagnosticPanel"), { ssr: false });
+const WeeklyRitualCTA = dynamic(() => import("@/components/WeeklyRitualCTA"), { ssr: false });
 
 // ── Saudação dinâmica ──────────────────────────────────────────────────────────
 
@@ -211,6 +232,10 @@ export default function HomePage() {
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [showBackupNudge, setShowBackupNudge] = useState(false);
+  const [condominioSubTab, setCondominioSubTab] = useState<CondominioSubTab>("perfil");
+  const [showCondominioSelector, setShowCondominioSelector] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   const urgentCount = useMemo(() => {
@@ -219,6 +244,9 @@ export default function HomePage() {
   }, [refreshKey]);
 
   useEffect(() => {
+    // FASE 6 — Migração multi-condomínio (idempotente, seguro chamar sempre)
+    migrateToMultiCondo();
+
     (window as unknown as Record<string, unknown>).__amigoDoPredioExport = exportTelemetry;
     const daysSince = recordSessionOpen();
     void trackEvent("session_open", { days_since_last: daysSince });
@@ -409,7 +437,14 @@ export default function HomePage() {
     }, 50);
   };
 
+  function showToast(msg: string) {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMsg(msg);
+    toastTimerRef.current = setTimeout(() => setToastMsg(null), 2800);
+  }
+
   const handleScrollToMemoria = () => {
+    setCondominioSubTab("perfil");
     navigateTab("condominio");
   };
 
@@ -431,10 +466,12 @@ export default function HomePage() {
   // Chamado pela bridge do OnboardingProfile: expande MemoriaPanel automaticamente
   const handleSetupMemoria = () => {
     setShouldExpandMemoria(true);
+    setCondominioSubTab("perfil");
   };
 
   const handleOpenRevisaoMensal = () => {
     setFocusRevisaoMensal(true);
+    setCondominioSubTab("historico");
     navigateTab("condominio");
   };
 
@@ -462,6 +499,7 @@ export default function HomePage() {
             activeTab={activeTab}
             unreadNotifications={unreadNotifications}
             onNotificationsClick={() => setShowNotificationCenter(true)}
+            onCondominioSelectorOpen={() => setShowCondominioSelector(true)}
           />
         )}
 
@@ -499,6 +537,7 @@ export default function HomePage() {
                   void trackEvent("profile_completion_cta_tap", {
                     completion_bucket: completionBucket(profileCompletion),
                   });
+                  if (target === "condominio") setCondominioSubTab("perfil");
                   navigateTab(target);
                 }}
               />
@@ -512,6 +551,10 @@ export default function HomePage() {
                 <HomeSaudeCard
                   refreshKey={refreshKey}
                   onClick={() => navigateToSubView("saude")}
+                />
+                <WeeklyRitualCTA
+                  refreshKey={refreshKey}
+                  onOpen={handleOpenRevisaoMensal}
                 />
                 <HomeAgendaCard
                   refreshKey={refreshKey}
@@ -826,7 +869,37 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── 5. CONDOMÍNIO — memória e dados do prédio ─────────────── */}
+        {/* ── 5. FINANCEIRO — saúde financeira e movimentações ─────── */}
+        {activeTab === "financeiro" && (
+          <div key="financeiro" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
+            <div className="px-5 pb-2 pt-1 sm:px-6">
+              <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
+                Financeiro
+              </p>
+              <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
+                Saúde financeira
+              </p>
+              <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
+                Receitas, despesas e caixa do condomínio.
+              </p>
+            </div>
+            <FinancialHealthCard refreshKey={refreshKey} />
+            <FinancialQuickAdd onSaved={() => setRefreshKey((k) => k + 1)} />
+            <FinancialTimeline
+              refreshKey={refreshKey}
+              onDataChanged={() => setRefreshKey((k) => k + 1)}
+            />
+            <FinancialMemoryCard />
+            <div className="px-5 pb-6 pt-2 sm:px-6">
+              <p className="text-[10.5px] leading-relaxed text-navy-400">
+                Os dados financeiros são registrados manualmente e ficam neste dispositivo.
+                Não constituem contabilidade formal, DRE ou demonstrativo oficial.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── 6. CONDOMÍNIO — memória e dados do prédio ─────────────── */}
         {activeTab === "condominio" && (
           <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
@@ -838,174 +911,189 @@ export default function HomePage() {
               <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
                 {condoName || (hasCondominioData ? "Meu prédio" : "Ativar monitoramento")}
               </p>
-              {hasCondominioData ? (
-                <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
-                  Dados essenciais, rotina operacional e segurança dos registros.
-                </p>
-              ) : (
-                <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-                  Cadastre os dados essenciais para acompanhar prazos, pendências e saúde operacional.
-                </p>
-              )}
             </div>
 
-            {/* ── Dados do prédio ───────────────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-4 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Dados do prédio</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Perfil do condomínio, estrutura e convenção.</p>
-              </div>
-            )}
-            <OnboardingProfile
-              onProfileSaved={() => setRefreshKey((k) => k + 1)}
-              onSetupMemoria={handleSetupMemoria}
-              forceShow
-            />
-
-            {/* ── Vencimentos e rotinas ─────────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Vencimentos e rotinas</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">AVCB, seguro, mandato e manutenções periódicas.</p>
-              </div>
-            )}
-            <MemoriaPanel
-              onSaved={() => {
-                setRefreshKey((k) => k + 1);
-                setShouldExpandMemoria(false);
-              }}
-              autoExpand={shouldExpandMemoria}
-            />
-
-            {/* ── Pessoal e contratos ───────────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Pessoal e contratos</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Funcionários, férias e situação trabalhista.</p>
-              </div>
-            )}
-            <FuncionariosPanel onSaved={() => setRefreshKey((k) => k + 1)} />
-
-            {/* ── Documentação essencial ────────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Documentação essencial</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Convenção, AVCB, seguro, laudos e contratos.</p>
-              </div>
-            )}
-            <DocumentosEssenciaisPanel onSaved={() => setRefreshKey((k) => k + 1)} />
-            <CalendarioOperacionalPanel refreshKey={refreshKey} />
-
-            {/* ── Checklist de implantação ──────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Implantação</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Progresso de organização e itens pendentes.</p>
-              </div>
-            )}
-            <ImplantacaoChecklist
-              onNavigate={(target) => {
-                if (target === "condominio") {
-                  const el = document.getElementById("revisao-mensal");
-                  el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                } else if (target === "ferramentas") {
-                  navigateTab("ferramentas");
-                }
-              }}
-            />
-
-            {/* ── Histórico operacional ─────────────────────────────── */}
-            <TimelineOperacional refreshKey={refreshKey} />
-            <div id="revisao-mensal" className="scroll-mt-3">
-              <RevisaoMensal
-                refreshKey={refreshKey}
-                onDone={() => setRefreshKey((k) => k + 1)}
-              />
-            </div>
-
-            {/* ── Relatório de saúde ────────────────────────────────── */}
-            <RelatorioSaudePanel />
-
-            {/* ── Conta e dados ─────────────────────────────────────── */}
-            {hasCondominioData && (
-              <div className="px-5 pb-0.5 pt-3 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta e dados</p>
-                <p className="mt-0.5 text-[11px] text-navy-400">Backup, sincronização e configurações do app.</p>
-              </div>
-            )}
-
-            {/* Conta e sincronização */}
-            <section className="px-5 pb-2 pt-2 sm:px-6">
-              <AccountPanel onRefresh={() => setRefreshKey((k) => k + 1)} />
-            </section>
-
-            {/* Backup e restauração */}
-            <BackupPanel onImported={() => setRefreshKey((k) => k + 1)} />
-
-            {/* Notificações */}
-            <section className="px-5 pb-2 pt-1 sm:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Notificações</p>
+            {/* ── Sub-navegação ──────────────────────────────────────── */}
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-5 pb-3 sm:px-6">
+              {CONDO_SUB_TABS.map((tab) => (
                 <button
+                  key={tab.id}
                   type="button"
-                  onClick={() => setShowNotifSettings((v) => !v)}
-                  className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
+                  onClick={() => setCondominioSubTab(tab.id)}
+                  className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[12px] font-medium transition-all active:scale-[0.97] ${
+                    condominioSubTab === tab.id
+                      ? "bg-navy-700 text-white shadow-sm"
+                      : "border border-navy-100 bg-white text-navy-600 hover:bg-navy-50"
+                  }`}
                 >
-                  {showNotifSettings ? "Fechar" : "Configurar"}
+                  {tab.label}
                 </button>
-              </div>
-              {showNotifSettings && <NotificationSettingsPanel />}
-            </section>
+              ))}
+            </div>
 
-            {/* Evolução da saúde operacional */}
-            {hasCondominioData && (
-              <section className="px-5 pb-3 pt-1 sm:px-6">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300 mb-3">Evolução da saúde operacional</p>
-                <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
-                  <HealthTrendChart />
-                </div>
-              </section>
+            {/* ── Perfil ────────────────────────────────────────────── */}
+            {condominioSubTab === "perfil" && (
+              <div>
+                {!hasCondominioData && (
+                  <p className="px-5 pb-2 text-[13px] leading-relaxed text-navy-500 sm:px-6">
+                    Cadastre os dados essenciais para acompanhar prazos, pendências e saúde operacional.
+                  </p>
+                )}
+                {hasCondominioData && (
+                  <div className="px-5 pb-0.5 pt-1 sm:px-6">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Dados do prédio</p>
+                    <p className="mt-0.5 text-[11px] text-navy-400">Perfil do condomínio, estrutura e convenção.</p>
+                  </div>
+                )}
+                <OnboardingProfile
+                  onProfileSaved={() => { setRefreshKey((k) => k + 1); showToast("Perfil salvo"); }}
+                  onSetupMemoria={handleSetupMemoria}
+                  forceShow
+                />
+                {hasCondominioData && (
+                  <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Vencimentos e rotinas</p>
+                    <p className="mt-0.5 text-[11px] text-navy-400">AVCB, seguro, mandato e manutenções periódicas.</p>
+                  </div>
+                )}
+                <MemoriaPanel
+                  onSaved={() => {
+                    setRefreshKey((k) => k + 1);
+                    setShouldExpandMemoria(false);
+                    showToast("Dados salvos");
+                  }}
+                  autoExpand={shouldExpandMemoria}
+                />
+              </div>
             )}
 
-            {/* ── Suporte e termos ──────────────────────────────────── */}
-            <section className="px-5 pb-3 pt-3 sm:px-6">
-              <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
-                <div className="mb-3 flex items-center gap-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Sobre o app</p>
+            {/* ── Documentos ────────────────────────────────────────── */}
+            {condominioSubTab === "documentos" && (
+              <div>
+                <div className="px-5 pb-0.5 pt-1 sm:px-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Documentação essencial</p>
+                  <p className="mt-0.5 text-[11px] text-navy-400">Convenção, AVCB, seguro, laudos e contratos.</p>
                 </div>
-                <div className="space-y-2">
-                  <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
-                    <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Ferramenta de apoio operacional</p>
-                    <p className="text-[11px] leading-relaxed text-navy-500">
-                      O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou profissional especializado. As orientações têm caráter informativo.
-                    </p>
-                  </div>
-                  <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
-                    <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Seus dados ficam no dispositivo</p>
-                    <p className="text-[11px] leading-relaxed text-navy-500">
-                      Os dados do condomínio são salvos localmente neste aparelho. Nada é enviado a terceiros. Use "Exportar dados" para fazer backup.
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 pt-1">
-                    <a
-                      href="/termos"
-                      className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600"
-                    >
-                      Termos de uso
-                    </a>
-                    <a
-                      href="/privacidade"
-                      className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600"
-                    >
-                      Política de privacidade
-                    </a>
-                    <p className="w-full text-[10px] leading-relaxed text-navy-300">
-                      Versão preliminar — pendente revisão jurídica.
-                    </p>
-                  </div>
-                </div>
+                <DocumentosEssenciaisPanel onSaved={() => { setRefreshKey((k) => k + 1); showToast("Documento atualizado"); }} />
+                <CalendarioOperacionalPanel refreshKey={refreshKey} />
               </div>
-            </section>
+            )}
+
+            {/* ── Pessoas ───────────────────────────────────────────── */}
+            {condominioSubTab === "pessoas" && (
+              <div>
+                <div className="px-5 pb-0.5 pt-1 sm:px-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Pessoal e contratos</p>
+                  <p className="mt-0.5 text-[11px] text-navy-400">Funcionários, férias e situação trabalhista.</p>
+                </div>
+                <FuncionariosPanel onSaved={() => { setRefreshKey((k) => k + 1); showToast("Funcionário atualizado"); }} />
+              </div>
+            )}
+
+            {/* ── Histórico ─────────────────────────────────────────── */}
+            {condominioSubTab === "historico" && (
+              <div>
+                {hasCondominioData && (
+                  <div className="px-5 pb-0.5 pt-1 sm:px-6">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Implantação</p>
+                    <p className="mt-0.5 text-[11px] text-navy-400">Progresso de organização e itens pendentes.</p>
+                  </div>
+                )}
+                <ImplantacaoChecklist
+                  onNavigate={(target) => {
+                    if (target === "condominio") {
+                      const el = document.getElementById("revisao-mensal");
+                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    } else if (target === "ferramentas") {
+                      navigateTab("ferramentas");
+                    }
+                  }}
+                />
+                <TimelineOperacional refreshKey={refreshKey} />
+                <div id="revisao-mensal" className="scroll-mt-3">
+                  <RevisaoMensal
+                    refreshKey={refreshKey}
+                    onDone={() => setRefreshKey((k) => k + 1)}
+                  />
+                </div>
+                <RelatorioSaudePanel />
+              </div>
+            )}
+
+            {/* ── Conta ─────────────────────────────────────────────── */}
+            {condominioSubTab === "conta" && (
+              <div>
+                {hasCondominioData && <MemoriaDoPredioBanner />}
+                {hasCondominioData && <HabitScoreCard />}
+
+                <div className="px-5 pb-0.5 pt-1 sm:px-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Conta e backup</p>
+                  <p className="mt-0.5 text-[11px] text-navy-400">Sincronização em nuvem e cópia de segurança.</p>
+                </div>
+                <section className="px-5 pb-2 pt-2 sm:px-6">
+                  <AccountPanel onRefresh={() => setRefreshKey((k) => k + 1)} />
+                </section>
+                <BackupPanel onImported={() => { setRefreshKey((k) => k + 1); showToast("Dados restaurados com sucesso"); }} />
+
+                <section className="px-5 pb-2 pt-1 sm:px-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Notificações</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowNotifSettings((v) => !v)}
+                      className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 hover:bg-navy-100 transition-colors"
+                    >
+                      {showNotifSettings ? "Fechar" : "Configurar"}
+                    </button>
+                  </div>
+                  {showNotifSettings && <NotificationSettingsPanel />}
+                </section>
+
+                {hasCondominioData && (
+                  <section className="px-5 pb-3 pt-1 sm:px-6">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300 mb-3">Evolução da saúde operacional</p>
+                    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+                      <HealthTrendChart />
+                    </div>
+                  </section>
+                )}
+
+                <div className="px-5 pb-0.5 pt-1 sm:px-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Ferramentas</p>
+                </div>
+                <PushDiagnosticPanel />
+                <FeedbackHub />
+                <ReleaseHealth />
+
+                <section className="px-5 pb-6 pt-2 sm:px-6">
+                  <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
+                    <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Sobre o app</p>
+                    <div className="space-y-2">
+                      <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+                        <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Ferramenta de apoio operacional</p>
+                        <p className="text-[11px] leading-relaxed text-navy-500">
+                          O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou profissional especializado. As orientações têm caráter informativo.
+                        </p>
+                      </div>
+                      <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+                        <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Seus dados ficam no dispositivo</p>
+                        <p className="text-[11px] leading-relaxed text-navy-500">
+                          Os dados do condomínio são salvos localmente neste aparelho. Nada é enviado a terceiros. Use "Exportar dados" para fazer backup.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 pt-1">
+                        <a href="/termos" className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600">
+                          Termos de uso
+                        </a>
+                        <a href="/privacidade" className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600">
+                          Política de privacidade
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
 
           </div>
         )}
@@ -1013,6 +1101,29 @@ export default function HomePage() {
       </div>
 
       <BottomNav active={activeTab} onChange={navigateTab} urgentCount={urgentCount} />
+
+      {/* ── Toast de confirmação universal ────────────────────────── */}
+      {toastMsg && (
+        <div
+          className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] left-1/2 z-50 -translate-x-1/2"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div className="animate-fade-in-up flex items-center gap-2 rounded-full bg-navy-800/95 px-4 py-2.5 shadow-lg backdrop-blur-sm">
+            <svg className="h-3.5 w-3.5 flex-shrink-0 text-teal-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <p className="text-[13px] font-medium text-white">{toastMsg}</p>
+          </div>
+        </div>
+      )}
+
+      {showCondominioSelector && (
+        <CondominioSelector
+          isOpen={showCondominioSelector}
+          onClose={() => setShowCondominioSelector(false)}
+        />
+      )}
 
       {showOnboarding && (
         <OnboardingFlow

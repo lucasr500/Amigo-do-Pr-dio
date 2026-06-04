@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 export default function TermosPage() {
   return (
     <div className="min-h-screen bg-[#F7F1E8]">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-navy-100/60 bg-[#F7F1E8]/90 px-5 py-3 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[640px] items-center justify-between">
           <span className="font-display text-[15px] font-semibold text-navy-800">Amigo do Prédio</span>
@@ -24,15 +23,6 @@ export default function TermosPage() {
       </header>
 
       <main className="mx-auto max-w-[640px] px-5 py-6">
-
-        {/* Banner pré-beta */}
-        <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-          <p className="text-[12.5px] font-semibold text-amber-800">Versão preliminar — pré-beta, uso experimental</p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-amber-700">
-            Este documento está em vigor para a fase pré-beta do Amigo do Prédio e será revisado por profissional jurídico antes do lançamento público. Não substitui termos de uso de um produto comercial definitivo.
-          </p>
-        </div>
-
         <div className="space-y-6 text-navy-700">
 
           <div>
@@ -40,15 +30,15 @@ export default function TermosPage() {
               Termos de Uso
             </h1>
             <p className="mt-1 text-[12px] text-navy-400">
-              Última atualização: 25/05/2026
+              Última atualização: 03/06/2026
             </p>
           </div>
 
           {/* Seção 1 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">1. Sobre o Projeto</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">1. Sobre o Serviço</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              O <strong>Amigo do Prédio</strong> é um projeto digital em fase pré-beta, atualmente sem pessoa jurídica constituída específica para sua operação. Nesta etapa, o contato oficial do projeto é feito pelo e-mail{" "}
+              O <strong>Amigo do Prédio</strong> é um serviço digital de apoio operacional à gestão de condomínios residenciais. O contato oficial é feito pelo e-mail{" "}
               <a href="mailto:oamigodopredio@gmail.com" className="font-medium text-navy-700 underline underline-offset-2">
                 oamigodopredio@gmail.com
               </a>.
@@ -57,23 +47,23 @@ export default function TermosPage() {
               O serviço oferece:
             </p>
             <ul className="mt-2 space-y-1 pl-4 text-[13px] leading-relaxed text-navy-600">
-              <li>• Assistente de perguntas e respostas sobre legislação condominial (Lei 4.591/64, Lei 10.406/02 — Código Civil, e normas relacionadas);</li>
-              <li>• Ferramentas de gestão: gerador de comunicados, simulador de multas e juros, checklists operacionais;</li>
+              <li>• Assistente de orientações sobre legislação condominial (Lei 4.591/64, Código Civil e normas relacionadas);</li>
+              <li>• Ferramentas de gestão: gerador de comunicados, simuladores financeiros, checklists operacionais;</li>
               <li>• Monitoramento de datas operacionais críticas (vencimentos, assembleias, manutenções).</li>
             </ul>
           </section>
 
           {/* Seção 2 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">2. Fase Pré-Beta — Acesso Gratuito e Experimental</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">2. Acesso e Disponibilidade</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              O acesso ao Amigo do Prédio é <strong>gratuito e experimental</strong> nesta fase. Não há cobrança, assinatura ou plano pago vigente.
+              O acesso ao Amigo do Prédio é <strong>gratuito</strong> na fase atual. Não há cobrança, assinatura ou plano pago vigente.
             </p>
             <ul className="mt-2 space-y-1.5 pl-4 text-[13px] leading-relaxed text-navy-600">
-              <li>• O serviço pode ser modificado, restrito ou descontinuado sem aviso prévio durante a fase pré-beta;</li>
-              <li>• Não há garantia de disponibilidade contínua ou de manutenção da funcionalidade atual;</li>
+              <li>• O serviço pode ser modificado ou ter funcionalidades alteradas a qualquer momento;</li>
+              <li>• Não há garantia de disponibilidade contínua ou de manutenção de todas as funcionalidades atuais;</li>
               <li>• O uso é aceito no estado em que o produto se encontra (<em>as is</em>);</li>
-              <li>• O acesso antecipado pode ser encerrado ou convertido em produto com cobrança futuramente — nesse caso, os usuários serão informados com antecedência.</li>
+              <li>• Caso o serviço seja convertido em produto com cobrança, os usuários serão informados com antecedência razoável.</li>
             </ul>
           </section>
 
@@ -120,14 +110,14 @@ export default function TermosPage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">6. Dados no Dispositivo e Backup</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              As informações do condomínio registradas no aplicativo ficam armazenadas <strong>apenas no dispositivo do usuário</strong> (localStorage do navegador). O fundador do projeto não tem acesso a esses dados.
+              As informações do condomínio registradas no aplicativo ficam armazenadas <strong>por padrão apenas no dispositivo do usuário</strong> (localStorage do navegador). O responsável pelo serviço não tem acesso a esses dados.
             </p>
             <ul className="mt-2 space-y-1.5 pl-4 text-[13px] leading-relaxed text-navy-600">
-              <li>• Não há sincronização em nuvem nesta fase;</li>
-              <li>• Não há conta ou login — os dados estão vinculados ao navegador e dispositivo utilizados;</li>
-              <li>• Limpar o navegador, trocar de aparelho ou usar modo privado pode apagar os dados permanentemente;</li>
-              <li>• O backup dos dados é responsabilidade do usuário, utilizando a função "Exportar dados" disponível no app;</li>
-              <li>• O projeto não se responsabiliza por perda de dados decorrente das situações acima.</li>
+              <li>• O usuário pode criar uma conta para ativar backup opcional em nuvem — os dados são vinculados à conta e ao serviço Supabase;</li>
+              <li>• Sem backup em nuvem ativo, os dados ficam vinculados ao navegador e dispositivo utilizados;</li>
+              <li>• Limpar o navegador, trocar de aparelho ou usar modo privado sem fazer backup pode apagar os dados permanentemente;</li>
+              <li>• O backup dos dados é responsabilidade do usuário, por meio da função "Exportar dados" no app ou do backup em nuvem opcional;</li>
+              <li>• O serviço não se responsabiliza por perda de dados decorrente das situações acima.</li>
             </ul>
           </section>
 
@@ -154,7 +144,7 @@ export default function TermosPage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">9. Alterações nos Termos</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Estes termos podem ser atualizados a qualquer momento durante a fase pré-beta. Alterações significativas serão comunicadas pelo e-mail de contato do projeto ou por aviso dentro do aplicativo.
+              Estes termos podem ser atualizados a qualquer momento. Alterações significativas serão comunicadas pelo e-mail de contato ou por aviso dentro do aplicativo.
             </p>
           </section>
 
@@ -169,7 +159,6 @@ export default function TermosPage() {
             </p>
           </section>
 
-          {/* Links */}
           <div className="border-t border-navy-100 pt-4">
             <Link
               href="/privacidade"

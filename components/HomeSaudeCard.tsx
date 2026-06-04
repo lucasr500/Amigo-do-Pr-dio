@@ -163,6 +163,11 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
             )}
           </div>
           <p className="mt-0.5 text-[12px] leading-snug text-navy-600">{phrase}</p>
+          {result.percentage < 80 && result.biggestBottleneck && (
+            <p className="mt-0.5 text-[11px] leading-snug text-amber-700">
+              {result.biggestBottleneck}
+            </p>
+          )}
           {trendBadge && (
             <p className={`mt-0.5 text-[10.5px] font-medium ${trendBadge.color}`}>
               {trendBadge.label}

@@ -44,18 +44,19 @@ export async function uploadSnapshot(
 
     const snap = buildSnapshot(userId, backup);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (sb as any)
-      .from("app_snapshots")
-      .upsert(
-        {
-          user_id: snap.user_id,
-          payload: snap.payload,
-          version: snap.version,
-          device_hint: snap.device_hint,
-        },
-        { onConflict: "user_id" }
-      );
+    // SupabaseClient<Database> generic does not resolve table schema after lazy dynamic import;
+    // narrow cast to the known operation shape instead of using `as any` on the full client.
+    type UpsertFn = (data: Record<string, unknown>, opts: { onConflict: string }) => Promise<{ error: { message: string } | null }>;
+    const upsert = (sb.from("app_snapshots") as unknown as { upsert: UpsertFn }).upsert;
+    const { error } = await upsert(
+      {
+        user_id:     snap.user_id,
+        payload:     snap.payload,
+        version:     snap.version,
+        device_hint: snap.device_hint,
+      },
+      { onConflict: "user_id" }
+    );
 
     if (error) {
       devLog("upload failed", { userId: userId.slice(0, 8) + "…", error: (error as { message: string }).message });
@@ -78,17 +79,13 @@ export async function downloadSnapshot(userId: string): Promise<UserBackup | nul
     const sb = await getSupabaseClient();
     if (!sb) return null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb as any)
-      .from("app_snapshots")
-      .select("payload, version")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    type SelectResult = { payload: unknown; version: number };
+    type SelectFn = () => { eq: (...a: unknown[]) => { order: (...a: unknown[]) => { limit: (...a: unknown[]) => { single: () => Promise<{ data: SelectResult | null; error: unknown }> } } } };
+    const q = (sb.from("app_snapshots") as unknown as { select: SelectFn }).select();
+    const { data, error } = await q.eq("user_id", userId).order("created_at", { ascending: false }).limit(1).single();
 
     if (error || !data) return null;
-    return (data as { payload: UserBackup }).payload;
+    return (data as SelectResult).payload as UserBackup;
   } catch {
     return null;
   }
@@ -103,17 +100,14 @@ export async function checkRemoteSnapshot(userId: string): Promise<RemoteSnapsho
     const sb = await getSupabaseClient();
     if (!sb) return { exists: false, version: null, updatedAt: null };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (sb as any)
-      .from("app_snapshots")
-      .select("version, updated_at")
-      .eq("user_id", userId)
-      .limit(1)
-      .single();
+    type MetaResult = { version: number; updated_at: string };
+    type MetaFn = () => { eq: (...a: unknown[]) => { limit: (...a: unknown[]) => { single: () => Promise<{ data: MetaResult | null; error: unknown }> } } };
+    const mq = (sb.from("app_snapshots") as unknown as { select: MetaFn }).select();
+    const { data, error } = await mq.eq("user_id", userId).limit(1).single();
 
     if (error || !data) return { exists: false, version: null, updatedAt: null };
 
-    const row = data as { version: number; updated_at: string };
+    const row = data as MetaResult;
     devLog("remote meta", { userId: userId.slice(0, 8) + "…", version: row.version });
     return { exists: true, version: row.version, updatedAt: row.updated_at };
   } catch {

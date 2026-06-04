@@ -7,6 +7,7 @@ import {
   completePendencia,
   deletePendencia,
   logInteraction,
+  PENDENCIAS_LIMIT,
   type Pendencia,
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
@@ -227,6 +228,10 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
       setFormError("O título é obrigatório.");
       return;
     }
+    if (getPendencias().length >= PENDENCIAS_LIMIT) {
+      setFormError("Limite atingido. Conclua pendências antigas para adicionar novas.");
+      return;
+    }
     addPendencia({
       titulo:    formTitulo.trim(),
       categoria: formCategoria,
@@ -298,6 +303,44 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
           </button>
         </div>
       </div>
+
+      {/* ── Banner de capacidade ────────────────────────────────────── */}
+      {(() => {
+        const total = getPendencias().length;
+        if (total < 40) return null;
+        const isBlocked = total >= PENDENCIAS_LIMIT;
+        const isWarning = total >= 45;
+        const bgClass = isBlocked
+          ? "border-terracotta-200 bg-terracotta-50/80"
+          : isWarning
+          ? "border-amber-200 bg-amber-50/70"
+          : "border-amber-100 bg-amber-50/40";
+        const textClass = isBlocked ? "text-terracotta-800" : "text-amber-800";
+        const subClass  = isBlocked ? "text-terracotta-600" : "text-amber-600";
+        return (
+          <div className={`mx-5 mb-2 flex items-start gap-2.5 rounded-xl border px-3.5 py-2.5 sm:mx-6 ${bgClass}`}>
+            <svg className={`mt-0.5 h-4 w-4 flex-shrink-0 ${isBlocked ? "text-terracotta-500" : "text-amber-500"}`} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+              <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <div className="min-w-0 flex-1">
+              <p className={`text-[11.5px] font-semibold ${textClass}`}>
+                {isBlocked
+                  ? `Limite de ${PENDENCIAS_LIMIT} pendências atingido`
+                  : `${total} de ${PENDENCIAS_LIMIT} pendências usadas`}
+              </p>
+              <p className={`text-[11px] leading-snug ${subClass}`}>
+                {isBlocked
+                  ? "Conclua ou remova pendências antigas antes de adicionar novas."
+                  : "Conclua as mais antigas para liberar espaço."}
+              </p>
+            </div>
+            <span className={`flex-shrink-0 text-[10.5px] font-bold ${isBlocked ? "text-terracotta-500" : "text-amber-500"}`}>
+              {total}/{PENDENCIAS_LIMIT}
+            </span>
+          </div>
+        );
+      })()}
 
       {/* ── Filter chips ─────────────────────────────────────────────── */}
       <div className="pb-3">

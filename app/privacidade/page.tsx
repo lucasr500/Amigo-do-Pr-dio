@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 export default function PrivacidadePage() {
   return (
     <div className="min-h-screen bg-[#F7F1E8]">
-      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-navy-100/60 bg-[#F7F1E8]/90 px-5 py-3 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[640px] items-center justify-between">
           <span className="font-display text-[15px] font-semibold text-navy-800">Amigo do Prédio</span>
@@ -24,15 +23,6 @@ export default function PrivacidadePage() {
       </header>
 
       <main className="mx-auto max-w-[640px] px-5 py-6">
-
-        {/* Banner pré-beta */}
-        <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-          <p className="text-[12.5px] font-semibold text-amber-800">Versão preliminar — pré-beta, uso experimental</p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-amber-700">
-            Este documento está em vigor para a fase pré-beta do Amigo do Prédio, elaborado em conformidade com os princípios da LGPD (Lei 13.709/2018). Será revisado por profissional jurídico especializado antes do lançamento público como produto comercial.
-          </p>
-        </div>
-
         <div className="space-y-6 text-navy-700">
 
           <div>
@@ -40,7 +30,7 @@ export default function PrivacidadePage() {
               Política de Privacidade
             </h1>
             <p className="mt-1 text-[12px] text-navy-400">
-              Última atualização: 25/05/2026
+              Última atualização: 03/06/2026 · Elaborada em conformidade com a LGPD (Lei 13.709/2018)
             </p>
           </div>
 
@@ -48,7 +38,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">1. Identificação do Responsável</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Projeto <strong>Amigo do Prédio</strong>, em fase pré-beta, ainda sem pessoa jurídica específica constituída.
+              Serviço <strong>Amigo do Prédio</strong>.
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-navy-500">
               E-mail de contato:{" "}
@@ -64,7 +54,7 @@ export default function PrivacidadePage() {
 
             <p className="mb-2 text-[13px] font-medium text-navy-700">2.1 Dados armazenados localmente (no dispositivo do usuário)</p>
             <p className="mb-3 text-[13px] leading-relaxed text-navy-600">
-              Os dados abaixo ficam armazenados <strong>apenas no dispositivo do usuário</strong> (localStorage do navegador). Eles nunca são enviados para servidores externos. O responsável pelo projeto não tem acesso a essas informações.
+              Por padrão, os dados abaixo ficam armazenados <strong>apenas no dispositivo do usuário</strong> (localStorage do navegador). O responsável pelo serviço não tem acesso a essas informações.
             </p>
             <div className="overflow-x-auto rounded-lg border border-navy-100">
               <table className="w-full text-left text-[12px]">
@@ -87,21 +77,22 @@ export default function PrivacidadePage() {
               </table>
             </div>
 
-            <div className="mt-3 rounded-lg border border-navy-100 bg-navy-50/50 px-3 py-2.5">
+            <p className="mt-4 mb-2 text-[13px] font-medium text-navy-700">2.2 Backup opcional em nuvem</p>
+            <p className="mb-2 text-[13px] leading-relaxed text-navy-600">
+              O usuário pode criar uma conta (via e-mail com link mágico) para ativar o backup dos dados na nuvem. Quando ativo, o conjunto de dados operacionais do condomínio é armazenado de forma segura no Supabase, sob a conta do próprio usuário, com acesso restrito via RLS (Row Level Security).
+            </p>
+            <div className="rounded-lg border border-navy-100 bg-navy-50/50 px-3 py-2.5">
               <p className="text-[12px] leading-relaxed text-navy-600">
-                <strong>Importante:</strong> não há conta, login ou sincronização em nuvem nesta fase. Os dados estão vinculados ao navegador e aparelho utilizados. Limpar o navegador, trocar de dispositivo ou usar modo privado pode apagar os dados permanentemente se não houver backup. O backup é de responsabilidade do usuário, via "Exportar dados" no app.
+                <strong>Backup local:</strong> sem conta, os dados ficam apenas no dispositivo. Limpar o navegador, trocar de aparelho ou usar modo privado pode apagar os dados permanentemente se não houver backup. O backup é responsabilidade do usuário, via "Exportar dados" no app.
               </p>
             </div>
 
-            <p className="mt-4 mb-2 text-[13px] font-medium text-navy-700">2.2 Telemetria de uso (quando ativa)</p>
+            <p className="mt-4 mb-2 text-[13px] font-medium text-navy-700">2.3 Telemetria de uso (quando ativa)</p>
             <p className="mb-2 text-[13px] leading-relaxed text-navy-600">
-              A telemetria, quando ativa, registra <strong>eventos técnicos de uso</strong> para ajudar a melhorar o produto. Exemplos de eventos coletados: abertura de telas, cliques em botões, uso de ferramentas e ocorrência de erros técnicos.
-            </p>
-            <p className="mb-2 text-[13px] leading-relaxed text-navy-600">
-              A telemetria <strong>não inclui</strong>: o nome do condomínio, perguntas completas digitadas pelo usuário, dados de moradores, CPF, unidade, conteúdo de pendências, valores financeiros ou qualquer informação sensível do condomínio.
+              A telemetria, quando ativa, registra <strong>eventos técnicos de uso</strong> para ajudar a melhorar o produto. Exemplos: abertura de telas, cliques em botões e uso de ferramentas.
             </p>
             <p className="text-[12px] text-navy-500">
-              São coletados apenas metadados técnicos: categoria do tema identificado, se houve resposta ou fallback, duração da sessão em segundos e identificador técnico anônimo de sessão — sem vínculo com nome, e-mail ou CPF do usuário.
+              A telemetria <strong>não inclui</strong>: nome do condomínio, perguntas completas digitadas, dados de moradores, CPF, valores financeiros ou qualquer informação sensível. São coletados apenas metadados técnicos anônimos: categoria do tema, se houve resposta ou fallback, duração da sessão e identificador técnico de sessão — sem vínculo com nome, e-mail ou CPF.
             </p>
           </section>
 
@@ -122,6 +113,10 @@ export default function PrivacidadePage() {
                     <td className="px-3 py-2">Legítimo interesse do usuário (dados permanecem no próprio dispositivo)</td>
                   </tr>
                   <tr>
+                    <td className="px-3 py-2">Backup em nuvem (opcional)</td>
+                    <td className="px-3 py-2">Consentimento do usuário (opt-in ao criar conta)</td>
+                  </tr>
+                  <tr>
                     <td className="px-3 py-2">Telemetria de uso</td>
                     <td className="px-3 py-2">Legítimo interesse do responsável (melhoria do serviço, art. 7º, IX, LGPD)</td>
                   </tr>
@@ -134,7 +129,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">4. Compartilhamento de Dados</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Os dados de telemetria, quando coletados, são armazenados no Supabase (plataforma com servidores nos EUA). O Amigo do Prédio <strong>não vende, aluga ou compartilha dados com terceiros para fins de marketing</strong>.
+              Os dados de telemetria e os backups em nuvem são armazenados no Supabase (plataforma com servidores nos EUA). O Amigo do Prédio <strong>não vende, aluga ou compartilha dados com terceiros para fins de marketing</strong>.
             </p>
           </section>
 
@@ -155,8 +150,12 @@ export default function PrivacidadePage() {
                     <td className="px-3 py-2">Enquanto o usuário não limpar o navegador ou usar "Apagar dados" no app</td>
                   </tr>
                   <tr>
+                    <td className="px-3 py-2">Backup em nuvem (conta)</td>
+                    <td className="px-3 py-2">Enquanto a conta estiver ativa; pode ser excluído pelo usuário</td>
+                  </tr>
+                  <tr>
                     <td className="px-3 py-2">Dados de telemetria (Supabase)</td>
-                    <td className="px-3 py-2">Até 12 meses, podendo ser anonimizados ou excluídos antes desse prazo</td>
+                    <td className="px-3 py-2">Até 12 meses, podendo ser anonimizados ou excluídos antes</td>
                   </tr>
                 </tbody>
               </table>
@@ -169,7 +168,7 @@ export default function PrivacidadePage() {
             <p className="mb-2 text-[13px] leading-relaxed text-navy-600">O usuário tem direito a:</p>
             <ul className="space-y-1 pl-4 text-[13px] leading-relaxed text-navy-600">
               <li>• <strong>Acesso:</strong> saber quais dados técnicos foram coletados;</li>
-              <li>• <strong>Exclusão:</strong> solicitar a eliminação dos dados de telemetria;</li>
+              <li>• <strong>Exclusão:</strong> solicitar a eliminação dos dados de telemetria ou do backup em nuvem;</li>
               <li>• <strong>Portabilidade:</strong> exportar os dados locais do condomínio via "Exportar backup" no app;</li>
               <li>• <strong>Revogação:</strong> parar de usar o app — os dados locais permanecem no dispositivo até limpeza manual.</li>
             </ul>
@@ -194,8 +193,8 @@ export default function PrivacidadePage() {
                 </thead>
                 <tbody className="divide-y divide-navy-50 text-navy-600">
                   <tr><td className="px-3 py-2">Dados locais</td><td className="px-3 py-2">Protegidos pela segurança do próprio dispositivo e navegador</td></tr>
-                  <tr><td className="px-3 py-2">Telemetria</td><td className="px-3 py-2">Transmitida via HTTPS; armazenada com Row Level Security (RLS) no Supabase</td></tr>
-                  <tr><td className="px-3 py-2">Painel admin</td><td className="px-3 py-2">Protegido por senha configurada pelo responsável pelo projeto</td></tr>
+                  <tr><td className="px-3 py-2">Backup em nuvem</td><td className="px-3 py-2">Transmitido via HTTPS; armazenado com Row Level Security (RLS) no Supabase — cada usuário acessa apenas seus próprios dados</td></tr>
+                  <tr><td className="px-3 py-2">Telemetria</td><td className="px-3 py-2">Transmitida via HTTPS; armazenada com RLS no Supabase</td></tr>
                   <tr><td className="px-3 py-2">Dados sensíveis</td><td className="px-3 py-2">Não coletados — por design, o app não possui campo para CPF, nome de moradores ou valores financeiros individuais</td></tr>
                 </tbody>
               </table>
@@ -206,7 +205,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">8. Cookies e Rastreamento</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              O Amigo do Prédio <strong>não usa cookies de rastreamento</strong>. O armazenamento local (localStorage) é utilizado exclusivamente para os dados do próprio usuário listados na seção 2.1.
+              O Amigo do Prédio <strong>não usa cookies de rastreamento</strong>. O armazenamento local (localStorage) é utilizado exclusivamente para os dados operacionais do próprio usuário.
             </p>
           </section>
 
@@ -222,22 +221,21 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">10. Alterações nesta Política</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Esta política pode ser atualizada durante a fase pré-beta. Alterações serão comunicadas pelo e-mail de contato do projeto ou por aviso dentro do aplicativo.
+              Esta política pode ser atualizada a qualquer momento. Alterações serão comunicadas pelo e-mail de contato ou por aviso dentro do aplicativo.
             </p>
           </section>
 
           {/* Seção 11 */}
           <section>
-            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">11. Encarregado de Dados (DPO)</h2>
+            <h2 className="mb-2 text-[14px] font-semibold text-navy-800">11. Contato para Dúvidas de Privacidade</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Nesta fase pré-beta, o canal de contato para dúvidas sobre privacidade é o e-mail{" "}
+              Para dúvidas sobre privacidade ou exercício de direitos previstos na LGPD:{" "}
               <a href="mailto:oamigodopredio@gmail.com" className="font-medium text-navy-700 underline underline-offset-2">
                 oamigodopredio@gmail.com
-              </a>. A eventual necessidade de encarregado formal de dados será reavaliada conforme a evolução do projeto e orientação jurídica especializada.
+              </a>
             </p>
           </section>
 
-          {/* Links */}
           <div className="border-t border-navy-100 pt-4">
             <Link
               href="/termos"
