@@ -152,9 +152,9 @@ describe("parseFinancialQuickText", () => {
     expect(parseFinancialQuickText("")).toHaveLength(0);
   });
 
-  test("'elevador 1.200' → categoria Elevador", () => {
+  test("'elevador 1.200' → categoria Elevadores", () => {
     const [line] = parseFinancialQuickText("elevador 1.200");
-    expect(line.entry?.category).toBe("Elevador");
+    expect(line.entry?.category).toBe("Elevadores");
   });
 
   test("'arrecadação 15.000' → tipo receita", () => {

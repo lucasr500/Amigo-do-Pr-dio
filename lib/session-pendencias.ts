@@ -17,7 +17,7 @@ export type Pendencia = {
   titulo: string;
   descricao?: string;
   categoria?: string;
-  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario" | "comunicado";
+  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario" | "comunicado" | "financeiro";
   matchedId?: string | null;
   status: "aberta" | "concluida";
   createdAt: string;

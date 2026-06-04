@@ -25,7 +25,13 @@ import {
 import { computeHealthScore } from "@/lib/health-score";
 import { STALE_TASK_DAYS } from "@/lib/health-config";
 import { contarStatusManutencoes, temManutencaoCriticaAtrasada } from "@/lib/recorrencias";
-import { getFinancialSummary } from "@/lib/financial";
+import {
+  getFinancialSummary,
+  getMonthOverMonthComparison,
+  getUpcomingBillsByWindow,
+  getCurrentFinancialSnapshot,
+  currentMonthKey,
+} from "@/lib/financial";
 import { buildLocalIntegrityReport } from "@/lib/local-integrity";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
@@ -254,6 +260,18 @@ export function buildCommandCenter(): CommandCenterResult {
 
   const financialSummary = getFinancialSummary();
   const integrity = buildLocalIntegrityReport();
+
+  // ── Recomendações financeiras enriquecidas ────────────────────────────────
+  const today = new Date().toISOString().slice(0, 10);
+  const month = currentMonthKey();
+  const financialSnapshot = getCurrentFinancialSnapshot(month);
+  const mom = getMonthOverMonthComparison(month);
+  const windows = getUpcomingBillsByWindow(financialSnapshot);
+  const risk = financialSummary.cashRiskAnalysis;
+  const hasFinancialData = financialSnapshot.entries.length > 0 || financialSnapshot.estimatedBalance !== 0;
+  void today;
+
+  // Alertas de risco já existentes (com texto enriquecido)
   for (const alert of financialSummary.alerts) {
     actions.push({
       id: alert.id,
@@ -266,6 +284,111 @@ export function buildCommandCenter(): CommandCenterResult {
       motivo: alert.reason,
       impacto: alert.impact,
       cta: "Revisar financeiro",
+      origemDados: "financeiro",
+    });
+  }
+
+  // Conta vencida de alto valor (>= R$ 5.000) — prioridade urgente
+  const highValueOverdue = financialSummary.contasVencidas.filter((e) => e.amount >= 5000);
+  if (highValueOverdue.length > 0) {
+    const top = highValueOverdue.sort((a, b) => b.amount - a.amount)[0];
+    actions.push({
+      id: "financial_high_value_overdue",
+      titulo: `Regularize conta vencida de alto valor: ${top.title}`,
+      descricao: `Conta vencida de R$ ${top.amount.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}. Risco de multa e interrupção de serviço.`,
+      prioridade: "urgente",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: "Conta vencida de valor relevante representa risco operacional e financeiro imediato.",
+      impacto: "Evita multa, juros e possível interrupção de serviço essencial.",
+      cta: "Ver contas vencidas",
+      origemDados: "financeiro",
+    });
+  }
+
+  // Contas vencendo em 3 dias
+  if (windows.next3Days.length > 0) {
+    const total = windows.next3Days.reduce((s, e) => s + e.amount, 0);
+    actions.push({
+      id: "financial_bills_due_3days",
+      titulo: `${windows.next3Days.length} conta${windows.next3Days.length > 1 ? "s" : ""} vencem nos próximos 3 dias`,
+      descricao: `Total: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}. Prepare pagamento para evitar atraso.`,
+      prioridade: "este_mes",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: "Conta próxima do vencimento requer ação imediata para evitar mora.",
+      impacto: "Pagamento em dia evita multa, juros e comprometimento da reputação financeira.",
+      cta: "Ver contas próximas",
+      origemDados: "financeiro",
+    });
+  }
+
+  // Risco crítico de caixa sem alerta já coberto
+  if (risk.level === "crítico" && financialSummary.contasVencidas.length === 0 && financialSummary.estimatedBalance >= 0) {
+    actions.push({
+      id: "financial_cash_risk_critical",
+      titulo: "Risco de caixa crítico identificado",
+      descricao: risk.reasons.join(" "),
+      prioridade: "urgente",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: risk.reasons[0] ?? "Indicadores financeiros apontam risco.",
+      impacto: "Ação preventiva evita comprometimento do caixa operacional.",
+      cta: "Revisar financeiro",
+      origemDados: "financeiro",
+    });
+  }
+
+  // Inadimplência alta sem alerta já coberto
+  if ((financialSnapshot.delinquencyRate ?? 0) >= 20 && !financialSummary.alerts.some((a) => a.id === "financial_delinquency_high")) {
+    actions.push({
+      id: "financial_delinquency_critical",
+      titulo: `Inadimplência de ${financialSnapshot.delinquencyRate}% está acima do aceitável`,
+      descricao: "Inadimplência acima de 20% compromete previsibilidade de caixa e pode inviabilizar contratos.",
+      prioridade: "urgente",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: "Nível de inadimplência informado é crítico para saúde financeira do condomínio.",
+      impacto: "Priorize acordos e cobrança formal para recuperar previsibilidade de caixa.",
+      cta: "Revisar inadimplência",
+      origemDados: "financeiro",
+    });
+  }
+
+  // MoM: piora relevante no saldo (>= R$ 2.000 de queda)
+  if (mom.hasPreviousMonth && mom.balanceDelta <= -2000) {
+    actions.push({
+      id: "financial_balance_dropped",
+      titulo: "Saldo estimado caiu em relação ao mês anterior",
+      descricao: `Queda de R$ ${Math.abs(mom.balanceDelta).toLocaleString("pt-BR", { minimumFractionDigits: 2 })} em relação a ${mom.previousMonth}.`,
+      prioridade: "este_mes",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: "Queda relevante de saldo pode indicar aumento de despesas ou redução de arrecadação.",
+      impacto: "Identifique a causa antes de aprovar novas despesas.",
+      cta: "Ver comparação mensal",
+      origemDados: "financeiro",
+    });
+  }
+
+  // Financeiro sem dados — recomendar preenchimento
+  if (!hasFinancialData) {
+    actions.push({
+      id: "financial_no_data",
+      titulo: "Preencha o resumo financeiro do mês",
+      descricao: "Sem dados financeiros não é possível avaliar saúde de caixa, risco ou contas próximas.",
+      prioridade: "este_mes",
+      categoria: "financeiro",
+      sourceModule: "financeiro",
+      resolveTarget: "condominio",
+      motivo: "Dados financeiros ausentes impedem monitoramento operacional completo.",
+      impacto: "Preencher ativa visão de risco, comparação mensal e recomendações automáticas.",
+      cta: "Acessar financeiro",
       origemDados: "financeiro",
     });
   }
@@ -367,7 +490,7 @@ export function buildCommandCenter(): CommandCenterResult {
     const hasAssisted = !!(a.avcb || a.seguro || a.mandato);
     if (!hasLegacy && !hasAssisted) return "sem-dados";
     if (urgentActions.length > 0 || criticalNotifications.length > 0 || financialSummary.cashRisk === "critico" || overdueAgenda.length > 0 || integrity.status === "critical") return "critico";
-    if (warningNotifications.length > 0 || stalePendencias > 0 || missingDocs > 2 || integrity.status === "warning") return "atencao";
+    if (warningNotifications.length > 0 || stalePendencias > 0 || missingDocs > 2 || integrity.status === "warning" || financialSummary.cashRisk === "atencao") return "atencao";
     return "estavel";
   })();
 

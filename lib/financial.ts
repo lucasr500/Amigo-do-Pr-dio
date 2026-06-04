@@ -1,6 +1,33 @@
 export type FinancialEntryType = "receita" | "despesa" | "conta_a_pagar" | "investimento";
 export type FinancialPriority = "baixa" | "media" | "alta" | "critica";
 export type FinancialEntryStatus = "previsto" | "pago" | "vencido";
+export type FinancialTrendDirection = "up" | "down" | "stable" | "unknown";
+export type CashRiskLevel = "baixo" | "atenção" | "crítico";
+
+export const FINANCIAL_CATEGORIES = [
+  "Condomínio",
+  "Funcionários",
+  "Encargos trabalhistas",
+  "Elevadores",
+  "Água",
+  "Energia",
+  "Gás",
+  "Limpeza",
+  "Manutenção",
+  "Segurança",
+  "Jardinagem",
+  "Seguro",
+  "Administradora",
+  "Obras",
+  "Fundo de reserva",
+  "Inadimplência",
+  "Receita ordinária",
+  "Receita extraordinária",
+  "Reserva com liquidez",
+  "Outros",
+] as const;
+
+export type FinancialCategory = (typeof FINANCIAL_CATEGORIES)[number];
 
 export type FinancialEntry = {
   id: string;
@@ -37,6 +64,32 @@ export type FinancialAlert = {
   severity: "info" | "warning" | "critical";
 };
 
+export type MonthOverMonthComparison = {
+  currentMonth: string;
+  previousMonth?: string;
+  revenueDelta: number;
+  revenueDeltaPct?: number;
+  expenseDelta: number;
+  expenseDeltaPct?: number;
+  balanceDelta: number;
+  balanceDeltaPct?: number;
+  delinquencyDeltaPct?: number;
+  direction: {
+    revenue: FinancialTrendDirection;
+    expenses: FinancialTrendDirection;
+    balance: FinancialTrendDirection;
+    delinquency: FinancialTrendDirection;
+  };
+  hasPreviousMonth: boolean;
+};
+
+export type CashRiskAnalysis = {
+  level: CashRiskLevel;
+  reasons: string[];
+  nextAction: string;
+  severityScore: number;
+};
+
 export type FinancialSummary = {
   month: string;
   estimatedBalance: number;
@@ -48,6 +101,7 @@ export type FinancialSummary = {
   delinquencyRate?: number;
   liquidityReserve?: number;
   cashRisk: "baixo" | "atencao" | "critico";
+  cashRiskAnalysis: CashRiskAnalysis;
   alerts: FinancialAlert[];
 };
 
@@ -64,8 +118,18 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function moneyBRL(value: number): string {
+  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
 export function currentMonthKey(date = new Date()): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function previousMonthKey(month: string): string {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(y, m - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function moneyFromText(raw: string): number | null {
@@ -100,18 +164,37 @@ function inferType(raw: string): FinancialEntryType {
   return "despesa";
 }
 
-function inferCategory(raw: string): string {
+export function inferCategory(raw: string): string {
   const text = raw.toLowerCase();
-  if (/elevador/.test(text)) return "Elevador";
+  if (/elevador/.test(text)) return "Elevadores";
   if (/limpeza|faxina/.test(text)) return "Limpeza";
-  if (/[áa]gua|sabesp/.test(text)) return "Água";
-  if (/luz|energia/.test(text)) return "Energia";
-  if (/portaria|seguran/.test(text)) return "Portaria";
+  if (/[áa]gua|sabesp|cedae|sanepar/.test(text)) return "Água";
+  if (/luz|energia|light|enel|celpe|cemig/.test(text)) return "Energia";
+  if (/g[aá]s/.test(text)) return "Gás";
+  if (/portaria|vigilância|seguran/.test(text)) return "Segurança";
+  if (/porteiro|zelador|faxineiro|funcionário|empregado/.test(text)) return "Funcionários";
+  if (/encargo|fgts|inss|férias|rescis/.test(text)) return "Encargos trabalhistas";
+  if (/jardinagem|jardim|paisagem/.test(text)) return "Jardinagem";
   if (/seguro/.test(text)) return "Seguro";
-  if (/obra|manuten/.test(text)) return "Manutenção";
+  if (/administradora|taxa.*adm|adm.*taxa/.test(text)) return "Administradora";
+  if (/obra|reforma|construção/.test(text)) return "Obras";
+  if (/fundo.*reserva|reserva.*fundo/.test(text)) return "Fundo de reserva";
   if (/inadimpl/.test(text)) return "Inadimplência";
-  if (/invest|aplicad|reserva/.test(text)) return "Reserva";
-  return "Operacional";
+  if (/invest|aplicad/.test(text)) return "Reserva com liquidez";
+  if (/reserva/.test(text)) return "Reserva com liquidez";
+  if (/manut|reparo|conserto/.test(text)) return "Manutenção";
+  if (/cota|arrecad|receita/.test(text)) return "Receita ordinária";
+  return "Outros";
+}
+
+function trendDirection(delta: number, threshold = 0): FinancialTrendDirection {
+  if (Math.abs(delta) <= threshold) return "stable";
+  return delta > 0 ? "up" : "down";
+}
+
+function safePct(delta: number, base: number): number | undefined {
+  if (base === 0) return undefined;
+  return Math.round((delta / Math.abs(base)) * 1000) / 10;
 }
 
 function read(): MonthlyFinancialSnapshot[] {
@@ -240,6 +323,251 @@ export function isFinancialEntryOverdue(entry: FinancialEntry, today = todayISO(
   return entry.type === "conta_a_pagar" && entry.status !== "pago" && !!entry.dueDate && entry.dueDate < today;
 }
 
+export function getCashRiskAnalysis(snapshot: MonthlyFinancialSnapshot): CashRiskAnalysis {
+  const today = todayISO();
+  const entries = snapshot.entries;
+
+  const overdueEntries = entries.filter((e) => isFinancialEntryOverdue(e, today));
+  const overdueTotal = overdueEntries.reduce((sum, e) => sum + e.amount, 0);
+
+  const totalDespesas = entries
+    .filter((e) => (e.type === "despesa" || e.type === "conta_a_pagar") && e.status !== "pago")
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const balance = snapshot.estimatedBalance;
+  const reserve = snapshot.liquidityReserve ?? 0;
+  const delinquency = snapshot.delinquencyRate ?? 0;
+
+  const reasons: string[] = [];
+  let score = 0;
+
+  if (balance < 0) {
+    reasons.push("Saldo estimado negativo.");
+    score += 40;
+  }
+
+  if (overdueTotal > 0) {
+    if (balance > 0 && overdueTotal > balance * 0.3) {
+      reasons.push(`Valor vencido (${moneyBRL(overdueTotal)}) representa mais de 30% do saldo estimado.`);
+      score += 30;
+    } else if (overdueTotal >= 10000) {
+      reasons.push(`Valor total vencido: ${moneyBRL(overdueTotal)}.`);
+      score += 20;
+    } else {
+      reasons.push(`${overdueEntries.length} conta${overdueEntries.length > 1 ? "s" : ""} vencida${overdueEntries.length > 1 ? "s" : ""} (${moneyBRL(overdueTotal)}).`);
+      score += 10;
+    }
+  }
+
+  if (delinquency >= 20) {
+    reasons.push(`Inadimplência informada de ${delinquency}% é alta.`);
+    score += 20;
+  } else if (delinquency >= 10) {
+    reasons.push(`Inadimplência de ${delinquency}% merece atenção.`);
+    score += 10;
+  }
+
+  if (totalDespesas > 0 && reserve > 0 && reserve < totalDespesas * 0.5) {
+    reasons.push("Reserva com liquidez abaixo de 50% das despesas do mês.");
+    score += 10;
+  }
+
+  const level: CashRiskLevel = score >= 40 ? "crítico" : score >= 15 ? "atenção" : "baixo";
+
+  const nextAction =
+    level === "crítico"
+      ? reasons.length > 0
+        ? `Priorize regularização: ${reasons[0]}`
+        : "Revise o financeiro imediatamente."
+      : level === "atenção"
+      ? "Revise os pontos de atenção antes de aprovar novas despesas."
+      : "Continue mantendo as contas em dia.";
+
+  return { level, reasons, nextAction, severityScore: score };
+}
+
+export function getMonthOverMonthComparison(month: string): MonthOverMonthComparison {
+  const prevMonth = previousMonthKey(month);
+  const current = getCurrentFinancialSnapshot(month);
+  const prevSnap = read().find((s) => s.month === prevMonth);
+
+  if (!prevSnap) {
+    return {
+      currentMonth: month,
+      hasPreviousMonth: false,
+      revenueDelta: 0,
+      expenseDelta: 0,
+      balanceDelta: 0,
+      direction: {
+        revenue: "unknown",
+        expenses: "unknown",
+        balance: "unknown",
+        delinquency: "unknown",
+      },
+    };
+  }
+
+  const sumByType = (snap: MonthlyFinancialSnapshot, type: FinancialEntryType[]) =>
+    snap.entries.filter((e) => type.includes(e.type)).reduce((s, e) => s + e.amount, 0);
+
+  const curRevenue  = sumByType(current, ["receita"]);
+  const curExpenses = sumByType(current, ["despesa", "conta_a_pagar"]);
+  const curBalance  = current.estimatedBalance;
+  const prevRevenue  = sumByType(prevSnap, ["receita"]);
+  const prevExpenses = sumByType(prevSnap, ["despesa", "conta_a_pagar"]);
+  const prevBalance  = prevSnap.estimatedBalance;
+
+  const revenueDelta  = curRevenue  - prevRevenue;
+  const expenseDelta  = curExpenses - prevExpenses;
+  const balanceDelta  = curBalance  - prevBalance;
+
+  const delinquencyDelta =
+    current.delinquencyRate !== undefined && prevSnap.delinquencyRate !== undefined
+      ? current.delinquencyRate - prevSnap.delinquencyRate
+      : undefined;
+
+  return {
+    currentMonth: month,
+    previousMonth: prevMonth,
+    hasPreviousMonth: true,
+    revenueDelta,
+    revenueDeltaPct: safePct(revenueDelta, prevRevenue),
+    expenseDelta,
+    expenseDeltaPct: safePct(expenseDelta, prevExpenses),
+    balanceDelta,
+    balanceDeltaPct: safePct(balanceDelta, prevBalance),
+    delinquencyDeltaPct: delinquencyDelta,
+    direction: {
+      revenue: trendDirection(revenueDelta, 1),
+      expenses: trendDirection(expenseDelta, 1),
+      balance: trendDirection(balanceDelta, 1),
+      delinquency: delinquencyDelta !== undefined ? trendDirection(delinquencyDelta, 0.5) : "unknown",
+    },
+  };
+}
+
+export function getUpcomingBillsByWindow(
+  snapshot: MonthlyFinancialSnapshot,
+  today = todayISO()
+): {
+  next3Days: FinancialEntry[];
+  next7Days: FinancialEntry[];
+  next15Days: FinancialEntry[];
+} {
+  const add = (days: number) => {
+    const d = new Date(`${today}T12:00:00`);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  };
+  const d3  = add(3);
+  const d7  = add(7);
+  const d15 = add(15);
+
+  const upcoming = snapshot.entries.filter(
+    (e) => e.type === "conta_a_pagar" && e.status !== "pago" && e.dueDate && e.dueDate >= today
+  );
+
+  return {
+    next3Days:  upcoming.filter((e) => e.dueDate! <= d3),
+    next7Days:  upcoming.filter((e) => e.dueDate! > d3  && e.dueDate! <= d7),
+    next15Days: upcoming.filter((e) => e.dueDate! > d7  && e.dueDate! <= d15),
+  };
+}
+
+export function buildFinancialExecutiveInsight(month: string): {
+  title: string;
+  subtitle: string;
+  highlights: string[];
+  warnings: string[];
+  nextAction: string;
+} {
+  const snapshot = getCurrentFinancialSnapshot(month);
+  const summary  = getFinancialSummary(month);
+  const mom      = getMonthOverMonthComparison(month);
+  const windows  = getUpcomingBillsByWindow(snapshot);
+  const risk     = summary.cashRiskAnalysis;
+
+  const highlights: string[] = [];
+  const warnings: string[]   = [];
+
+  const hasData = snapshot.entries.length > 0 || snapshot.estimatedBalance !== 0;
+
+  if (!hasData) {
+    return {
+      title: "Visão operacional financeira",
+      subtitle: "Sem dados suficientes ainda.",
+      highlights: [],
+      warnings: [],
+      nextAction: "Comece informando o saldo estimado e as principais contas do mês.",
+    };
+  }
+
+  if (summary.estimatedBalance > 0) {
+    highlights.push(`Saldo estimado: ${moneyBRL(summary.estimatedBalance)}.`);
+  }
+
+  const resultado = summary.totalReceitas - summary.totalDespesas;
+  if (summary.totalReceitas > 0 || summary.totalDespesas > 0) {
+    const sign = resultado >= 0 ? "positivo" : "negativo";
+    highlights.push(`Resultado do mês ${sign}: ${moneyBRL(Math.abs(resultado))}.`);
+  }
+
+  const totalUpcoming = windows.next3Days.length + windows.next7Days.length + windows.next15Days.length;
+  if (windows.next3Days.length > 0) {
+    const total = windows.next3Days.reduce((s, e) => s + e.amount, 0);
+    warnings.push(`${windows.next3Days.length} conta${windows.next3Days.length > 1 ? "s" : ""} vencem nos próximos 3 dias (${moneyBRL(total)}).`);
+  } else if (totalUpcoming > 0) {
+    highlights.push(`${totalUpcoming} conta${totalUpcoming > 1 ? "s" : ""} a pagar nos próximos 15 dias.`);
+  }
+
+  if (summary.contasVencidas.length > 0) {
+    const total = summary.contasVencidas.reduce((s, e) => s + e.amount, 0);
+    warnings.push(`${summary.contasVencidas.length} conta${summary.contasVencidas.length > 1 ? "s" : ""} vencida${summary.contasVencidas.length > 1 ? "s" : ""} (${moneyBRL(total)}).`);
+  }
+
+  if (mom.hasPreviousMonth) {
+    if (mom.direction.balance === "down" && Math.abs(mom.balanceDelta) > 100) {
+      warnings.push(`Saldo estimado caiu ${moneyBRL(Math.abs(mom.balanceDelta))} em relação ao mês anterior.`);
+    } else if (mom.direction.balance === "up" && Math.abs(mom.balanceDelta) > 100) {
+      highlights.push(`Saldo estimado subiu ${moneyBRL(mom.balanceDelta)} em relação ao mês anterior.`);
+    }
+    if (mom.direction.revenue === "up" && mom.revenueDelta > 0) {
+      highlights.push(`Receitas subiram ${mom.revenueDeltaPct !== undefined ? `${mom.revenueDeltaPct}%` : moneyBRL(mom.revenueDelta)} em relação ao mês anterior.`);
+    }
+    if (mom.direction.expenses === "up" && mom.expenseDelta > 500) {
+      warnings.push(`Despesas aumentaram ${moneyBRL(mom.expenseDelta)} em relação ao mês anterior.`);
+    }
+  }
+
+  if ((summary.delinquencyRate ?? 0) >= 10) {
+    warnings.push(`Inadimplência em ${summary.delinquencyRate}%.`);
+  }
+
+  const subtitle =
+    risk.level === "crítico"
+      ? "Atenção: há pontos críticos que precisam de ação."
+      : risk.level === "atenção"
+      ? "Mês com pontos de atenção. Revise antes de novas despesas."
+      : warnings.length > 0
+      ? "Mês razoável, mas há pontos a verificar."
+      : "Mês estável. Mantenha as contas em dia.";
+
+  const nextAction =
+    summary.contasVencidas.length > 0
+      ? `Regularize a conta vencida de maior valor: ${summary.contasVencidas.sort((a, b) => b.amount - a.amount)[0]?.title ?? "—"}.`
+      : windows.next3Days.length > 0
+      ? "Prepare pagamento das contas que vencem nos próximos 3 dias."
+      : risk.nextAction;
+
+  return {
+    title: "Visão operacional financeira",
+    subtitle,
+    highlights,
+    warnings,
+    nextAction,
+  };
+}
+
 export function getFinancialSummary(month = currentMonthKey()): FinancialSummary {
   const snapshot = getCurrentFinancialSnapshot(month);
   const today = todayISO();
@@ -257,14 +585,17 @@ export function getFinancialSummary(month = currentMonthKey()): FinancialSummary
     .filter((entry) => entry.type === "investimento")
     .reduce((sum, entry) => sum + entry.amount, 0);
 
+  const cashRiskAnalysis = getCashRiskAnalysis(snapshot);
+
   const alerts: FinancialAlert[] = [];
   if (contasVencidas.length > 0) {
+    const total = contasVencidas.reduce((s, e) => s + e.amount, 0);
     alerts.push({
       id: "financial_overdue_bills",
-      title: `${contasVencidas.length} conta${contasVencidas.length > 1 ? "s" : ""} vencida${contasVencidas.length > 1 ? "s" : ""}`,
+      title: `${contasVencidas.length} conta${contasVencidas.length > 1 ? "s" : ""} vencida${contasVencidas.length > 1 ? "s" : ""} (${moneyBRL(total)})`,
       reason: "Conta vencida vira risco operacional e pressiona o caixa.",
       impact: "Regularizar ou negociar evita multa, juros e interrupção de serviço.",
-      severity: "critical",
+      severity: cashRiskAnalysis.level === "crítico" ? "critical" : "warning",
     });
   }
   if ((snapshot.delinquencyRate ?? 0) >= 10) {
@@ -273,7 +604,7 @@ export function getFinancialSummary(month = currentMonthKey()): FinancialSummary
       title: `Inadimplência em ${snapshot.delinquencyRate}%`,
       reason: "Inadimplência alta reduz previsibilidade de caixa.",
       impact: "Priorize acordos e cobrança formal antes de aprovar novas despesas.",
-      severity: "warning",
+      severity: (snapshot.delinquencyRate ?? 0) >= 20 ? "critical" : "warning",
     });
   }
   if (snapshot.estimatedBalance < 0) {
@@ -286,10 +617,9 @@ export function getFinancialSummary(month = currentMonthKey()): FinancialSummary
     });
   }
 
-  const cashRisk = snapshot.estimatedBalance < 0 || contasVencidas.length >= 2
-    ? "critico"
-    : contasVencidas.length > 0 || (snapshot.delinquencyRate ?? 0) >= 10
-    ? "atencao"
+  const cashRisk =
+    cashRiskAnalysis.level === "crítico" ? "critico"
+    : cashRiskAnalysis.level === "atenção" ? "atencao"
     : "baixo";
 
   return {
@@ -303,6 +633,7 @@ export function getFinancialSummary(month = currentMonthKey()): FinancialSummary
     delinquencyRate: snapshot.delinquencyRate,
     liquidityReserve: snapshot.liquidityReserve,
     cashRisk,
+    cashRiskAnalysis,
     alerts,
   };
 }
@@ -329,7 +660,7 @@ export function parseFinancialQuickText(text: string): ParsedFinancialLine[] {
         return {
           raw: line,
           snapshotPatch: { liquidityReserve: amount },
-          entry: { type: "investimento", title: "Reserva com liquidez", amount, category: "Reserva", notes: line, status: "previsto" },
+          entry: { type: "investimento", title: "Reserva com liquidez", amount, category: "Reserva com liquidez", notes: line, status: "previsto" },
         };
       }
       if (amount === null) return { raw: line, warning: "Não encontrei valor monetário nesta linha." };
@@ -342,7 +673,7 @@ export function parseFinancialQuickText(text: string): ParsedFinancialLine[] {
           amount,
           dueDate: parseDateToken(line),
           category: inferCategory(line),
-          status: type === "conta_a_pagar" ? "previsto" : "previsto",
+          status: "previsto",
           notes: line,
         },
       };
@@ -351,34 +682,139 @@ export function parseFinancialQuickText(text: string): ParsedFinancialLine[] {
 
 export function buildMonthlyFinancialExecutiveSummary(month = currentMonthKey()): string {
   const snapshot = getCurrentFinancialSnapshot(month);
-  const summary = getFinancialSummary(month);
+  const summary  = getFinancialSummary(month);
+  const mom      = getMonthOverMonthComparison(month);
+  const windows  = getUpcomingBillsByWindow(snapshot);
+  const risk     = summary.cashRiskAnalysis;
+
+  const resultado = summary.totalReceitas - summary.totalDespesas;
+
   const lines = [
     `Resumo financeiro operacional — ${month}`,
     "",
-    `Saldo estimado: ${summary.estimatedBalance.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
-    `Receitas registradas: ${summary.totalReceitas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
-    `Despesas/contas registradas: ${summary.totalDespesas.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
-    `Reserva com liquidez: ${(summary.liquidityReserve ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`,
+    `Saldo estimado: ${moneyBRL(summary.estimatedBalance)}`,
+    `Receitas registradas: ${moneyBRL(summary.totalReceitas)}`,
+    `Despesas/contas registradas: ${moneyBRL(summary.totalDespesas)}`,
+    `Resultado estimado do mês: ${resultado >= 0 ? "+" : ""}${moneyBRL(resultado)}`,
+    `Reserva com liquidez: ${moneyBRL(summary.liquidityReserve ?? 0)}`,
     `Inadimplência informada: ${summary.delinquencyRate !== undefined ? `${summary.delinquencyRate}%` : "não informada"}`,
+    "",
+    `Contas pagas: ${snapshot.entries.filter((e) => e.status === "pago").length}`,
+    `Contas a pagar: ${snapshot.entries.filter((e) => e.type === "conta_a_pagar" && e.status !== "pago").length}`,
     `Contas vencidas: ${summary.contasVencidas.length}`,
-    `Contas próximas: ${summary.contasProximas.length}`,
-    `Risco de caixa: ${summary.cashRisk}`,
+    `Risco de caixa: ${risk.level}`,
   ];
 
-  if (summary.alerts.length > 0) {
-    lines.push("", "Alertas:");
-    summary.alerts.forEach((alert) => {
-      lines.push(`- ${alert.title}: ${alert.reason} ${alert.impact}`);
-    });
+  if (mom.hasPreviousMonth) {
+    lines.push("");
+    lines.push(`Comparação com ${mom.previousMonth}:`);
+    if (mom.revenueDeltaPct !== undefined) {
+      lines.push(`  Receitas: ${mom.revenueDelta >= 0 ? "+" : ""}${moneyBRL(mom.revenueDelta)} (${mom.revenueDeltaPct >= 0 ? "+" : ""}${mom.revenueDeltaPct}%)`);
+    } else {
+      lines.push(`  Receitas: ${mom.revenueDelta >= 0 ? "+" : ""}${moneyBRL(mom.revenueDelta)}`);
+    }
+    if (mom.expenseDeltaPct !== undefined) {
+      lines.push(`  Despesas: ${mom.expenseDelta >= 0 ? "+" : ""}${moneyBRL(mom.expenseDelta)} (${mom.expenseDeltaPct >= 0 ? "+" : ""}${mom.expenseDeltaPct}%)`);
+    } else {
+      lines.push(`  Despesas: ${mom.expenseDelta >= 0 ? "+" : ""}${moneyBRL(mom.expenseDelta)}`);
+    }
+    lines.push(`  Saldo: ${mom.balanceDelta >= 0 ? "+" : ""}${moneyBRL(mom.balanceDelta)}`);
+    if (mom.delinquencyDeltaPct !== undefined) {
+      lines.push(`  Inadimplência: ${mom.delinquencyDeltaPct >= 0 ? "+" : ""}${mom.delinquencyDeltaPct}pp`);
+    }
+  } else {
+    lines.push("", "Comparação com mês anterior: sem dados do mês anterior para comparar.");
   }
+
+  const totalUpcoming = windows.next3Days.length + windows.next7Days.length + windows.next15Days.length;
+  if (totalUpcoming > 0) {
+    lines.push("", "Próximas contas:");
+    if (windows.next3Days.length > 0) {
+      lines.push(`  Próximos 3 dias: ${windows.next3Days.map((e) => `${e.title} (${moneyBRL(e.amount)})`).join(", ")}`);
+    }
+    if (windows.next7Days.length > 0) {
+      lines.push(`  4 a 7 dias: ${windows.next7Days.map((e) => `${e.title} (${moneyBRL(e.amount)})`).join(", ")}`);
+    }
+    if (windows.next15Days.length > 0) {
+      lines.push(`  8 a 15 dias: ${windows.next15Days.map((e) => `${e.title} (${moneyBRL(e.amount)})`).join(", ")}`);
+    }
+  }
+
+  if (risk.reasons.length > 0) {
+    lines.push("", "Pontos de atenção:");
+    risk.reasons.forEach((r) => lines.push(`  - ${r}`));
+  }
+
+  lines.push("", `Próxima ação recomendada: ${
+    summary.contasVencidas.length > 0
+      ? `Regularize a conta vencida de maior valor — ${summary.contasVencidas.sort((a, b) => b.amount - a.amount)[0]?.title ?? "—"}.`
+      : risk.nextAction
+  }`);
 
   if (snapshot.entries.length > 0) {
-    lines.push("", "Lançamentos:");
-    snapshot.entries.slice(-12).forEach((entry) => {
-      lines.push(`- ${entry.title}: ${entry.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} (${entry.category ?? "sem categoria"})`);
-    });
+    lines.push("", "Principais lançamentos:");
+    const byCategory = snapshot.entries.reduce<Record<string, number>>((acc, e) => {
+      const cat = e.category ?? "Outros";
+      acc[cat] = (acc[cat] ?? 0) + e.amount;
+      return acc;
+    }, {});
+    Object.entries(byCategory)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .forEach(([cat, total]) => lines.push(`  ${cat}: ${moneyBRL(total)}`));
   }
 
-  lines.push("", "Controle auxiliar com dados informados manualmente. Não substitui demonstrativo contábil oficial.");
+  lines.push("", "Controle auxiliar com dados informados manualmente. Não substitui demonstrativo contábil oficial, prestação de contas ou documentos da administradora.");
   return lines.join("\n");
+}
+
+// ─── Helpers para integração com pendências e agenda ─────────────────────────
+
+export type PendenciaFromEntryPayload = {
+  titulo: string;
+  descricao: string;
+  categoria: string;
+  origem: "financeiro" & string;
+  prioridade: "critica" | "alta" | "media" | "baixa";
+  dueDate?: string;
+  linkedType: "financeiro";
+  linkedId: string;
+};
+
+export type AgendaFromEntryPayload = {
+  title: string;
+  date: string;
+  type: "cobranca";
+  note: string;
+  prioridade: "alta" | "media" | "baixa";
+};
+
+export function buildPendenciaPayloadFromEntry(entry: FinancialEntry): PendenciaFromEntryPayload {
+  const overdueTotal = entry.amount;
+  const prioridade: "critica" | "alta" | "media" | "baixa" =
+    overdueTotal >= 10000 ? "critica" : overdueTotal >= 2000 ? "alta" : "media";
+
+  return {
+    titulo: `Regularizar conta vencida: ${entry.title} — ${moneyBRL(entry.amount)}`,
+    descricao: `Conta do tipo "${entry.category ?? "operacional"}" está vencida. Valor: ${moneyBRL(entry.amount)}.${entry.dueDate ? ` Vencimento original: ${entry.dueDate}.` : ""}`,
+    categoria: entry.category ?? "financeiro",
+    origem: "financeiro",
+    prioridade,
+    dueDate: entry.dueDate,
+    linkedType: "financeiro",
+    linkedId: entry.id,
+  };
+}
+
+export function buildAgendaPayloadFromEntry(entry: FinancialEntry): AgendaFromEntryPayload {
+  const prioridade: "alta" | "media" | "baixa" =
+    entry.amount >= 5000 ? "alta" : entry.amount >= 1000 ? "media" : "baixa";
+
+  return {
+    title: `Pagar conta: ${entry.title} — ${moneyBRL(entry.amount)}`,
+    date: entry.dueDate ?? todayISO(),
+    type: "cobranca",
+    note: `Conta a pagar de ${moneyBRL(entry.amount)}. Categoria: ${entry.category ?? "—"}. Registrado pelo módulo financeiro.`,
+    prioridade,
+  };
 }
