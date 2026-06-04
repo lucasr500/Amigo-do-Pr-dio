@@ -33,6 +33,14 @@ import {
   currentMonthKey,
 } from "@/lib/financial";
 import { buildLocalIntegrityReport } from "@/lib/local-integrity";
+import {
+  isDocumentoVencido,
+  isDocumentoProximoVencimento,
+  isDocumentoFaltante,
+  getDocumentosSummary,
+  DOCUMENTO_LABEL,
+  DOCUMENTO_CRITICIDADE as DOC_CRITICIDADE,
+} from "@/lib/session-documentos";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
 
@@ -406,6 +414,102 @@ export function buildCommandCenter(): CommandCenterResult {
       cta: "Revisar dados locais",
       origemDados: "integridade-local",
     });
+  }
+
+  // ── Recomendações documentais enriquecidas ────────────────────────────────
+  {
+    const docSummary = getDocumentosSummary();
+    const docsPersistidos = getDocumentos();
+    const docsMap = new Map(docsPersistidos.map((d) => [d.id, d]));
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const pendenciasAbertas = getPendenciasAbertas();
+
+    // Documento crítico vencido
+    const criticosVencidos = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => {
+      const doc = docsMap.get(id);
+      return DOC_CRITICIDADE[id as DocumentoEssencialId] === "critica" && doc && isDocumentoVencido(doc, todayStr);
+    });
+    if (criticosVencidos.length > 0) {
+      const id = criticosVencidos[0] as DocumentoEssencialId;
+      const label = DOCUMENTO_LABEL[id];
+      actions.push({
+        id: "docs_critical_expired",
+        titulo: `Regularize documento crítico vencido: ${label}`,
+        descricao: "Documento obrigatório com vencimento ultrapassado representa risco legal e operacional.",
+        prioridade: "urgente",
+        categoria: "legal",
+        sourceModule: "documentos",
+        resolveTarget: "condominio",
+        motivo: "Documento crítico vencido pode comprometer a regularidade do condomínio.",
+        impacto: "Regularizar evita autuação, penalidade e responsabilidade do síndico.",
+        cta: "Ver documentos",
+        origemDados: "documentos",
+      });
+    }
+
+    // Documento crítico ausente
+    if (docSummary.criticosPendentes > 0) {
+      actions.push({
+        id: "docs_critical_missing",
+        titulo: `${docSummary.criticosPendentes} documento${docSummary.criticosPendentes > 1 ? "s" : ""} crítico${docSummary.criticosPendentes > 1 ? "s" : ""} sem confirmar`,
+        descricao: "Documentos críticos não localizados reduzem rastreabilidade operacional.",
+        prioridade: "este_mes",
+        categoria: "gestao",
+        sourceModule: "documentos",
+        resolveTarget: "condominio",
+        motivo: "Documentos críticos ausentes são lacuna operacional relevante.",
+        impacto: "Localizar e registrar garante rastreabilidade e reduz risco em auditorias.",
+        cta: "Ver documentos críticos",
+        origemDados: "documentos",
+      });
+    }
+
+    // Documento próximo do vencimento (30 dias)
+    const proximosVencimento = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => {
+      const doc = docsMap.get(id);
+      return doc && isDocumentoProximoVencimento(doc, 30, todayStr);
+    });
+    if (proximosVencimento.length > 0) {
+      actions.push({
+        id: "docs_expiring_soon",
+        titulo: `${proximosVencimento.length} documento${proximosVencimento.length > 1 ? "s" : ""} vencem em 30 dias`,
+        descricao: "Documentos próximos do vencimento requerem planejamento de renovação.",
+        prioridade: "este_mes",
+        categoria: "gestao",
+        sourceModule: "documentos",
+        resolveTarget: "condominio",
+        motivo: "Vencimento próximo sem agendamento pode gerar irregularidade.",
+        impacto: "Agendar renovação com antecedência evita multa e interrupção de cobertura.",
+        cta: "Agendar renovações",
+        origemDados: "documentos",
+      });
+    }
+
+    // Documento vencido sem pendência aberta
+    const vencidosSemPendencia = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => {
+      const doc = docsMap.get(id);
+      if (!doc || !isDocumentoVencido(doc, todayStr)) return false;
+      return !pendenciasAbertas.some(
+        (p) => (p.linkedType === "documento" && p.linkedId === id) || (p.origem === "documento" && p.matchedId === id)
+      );
+    });
+    if (vencidosSemPendencia.length > 0 && criticosVencidos.length === 0) {
+      actions.push({
+        id: "docs_expired_no_task",
+        titulo: `Crie pendência para ${vencidosSemPendencia.length} documento${vencidosSemPendencia.length > 1 ? "s" : ""} vencido${vencidosSemPendencia.length > 1 ? "s" : ""}`,
+        descricao: "Documentos vencidos sem próximo passo ficam invisíveis na rotina operacional.",
+        prioridade: "este_mes",
+        categoria: "gestao",
+        sourceModule: "documentos",
+        resolveTarget: "condominio",
+        motivo: "Vencimento sem registro de ação é lacuna operacional.",
+        impacto: "Criar pendência mantém o documento no radar até regularização.",
+        cta: "Ver documentos vencidos",
+        origemDados: "documentos",
+      });
+    }
+
+    void isDocumentoFaltante; // imported for panel — not needed here
   }
 
   const sortedActions = [...actions].sort((a, b) => {

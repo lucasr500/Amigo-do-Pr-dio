@@ -3,18 +3,28 @@
 import { buildCommandCenter } from "@/lib/command-center";
 import { buildMonthlyFinancialExecutiveSummary, currentMonthKey } from "@/lib/financial";
 import { buildLocalIntegrityReport } from "@/lib/local-integrity";
-import { getAgendaEvents, getDocumentos, getPendencias } from "@/lib/session";
+import { getAgendaEvents, getPendencias } from "@/lib/session";
+import { getDocumentosSummary } from "@/lib/session-documentos";
 
 export function buildMonthlyOperationalSummary(month = currentMonthKey()): string {
   const command = buildCommandCenter();
   const integrity = buildLocalIntegrityReport();
   const pendencias = getPendencias();
   const agenda = getAgendaEvents();
-  const documentos = getDocumentos();
+  const docSummary = getDocumentosSummary();
   const abertas = pendencias.filter((p) => p.status === "aberta");
   const concluidas = pendencias.filter((p) => p.status === "concluida");
   const eventosAbertos = agenda.filter((event) => !event.completedAt);
-  const docsConfirmados = documentos.filter((doc) => doc.status === "tenho");
+
+  // Seção documental
+  const docLine =
+    docSummary.criticosPendentes > 0
+      ? `${docSummary.criticosPendentes} crítico${docSummary.criticosPendentes > 1 ? "s" : ""} pendente${docSummary.criticosPendentes > 1 ? "s" : ""}, ${docSummary.vencidos} vencido${docSummary.vencidos !== 1 ? "s" : ""}, ${docSummary.tenho} regular${docSummary.tenho !== 1 ? "es" : ""}`
+      : docSummary.vencidos > 0
+      ? `${docSummary.vencidos} vencido${docSummary.vencidos !== 1 ? "s" : ""} para regularizar, ${docSummary.tenho} regular${docSummary.tenho !== 1 ? "es" : ""}`
+      : docSummary.proximos > 0
+      ? `${docSummary.proximos} vencem em breve, ${docSummary.tenho} regular${docSummary.tenho !== 1 ? "es" : ""} — sem pendências críticas`
+      : `${docSummary.tenho} regular${docSummary.tenho !== 1 ? "es" : ""} — sem pendências críticas registradas no app`;
 
   return [
     `Resumo operacional mensal — ${month}`,
@@ -32,10 +42,10 @@ export function buildMonthlyOperationalSummary(month = currentMonthKey()): strin
     `- Pendências abertas: ${abertas.length}`,
     `- Pendências concluídas: ${concluidas.length}`,
     `- Eventos abertos na agenda: ${eventosAbertos.length}`,
-    `- Documentos confirmados: ${docsConfirmados.length}/${documentos.length || "não revisado"}`,
+    `- Documentos: ${docLine}`,
     "",
     buildMonthlyFinancialExecutiveSummary(month),
     "",
-    "Observação: resumo auxiliar gerado com dados locais informados manualmente. Não substitui documentos oficiais, demonstrativos contábeis ou orientação profissional.",
+    "Observação: resumo auxiliar gerado com dados locais informados manualmente. Não substitui documentos oficiais, demonstrativos contábeis, guarda documental oficial ou orientação profissional.",
   ].join("\n");
 }

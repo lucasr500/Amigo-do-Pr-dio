@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import {
   getDocumentos,
   upsertDocumento,
-  addPendencia,
   getPendenciasAbertas,
+  addPendencia,
   addAuditEntry,
   DOCUMENTOS_ESSENCIAIS_IDS,
   DOCUMENTO_LABEL,
@@ -16,6 +16,17 @@ import {
   type DocumentoEssencialId,
   type DocumentoCategoria,
 } from "@/lib/session";
+import {
+  isDocumentoVencido,
+  isDocumentoProximoVencimento,
+  isDocumentoFaltante,
+  getDocumentosSummary,
+  buildPendenciaFromDocumento,
+  buildAgendaFromDocumento,
+  buildFinancialFromDocumento,
+} from "@/lib/session-documentos";
+import { addAgendaEvent, getAgendaEvents } from "@/lib/session-agenda";
+import { addFinancialEntry, currentMonthKey } from "@/lib/financial";
 import { trackEvent } from "@/lib/telemetry";
 import EmptyState from "@/components/ui/EmptyState";
 import { getWhereToFind } from "@/lib/discovery-hints";
@@ -96,7 +107,6 @@ const EMPTY_STATE_EXPERT: Record<DocumentoCategoria, string> = {
   fiscal:      "CND indica que o condomínio está quite com obrigações fiscais. Necessária em financiamentos e algumas negociações.",
 };
 
-// Maps document IDs to discovery hint IDs in lib/discovery-hints.ts
 const DOC_HINT_MAP: Partial<Record<DocumentoEssencialId, string>> = {
   avcb_clcb:               "avcb",
   apolice_seguro:          "seguro_apolice",
@@ -113,6 +123,20 @@ const DOC_HINT_MAP: Partial<Record<DocumentoEssencialId, string>> = {
 
 const CRIT_ORDER: Record<string, number> = { critica: 0, importante: 1, recomendada: 2 };
 
+type DocFilter = "todos" | "criticos" | "faltam" | "vencidos" | "proximos" | "regulares" | "sem_revisao";
+
+const FILTER_LABEL: Record<DocFilter, string> = {
+  todos:       "Todos",
+  criticos:    "Críticos",
+  faltam:      "Faltam",
+  vencidos:    "Vencidos",
+  proximos:    "Próximos",
+  regulares:   "Regulares",
+  sem_revisao: "Sem revisão",
+};
+
+const FILTERS: DocFilter[] = ["todos", "criticos", "faltam", "vencidos", "proximos", "regulares", "sem_revisao"];
+
 export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -123,24 +147,65 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   const [editingStatus, setEditingStatus] = useState<DocumentoStatus | null>(null);
   const [editingLink, setEditingLink] = useState("");
   const [editingOnde, setEditingOnde] = useState("");
+  const [editingVencimento, setEditingVencimento] = useState("");
+  const [editingCusto, setEditingCusto] = useState("");
   const [pendenciaIds, setPendenciaIds] = useState<Set<string>>(new Set());
+  const [agendaDocIds, setAgendaDocIds] = useState<Set<string>>(new Set());
   const [savedFeedback, setSavedFeedback] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<DocFilter>("todos");
+  const [showCustoForm, setShowCustoForm] = useState<string | null>(null);
+
+  const today = new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     const stored = getDocumentos();
     const map: Record<string, DocumentoEssencial> = {};
     stored.forEach((d) => { map[d.id] = d; });
     setDocs(map);
+
+    // Pendências vinculadas (novo padrão linkedType + fallback matchedId)
     const pIds = new Set(
       getPendenciasAbertas()
-        .filter((p) => p.origem === "documento" && !!p.matchedId)
-        .map((p) => p.matchedId!)
+        .filter((p) =>
+          (p.linkedType === "documento" && !!p.linkedId) ||
+          (p.origem === "documento" && !!p.matchedId)
+        )
+        .map((p) => (p.linkedId ?? p.matchedId)!)
     );
     setPendenciaIds(pIds);
+
+    // Eventos de agenda vinculados a documentos
+    const agIds = new Set(
+      getAgendaEvents()
+        .filter((e) => !e.completedAt && e.note?.includes("[doc:"))
+        .map((e) => {
+          const match = e.note?.match(/\[doc:([^\]]+)\]/);
+          return match ? match[1] : null;
+        })
+        .filter((id): id is string => !!id)
+    );
+    setAgendaDocIds(agIds);
     setHydrated(true);
   }, []);
 
   if (!hydrated) return null;
+
+  const summary = getDocumentosSummary(today);
+
+  // Smart default filter
+  const defaultFilter: DocFilter =
+    summary.criticosPendentes > 0 ? "criticos"
+    : summary.vencidos > 0 ? "vencidos"
+    : "todos";
+
+  // Compute active filter (use defaultFilter on first expansion)
+  const effectiveFilter = activeFilter;
+
+  function flash(msg: string) {
+    setActionFeedback(msg);
+    setTimeout(() => setActionFeedback(null), 2500);
+  }
 
   const total = DOCUMENTOS_ESSENCIAIS_IDS.length;
   const tenho = Object.values(docs).filter((d) => d.status === "tenho").length;
@@ -155,12 +220,31 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     return critico && (!doc || (doc.status !== "tenho" && doc.status !== "nao_se_aplica"));
   }).length;
 
-  // First critical document not yet confirmed — used for priority prompt
   const firstUnfilledCritical = DOCUMENTOS_ESSENCIAIS_IDS.find((id) => {
     const critico = DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica";
     const doc = docs[id];
     return critico && (!doc || (doc.status !== "tenho" && doc.status !== "nao_se_aplica"));
   }) as DocumentoEssencialId | undefined;
+
+  // Filter predicate
+  function matchesFilter(id: string, filter: DocFilter): boolean {
+    const docId = id as DocumentoEssencialId;
+    const doc = docs[id];
+    const crit = DOCUMENTO_CRITICIDADE[docId] === "critica";
+    switch (filter) {
+      case "todos":       return true;
+      case "criticos":    return crit;
+      case "faltam":      return isDocumentoFaltante(doc);
+      case "vencidos":    return !!doc && isDocumentoVencido(doc, today);
+      case "proximos":    return !!doc && !isDocumentoVencido(doc, today) && isDocumentoProximoVencimento(doc, 60, today);
+      case "regulares":   return !!doc && doc.status === "tenho" && !isDocumentoVencido(doc, today);
+      case "sem_revisao": return !doc;
+      default:            return true;
+    }
+  }
+
+  const filteredIds = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => matchesFilter(id, effectiveFilter));
+  const isFiltered = effectiveFilter !== "todos";
 
   const openEditor = (id: string) => {
     const doc = docs[id];
@@ -168,6 +252,9 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     setEditingStatus(doc?.status ?? null);
     setEditingOnde(doc?.ondeEsta ?? "");
     setEditingLink(doc?.linkExterno ?? "");
+    setEditingVencimento(doc?.dataVencimento ?? "");
+    setEditingCusto(doc?.custoEstimado ? String(doc.custoEstimado) : "");
+    setShowCustoForm(null);
   };
 
   const closeEditor = () => {
@@ -175,9 +262,19 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
     setEditingStatus(null);
     setEditingOnde("");
     setEditingLink("");
+    setEditingVencimento("");
+    setEditingCusto("");
+    setShowCustoForm(null);
   };
 
-  const persistDoc = (id: string, status: DocumentoStatus, onde?: string, link?: string) => {
+  const persistDoc = (
+    id: string,
+    status: DocumentoStatus,
+    onde?: string,
+    link?: string,
+    vencimento?: string,
+    custo?: string
+  ) => {
     const now = new Date().toISOString();
     const existing = docs[id];
     const updated: DocumentoEssencial = {
@@ -187,10 +284,15 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
       ...(existing ? {
         vencimento: existing.vencimento,
         observacoes: existing.observacoes,
-        dataVencimento: existing.dataVencimento,
+        linkedPendenciaId: existing.linkedPendenciaId,
+        linkedAgendaEventId: existing.linkedAgendaEventId,
+        linkedFinancialEntryId: existing.linkedFinancialEntryId,
       } : {}),
       ondeEsta: onde?.trim() || existing?.ondeEsta,
       linkExterno: link?.trim() || existing?.linkExterno,
+      dataVencimento: vencimento?.trim() || existing?.dataVencimento,
+      custoEstimado: custo ? Number(custo.replace(",", ".")) : existing?.custoEstimado,
+      reviewedAt: now,
     };
     const next = { ...docs, [id]: updated };
     setDocs(next);
@@ -198,7 +300,14 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
     if (status === "precisa_localizar" && !pendenciaIds.has(id)) {
       const titulo = PENDENCIA_TITULO[id as DocumentoEssencialId] ?? `Localizar: ${DOCUMENTO_LABEL[id as DocumentoEssencialId] ?? id}`;
-      addPendencia({ titulo, categoria: "gestao", origem: "documento", matchedId: id });
+      addPendencia({
+        titulo,
+        categoria: "gestao",
+        origem: "documento",
+        matchedId: id,
+        linkedType: "documento",
+        linkedId: id,
+      });
       void trackEvent("pendencia_created_from_documento", { doc_id: id });
       setPendenciaIds((prev) => new Set([...prev, id]));
     }
@@ -217,14 +326,86 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
   const saveEditing = (id: string) => {
     if (!editingStatus) return;
-    persistDoc(id, editingStatus, editingOnde, editingLink);
+    persistDoc(id, editingStatus, editingOnde, editingLink, editingVencimento, editingCusto);
     closeEditor();
   };
 
-  // One-tap save from priority card — no extra fields needed
   const quickSave = (id: DocumentoEssencialId, status: DocumentoStatus) => {
     persistDoc(id, status);
   };
+
+  function createPendenciaForDoc(docId: DocumentoEssencialId) {
+    if (pendenciaIds.has(docId)) {
+      flash("Pendência já existe para este documento.");
+      return;
+    }
+    const doc = docs[docId];
+    const payload = buildPendenciaFromDocumento(docId, doc, today);
+    addPendencia({
+      titulo: payload.titulo,
+      descricao: payload.descricao,
+      categoria: payload.categoria,
+      origem: payload.origem,
+      prioridade: payload.prioridade,
+      dueDate: payload.dueDate,
+      linkedType: payload.linkedType,
+      linkedId: payload.linkedId,
+      matchedId: payload.matchedId,
+      origemDetalhe: payload.origemDetalhe,
+    });
+    setPendenciaIds((prev) => new Set([...prev, docId]));
+    void trackEvent("pendencia_created_from_documento", { doc_id: docId });
+    flash("Pendência criada.");
+    onSaved?.();
+  }
+
+  function createAgendaForDoc(docId: DocumentoEssencialId) {
+    const doc = docs[docId];
+    if (!doc?.dataVencimento) {
+      flash("Informe o vencimento do documento antes de agendar.");
+      return;
+    }
+    if (agendaDocIds.has(docId)) {
+      flash("Evento de agenda já existe para este documento.");
+      return;
+    }
+    const payload = buildAgendaFromDocumento(docId, doc.dataVencimento, today);
+    addAgendaEvent({
+      title: payload.title,
+      date: payload.date,
+      type: payload.type,
+      note: payload.note,
+      prioridade: payload.prioridade,
+      recurrence: "nenhuma",
+      source: "manual",
+      updatedAt: new Date().toISOString(),
+    });
+    setAgendaDocIds((prev) => new Set([...prev, docId]));
+    flash("Evento criado na agenda.");
+    onSaved?.();
+  }
+
+  function createFinancialForDoc(docId: DocumentoEssencialId, custoStr: string) {
+    const custo = Number(custoStr.replace(",", "."));
+    if (!Number.isFinite(custo) || custo <= 0) {
+      flash("Informe um valor válido para o custo previsto.");
+      return;
+    }
+    const doc = docs[docId];
+    const payload = buildFinancialFromDocumento(docId, custo, doc?.dataVencimento);
+    addFinancialEntry(currentMonthKey(), {
+      type: payload.type,
+      title: payload.title,
+      amount: payload.amount,
+      dueDate: payload.dueDate,
+      category: payload.category,
+      notes: payload.notes,
+      status: "previsto",
+    });
+    setShowCustoForm(null);
+    flash("Custo previsto criado no financeiro.");
+    onSaved?.();
+  }
 
   // ── Collapsed ──────────────────────────────────────────────────────────────
   if (!expanded) {
@@ -239,7 +420,10 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
         <button
           type="button"
-          onClick={() => setExpanded(true)}
+          onClick={() => {
+            setExpanded(true);
+            setActiveFilter(defaultFilter);
+          }}
           className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
           <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[10px] font-bold text-navy-500" aria-hidden="true">
@@ -266,6 +450,8 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
       <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
+
+        {/* ── Cabeçalho ── */}
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-[13px] font-semibold text-navy-800">Documentos essenciais</p>
@@ -284,32 +470,91 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           </button>
         </div>
 
-        {/* Resumo de cobertura */}
+        {/* ── 4 cards executivos ── */}
         {cadastrados > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {tenho > 0 && (
-              <span className="inline-flex items-center rounded-full bg-navy-50 px-2.5 py-0.5 text-[10.5px] font-medium text-navy-600 ring-1 ring-navy-100">
-                ✓ {tenho} confirmado{tenho !== 1 ? "s" : ""}
-              </span>
-            )}
-            {precisa > 0 && (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-medium text-amber-700 ring-1 ring-amber-100">
-                ⟳ {precisa} a localizar
-              </span>
-            )}
-            {naoTenho > 0 && (
-              <span className="inline-flex items-center rounded-full bg-terracotta-50 px-2.5 py-0.5 text-[10.5px] font-medium text-terracotta-700 ring-1 ring-terracotta-100">
-                ✗ {naoTenho} ausente{naoTenho !== 1 ? "s" : ""}
-              </span>
-            )}
-            {criticosNaoConfirmados > 0 && (
-              <span className="inline-flex items-center rounded-full bg-terracotta-100 px-2.5 py-0.5 text-[10.5px] font-medium text-terracotta-800 ring-1 ring-terracotta-200">
-                ⚠ {criticosNaoConfirmados} crítico{criticosNaoConfirmados !== 1 ? "s" : ""} pendente{criticosNaoConfirmados !== 1 ? "s" : ""}
-              </span>
-            )}
+          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <button
+              type="button"
+              onClick={() => setActiveFilter("criticos")}
+              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "criticos" ? "bg-terracotta-100/70" : "bg-navy-50/60 hover:bg-terracotta-50/40"}`}
+            >
+              <p className="text-[10.5px] font-medium text-navy-400">Críticos pendentes</p>
+              <p className={`mt-0.5 text-[16px] font-bold ${summary.criticosPendentes > 0 ? "text-terracotta-700" : "text-navy-800"}`}>
+                {summary.criticosPendentes}
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("vencidos")}
+              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "vencidos" ? "bg-terracotta-100/70" : "bg-navy-50/60 hover:bg-terracotta-50/40"}`}
+            >
+              <p className="text-[10.5px] font-medium text-navy-400">Vencidos</p>
+              <p className={`mt-0.5 text-[16px] font-bold ${summary.vencidos > 0 ? "text-terracotta-700" : "text-navy-800"}`}>
+                {summary.vencidos}
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("proximos")}
+              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "proximos" ? "bg-amber-100/70" : "bg-navy-50/60 hover:bg-amber-50/40"}`}
+            >
+              <p className="text-[10.5px] font-medium text-navy-400">Próximos 60 dias</p>
+              <p className={`mt-0.5 text-[16px] font-bold ${summary.proximos > 0 ? "text-amber-700" : "text-navy-800"}`}>
+                {summary.proximos}
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter("regulares")}
+              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "regulares" ? "bg-teal-100/70" : "bg-navy-50/60 hover:bg-teal-50/40"}`}
+            >
+              <p className="text-[10.5px] font-medium text-navy-400">Regulares</p>
+              <p className="mt-0.5 text-[16px] font-bold text-teal-700">{summary.tenho}</p>
+            </button>
           </div>
         )}
 
+        {/* ── Frase executiva ── */}
+        {cadastrados > 0 && (
+          <div className="mb-3 rounded-[10px] bg-navy-50/40 px-3 py-2">
+            <p className="text-[11.5px] leading-relaxed text-navy-600">
+              {summary.criticosPendentes > 0
+                ? `${summary.criticosPendentes} documento${summary.criticosPendentes > 1 ? "s" : ""} crítico${summary.criticosPendentes > 1 ? "s" : ""} pendente${summary.criticosPendentes > 1 ? "s" : ""} de ação.`
+                : summary.vencidos > 0
+                ? `${summary.vencidos} documento${summary.vencidos > 1 ? "s" : ""} vencido${summary.vencidos > 1 ? "s" : ""} para regularizar.`
+                : summary.proximos > 0
+                ? `${summary.proximos} documento${summary.proximos > 1 ? "s" : ""} vencem nos próximos 60 dias.`
+                : "Documentos sem pendências críticas registradas no app."}
+            </p>
+          </div>
+        )}
+
+        {/* ── Filtros ── */}
+        <div className="mb-3 no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setActiveFilter(f)}
+              className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-medium transition-colors ${
+                activeFilter === f
+                  ? "bg-navy-700 text-white"
+                  : "border border-navy-100 bg-white text-navy-500 hover:bg-navy-50"
+              }`}
+            >
+              {FILTER_LABEL[f]}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Feedback de ação ── */}
+        {actionFeedback && (
+          <div className="mb-2 rounded-[10px] bg-teal-50 px-3 py-2 text-[11.5px] text-teal-800">
+            {actionFeedback}
+          </div>
+        )}
+
+        {/* ── Estado vazio inicial ── */}
         {cadastrados === 0 && (
           <div className="mb-3">
             <EmptyState
@@ -321,8 +566,8 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           </div>
         )}
 
-        {/* Cartão de prioridade: próximo crítico a confirmar */}
-        {criticosNaoConfirmados > 0 && firstUnfilledCritical && (
+        {/* ── Cartão de prioridade: próximo crítico a confirmar ── */}
+        {!isFiltered && criticosNaoConfirmados > 0 && firstUnfilledCritical && (
           <div className="mb-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3.5 py-3">
             <p className="text-[10.5px] font-semibold text-amber-700 mb-1.5">
               {cadastrados === 0
@@ -353,270 +598,352 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           </div>
         )}
 
-        {/* Grupos por categoria */}
-        <div className="space-y-2">
-          {GRUPOS.map((cat) => {
-            // Sort criticals first within each group
-            const idsGrupo = DOCUMENTOS_ESSENCIAIS_IDS
-              .filter((id) => DOCUMENTO_CATEGORIA[id as DocumentoEssencialId] === cat)
-              .sort((a, b) =>
-                (CRIT_ORDER[DOCUMENTO_CRITICIDADE[a as DocumentoEssencialId]] ?? 2) -
-                (CRIT_ORDER[DOCUMENTO_CRITICIDADE[b as DocumentoEssencialId]] ?? 2)
-              );
+        {/* ── Lista filtrada ou por grupos ── */}
+        {isFiltered ? (
+          // Vista flat filtrada
+          <div className="space-y-1.5">
+            {filteredIds.length === 0 ? (
+              <p className="py-4 text-center text-[12px] text-navy-400">
+                Nenhum documento neste filtro.
+              </p>
+            ) : (
+              filteredIds.map((id) => {
+                const docId = id as DocumentoEssencialId;
+                return renderDocCard(docId);
+              })
+            )}
+          </div>
+        ) : (
+          // Vista por grupos (comportamento original)
+          <div className="space-y-2">
+            {GRUPOS.map((cat) => {
+              const idsGrupo = DOCUMENTOS_ESSENCIAIS_IDS
+                .filter((id) => DOCUMENTO_CATEGORIA[id as DocumentoEssencialId] === cat)
+                .sort((a, b) =>
+                  (CRIT_ORDER[DOCUMENTO_CRITICIDADE[a as DocumentoEssencialId]] ?? 2) -
+                  (CRIT_ORDER[DOCUMENTO_CRITICIDADE[b as DocumentoEssencialId]] ?? 2)
+                );
 
-            const tenhoGrupo        = idsGrupo.filter((id) => docs[id]?.status === "tenho").length;
-            const precisaGrupo      = idsGrupo.filter((id) => docs[id]?.status === "precisa_localizar").length;
-            const naoTenhoGrupo     = idsGrupo.filter((id) => docs[id]?.status === "nao_tenho").length;
-            const cadastradosGrupo  = idsGrupo.filter((id) => !!docs[id]).length;
-            const aberto            = grupoAberto === cat;
+              const tenhoGrupo        = idsGrupo.filter((id) => docs[id]?.status === "tenho").length;
+              const precisaGrupo      = idsGrupo.filter((id) => docs[id]?.status === "precisa_localizar").length;
+              const naoTenhoGrupo     = idsGrupo.filter((id) => docs[id]?.status === "nao_tenho").length;
+              const cadastradosGrupo  = idsGrupo.filter((id) => !!docs[id]).length;
+              const aberto            = grupoAberto === cat;
 
-            // Progressive reveal: when a group has no registered docs, show only criticals first
-            const criticalIds   = idsGrupo.filter((id) => DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica");
-            const showAll       = grupoMostrandoTodos.has(cat) || cadastradosGrupo > 0 || criticalIds.length === 0;
-            const idsToShow     = showAll ? idsGrupo : criticalIds;
-            const hiddenCount   = showAll ? 0 : idsGrupo.length - criticalIds.length;
+              const criticalIds = idsGrupo.filter((id) => DOCUMENTO_CRITICIDADE[id as DocumentoEssencialId] === "critica");
+              const showAll     = grupoMostrandoTodos.has(cat) || cadastradosGrupo > 0 || criticalIds.length === 0;
+              const idsToShow   = showAll ? idsGrupo : criticalIds;
+              const hiddenCount = showAll ? 0 : idsGrupo.length - criticalIds.length;
 
-            // Progress bar color
-            const barColor = cadastradosGrupo === 0
-              ? ""
-              : tenhoGrupo === idsGrupo.length
-              ? "bg-teal-400"
-              : tenhoGrupo > 0
-              ? "bg-amber-400"
-              : "bg-terracotta-300";
+              const barColor = cadastradosGrupo === 0
+                ? ""
+                : tenhoGrupo === idsGrupo.length
+                ? "bg-teal-400"
+                : tenhoGrupo > 0
+                ? "bg-amber-400"
+                : "bg-terracotta-300";
 
-            return (
-              <div key={cat} className="rounded-xl border border-navy-50 overflow-hidden">
-                {/* Header do grupo */}
-                <button
-                  type="button"
-                  onClick={() => setGrupoAberto(aberto ? null : cat)}
-                  className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-navy-50/50 transition-colors"
-                >
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORIA_COR[cat]}`}>
-                    {CATEGORIA_LABEL[cat]}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11.5px] text-navy-500">{GRUPO_DESCRICAO[cat]}</p>
-                    {/* Per-category progress bar */}
-                    {cadastradosGrupo > 0 && (
-                      <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-navy-100">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${barColor}`}
-                          style={{ width: `${Math.round((tenhoGrupo / idsGrupo.length) * 100)}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {cadastradosGrupo > 0 && (
-                      <span className="text-[10px] text-navy-400">
-                        {tenhoGrupo}/{idsGrupo.length}
-                      </span>
-                    )}
-                    {precisaGrupo > 0 && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
-                    )}
-                    {naoTenhoGrupo > 0 && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-terracotta-400" aria-hidden="true" />
-                    )}
-                    <svg
-                      className={`h-3.5 w-3.5 text-navy-300 transition-transform ${aberto ? "rotate-90" : ""}`}
-                      viewBox="0 0 14 14"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </button>
-
-                {/* Itens do grupo */}
-                {aberto && (
-                  <div className="border-t border-navy-50 bg-navy-50/20 px-3 py-2 space-y-1.5">
-                    {/* Empty state especialista por categoria */}
-                    {cadastradosGrupo === 0 && (
-                      <p className="text-[11px] leading-relaxed text-navy-500 px-0.5 py-1">
-                        {EMPTY_STATE_EXPERT[cat]}
-                      </p>
-                    )}
-
-                    {idsToShow.map((id) => {
-                      const docId = id as DocumentoEssencialId;
-                      const doc = docs[id];
-                      const status = doc?.status;
-                      const critico = DOCUMENTO_CRITICIDADE[docId] === "critica";
-                      const isEditing = editingId === id;
-                      const hasOnde = !!doc?.ondeEsta;
-                      const hasLink = !!doc?.linkExterno;
-                      const hintId = DOC_HINT_MAP[docId];
-                      const whereToFind = hintId ? getWhereToFind(hintId) : null;
-
-                      return (
-                        <div key={id} className="rounded-lg bg-white px-3 py-2">
-                          {/* Linha principal: nome + badge */}
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-start gap-1.5 min-w-0 flex-1">
-                              {critico && (
-                                <span className="mt-0.5 shrink-0 text-[9px] font-bold text-terracotta-500 uppercase tracking-wide">★</span>
-                              )}
-                              <p className="text-[12px] font-medium text-navy-800 leading-snug">
-                                {DOCUMENTO_LABEL[docId]}
-                              </p>
-                            </div>
-                            {!isEditing && (
-                              status ? (
-                                <button
-                                  type="button"
-                                  onClick={() => openEditor(id)}
-                                  className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${STATUS_BADGE[status]}`}
-                                >
-                                  {STATUS_LABEL[status]}
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => openEditor(id)}
-                                  className="shrink-0 text-[10.5px] text-navy-400 hover:text-navy-600"
-                                >
-                                  Registrar
-                                </button>
-                              )
-                            )}
-                          </div>
-
-                          {/* Metadados rápidos (onde / link) quando não editando */}
-                          {!isEditing && (hasOnde || hasLink) && (
-                            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-                              {hasOnde && (
-                                <span className="text-[10.5px] text-navy-400">
-                                  📂 {doc.ondeEsta}
-                                </span>
-                              )}
-                              {hasLink && (
-                                <span className="text-[10.5px] text-navy-400 truncate max-w-[160px]">
-                                  🔗 {doc.linkExterno}
-                                </span>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Dica de localização para documentos a localizar (modo leitura) */}
-                          {!isEditing && status === "precisa_localizar" && whereToFind && (
-                            <p className="mt-1 text-[10.5px] leading-snug text-amber-600">
-                              <span className="font-medium">Onde encontrar:</span> {whereToFind}
-                            </p>
-                          )}
-
-                          {/* Editor inline */}
-                          {isEditing && (
-                            <div className="mt-2.5 space-y-2.5">
-                              {/* Status buttons */}
-                              <div className="flex flex-wrap gap-1.5">
-                                {(["tenho", "nao_tenho", "precisa_localizar", "nao_se_aplica"] as DocumentoStatus[]).map((s) => (
-                                  <button
-                                    key={s}
-                                    type="button"
-                                    onClick={() => setEditingStatus(s)}
-                                    className={`rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition-all active:scale-95 ${
-                                      editingStatus === s
-                                        ? "bg-navy-700 text-white ring-navy-700"
-                                        : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
-                                    }`}
-                                  >
-                                    {STATUS_LABEL[s]}
-                                  </button>
-                                ))}
-                              </div>
-
-                              {/* Discovery hint when marking as "precisa_localizar" */}
-                              {editingStatus === "precisa_localizar" && whereToFind && (
-                                <div className="rounded-lg bg-amber-50/70 px-3 py-2">
-                                  <p className="text-[10.5px] leading-snug text-amber-700">
-                                    <span className="font-medium">Onde encontrar:</span> {whereToFind}
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* Onde está */}
-                              <div>
-                                <label className="mb-1 block text-[10px] font-medium text-navy-500">
-                                  Onde está / localização <span className="text-navy-300">(opcional)</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  autoComplete="off"
-                                  value={editingOnde}
-                                  onChange={(e) => setEditingOnde(e.target.value)}
-                                  placeholder="Ex: Pasta jurídica, drive da administradora"
-                                  className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-400 focus:bg-white"
-                                />
-                              </div>
-
-                              {/* Link / referência */}
-                              <div>
-                                <label className="mb-1 block text-[10px] font-medium text-navy-500">
-                                  Link ou referência <span className="text-navy-300">(opcional)</span>
-                                </label>
-                                <input
-                                  type="text"
-                                  autoComplete="off"
-                                  value={editingLink}
-                                  onChange={(e) => setEditingLink(e.target.value)}
-                                  placeholder="Ex: drive.google.com/... ou nome do arquivo"
-                                  className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-400 focus:bg-white"
-                                />
-                              </div>
-
-                              {/* Ações */}
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => saveEditing(id)}
-                                  disabled={!editingStatus}
-                                  className="rounded-full bg-navy-800 px-4 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-900 active:scale-95 disabled:opacity-40"
-                                >
-                                  Salvar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={closeEditor}
-                                  className="px-2 text-[11px] text-navy-400 hover:text-navy-600"
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          {pendenciaIds.has(id) && status === "precisa_localizar" && !isEditing && (
-                            <p className="mt-1 text-[10px] text-amber-600">Próximo passo criado</p>
-                          )}
+              return (
+                <div key={cat} className="rounded-xl border border-navy-50 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setGrupoAberto(aberto ? null : cat)}
+                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-navy-50/50 transition-colors"
+                  >
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORIA_COR[cat]}`}>
+                      {CATEGORIA_LABEL[cat]}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11.5px] text-navy-500">{GRUPO_DESCRICAO[cat]}</p>
+                      {cadastradosGrupo > 0 && (
+                        <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-navy-100">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+                            style={{ width: `${Math.round((tenhoGrupo / idsGrupo.length) * 100)}%` }}
+                          />
                         </div>
-                      );
-                    })}
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {cadastradosGrupo > 0 && (
+                        <span className="text-[10px] text-navy-400">
+                          {tenhoGrupo}/{idsGrupo.length}
+                        </span>
+                      )}
+                      {precisaGrupo > 0 && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
+                      )}
+                      {naoTenhoGrupo > 0 && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-terracotta-400" aria-hidden="true" />
+                      )}
+                      <svg className={`h-3.5 w-3.5 text-navy-300 transition-transform ${aberto ? "rotate-90" : ""}`} viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </button>
 
-                    {/* Progressive reveal: "Ver N mais" when showing only criticals */}
-                    {hiddenCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setGrupoMostrandoTodos((prev) => new Set([...prev, cat]))}
-                        className="w-full py-2 text-[11px] text-navy-400 hover:text-navy-600 text-center transition-colors"
-                      >
-                        Ver {hiddenCount} mais →
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  {aberto && (
+                    <div className="border-t border-navy-50 bg-navy-50/20 px-3 py-2 space-y-1.5">
+                      {cadastradosGrupo === 0 && (
+                        <p className="text-[11px] leading-relaxed text-navy-500 px-0.5 py-1">
+                          {EMPTY_STATE_EXPERT[cat]}
+                        </p>
+                      )}
+                      {idsToShow.map((id) => renderDocCard(id as DocumentoEssencialId))}
+                      {hiddenCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setGrupoMostrandoTodos((prev) => new Set([...prev, cat]))}
+                          className="w-full py-2 text-[11px] text-navy-400 hover:text-navy-600 text-center transition-colors"
+                        >
+                          Ver {hiddenCount} mais →
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <p className="mt-3 text-[10px] leading-relaxed text-navy-400">
-          ★ = documentos críticos. &ldquo;Localizar&rdquo; cria próximo passo automático. &ldquo;N/A&rdquo; = não se aplica a este condomínio.
+          ★ = documentos críticos · Controle auxiliar — não substitui guarda documental oficial, orientação jurídica ou técnica.
         </p>
       </div>
     </section>
   );
+
+  // ── Card de documento (shared entre vista flat e grupo) ─────────────────────
+  function renderDocCard(docId: DocumentoEssencialId) {
+    const id = docId as string;
+    const doc = docs[id];
+    const status = doc?.status;
+    const critico = DOCUMENTO_CRITICIDADE[docId] === "critica";
+    const isEditing = editingId === id;
+    const hasOnde = !!doc?.ondeEsta;
+    const hasLink = !!doc?.linkExterno;
+    const hintId = DOC_HINT_MAP[docId];
+    const whereToFind = hintId ? getWhereToFind(hintId) : null;
+    const vencido = !!doc && isDocumentoVencido(doc, today);
+    const proximo = !!doc && !vencido && isDocumentoProximoVencimento(doc, 60, today);
+    const faltante = isDocumentoFaltante(doc);
+    const hasPendencia = pendenciaIds.has(id);
+    const hasAgenda = agendaDocIds.has(id);
+    const hasVencimento = !!doc?.dataVencimento;
+    const showCusto = showCustoForm === id;
+
+    return (
+      <div key={id} className={`rounded-lg px-3 py-2 ${vencido ? "bg-terracotta-50/60 border border-terracotta-100" : proximo ? "bg-amber-50/50 border border-amber-100" : "bg-white"}`}>
+        {/* Linha principal */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start gap-1.5 min-w-0 flex-1">
+            {critico && (
+              <span className="mt-0.5 shrink-0 text-[9px] font-bold text-terracotta-500 uppercase tracking-wide">★</span>
+            )}
+            <div className="min-w-0">
+              <p className="text-[12px] font-medium text-navy-800 leading-snug">
+                {DOCUMENTO_LABEL[docId]}
+              </p>
+              {vencido && (
+                <p className="text-[10px] font-medium text-terracotta-700">Vencido em {doc!.dataVencimento}</p>
+              )}
+              {proximo && (
+                <p className="text-[10px] text-amber-700">Vence em {doc!.dataVencimento}</p>
+              )}
+            </div>
+          </div>
+          {!isEditing && (
+            status ? (
+              <button
+                type="button"
+                onClick={() => openEditor(id)}
+                className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${STATUS_BADGE[status]}`}
+              >
+                {STATUS_LABEL[status]}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openEditor(id)}
+                className="shrink-0 text-[10.5px] text-navy-400 hover:text-navy-600"
+              >
+                Registrar
+              </button>
+            )
+          )}
+        </div>
+
+        {/* Metadados */}
+        {!isEditing && (hasOnde || hasLink) && (
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+            {hasOnde && <span className="text-[10.5px] text-navy-400">📂 {doc!.ondeEsta}</span>}
+            {hasLink && <span className="text-[10.5px] text-navy-400 truncate max-w-[160px]">🔗 {doc!.linkExterno}</span>}
+          </div>
+        )}
+
+        {/* Dica de localização */}
+        {!isEditing && status === "precisa_localizar" && whereToFind && (
+          <p className="mt-1 text-[10.5px] leading-snug text-amber-600">
+            <span className="font-medium">Onde encontrar:</span> {whereToFind}
+          </p>
+        )}
+
+        {/* CTAs operacionais */}
+        {!isEditing && (faltante || vencido || hasVencimento) && (
+          <div className="mt-1.5 flex flex-wrap gap-2">
+            {(faltante || vencido) && (
+              <button
+                type="button"
+                onClick={() => createPendenciaForDoc(docId)}
+                className={`text-[10.5px] font-medium ${hasPendencia ? "text-navy-300 cursor-default" : "text-terracotta-700 hover:text-terracotta-800"}`}
+                disabled={hasPendencia}
+              >
+                {hasPendencia ? "Pendência criada" : "Criar pendência"}
+              </button>
+            )}
+            {hasVencimento && (
+              <button
+                type="button"
+                onClick={() => createAgendaForDoc(docId)}
+                className={`text-[10.5px] font-medium ${hasAgenda ? "text-navy-300 cursor-default" : "text-navy-500 hover:text-navy-700"}`}
+                disabled={hasAgenda}
+              >
+                {hasAgenda ? "Agendado" : "Agendar renovação"}
+              </button>
+            )}
+            {!showCusto && (
+              <button
+                type="button"
+                onClick={() => setShowCustoForm(showCusto ? null : id)}
+                className="text-[10.5px] text-navy-400 hover:text-navy-600"
+              >
+                + custo previsto
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Mini-form de custo previsto */}
+        {!isEditing && showCusto && (
+          <div className="mt-2 flex items-center gap-2">
+            <input
+              type="text"
+              inputMode="decimal"
+              value={editingCusto}
+              onChange={(e) => setEditingCusto(e.target.value)}
+              placeholder="Valor estimado (R$)"
+              className="flex-1 rounded-lg border border-navy-200 bg-white px-2.5 py-1.5 text-[12px] text-navy-800"
+            />
+            <button
+              type="button"
+              onClick={() => createFinancialForDoc(docId, editingCusto)}
+              className="rounded-full bg-navy-700 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-navy-800"
+            >
+              Criar
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowCustoForm(null); setEditingCusto(""); }}
+              className="text-[11px] text-navy-400"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+
+        {/* Editor inline */}
+        {isEditing && (
+          <div className="mt-2.5 space-y-2.5">
+            <div className="flex flex-wrap gap-1.5">
+              {(["tenho", "nao_tenho", "precisa_localizar", "nao_se_aplica"] as DocumentoStatus[]).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setEditingStatus(s)}
+                  className={`rounded-full px-3 py-1 text-[11px] font-medium ring-1 transition-all active:scale-95 ${
+                    editingStatus === s
+                      ? "bg-navy-700 text-white ring-navy-700"
+                      : "bg-white text-navy-600 ring-navy-200 hover:ring-navy-300"
+                  }`}
+                >
+                  {STATUS_LABEL[s]}
+                </button>
+              ))}
+            </div>
+
+            {editingStatus === "precisa_localizar" && whereToFind && (
+              <div className="rounded-lg bg-amber-50/70 px-3 py-2">
+                <p className="text-[10.5px] leading-snug text-amber-700">
+                  <span className="font-medium">Onde encontrar:</span> {whereToFind}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1 block text-[10px] font-medium text-navy-500">
+                Vencimento <span className="text-navy-300">(opcional)</span>
+              </label>
+              <input
+                type="date"
+                value={editingVencimento}
+                onChange={(e) => setEditingVencimento(e.target.value)}
+                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 outline-none focus:border-navy-400 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[10px] font-medium text-navy-500">
+                Onde está / localização <span className="text-navy-300">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                autoComplete="off"
+                value={editingOnde}
+                onChange={(e) => setEditingOnde(e.target.value)}
+                placeholder="Ex: Pasta jurídica, drive da administradora"
+                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-400 focus:bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-[10px] font-medium text-navy-500">
+                Link ou referência <span className="text-navy-300">(opcional)</span>
+              </label>
+              <input
+                type="text"
+                autoComplete="off"
+                value={editingLink}
+                onChange={(e) => setEditingLink(e.target.value)}
+                placeholder="Ex: drive.google.com/... ou nome do arquivo"
+                className="w-full rounded-lg border border-navy-200 bg-navy-50/30 px-3 py-2 text-[12px] text-navy-800 placeholder-navy-300 outline-none focus:border-navy-400 focus:bg-white"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => saveEditing(id)}
+                disabled={!editingStatus}
+                className="rounded-full bg-navy-800 px-4 py-1.5 text-[11.5px] font-medium text-white transition-all hover:bg-navy-900 active:scale-95 disabled:opacity-40"
+              >
+                Salvar
+              </button>
+              <button
+                type="button"
+                onClick={closeEditor}
+                className="px-2 text-[11px] text-navy-400 hover:text-navy-600"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {hasPendencia && status === "precisa_localizar" && !isEditing && (
+          <p className="mt-1 text-[10px] text-amber-600">Próximo passo criado</p>
+        )}
+      </div>
+    );
+  }
 }

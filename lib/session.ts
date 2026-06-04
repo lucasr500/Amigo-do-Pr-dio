@@ -23,11 +23,17 @@ import {
 // Importações internas para uso em migrateSessionData, backup e cast de tipos
 import { getPendencias, normalizePendencia, type Pendencia } from "./session-pendencias";
 import { getAgendaEvents, normalizeAgendaEvent, type AgendaEvent } from "./session-agenda";
+import {
+  getDocumentos,
+  type DocumentoEssencial,
+} from "./session-documentos";
 
 // ─── Re-exports — preservam a API pública de @/lib/session ───────────────────
 export { getStorageSizeKB, clearAllData } from "./session-core";
 export * from "./session-pendencias";
 export * from "./session-agenda";
+export * from "./session-documentos";
+export type { DatePrecision, AssistedDateField, ManutencaoFrequencia } from "./session-types";
 
 // Espelha o schema escrito por logQuery() em data.ts
 export type QueryLog = {
@@ -101,19 +107,11 @@ export type CondominioProfile = {
   observacoesInternas?: string;
 };
 
-// ─── Datas assistidas — precisão flexível ──────────────────────────────────
-// Permite aceitar datas completas, aproximadas, desconhecidas ou dispensadas.
-// Armazenado em paralelo com MemoriaOperacional para retrocompatibilidade.
-
-export type DatePrecision = "exact" | "month" | "year" | "unknown" | "not_applicable";
-
-export type AssistedDateField = {
-  value?: string;       // YYYY-MM-DD (exact), YYYY-MM (month), YYYY (year)
-  precision: DatePrecision;
-  status: "filled" | "estimated" | "unknown" | "to_discover" | "not_applicable";
-  notes?: string;
-  updatedAt: string;    // ISO
-};
+// ─── Datas assistidas — ver session-types.ts ─────────────────────────────────
+// DatePrecision, AssistedDateField e ManutencaoFrequencia foram movidos para
+// session-types.ts e são re-exportados via session-documentos. Usados localmente
+// via import abaixo para as funções internas buildAssistedDate e MemoriaAssistida.
+import type { AssistedDateField, ManutencaoFrequencia } from "./session-types";
 
 export type MemoriaAssistida = {
   avcb?: AssistedDateField;
@@ -125,35 +123,13 @@ export type MemoriaAssistida = {
 // Capturado no onboarding para adaptar linguagem e plano inicial.
 export type ImplantacaoMode = "existing" | "new_sindico" | "organizing";
 
-// ─── Documentos essenciais ──────────────────────────────────────────────────
-export type DocumentoStatus = "tenho" | "nao_tenho" | "precisa_localizar" | "nao_se_aplica";
-
-export type DocumentoCategoria =
-  | "seguranca" | "trabalhista" | "juridico" | "operacional" | "fiscal" | "manutencao";
-
-export type DocumentoCriticidade = "critica" | "importante" | "recomendada";
-
-export type DocumentoEssencial = {
-  id: string;
-  status: DocumentoStatus;
-  vencimento?: AssistedDateField;
-  observacoes?: string;
-  ondeEsta?: string;
-  updatedAt: string;
-  // Campos v2 — opcionais para retrocompatibilidade
-  dataVencimento?: string;   // YYYY-MM-DD — vencimento explícito quando "tenho"
-  recorrencia?: ManutencaoFrequencia; // se renovação periódica
-  // Campos v3 — link e localização física
-  linkExterno?: string;      // URL ou caminho de referência
-  nomeArquivo?: string;      // nome descritivo do arquivo físico ou digital
-};
+// DocumentoStatus, DocumentoCategoria, DocumentoCriticidade, DocumentoEssencial,
+// DocumentoEssencialId, DOCUMENTOS_ESSENCIAIS_IDS, DOCUMENTO_LABEL,
+// DOCUMENTO_CATEGORIA, DOCUMENTO_CRITICIDADE, getDocumentos, saveDocumentos,
+// upsertDocumento, getDocumentoById — agora em session-documentos.ts (re-exported).
 
 // ─── Manutenções recorrentes ─────────────────────────────────────────────────
-// Engine de recorrência operacional. Cada item representa uma manutenção
-// obrigatória ou recomendada, com frequência e histórico de execução.
-
-export type ManutencaoFrequencia =
-  | "mensal" | "bimestral" | "trimestral" | "semestral" | "anual" | "sob_demanda";
+// ManutencaoFrequencia vem de session-types (re-exportado via session-documentos).
 
 export type ManutencaoCriticidade = "critica" | "importante" | "recomendada";
 
@@ -817,121 +793,7 @@ export function buildAssistedDate(
   return { value: input, precision: "exact", status: "filled", notes, updatedAt: now };
 }
 
-// ─── Documentos essenciais ───────────────────────────────────────────────────
-
-export const DOCUMENTOS_ESSENCIAIS_IDS = [
-  // Jurídico
-  "convencao",
-  "regimento",
-  "ata_eleicao",
-  // Segurança
-  "apolice_seguro",
-  "avcb_clcb",
-  "spda_laudo",
-  "brigada_certificado",
-  // Manutenção / Contratos
-  "contrato_elevador",
-  "contrato_limpeza",
-  "contrato_portaria",
-  "laudos_tecnicos",
-  // Operacional / Comprovantes
-  "extintores_comprovante",
-  "caixa_agua_comprovante",
-  "dedetizacao_comprovante",
-  // Trabalhista
-  "cct_funcionarios",
-  "controle_ferias",
-  "ppra_pgr",
-  "pcmso",
-  // Fiscal
-  "cnd_condominio",
-] as const;
-
-export type DocumentoEssencialId = typeof DOCUMENTOS_ESSENCIAIS_IDS[number];
-
-export const DOCUMENTO_LABEL: Record<DocumentoEssencialId, string> = {
-  convencao:               "Convenção condominial",
-  regimento:               "Regimento interno",
-  ata_eleicao:             "Ata de eleição do síndico",
-  apolice_seguro:          "Apólice de seguro predial",
-  avcb_clcb:               "AVCB / CLCB",
-  spda_laudo:              "Laudo SPDA / Para-raio",
-  brigada_certificado:     "Certificado de Brigada de Incêndio",
-  contrato_elevador:       "Contrato de manutenção de elevadores",
-  contrato_limpeza:        "Contrato de limpeza",
-  contrato_portaria:       "Contrato de portaria / segurança",
-  laudos_tecnicos:         "Laudos técnicos (estrutural, elétrico etc.)",
-  extintores_comprovante:  "Comprovante de manutenção de extintores",
-  caixa_agua_comprovante:  "Comprovante de limpeza da caixa d'água",
-  dedetizacao_comprovante: "Comprovante de dedetização",
-  cct_funcionarios:        "CCT aplicável aos funcionários",
-  controle_ferias:         "Controle de férias dos funcionários",
-  ppra_pgr:                "PPRA / PGR",
-  pcmso:                   "PCMSO",
-  cnd_condominio:          "CND / Certidão negativa fiscal",
-};
-
-export const DOCUMENTO_CATEGORIA: Record<DocumentoEssencialId, DocumentoCategoria> = {
-  convencao:               "juridico",
-  regimento:               "juridico",
-  ata_eleicao:             "juridico",
-  apolice_seguro:          "seguranca",
-  avcb_clcb:               "seguranca",
-  spda_laudo:              "seguranca",
-  brigada_certificado:     "seguranca",
-  contrato_elevador:       "manutencao",
-  contrato_limpeza:        "operacional",
-  contrato_portaria:       "operacional",
-  laudos_tecnicos:         "manutencao",
-  extintores_comprovante:  "seguranca",
-  caixa_agua_comprovante:  "operacional",
-  dedetizacao_comprovante: "operacional",
-  cct_funcionarios:        "trabalhista",
-  controle_ferias:         "trabalhista",
-  ppra_pgr:                "trabalhista",
-  pcmso:                   "trabalhista",
-  cnd_condominio:          "fiscal",
-};
-
-export const DOCUMENTO_CRITICIDADE: Record<DocumentoEssencialId, DocumentoCriticidade> = {
-  convencao:               "critica",
-  regimento:               "importante",
-  ata_eleicao:             "critica",
-  apolice_seguro:          "critica",
-  avcb_clcb:               "critica",
-  spda_laudo:              "critica",
-  brigada_certificado:     "critica",
-  contrato_elevador:       "importante",
-  contrato_limpeza:        "recomendada",
-  contrato_portaria:       "recomendada",
-  laudos_tecnicos:         "importante",
-  extintores_comprovante:  "critica",
-  caixa_agua_comprovante:  "importante",
-  dedetizacao_comprovante: "importante",
-  cct_funcionarios:        "importante",
-  controle_ferias:         "importante",
-  ppra_pgr:                "importante",
-  pcmso:                   "importante",
-  cnd_condominio:          "recomendada",
-};
-
-export function getDocumentos(): DocumentoEssencial[] {
-  return safeRead<DocumentoEssencial[]>(KEYS.DOCUMENTOS, []);
-}
-
-export function saveDocumentos(docs: DocumentoEssencial[]): void {
-  safeWrite(KEYS.DOCUMENTOS, docs);
-}
-
-export function upsertDocumento(doc: DocumentoEssencial): void {
-  const all = getDocumentos().filter((d) => d.id !== doc.id);
-  all.push(doc);
-  saveDocumentos(all);
-}
-
-export function getDocumentoById(id: string): DocumentoEssencial | null {
-  return getDocumentos().find((d) => d.id === id) ?? null;
-}
+// ─── Documentos essenciais — ver session-documentos.ts (re-exported acima) ───
 
 // ─── Manutenções recorrentes ──────────────────────────────────────────────────
 
