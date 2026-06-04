@@ -1,30 +1,33 @@
 // ─── Session storage service ──────────────────────────────────────────────────
-// Camada centralizada de leitura/escrita no localStorage.
-// Toda persistência de dados do usuário passa por este módulo.
-//
-// Migração futura para backend: substituir `safeRead`/`safeWrite` por
-// chamadas fetch() mantendo as mesmas assinaturas de função.
+// Camada de compatibilidade e orquestração.
+// Importa primitivos de session-core e domínios de session-pendencias /
+// session-agenda, reexportando tudo para manter a API pública de @/lib/session.
 //
 // Versão do schema de dados: SESSION_SCHEMA_VERSION
 // Incrementar aqui ao adicionar campos incompatíveis.
 export const SESSION_SCHEMA_VERSION = 8;
 
-// ─── Caps de armazenamento ────────────────────────────────────────────────────
-// Caps aumentados para suportar uso prolongado sem perda silenciosa de dados.
-// WARN_* dispara alerta no painel de integridade; MAX_* é o limite de descarte.
-export const MAX_PENDENCIAS     = 200;
-export const WARN_PENDENCIAS    = 150;
-export const MAX_AGENDA_EVENTS  = 365;
-export const WARN_AGENDA_EVENTS = 300;
+// Caps de ocorrências (domínio ainda centralizado aqui)
 export const MAX_OCORRENCIAS    = 300;
 export const WARN_OCORRENCIAS   = 250;
 
+// ─── Imports de infra e domínio ───────────────────────────────────────────────
+import { safeRead, safeWrite, KEYS, todayISO } from "./session-core";
 import { ate, desde, past } from "./urgency";
 import {
   getFinancialSnapshots,
   saveFinancialSnapshots,
   type MonthlyFinancialSnapshot,
 } from "./financial";
+
+// Importações internas para uso em migrateSessionData, backup e cast de tipos
+import { getPendencias, normalizePendencia, type Pendencia } from "./session-pendencias";
+import { getAgendaEvents, normalizeAgendaEvent, type AgendaEvent } from "./session-agenda";
+
+// ─── Re-exports — preservam a API pública de @/lib/session ───────────────────
+export { getStorageSizeKB, clearAllData } from "./session-core";
+export * from "./session-pendencias";
+export * from "./session-agenda";
 
 // Espelha o schema escrito por logQuery() em data.ts
 export type QueryLog = {
@@ -205,79 +208,6 @@ export type MemoriaOperacional = {
   vencimentoSeguro?: string;
   fimMandatoSindico?: string;
 };
-
-// Chaves do localStorage — centralizadas para facilitar migração futura para backend
-const KEYS = {
-  QUERIES:              "amigo_queries",    // escrito por data.ts logQuery()
-  FAVORITES:            "amigo_favorites",
-  STATS:                "amigo_stats",
-  SHARES:               "amigo_shares",
-  CHECKLISTS:           "amigo_checklists",
-  CHECKLIST_EVENTS:     "amigo_checklist_events",
-  INTERACTIONS:         "amigo_interactions",
-  PROFILE:              "amigo_profile",
-  MEMORIA:              "amigo_memoria",
-  MEMORIA_ASSISTIDA:    "amigo_memoria_assistida",
-  DOCUMENTOS:           "amigo_documentos",
-  FUNCIONARIOS:         "amigo_funcionarios",
-  MANUTENCOES:          "amigo_manutencoes",
-  IMPLANTACAO_MODE:     "amigo_implantacao_mode",
-  SESSION_META:         "amigo_session_meta",
-  RESOLUTION_EVENTS:    "amigo_resolution_events",
-  PENDENCIAS:           "amigo_pendencias",
-  OCORRENCIAS:          "amigo_ocorrencias",
-  AGENDA:               "amigo_agenda",
-  REVISAO_MENSAL_HOME:  "amigo_revisao_mensal_home",
-  REVISAO_SEMANAL:       "amigo_revisao_semanal",
-  ONBOARDING_COMPLETE:   "amigo_onboarding_complete",
-  COMUNICADO_HISTORY:    "amigo_comunicado_history",
-  NOTIFICATIONS:         "amigo_notifications",
-  HEALTH_HISTORY:        "amigo_health_history",
-  AUDIT_LOG:             "amigo_audit_log",
-} as const;
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function safeRead<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as T;
-    // Valida que o resultado é do tipo esperado (não null inesperado)
-    if (parsed === null && fallback !== null) return fallback;
-    return parsed;
-  } catch {
-    // JSON corrompido — remove a chave para evitar problema recorrente
-    try { localStorage.removeItem(key); } catch { /* empty */ }
-    return fallback;
-  }
-}
-
-function safeWrite(key: string, value: unknown): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    if (e instanceof DOMException) {
-      // Quota exceeded: libera espaço em ordem de prioridade crescente e retenta
-      const candidates = [KEYS.QUERIES, KEYS.AUDIT_LOG, KEYS.HEALTH_HISTORY];
-      for (const candidate of candidates) {
-        try {
-          localStorage.removeItem(candidate);
-          localStorage.setItem(key, JSON.stringify(value));
-          return;
-        } catch {
-          // ainda sem espaço — tenta o próximo candidato
-        }
-      }
-    }
-  }
-}
-
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // ─── Histórico de perguntas ───────────────────────────────────────────────────
 
@@ -561,328 +491,6 @@ export function countMemoriaItens(): number {
   return Object.values(m).filter((v) => v !== undefined && v !== "").length;
 }
 
-// ─── Pendências ───────────────────────────────────────────────────────────────
-// Sistema leve de próximos passos do síndico.
-// Persiste em localStorage; não incluído no UserBackup v1.
-
-export type PendenciaPrioridade = "critica" | "alta" | "media" | "baixa";
-
-export type Pendencia = {
-  id: string;
-  titulo: string;
-  descricao?: string;
-  categoria?: string;
-  origem?: "manual" | "response" | "guidance" | "revisao" | "memoria" | "ocorrencia" | "agenda" | "assistente_preenchimento" | "documento" | "funcionario" | "comunicado";
-  matchedId?: string | null;
-  status: "aberta" | "concluida";
-  createdAt: string;
-  completedAt?: string;
-  dueDate?: string;
-  prioridade?: PendenciaPrioridade;          // v8+
-  responsavel?: string;                      // v9+
-  origemDetalhe?: string;                    // v9+
-  linkedType?: "agenda" | "documento" | "financeiro" | "ocorrencia" | "assistente";
-  linkedId?: string | null;
-  observacaoResolucao?: string;              // v8+ — preenchido ao concluir
-};
-
-export function normalizePendencia(raw: Partial<Pendencia>): Pendencia {
-  const now = new Date().toISOString();
-  const status = raw.status === "concluida" ? "concluida" : "aberta";
-  const prioridade: PendenciaPrioridade =
-    raw.prioridade === "critica" ||
-    raw.prioridade === "alta" ||
-    raw.prioridade === "media" ||
-    raw.prioridade === "baixa"
-      ? raw.prioridade
-      : raw.origem === "guidance"
-        ? "alta"
-        : "media";
-
-  return {
-    id: raw.id || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    titulo: raw.titulo?.trim() || "Pendência sem título",
-    descricao: raw.descricao?.trim() || undefined,
-    categoria: raw.categoria || "operacional",
-    origem: raw.origem || "manual",
-    matchedId: raw.matchedId ?? null,
-    status,
-    createdAt: raw.createdAt || now,
-    completedAt: status === "concluida" ? raw.completedAt || now : raw.completedAt,
-    dueDate: raw.dueDate || undefined,
-    prioridade,
-    responsavel: raw.responsavel?.trim() || undefined,
-    origemDetalhe: raw.origemDetalhe?.trim() || undefined,
-    linkedType: raw.linkedType,
-    linkedId: raw.linkedId ?? null,
-    observacaoResolucao: raw.observacaoResolucao?.trim() || undefined,
-  };
-}
-
-export function getPendencias(): Pendencia[] {
-  return safeRead<Partial<Pendencia>[]>(KEYS.PENDENCIAS, []).map(normalizePendencia);
-}
-
-export function addPendencia(
-  p: Omit<Pendencia, "id" | "createdAt" | "status">
-): Pendencia {
-  const all = getPendencias();
-  const nova: Pendencia = {
-    ...p,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    status: "aberta",
-    createdAt: new Date().toISOString(),
-  };
-  all.push(nova);
-  // Preserva todas as pendências abertas; descarta apenas concluídas antigas se necessário
-  if (all.length > MAX_PENDENCIAS) {
-    const abertas    = all.filter((p) => p.status === "aberta");
-    const concluidas = all.filter((p) => p.status === "concluida");
-    const maxConcluidas = Math.max(0, MAX_PENDENCIAS - abertas.length);
-    safeWrite(KEYS.PENDENCIAS, [...abertas, ...concluidas.slice(-maxConcluidas)]);
-  } else {
-    safeWrite(KEYS.PENDENCIAS, all);
-  }
-  return nova;
-}
-
-export function completePendencia(id: string, observacao?: string): void {
-  safeWrite(
-    KEYS.PENDENCIAS,
-    getPendencias().map((p) =>
-      p.id === id
-        ? {
-            ...p,
-            status: "concluida" as const,
-            completedAt: new Date().toISOString(),
-            ...(observacao?.trim() ? { observacaoResolucao: observacao.trim() } : {}),
-          }
-        : p
-    )
-  );
-}
-
-export function updatePendencia(
-  id: string,
-  patch: Partial<Omit<Pendencia, "id" | "createdAt">>
-): void {
-  safeWrite(
-    KEYS.PENDENCIAS,
-    getPendencias().map((p) => (p.id === id ? { ...p, ...patch } : p))
-  );
-}
-
-export function reopenPendencia(id: string): void {
-  safeWrite(
-    KEYS.PENDENCIAS,
-    getPendencias().map((p) =>
-      p.id === id ? { ...p, status: "aberta" as const, completedAt: undefined, observacaoResolucao: undefined } : p
-    )
-  );
-}
-
-export function deletePendencia(id: string): void {
-  safeWrite(KEYS.PENDENCIAS, getPendencias().filter((p) => p.id !== id));
-}
-
-export function getPendenciasAbertas(): Pendencia[] {
-  return getPendencias().filter((p) => p.status === "aberta");
-}
-
-export function getPendenciasConcluidas(): Pendencia[] {
-  return getPendencias().filter((p) => p.status === "concluida");
-}
-
-// ─── Agenda do prédio ────────────────────────────────────────────────────────
-// Lista leve de eventos operacionais futuros. Sem recorrência, sem push,
-// sem calendário mensal — apenas registro e acompanhamento local.
-
-export type AgendaEventType =
-  | "assembleia"
-  | "manutencao"
-  | "dedetizacao"
-  | "caixa_agua"
-  | "extintores"
-  | "vistoria"
-  | "obra"
-  | "cobranca"
-  | "reuniao"
-  | "fornecedor"
-  | "comunicado"
-  | "retorno"
-  | "outro";
-
-export type AgendaRecurrence =
-  | "nenhuma"
-  | "semanal"
-  | "mensal"
-  | "trimestral"
-  | "semestral"
-  | "anual";
-
-export type AgendaEvent = {
-  id: string;
-  title: string;
-  date: string; // YYYY-MM-DD
-  type: AgendaEventType;
-  note?: string;
-  responsavel?: string;
-  prioridade?: PendenciaPrioridade;
-  recurrence?: AgendaRecurrence;
-  templateId?: string;
-  source?: "manual" | "template";
-  linkedPendenciaId?: string;
-  completedAt?: string;
-  createdAt: string;
-  updatedAt?: string;
-};
-
-export function normalizeAgendaEvent(raw: Partial<AgendaEvent>): AgendaEvent {
-  const now = new Date().toISOString();
-  const recurrence: AgendaRecurrence =
-    raw.recurrence === "semanal" ||
-    raw.recurrence === "mensal" ||
-    raw.recurrence === "trimestral" ||
-    raw.recurrence === "semestral" ||
-    raw.recurrence === "anual"
-      ? raw.recurrence
-      : "nenhuma";
-  return {
-    id: raw.id || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    title: raw.title?.trim() || "Evento sem título",
-    date: raw.date || todayISO(),
-    type: raw.type || "outro",
-    note: raw.note?.trim() || undefined,
-    responsavel: raw.responsavel?.trim() || undefined,
-    prioridade: raw.prioridade || "media",
-    recurrence,
-    templateId: raw.templateId,
-    source: raw.source || "manual",
-    linkedPendenciaId: raw.linkedPendenciaId,
-    completedAt: raw.completedAt,
-    createdAt: raw.createdAt || now,
-    updatedAt: raw.updatedAt,
-  };
-}
-
-export function getAgendaEvents(): AgendaEvent[] {
-  return safeRead<Partial<AgendaEvent>[]>(KEYS.AGENDA, []).map(normalizeAgendaEvent);
-}
-
-export function addAgendaEvent(
-  e: Omit<AgendaEvent, "id" | "createdAt">
-): AgendaEvent {
-  const all = getAgendaEvents();
-  const nova: AgendaEvent = {
-    ...e,
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    createdAt: new Date().toISOString(),
-  };
-  all.push(nova);
-  // Preserva eventos futuros; descarta apenas eventos passados/concluídos mais antigos
-  if (all.length > MAX_AGENDA_EVENTS) {
-    const today   = todayISO();
-    const futuros = all.filter((ev) => !ev.completedAt && ev.date >= today);
-    const outros  = all.filter((ev) => ev.completedAt || ev.date < today);
-    const maxOutros = Math.max(0, MAX_AGENDA_EVENTS - futuros.length);
-    safeWrite(KEYS.AGENDA, [...futuros, ...outros.slice(-maxOutros)]);
-  } else {
-    safeWrite(KEYS.AGENDA, all);
-  }
-  return nova;
-}
-
-export function updateAgendaEvent(
-  id: string,
-  changes: Partial<Omit<AgendaEvent, "id" | "createdAt">>
-): void {
-  safeWrite(
-    KEYS.AGENDA,
-    getAgendaEvents().map((e) =>
-      e.id === id ? { ...e, ...changes, updatedAt: new Date().toISOString() } : e
-    )
-  );
-}
-
-export function completeAgendaEvent(id: string): void {
-  const event = getAgendaEventById(id);
-  const completedAt = new Date().toISOString();
-  updateAgendaEvent(id, { completedAt });
-
-  if (!event || !event.recurrence || event.recurrence === "nenhuma") return;
-  const nextDate = getNextOccurrenceDate(event.date, event.recurrence);
-  addAgendaEvent({
-    title: event.title,
-    date: nextDate,
-    type: event.type,
-    note: event.note,
-    responsavel: event.responsavel,
-    prioridade: event.prioridade,
-    recurrence: event.recurrence,
-    templateId: event.templateId,
-    source: event.source,
-  });
-}
-
-export function deleteAgendaEvent(id: string): void {
-  safeWrite(KEYS.AGENDA, getAgendaEvents().filter((e) => e.id !== id));
-}
-
-export function getUpcomingAgendaEvents(limitDays = 90): AgendaEvent[] {
-  const today = todayISO();
-  return getAgendaEvents()
-    .filter((e) => !e.completedAt && e.date >= today)
-    .filter((e) => {
-      const diff = Math.floor(
-        (new Date(e.date).getTime() - new Date(today).getTime()) / 86400000
-      );
-      return diff <= limitDays;
-    })
-    .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-export function getAgendaEventById(id: string): AgendaEvent | null {
-  return getAgendaEvents().find((e) => e.id === id) ?? null;
-}
-
-export function getNextOccurrenceDate(date: string, recurrence: AgendaRecurrence): string {
-  const [yearStr, monthStr, dayStr] = date.split("-");
-  const year  = parseInt(yearStr,  10);
-  const month = parseInt(monthStr, 10); // 1-based (Jan=1, Dec=12)
-  const day   = parseInt(dayStr,   10);
-
-  // Clamps `d` to the last valid day of month `m` (1-based) in year `y`.
-  // new Date(y, m, 0) uses month as 0-based internally: day 0 rolls back to
-  // the last day of the preceding month, giving us the last day of month m.
-  function clampToMonth(y: number, m: number, d: number): string {
-    const daysInMonth = new Date(y, m, 0).getDate();
-    const clamped = Math.min(d, daysInMonth);
-    return `${y}-${String(m).padStart(2, "0")}-${String(clamped).padStart(2, "0")}`;
-  }
-
-  if (recurrence === "semanal") {
-    const d = new Date(`${date}T12:00:00`);
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().slice(0, 10);
-  }
-  if (recurrence === "mensal") {
-    const total = year * 12 + (month - 1) + 1;
-    return clampToMonth(Math.floor(total / 12), (total % 12) + 1, day);
-  }
-  if (recurrence === "trimestral") {
-    const total = year * 12 + (month - 1) + 3;
-    return clampToMonth(Math.floor(total / 12), (total % 12) + 1, day);
-  }
-  if (recurrence === "semestral") {
-    const total = year * 12 + (month - 1) + 6;
-    return clampToMonth(Math.floor(total / 12), (total % 12) + 1, day);
-  }
-  if (recurrence === "anual") {
-    return clampToMonth(year + 1, month, day);
-  }
-  return date;
-}
-
 export function migrateSessionData(): void {
   if (typeof window === "undefined") return;
   safeWrite(KEYS.PENDENCIAS, getPendencias().map(normalizePendencia));
@@ -1028,39 +636,6 @@ export function completeWeeklyReview(weekKey = getCurrentWeekKey()): WeeklyRevie
   };
   safeWrite(KEYS.REVISAO_SEMANAL, next);
   return next;
-}
-
-// ─── Tamanho estimado dos dados do app em localStorage ───────────────────────
-// Conta apenas chaves do prefixo "amigo_" — exclui dados de outros sites/apps.
-// Retorna valor em KB (arredondado para cima). Zero se localStorage indisponível.
-export function getStorageSizeKB(): number {
-  if (typeof window === "undefined") return 0;
-  try {
-    let bytes = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith("amigo_")) continue;
-      const value = localStorage.getItem(key) ?? "";
-      bytes += (key.length + value.length) * 2; // UTF-16: 2 bytes por char
-    }
-    return Math.ceil(bytes / 1024);
-  } catch {
-    return 0;
-  }
-}
-
-// ─── Limpeza de dados locais ─────────────────────────────────────────────────
-// Remove todas as chaves próprias do app. Usado pelo reset seguro em BackupPanel.
-// Não altera schema de backup — nenhum dado é exportado ou modificado, apenas removido.
-export function clearAllData(): void {
-  if (typeof window === "undefined") return;
-  try {
-    Object.values(KEYS).forEach((key) => {
-      localStorage.removeItem(key);
-    });
-  } catch {
-    // localStorage indisponível
-  }
 }
 
 // ─── Notifications storage ────────────────────────────────────────────────────
