@@ -1,5 +1,3 @@
-"use client";
-
 export type FinancialEntryType = "receita" | "despesa" | "conta_a_pagar" | "investimento";
 export type FinancialPriority = "baixa" | "media" | "alta" | "critica";
 export type FinancialEntryStatus = "previsto" | "pago" | "vencido";

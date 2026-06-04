@@ -9,6 +9,16 @@
 // Incrementar aqui ao adicionar campos incompatíveis.
 export const SESSION_SCHEMA_VERSION = 8;
 
+// ─── Caps de armazenamento ────────────────────────────────────────────────────
+// Caps aumentados para suportar uso prolongado sem perda silenciosa de dados.
+// WARN_* dispara alerta no painel de integridade; MAX_* é o limite de descarte.
+export const MAX_PENDENCIAS     = 200;
+export const WARN_PENDENCIAS    = 150;
+export const MAX_AGENDA_EVENTS  = 365;
+export const WARN_AGENDA_EVENTS = 300;
+export const MAX_OCORRENCIAS    = 300;
+export const WARN_OCORRENCIAS   = 250;
+
 import { ate, desde, past } from "./urgency";
 import {
   getFinancialSnapshots,
@@ -624,7 +634,15 @@ export function addPendencia(
     createdAt: new Date().toISOString(),
   };
   all.push(nova);
-  safeWrite(KEYS.PENDENCIAS, all.slice(-50)); // máx 50 registros
+  // Preserva todas as pendências abertas; descarta apenas concluídas antigas se necessário
+  if (all.length > MAX_PENDENCIAS) {
+    const abertas    = all.filter((p) => p.status === "aberta");
+    const concluidas = all.filter((p) => p.status === "concluida");
+    const maxConcluidas = Math.max(0, MAX_PENDENCIAS - abertas.length);
+    safeWrite(KEYS.PENDENCIAS, [...abertas, ...concluidas.slice(-maxConcluidas)]);
+  } else {
+    safeWrite(KEYS.PENDENCIAS, all);
+  }
   return nova;
 }
 
@@ -761,7 +779,16 @@ export function addAgendaEvent(
     createdAt: new Date().toISOString(),
   };
   all.push(nova);
-  safeWrite(KEYS.AGENDA, all.slice(-100));
+  // Preserva eventos futuros; descarta apenas eventos passados/concluídos mais antigos
+  if (all.length > MAX_AGENDA_EVENTS) {
+    const today   = todayISO();
+    const futuros = all.filter((ev) => !ev.completedAt && ev.date >= today);
+    const outros  = all.filter((ev) => ev.completedAt || ev.date < today);
+    const maxOutros = Math.max(0, MAX_AGENDA_EVENTS - futuros.length);
+    safeWrite(KEYS.AGENDA, [...futuros, ...outros.slice(-maxOutros)]);
+  } else {
+    safeWrite(KEYS.AGENDA, all);
+  }
   return nova;
 }
 
@@ -819,13 +846,41 @@ export function getAgendaEventById(id: string): AgendaEvent | null {
 }
 
 export function getNextOccurrenceDate(date: string, recurrence: AgendaRecurrence): string {
-  const d = new Date(`${date}T12:00:00`);
-  if (recurrence === "semanal") d.setDate(d.getDate() + 7);
-  if (recurrence === "mensal") d.setMonth(d.getMonth() + 1);
-  if (recurrence === "trimestral") d.setMonth(d.getMonth() + 3);
-  if (recurrence === "semestral") d.setMonth(d.getMonth() + 6);
-  if (recurrence === "anual") d.setFullYear(d.getFullYear() + 1);
-  return d.toISOString().slice(0, 10);
+  const [yearStr, monthStr, dayStr] = date.split("-");
+  const year  = parseInt(yearStr,  10);
+  const month = parseInt(monthStr, 10); // 1-based (Jan=1, Dec=12)
+  const day   = parseInt(dayStr,   10);
+
+  // Clamps `d` to the last valid day of month `m` (1-based) in year `y`.
+  // new Date(y, m, 0) uses month as 0-based internally: day 0 rolls back to
+  // the last day of the preceding month, giving us the last day of month m.
+  function clampToMonth(y: number, m: number, d: number): string {
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const clamped = Math.min(d, daysInMonth);
+    return `${y}-${String(m).padStart(2, "0")}-${String(clamped).padStart(2, "0")}`;
+  }
+
+  if (recurrence === "semanal") {
+    const d = new Date(`${date}T12:00:00`);
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
+  }
+  if (recurrence === "mensal") {
+    const total = year * 12 + (month - 1) + 1;
+    return clampToMonth(Math.floor(total / 12), (total % 12) + 1, day);
+  }
+  if (recurrence === "trimestral") {
+    const total = year * 12 + (month - 1) + 3;
+    return clampToMonth(Math.floor(total / 12), (total % 12) + 1, day);
+  }
+  if (recurrence === "semestral") {
+    const total = year * 12 + (month - 1) + 6;
+    return clampToMonth(Math.floor(total / 12), (total % 12) + 1, day);
+  }
+  if (recurrence === "anual") {
+    return clampToMonth(year + 1, month, day);
+  }
+  return date;
 }
 
 export function migrateSessionData(): void {
@@ -888,7 +943,7 @@ export function addOcorrencia(
     createdAt: new Date().toISOString(),
   };
   all.push(nova);
-  safeWrite(KEYS.OCORRENCIAS, all.slice(-80));
+  safeWrite(KEYS.OCORRENCIAS, all.slice(-MAX_OCORRENCIAS));
   return nova;
 }
 
@@ -1652,9 +1707,10 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v3 — idem + ocorrências leves (amigo_ocorrencias)
 //   v4 — idem + agenda do prédio (amigo_agenda)
 //   v7 — idem + resumo financeiro local (amigo_financial_snapshots)
+//   v8 — formato idêntico ao v7; bump de versão alinhado ao SESSION_SCHEMA_VERSION
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4" | "5" | "6" | "7";
+  version: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
@@ -1680,7 +1736,7 @@ export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "7",
+    version: "8",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1715,7 +1771,7 @@ export function exportUserData(): void {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "7",
+    version: "8",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1736,7 +1792,7 @@ export function getUserBackupJson(): string {
 }
 
 // Valida o backup sem escrever no localStorage — usado para mostrar preview antes da confirmação.
-// Aceita v1–v7 (versões acumulativas com funcionalidades adicionais).
+// Aceita v1–v8 (versões acumulativas com funcionalidades adicionais).
 export function parseAndValidateUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1751,7 +1807,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1767,13 +1823,13 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
-    if (d.version === "7" && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
       return { success: false, error: "Dados financeiros corrompidos no arquivo." };
     }
 
@@ -1782,18 +1838,18 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
-    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
 
     const pendenciasCount = isV2plus && Array.isArray(d.pendencias) ? (d.pendencias as Pendencia[]).length : undefined;
     const ocorrenciasCount = isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length : undefined;
     const agendaCount = isV4plus && Array.isArray(d.agenda) ? (d.agenda as AgendaEvent[]).length : undefined;
     const documentosCount = isV5plus && Array.isArray(d.documentos) ? (d.documentos as DocumentoEssencial[]).length : undefined;
     const funcionariosCount = isV5plus && Array.isArray(d.funcionarios) ? (d.funcionarios as FuncionarioFerias[]).length : undefined;
-    const manutencoesCount = (d.version === "6" || d.version === "7") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
-    const financialSnapshotsCount = d.version === "7" && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
+    const manutencoesCount = (d.version === "6" || d.version === "7" || d.version === "8") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
+    const financialSnapshotsCount = (d.version === "7" || d.version === "8") && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
 
     return {
       success: true,
@@ -1815,7 +1871,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
   }
 }
 
-// Importa backup v1–v7. Retrocompatível com todas as versões anteriores.
+// Importa backup v1–v8. Retrocompatível com todas as versões anteriores.
 export function importUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1830,7 +1886,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1846,13 +1902,13 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
-    if (d.version === "7" && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
       return { success: false, error: "Dados financeiros corrompidos no arquivo." };
     }
 
@@ -1865,10 +1921,10 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7";
-    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
 
     let pendenciasCount: number | undefined;
     if (isV2plus && Array.isArray(d.pendencias)) {
@@ -1919,7 +1975,7 @@ export function importUserData(jsonString: string): ImportResult {
       try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
 
-    if ((d.version === "6" || d.version === "7") && Array.isArray(d.manutencoes)) {
+    if ((d.version === "6" || d.version === "7" || d.version === "8") && Array.isArray(d.manutencoes)) {
       safeWrite(KEYS.MANUTENCOES, d.manutencoes);
       manutencoesCount = (d.manutencoes as ManutencaoRecorrente[]).length;
     } else {
@@ -1927,7 +1983,7 @@ export function importUserData(jsonString: string): ImportResult {
     }
 
     let financialSnapshotsCount: number | undefined;
-    if (d.version === "7" && Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8") && Array.isArray(d.financialSnapshots)) {
       saveFinancialSnapshots(d.financialSnapshots as MonthlyFinancialSnapshot[]);
       financialSnapshotsCount = (d.financialSnapshots as MonthlyFinancialSnapshot[]).length;
     } else {

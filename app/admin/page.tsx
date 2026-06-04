@@ -14,30 +14,60 @@ import {
 import { fetchRecentEvents, telemetryEnabled, RawEvent } from "@/lib/telemetry";
 import { auditQuestion, AuditResult, AuditExpectedType } from "@/lib/data";
 
-const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY ?? "";
-
 // ─── Auth ─────────────────────────────────────────────────────────────────────
+// Senha validada server-side via /api/admin/auth.
+// Nenhuma variável NEXT_PUBLIC_ é usada — a chave jamais aparece no bundle.
 
-function useAdminAuth() {
+type AdminAuthState = {
+  authed: boolean | null;
+  password: string;
+  setPassword: (v: string) => void;
+  submitting: boolean;
+  authError: string | null;
+  handleSubmit: (e: React.FormEvent) => void;
+};
+
+function useAdminAuth(): AdminAuthState {
   const [authed, setAuthed] = useState<boolean | null>(null);
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Produção sem chave configurada → bloquear sempre (evita exposição acidental)
-    if (!ADMIN_KEY && process.env.NODE_ENV === "production") {
-      setAuthed(false); return;
-    }
-    const stored = sessionStorage.getItem("amigo_admin_auth");
-    if (stored === "ok" || !ADMIN_KEY) { setAuthed(true); return; }
-    const input = window.prompt("Senha do painel:");
-    if (input === ADMIN_KEY) {
-      sessionStorage.setItem("amigo_admin_auth", "ok");
-      setAuthed(true);
-    } else {
+    try {
+      const stored = sessionStorage.getItem("amigo_admin_auth");
+      setAuthed(stored === "ok" ? true : false);
+    } catch {
       setAuthed(false);
     }
   }, []);
 
-  return authed;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password.trim() || submitting) return;
+    setSubmitting(true);
+    setAuthError(null);
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password.trim() }),
+      });
+      if (res.ok) {
+        try { sessionStorage.setItem("amigo_admin_auth", "ok"); } catch { /* noop */ }
+        setAuthed(true);
+      } else {
+        setAuthError("Senha incorreta.");
+        setPassword("");
+      }
+    } catch {
+      setAuthError("Erro ao verificar. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return { authed, password, setPassword, submitting, authError, handleSubmit };
 }
 
 // ─── Aggregation helpers ───────────────────────────────────────────────────────
@@ -434,7 +464,7 @@ function AuditSection() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminPage() {
-  const authed = useAdminAuth();
+  const { authed, password, setPassword, submitting, authError, handleSubmit } = useAdminAuth();
   const [data, setData] = useState<Aggregated | null>(null);
   const [source, setSource] = useState<"remote" | "local">("local");
 
@@ -471,8 +501,42 @@ export default function AdminPage() {
 
   if (authed === false) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-cream-50">
-        <p className="text-[13px] text-navy-500">Acesso negado.</p>
+      <div className="flex min-h-dvh items-center justify-center bg-cream-50 px-4">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-[320px] rounded-2xl border border-navy-100 bg-white p-6 shadow-card"
+        >
+          <p className="mb-1 text-[10.5px] font-semibold uppercase tracking-[0.13em] text-navy-400">
+            Painel do fundador
+          </p>
+          <p className="mb-5 text-[15px] font-semibold text-navy-800">Autenticação</p>
+          <label
+            htmlFor="admin-password"
+            className="mb-1.5 block text-[12px] font-medium text-navy-600"
+          >
+            Senha
+          </label>
+          <input
+            id="admin-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            disabled={submitting}
+            className="mb-3 w-full rounded-xl border border-navy-200 bg-navy-50/30 px-3 py-2.5 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none disabled:opacity-60"
+            placeholder="••••••••"
+          />
+          {authError && (
+            <p className="mb-3 text-[11.5px] text-terracotta-700">{authError}</p>
+          )}
+          <button
+            type="submit"
+            disabled={submitting || !password.trim()}
+            className="w-full rounded-xl bg-navy-700 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-navy-800 active:scale-[0.98] disabled:opacity-50"
+          >
+            {submitting ? "Verificando..." : "Entrar"}
+          </button>
+        </form>
       </div>
     );
   }

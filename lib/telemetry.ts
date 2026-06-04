@@ -16,13 +16,13 @@
 //      CREATE POLICY "insert_only" ON events FOR INSERT TO anon WITH CHECK (true);
 //      CREATE POLICY "read_anon" ON events FOR SELECT TO anon USING (true);
 //
-//      O /admin usa NEXT_PUBLIC_ADMIN_KEY para proteger a interface e lê eventos
-//      via fetchRecentEvents() com a anon key. Por isso, a leitura remota depende
+//      O /admin valida senha via POST /api/admin/auth (server-side, sem NEXT_PUBLIC_).
+//      A leitura remota de eventos usa fetchRecentEvents() com a anon key — depende
 //      de policy SELECT para anon. Ver docs/setup-supabase-telemetria.md.
 //   3. Adicionar em .env.local:
 //      NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 //      NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
-//      NEXT_PUBLIC_ADMIN_KEY=<senha-do-painel>
+//      ADMIN_KEY=<senha-do-painel>  ← sem NEXT_PUBLIC_, lida só server-side
 //
 // Sem as variáveis configuradas: todas as chamadas são no-op silencioso.
 

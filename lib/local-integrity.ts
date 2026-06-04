@@ -4,11 +4,15 @@ import {
   getAgendaEvents,
   getDocumentos,
   getLastBackupAt,
+  getOcorrencias,
   getPendencias,
   getProfile,
   getStorageSizeKB,
   DOCUMENTO_CRITICIDADE,
   DOCUMENTOS_ESSENCIAIS_IDS,
+  WARN_AGENDA_EVENTS,
+  WARN_OCORRENCIAS,
+  WARN_PENDENCIAS,
   type DocumentoEssencialId,
 } from "@/lib/session";
 import { getCurrentFinancialSnapshot, isFinancialEntryOverdue } from "@/lib/financial";
@@ -31,6 +35,7 @@ export type LocalIntegrityReport = {
   counts: {
     pendencias: number;
     agenda: number;
+    ocorrencias: number;
     documentos: number;
     financialEntries: number;
   };
@@ -46,6 +51,7 @@ export function buildLocalIntegrityReport(): LocalIntegrityReport {
   const profile = getProfile();
   const pendencias = getPendencias();
   const agenda = getAgendaEvents();
+  const ocorrencias = getOcorrencias();
   const documentos = getDocumentos();
   const financialSnapshot = getCurrentFinancialSnapshot();
   const lastBackupAt = getLastBackupAt();
@@ -59,6 +65,35 @@ export function buildLocalIntegrityReport(): LocalIntegrityReport {
       severity: "info",
       title: "Perfil sem nome do condomínio",
       detail: "Nomear o prédio melhora relatórios, backups e leitura operacional.",
+    });
+  }
+
+  // Alertas de volume alto — avisa antes de atingir o limite de descarte
+  if (pendencias.length >= WARN_PENDENCIAS) {
+    issues.push({
+      id: "pendencias_high_volume",
+      module: "pendencias",
+      severity: "warning",
+      title: `Volume alto de pendências: ${pendencias.length} registros`,
+      detail: `Aproximando do limite (${WARN_PENDENCIAS}+). Exporte um backup e archive pendências antigas concluídas.`,
+    });
+  }
+  if (agenda.length >= WARN_AGENDA_EVENTS) {
+    issues.push({
+      id: "agenda_high_volume",
+      module: "agenda",
+      severity: "warning",
+      title: `Volume alto na agenda: ${agenda.length} eventos`,
+      detail: `Aproximando do limite (${WARN_AGENDA_EVENTS}+). Exporte um backup e conclua ou remova eventos passados.`,
+    });
+  }
+  if (ocorrencias.length >= WARN_OCORRENCIAS) {
+    issues.push({
+      id: "ocorrencias_high_volume",
+      module: "pendencias",
+      severity: "info",
+      title: `Volume alto de ocorrências: ${ocorrencias.length} registros`,
+      detail: `Próximo do limite (${WARN_OCORRENCIAS}+). Considere exportar um backup.`,
     });
   }
 
@@ -154,6 +189,7 @@ export function buildLocalIntegrityReport(): LocalIntegrityReport {
     counts: {
       pendencias: pendencias.length,
       agenda: agenda.length,
+      ocorrencias: ocorrencias.length,
       documentos: documentos.length,
       financialEntries: financialSnapshot.entries.length,
     },
