@@ -69,7 +69,10 @@ export function currentMonthKey(date = new Date()): string {
 }
 
 function moneyFromText(raw: string): number | null {
-  const match = raw.match(/(?:r\$\s*)?(\d{1,3}(?:\.\d{3})*|\d+)(?:,(\d{1,2}))?/i);
+  // \d{1,3}(?:\.\d{3})+ matches BR thousands-separated numbers (1.200, 1.200.000).
+  // The + (not *) forces at least one .ddd group, so plain "1200" falls through to \d+
+  // and is matched entirely, fixing "1200,50" → 1200.50 (was: 120 with the * variant).
+  const match = raw.match(/(?:r\$\s*)?(\d{1,3}(?:\.\d{3})+|\d+)(?:,(\d{1,2}))?/i);
   if (!match) return null;
   const whole = match[1].replace(/\./g, "");
   const cents = match[2] ?? "00";

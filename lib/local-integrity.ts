@@ -22,7 +22,7 @@ export type LocalIntegritySeverity = "ok" | "info" | "warning" | "critical";
 
 export type LocalIntegrityIssue = {
   id: string;
-  module: "backup" | "pendencias" | "agenda" | "documentos" | "financeiro" | "perfil";
+  module: "backup" | "pendencias" | "agenda" | "documentos" | "financeiro" | "perfil" | "ocorrencias";
   severity: Exclude<LocalIntegritySeverity, "ok">;
   title: string;
   detail: string;
@@ -90,7 +90,7 @@ export function buildLocalIntegrityReport(): LocalIntegrityReport {
   if (ocorrencias.length >= WARN_OCORRENCIAS) {
     issues.push({
       id: "ocorrencias_high_volume",
-      module: "pendencias",
+      module: "ocorrencias",
       severity: "info",
       title: `Volume alto de ocorrências: ${ocorrencias.length} registros`,
       detail: `Próximo do limite (${WARN_OCORRENCIAS}+). Considere exportar um backup.`,
