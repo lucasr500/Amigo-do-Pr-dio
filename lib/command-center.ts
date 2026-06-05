@@ -41,6 +41,8 @@ import {
   DOCUMENTO_LABEL,
   DOCUMENTO_CRITICIDADE as DOC_CRITICIDADE,
 } from "@/lib/session-documentos";
+import { buildMonthlyReview } from "@/lib/monthly-review";
+import { getMonthlyReviewState } from "@/lib/session-monthly-review";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
 
@@ -510,6 +512,58 @@ export function buildCommandCenter(): CommandCenterResult {
     }
 
     void isDocumentoFaltante; // imported for panel — not needed here
+  }
+
+  // ── Revisão mensal ────────────────────────────────────────────────────────
+  {
+    const reviewState = getMonthlyReviewState(month);
+    const review = buildMonthlyReview(month, reviewState.status);
+
+    // Revisão com itens críticos — prioridade urgente
+    if (review.criticalCount > 0 && reviewState.status !== "concluida") {
+      actions.push({
+        id: "monthly_review_critical",
+        titulo: `Revisão mensal — ${review.criticalCount} ponto${review.criticalCount > 1 ? "s" : ""} crítico${review.criticalCount > 1 ? "s" : ""}`,
+        descricao: review.recommendedFirstAction?.description ?? "Revisão mensal identificou itens urgentes.",
+        prioridade: "urgente",
+        categoria: "gestao",
+        sourceModule: "revisao_mensal",
+        resolveTarget: "condominio",
+        motivo: "A revisão mensal identificou itens críticos que requerem ação.",
+        impacto: "Resolver os pontos críticos reduz risco e mantém o condomínio organizado.",
+        cta: "Fazer revisão mensal",
+        origemDados: "revisao-mensal",
+      });
+    } else if (reviewState.status === "pendente" && new Date().getDate() >= 20) {
+      // A partir do dia 20 do mês, nudge para revisão ainda não iniciada
+      actions.push({
+        id: "monthly_review_pending",
+        titulo: "Revisão mensal deste mês ainda não foi iniciada",
+        descricao: "Faça a revisão mensal para verificar financeiro, documentos, agenda e pendências.",
+        prioridade: "este_mes",
+        categoria: "gestao",
+        sourceModule: "revisao_mensal",
+        resolveTarget: "condominio",
+        motivo: "Revisão mensal não realizada — prática de controle auxiliar recomendada.",
+        impacto: "Abre visão consolidada de riscos e pontos de atenção do mês.",
+        cta: "Iniciar revisão mensal",
+        origemDados: "revisao-mensal",
+      });
+    } else if (reviewState.status === "em_andamento") {
+      actions.push({
+        id: "monthly_review_inprogress",
+        titulo: "Revisão mensal em andamento",
+        descricao: `${reviewState.checkedItems.length} de ${review.items.length} pontos verificados.`,
+        prioridade: "este_mes",
+        categoria: "gestao",
+        sourceModule: "revisao_mensal",
+        resolveTarget: "condominio",
+        motivo: "Revisão mensal iniciada mas não concluída.",
+        impacto: "Concluir a revisão mantém o condomínio bem acompanhado.",
+        cta: "Continuar revisão",
+        origemDados: "revisao-mensal",
+      });
+    }
   }
 
   const sortedActions = [...actions].sort((a, b) => {

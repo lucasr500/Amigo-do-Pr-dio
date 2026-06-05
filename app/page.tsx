@@ -113,6 +113,8 @@ const HealthTrendChart = dynamic(() => import("@/components/HealthTrendChart"), 
 const NotificationSettingsPanel = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
 const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
+const MonthlyReviewCard = dynamic(() => import("@/components/MonthlyReviewCard"), { ssr: false });
+const MonthlyReviewPanel = dynamic(() => import("@/components/MonthlyReviewPanel"), { ssr: false });
 
 // ── Profile completion helpers ────────────────────────────────────────────────
 
@@ -377,6 +379,11 @@ export default function HomePage() {
     navigateTab("condominio");
   };
 
+  const handleOpenMonthlyReview = () => {
+    setFocusRevisaoMensal(true);
+    navigateTab("condominio");
+  };
+
   const handleActivateDemo = async () => {
     const { activateDemo } = await import("@/lib/demo");
     activateDemo();
@@ -468,6 +475,10 @@ export default function HomePage() {
                   onOpenNotifications={() => setShowNotificationCenter(true)}
                 />
                 <PushPromptStrip />
+                <MonthlyReviewCard
+                  refreshKey={refreshKey}
+                  onOpen={handleOpenMonthlyReview}
+                />
                 {urgentCount > 0 && (
                   <div className="px-5 pb-3 sm:px-6">
                     <button
@@ -865,6 +876,18 @@ export default function HomePage() {
             {/* ── Relatório de saúde ────────────────────────────────── */}
             <RelatorioSaudePanel />
             <MonthlyOperationalSummaryPanel />
+
+            {/* ── Revisão mensal guiada ─────────────────────────────── */}
+            {hasCondominioData && (
+              <div className="px-5 pb-0.5 pt-3 sm:px-6">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Revisão mensal</p>
+                <p className="mt-0.5 text-[11px] text-navy-400">Checklist guiado de controle operacional mensal.</p>
+              </div>
+            )}
+            <MonthlyReviewPanel
+              refreshKey={refreshKey}
+              onRefresh={() => setRefreshKey((k) => k + 1)}
+            />
 
             {/* ── Financeiro operacional ────────────────────────────── */}
             {hasCondominioData && (

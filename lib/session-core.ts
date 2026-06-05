@@ -27,6 +27,7 @@ export const KEYS = {
   OCORRENCIAS:          "amigo_ocorrencias",
   AGENDA:               "amigo_agenda",
   REVISAO_MENSAL_HOME:  "amigo_revisao_mensal_home",
+  MONTHLY_REVIEW_STATE: "amigo_monthly_review_state",
   REVISAO_SEMANAL:       "amigo_revisao_semanal",
   ONBOARDING_COMPLETE:   "amigo_onboarding_complete",
   COMUNICADO_HISTORY:    "amigo_comunicado_history",
