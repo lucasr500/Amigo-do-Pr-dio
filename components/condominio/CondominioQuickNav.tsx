@@ -1,6 +1,7 @@
 "use client";
 
 const NAV_ITEMS = [
+  { id: "overview",       label: "Visão" },
   { id: "visao-geral",    label: "Meu prédio" },
   { id: "revisao-mensal", label: "Revisão" },
   { id: "financeiro",     label: "Financeiro" },

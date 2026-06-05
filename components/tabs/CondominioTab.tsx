@@ -5,6 +5,11 @@ import type { AppTab } from "@/components/BottomNav";
 import CondominioSection from "@/components/condominio/CondominioSection";
 import CondominioQuickNav from "@/components/condominio/CondominioQuickNav";
 
+const CondominioOverview = dynamic(
+  () => import("@/components/condominio/CondominioOverview"),
+  { ssr: false },
+);
+
 const OnboardingProfile              = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const MemoriaPanel                   = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 const ImplantacaoChecklist           = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
@@ -51,27 +56,22 @@ export default function CondominioTab({
   onNavigateTab,
   onToggleNotifSettings,
 }: Props) {
+  function scrollToSection(id: string) {
+    const el = document.getElementById(id);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
-      {/* ── Cabeçalho ──────────────────────────────────────────────── */}
-      <div className="px-5 pb-1 pt-1 sm:px-6">
-        <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
-          Condomínio
-        </p>
-        <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-          {condoName || (hasCondominioData ? "Meu prédio" : "Ativar monitoramento")}
-        </p>
-        {hasCondominioData ? (
-          <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
-            Dados essenciais, rotina operacional e segurança dos registros.
-          </p>
-        ) : (
-          <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-            Cadastre os dados essenciais para acompanhar prazos, pendências e saúde operacional.
-          </p>
-        )}
-      </div>
+      {/* ── Visão executiva do prédio ──────────────────────────────── */}
+      <CondominioOverview
+        refreshKey={refreshKey}
+        condoName={condoName || undefined}
+        onNavigateTab={onNavigateTab}
+        onNavigateToSection={scrollToSection}
+        onOpenMonthlyReview={onOpenMonthlyReview}
+      />
 
       {/* ── Quick Nav — só com dados ────────────────────────────────── */}
       {hasCondominioData && <CondominioQuickNav />}
