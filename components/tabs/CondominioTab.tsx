@@ -1,0 +1,282 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import type { AppTab } from "@/components/BottomNav";
+import CondominioSection from "@/components/condominio/CondominioSection";
+import CondominioQuickNav from "@/components/condominio/CondominioQuickNav";
+
+const OnboardingProfile              = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
+const MemoriaPanel                   = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
+const ImplantacaoChecklist           = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
+const RevisaoMensal                  = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
+const MonthlyOperationalSummaryPanel = dynamic(() => import("@/components/MonthlyOperationalSummaryPanel"), { ssr: false });
+const RelatorioSaudePanel            = dynamic(() => import("@/components/RelatorioSaudePanel"), { ssr: false });
+const MonthlyReviewPanel             = dynamic(() => import("@/components/MonthlyReviewPanel"), { ssr: false });
+const MonthlyReviewHistoryPanel      = dynamic(() => import("@/components/MonthlyReviewHistoryPanel"), { ssr: false });
+const FinancialPanel                 = dynamic(() => import("@/components/FinancialPanel"), { ssr: false });
+const DocumentosEssenciaisPanel      = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
+const CalendarioOperacionalPanel     = dynamic(() => import("@/components/CalendarioOperacionalPanel"), { ssr: false });
+const FuncionariosPanel              = dynamic(() => import("@/components/FuncionariosPanel"), { ssr: false });
+const TimelineOperacional            = dynamic(() => import("@/components/TimelineOperacional"), { ssr: false });
+const AccountPanel                   = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
+const LocalDataIntegrityPanel        = dynamic(() => import("@/components/LocalDataIntegrityPanel"), { ssr: false });
+const BackupPanel                    = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
+const NotificationSettingsPanel      = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
+const HealthTrendChart               = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
+
+type Props = {
+  refreshKey: number;
+  hasCondominioData: boolean;
+  condoName: string;
+  shouldExpandMemoria: boolean;
+  showNotifSettings: boolean;
+  onRefresh: () => void;
+  onMemoriaSaved: () => void;
+  onSetupMemoria: () => void;
+  onOpenMonthlyReview: () => void;
+  onNavigateTab: (tab: AppTab) => void;
+  onToggleNotifSettings: () => void;
+};
+
+export default function CondominioTab({
+  refreshKey,
+  hasCondominioData,
+  condoName,
+  shouldExpandMemoria,
+  showNotifSettings,
+  onRefresh,
+  onMemoriaSaved,
+  onSetupMemoria,
+  onOpenMonthlyReview,
+  onNavigateTab,
+  onToggleNotifSettings,
+}: Props) {
+  return (
+    <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
+
+      {/* ── Cabeçalho ──────────────────────────────────────────────── */}
+      <div className="px-5 pb-1 pt-1 sm:px-6">
+        <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
+          Condomínio
+        </p>
+        <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
+          {condoName || (hasCondominioData ? "Meu prédio" : "Ativar monitoramento")}
+        </p>
+        {hasCondominioData ? (
+          <p className="mt-1 text-[12.5px] leading-relaxed text-navy-500">
+            Dados essenciais, rotina operacional e segurança dos registros.
+          </p>
+        ) : (
+          <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
+            Cadastre os dados essenciais para acompanhar prazos, pendências e saúde operacional.
+          </p>
+        )}
+      </div>
+
+      {/* ── Quick Nav — só com dados ────────────────────────────────── */}
+      {hasCondominioData && <CondominioQuickNav />}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 1 — Meu prédio (sempre visível)                      */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      <CondominioSection
+        id="visao-geral"
+        title="Meu prédio"
+        subtitle="Perfil, estrutura e vencimentos essenciais."
+        eyebrow="Prédio"
+        priority="high"
+      >
+        <OnboardingProfile
+          onProfileSaved={onRefresh}
+          onSetupMemoria={onSetupMemoria}
+          forceShow
+        />
+        {hasCondominioData && (
+          <MemoriaPanel
+            onSaved={onMemoriaSaved}
+            autoExpand={shouldExpandMemoria}
+          />
+        )}
+      </CondominioSection>
+
+      {/* SEÇÃO 2 — Implantação (recolhível, começa fechada) */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="implantacao"
+          title="Implantação"
+          subtitle="Progresso de organização e itens pendentes."
+          eyebrow="Setup"
+          priority="low"
+          defaultOpen={false}
+        >
+          <ImplantacaoChecklist
+            onNavigate={(target) => {
+              if (target === "condominio") {
+                const el = document.getElementById("revisao-mensal");
+                el?.scrollIntoView({ behavior: "smooth", block: "start" });
+              } else if (target === "ferramentas") {
+                onNavigateTab("ferramentas");
+              }
+            }}
+          />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 3 — Revisão mensal (alta prioridade)                 */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="revisao-mensal"
+          title="Revisão mensal"
+          subtitle="Ritual de controle operacional com histórico."
+          eyebrow="Ritual"
+          priority="high"
+        >
+          <RevisaoMensal
+            refreshKey={refreshKey}
+            onDone={onRefresh}
+          />
+          <RelatorioSaudePanel />
+          <MonthlyOperationalSummaryPanel />
+          <MonthlyReviewPanel
+            refreshKey={refreshKey}
+            onRefresh={onRefresh}
+          />
+          <MonthlyReviewHistoryPanel
+            refreshKey={refreshKey}
+            onStartReview={onOpenMonthlyReview}
+          />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 4 — Financeiro auxiliar                              */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="financeiro"
+          title="Financeiro auxiliar"
+          subtitle="Caixa, contas e riscos para acompanhamento local."
+          eyebrow="Financeiro"
+          priority="high"
+        >
+          <FinancialPanel onSaved={onRefresh} />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 5 — Documentos essenciais                            */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="documentos"
+          title="Documentos essenciais"
+          subtitle="Convenção, AVCB, seguro, laudos e contratos."
+          eyebrow="Documentos"
+          priority="high"
+        >
+          <DocumentosEssenciaisPanel onSaved={onRefresh} />
+          <CalendarioOperacionalPanel refreshKey={refreshKey} />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 6 — Operação e pessoas (recolhível)                  */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="operacao"
+          title="Operação e pessoas"
+          subtitle="Funcionários, férias, contratos e histórico."
+          eyebrow="Operação"
+          priority="normal"
+          defaultOpen={false}
+        >
+          <FuncionariosPanel onSaved={onRefresh} />
+          <TimelineOperacional refreshKey={refreshKey} />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 7 — Segurança dos dados (recolhível)                 */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="dados"
+          title="Segurança dos dados"
+          subtitle="Backup, integridade, conta e configurações."
+          eyebrow="Dados"
+          priority="normal"
+          defaultOpen={false}
+        >
+          <section className="px-5 pb-2 pt-2 sm:px-6">
+            <AccountPanel onRefresh={onRefresh} />
+          </section>
+          <LocalDataIntegrityPanel refreshKey={refreshKey} />
+          <BackupPanel onImported={onRefresh} />
+
+          <section className="px-5 pb-2 pt-1 sm:px-6">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">
+                Notificações
+              </p>
+              <button
+                type="button"
+                onClick={onToggleNotifSettings}
+                className="rounded-full px-2.5 py-1 text-[11px] font-medium text-navy-500 transition-colors hover:bg-navy-100"
+              >
+                {showNotifSettings ? "Fechar" : "Configurar"}
+              </button>
+            </div>
+            {showNotifSettings && <NotificationSettingsPanel />}
+          </section>
+
+          <section className="px-5 pb-3 pt-1 sm:px-6">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">
+              Evolução da saúde operacional
+            </p>
+            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+              <HealthTrendChart />
+            </div>
+          </section>
+        </CondominioSection>
+      )}
+
+      {/* ── Sobre o app ─────────────────────────────────────────────── */}
+      <section className="px-5 pb-3 pt-5 sm:px-6">
+        <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
+          <div className="mb-3 flex items-center gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Sobre o app</p>
+          </div>
+          <div className="space-y-2">
+            <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+              <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Ferramenta de apoio operacional</p>
+              <p className="text-[11px] leading-relaxed text-navy-500">
+                O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou profissional especializado. As orientações têm caráter informativo.
+              </p>
+            </div>
+            <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+              <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Seus dados ficam no dispositivo</p>
+              <p className="text-[11px] leading-relaxed text-navy-500">
+                Os dados do condomínio são salvos localmente neste aparelho. Nada é enviado a terceiros. Use "Exportar dados" para fazer backup.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-0.5 pt-1">
+              <a href="/termos" className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600">
+                Termos de uso
+              </a>
+              <a href="/privacidade" className="text-[10.5px] text-navy-400 underline underline-offset-2 transition-colors hover:text-navy-600">
+                Política de privacidade
+              </a>
+              <p className="w-full text-[10px] leading-relaxed text-navy-300">
+                Versão preliminar — pendente revisão jurídica.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  );
+}
