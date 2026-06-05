@@ -47,7 +47,7 @@ A Fase 39 não fez alterações em arquivos `.ts`, `.tsx` ou `.css`. Todos os en
 
 | Variável | Estado atual | Impacto se ausente |
 |----------|--------------|-------------------|
-| `NEXT_PUBLIC_ADMIN_KEY` | Não configurada | /admin bloqueado em prod; auto-login em dev |
+| `ADMIN_KEY` | Não configurada | /admin bloqueado em prod; auto-login em dev |
 | `NEXT_PUBLIC_SUPABASE_URL` | Não configurada | Telemetria desabilitada (no-op) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Não configurada | Idem |
 | `NEXT_PUBLIC_APP_URL` | Não configurada | WhatsApp share funciona sem link do app |
@@ -78,7 +78,7 @@ Ver `docs/status-supabase-telemetria-fase-39.md` para SQL completo e checklist d
 
 | Cenário | Comportamento |
 |---------|---------------|
-| Dev local, sem `NEXT_PUBLIC_ADMIN_KEY` | Auto-login (modo dev — conveniente) |
+| Dev local, sem `ADMIN_KEY` | Auto-login (modo dev — conveniente) |
 | Dev local, com chave | Pede senha via `window.prompt` |
 | Produção, sem chave | Bloqueado — mostra "Acesso negado." |
 | Produção, com chave | Pede senha normalmente |
@@ -196,7 +196,7 @@ Nenhum — nesta fase, nenhuma alteração de código foi necessária. O produto
 
 - [ ] **Teste PWA físico** — Android (Chrome) + iOS (Safari) — `docs/resultado-teste-pwa-fase-39.md`
 - [ ] **Configurar Supabase** — 15–20 min — `docs/setup-supabase-telemetria.md`
-- [ ] **Definir `NEXT_PUBLIC_ADMIN_KEY`** no Vercel + testar acesso em produção
+- [ ] **Definir `ADMIN_KEY`** no Vercel + testar acesso em produção
 - [ ] **Auditoria /admin ao vivo** — clicar "Rodar auditoria" e confirmar recall ≥ 75%
 
 ### Bloqueadores de processo
@@ -253,7 +253,7 @@ Route (app)                              Size     First Load JS
 | Telemetria configurada | ⏳ código pronto; Supabase pendente |
 | Documentos legais revisados | ⏳ rascunhos prontos; advogado pendente |
 | Canal de feedback ativo | ⏳ plano pronto; ativação pendente |
-| `NEXT_PUBLIC_ADMIN_KEY` no Vercel | ⏳ guia pronto; configuração pendente |
+| `ADMIN_KEY` no Vercel | ⏳ guia pronto; configuração pendente |
 
 ---
 
@@ -266,7 +266,7 @@ A Fase 40 é a fase de "sair da cadeira" — tudo o que precisa ser feito requer
 ### Tarefas sugeridas
 
 1. **Criar projeto Supabase** (15 min) — seguir `docs/setup-supabase-telemetria.md`
-2. **Adicionar variáveis no Vercel** (10 min) — `NEXT_PUBLIC_ADMIN_KEY`, URLs Supabase, `NEXT_PUBLIC_APP_URL`
+2. **Adicionar variáveis no Vercel** (10 min) — `ADMIN_KEY`, URLs Supabase, `NEXT_PUBLIC_APP_URL`
 3. **Fazer novo deploy** e confirmar que `/admin` pede senha em produção
 4. **DevTools em Chrome desktop** — Application → Manifest → confirmar sem erros (10 min)
 5. **Teste PWA em Android** — instalar e verificar standalone + ícone (20 min)

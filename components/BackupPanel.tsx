@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { exportUserData, getUserBackupJson, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import AlertBox from "@/components/ui/AlertBox";
 
 type Props = {
   onImported?: () => void;
@@ -158,29 +159,21 @@ export default function BackupPanel({ onImported }: Props) {
           {(() => {
             if (!lastBackupAt) {
               return (
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-3">
-                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                    <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <p className="text-[11.5px] leading-relaxed text-amber-800">
-                    <strong>Nenhum backup exportado ainda.</strong> Exporte agora para proteger os dados do condomínio.
-                  </p>
-                </div>
+                <AlertBox
+                  tone="warning"
+                  title="Nenhum backup exportado ainda."
+                  description="Exporte agora para proteger os dados locais do condomínio."
+                />
               );
             }
             const days = Math.floor((Date.now() - new Date(lastBackupAt).getTime()) / 86400000);
             if (days >= 14) {
               return (
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-3">
-                  <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M8 2L1.5 13.5h13L8 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                    <path d="M8 6.5v3M8 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                  <p className="text-[11.5px] leading-relaxed text-amber-800">
-                    Último backup há <strong>{days} dias</strong> — exporte uma cópia atualizada.
-                  </p>
-                </div>
+                <AlertBox
+                  tone="warning"
+                  title={`Último backup há ${days} dias.`}
+                  description="Exporte uma cópia atualizada para manter a segurança dos dados locais."
+                />
               );
             }
             return null;
@@ -200,7 +193,7 @@ export default function BackupPanel({ onImported }: Props) {
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-[12.5px] font-medium text-navy-800">Exportar dados</p>
-              <p className="text-[11px] text-navy-400">Backup v7: memória, documentos, funcionários, pendências, ocorrências, agenda e financeiro local</p>
+              <p className="text-[11px] text-navy-400">Backup local v9: memória, documentos essenciais, funcionários, pendências, agenda, financeiro auxiliar e histórico de revisão mensal</p>
             </div>
             <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

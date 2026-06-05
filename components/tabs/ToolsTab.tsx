@@ -14,12 +14,12 @@ const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajus
 const CommandCenterPanel    = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel  = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
 
-const TOOL_CATEGORIES: Array<{ id: ToolGroup; icon: string; title: string; description: string }> = [
-  { id: "rotina",      icon: "📋", title: "Rotina do síndico", description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
-  { id: "comunicados", icon: "📢", title: "Comunicados",        description: "Gere avisos formais para moradores em segundos." },
-  { id: "simuladores", icon: "🧮", title: "Simuladores",        description: "Estime multas, juros e reajuste de cota condominial." },
-  { id: "checklists",  icon: "✅", title: "Checklists",         description: "Conferência guiada para assembleias, obras e manutenção." },
-  { id: "temas",       icon: "🔍", title: "Explorar por tema",  description: "Orientações práticas organizadas por tema de gestão." },
+const TOOL_CATEGORIES: Array<{ id: ToolGroup; code: string; title: string; description: string }> = [
+  { id: "rotina",      code: "RT", title: "Rotina do síndico", description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
+  { id: "comunicados", code: "CM", title: "Comunicados",        description: "Gere avisos formais para moradores em segundos." },
+  { id: "simuladores", code: "SM", title: "Simuladores",        description: "Estime multas, juros e reajuste de cota condominial." },
+  { id: "checklists",  code: "CK", title: "Checklists",         description: "Conferência guiada para assembleias, obras e manutenção." },
+  { id: "temas",       code: "TM", title: "Explorar por tema",  description: "Orientações práticas organizadas por tema de gestão." },
 ];
 
 type Props = {
@@ -94,8 +94,8 @@ export default function ToolsTab({
                 onClick={() => onSetActiveToolGroup(cat.id)}
                 className="flex items-center gap-4 rounded-xl border border-navy-100 bg-white px-4 py-4 text-left shadow-sm transition-all hover:border-navy-200 hover:shadow active:scale-[0.98]"
               >
-                <span className="flex-shrink-0 text-[22px] leading-none" aria-hidden="true">
-                  {cat.icon}
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-navy-50 text-[10.5px] font-bold tracking-[0.08em] text-navy-500" aria-hidden="true">
+                  {cat.code}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13.5px] font-semibold text-navy-800">{cat.title}</p>

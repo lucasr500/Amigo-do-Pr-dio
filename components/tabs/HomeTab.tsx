@@ -89,31 +89,10 @@ export default function HomeTab({
         />
       )}
 
-      {/* Setup card — aponta o que falta e o que ativa */}
-      {!subView && hasCondominioData && (
-        <ProgressiveSetupCard
-          refreshKey={refreshKey}
-          onNavigate={(target) => {
-            void trackEvent("profile_completion_cta_tap", {
-              completion_bucket: completionBucket(profileCompletion),
-            });
-            onNavigateTab(target);
-          }}
-        />
-      )}
-
       {/* Conteúdo normal da Home — com dados */}
       {!subView && hasCondominioData && (
         <>
           <DynamicGreeting condoName={condoName} />
-          <HomeSaudeCard
-            refreshKey={refreshKey}
-            onClick={() => onNavigateToSubView("saude")}
-          />
-          <HomeAgendaCard
-            refreshKey={refreshKey}
-            onNavigate={() => onNavigateTab("agenda")}
-          />
           <HomePriorityStrip
             refreshKey={refreshKey}
             onNavigate={(target) => {
@@ -124,11 +103,28 @@ export default function HomeTab({
             }}
             onOpenNotifications={onOpenNotifications}
           />
-          <PushPromptStrip />
           <MonthlyReviewCard
             refreshKey={refreshKey}
             onOpen={onOpenMonthlyReview}
           />
+          <HomeAgendaCard
+            refreshKey={refreshKey}
+            onNavigate={() => onNavigateTab("agenda")}
+          />
+          <HomeSaudeCard
+            refreshKey={refreshKey}
+            onClick={() => onNavigateToSubView("saude")}
+          />
+          <ProgressiveSetupCard
+            refreshKey={refreshKey}
+            onNavigate={(target) => {
+              void trackEvent("profile_completion_cta_tap", {
+                completion_bucket: completionBucket(profileCompletion),
+              });
+              onNavigateTab(target);
+            }}
+          />
+          <PushPromptStrip />
           {urgentCount > 0 && (
             <div className="px-5 pb-3 sm:px-6">
               <button
@@ -159,7 +155,12 @@ export default function HomeTab({
           {showBackupNudge && !isDemo && (
             <div className="px-5 pb-3 sm:px-6">
               <div className="flex items-center gap-3 rounded-[14px] border border-amber-200/80 bg-amber-50/70 px-4 py-3">
-                <span className="flex-shrink-0 text-[13px]" aria-hidden="true">💾</span>
+                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-amber-100" aria-hidden="true">
+                  <svg className="h-3.5 w-3.5 text-amber-700" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2v7M8 9L5.5 6.5M8 9l2.5-2.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 11.5h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
+                </span>
                 <p className="min-w-0 flex-1 text-[12px] leading-snug text-amber-800">
                   Faça um backup para proteger os dados do prédio.
                 </p>

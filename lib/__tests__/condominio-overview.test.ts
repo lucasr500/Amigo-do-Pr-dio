@@ -32,6 +32,7 @@ vi.mock("../health-score", () => ({
 }));
 vi.mock("../command-center", () => ({
   buildCommandCenter: vi.fn(),
+  buildCommandCenterCached: vi.fn(),
 }));
 vi.mock("../financial", () => ({
   getFinancialSummary: vi.fn(),
@@ -154,7 +155,7 @@ function noData() {
 beforeEach(() => {
   noData();
   vi.mocked(healthMod.computeHealthScore).mockReturnValue(makeHealth(80));
-  vi.mocked(cmdMod.buildCommandCenter).mockReturnValue(makeCmd());
+  vi.mocked(cmdMod.buildCommandCenterCached).mockReturnValue(makeCmd());
   vi.mocked(financialMod.getFinancialSummary).mockReturnValue(makeFinancial("baixo"));
   vi.mocked(reviewMod.getMonthlyReviewState).mockReturnValue(makeReviewState("pendente"));
   vi.mocked(reviewMod.getLastCompletedMonthlyReview).mockReturnValue(null);
@@ -212,7 +213,7 @@ describe("derivação status critico", () => {
     expect(buildCondominioOverview().status).toBe("critico");
   });
   it("critico quando riskLevel critico", () => {
-    vi.mocked(cmdMod.buildCommandCenter).mockReturnValue(makeCmd({ riskLevel: "critico" as const }));
+    vi.mocked(cmdMod.buildCommandCenterCached).mockReturnValue(makeCmd({ riskLevel: "critico" as const }));
     expect(buildCondominioOverview().status).toBe("critico");
   });
   it("critico quando cashRisk critico", () => {
@@ -235,7 +236,7 @@ describe("derivação status atencao", () => {
       resolveTarget: "condominio", motivo: "Vencido", cta: "Resolver",
       sourceModule: "avcb",
     };
-    vi.mocked(cmdMod.buildCommandCenter).mockReturnValue(makeCmd({ urgentActions: [action] }));
+    vi.mocked(cmdMod.buildCommandCenterCached).mockReturnValue(makeCmd({ urgentActions: [action] }));
     expect(buildCondominioOverview().status).toBe("atencao");
   });
 });
@@ -249,7 +250,7 @@ describe("nextAction", () => {
       prioridade: "urgente", categoria: "legal",
       resolveTarget: "condominio", motivo: "Vencido há 30 dias", cta: "Renovar",
     };
-    vi.mocked(cmdMod.buildCommandCenter).mockReturnValue(makeCmd({ topPriority: action }));
+    vi.mocked(cmdMod.buildCommandCenterCached).mockReturnValue(makeCmd({ topPriority: action }));
     const m = buildCondominioOverview();
     expect(m.nextAction?.title).toBe("Renovar AVCB");
     expect(m.nextAction?.reason).toBe("Vencido há 30 dias");
@@ -269,7 +270,7 @@ describe("warnings", () => {
       id, titulo, descricao: "", prioridade: "urgente", categoria: "operacional",
       resolveTarget: "condominio",
     });
-    vi.mocked(cmdMod.buildCommandCenter).mockReturnValue(makeCmd({
+    vi.mocked(cmdMod.buildCommandCenterCached).mockReturnValue(makeCmd({
       urgentActions: [
         makeAction("1", "Renovar AVCB"),
         makeAction("2", "Vistoria elevador"),

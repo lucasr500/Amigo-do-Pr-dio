@@ -606,7 +606,7 @@ Fase de documentação e auditoria. Zero alterações de código-fonte.
 - **Compatibilidade retroativa:** `fimMandatoSindico` é opcional — backups antigos sem o campo continuam funcionando
 
 ### Entregues na Fase 38
-- **Admin hardening:** `app/admin/page.tsx` — produção sem `NEXT_PUBLIC_ADMIN_KEY` → bloqueio automático (antes: auto-login)
+- **Admin hardening:** `app/admin/page.tsx` — produção sem `ADMIN_KEY` → bloqueio automático (antes: auto-login)
 - **CCT copy fix:** `components/Response.tsx` — aviso regional mais claro sobre limitação CCT SECOVI-Rio
 - **Setup Supabase:** `docs/setup-supabase-telemetria.md` — SQL, env vars, queries de acompanhamento
 - **Rascunho jurídico:** `docs/rascunho-termos-de-uso.md` e `docs/rascunho-politica-privacidade.md` (LGPD)
@@ -847,7 +847,7 @@ Para ativar, criar `.env.local` com:
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://<project>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
-NEXT_PUBLIC_ADMIN_KEY=<senha-do-painel>
+ADMIN_KEY=<senha-do-painel>
 ```
 
 Eventos mais importantes para acompanhar:

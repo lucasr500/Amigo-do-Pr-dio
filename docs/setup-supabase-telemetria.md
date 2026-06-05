@@ -82,7 +82,7 @@ CREATE POLICY "read_anon"
 ```
 
 > **Nota de segurança:** Ambas as policies usam `TO anon` porque o painel `/admin` autentica
-> via senha local (`NEXT_PUBLIC_ADMIN_KEY`) e chama `fetchRecentEvents()` com a anon key.
+> via senha local (`ADMIN_KEY`) e chama `fetchRecentEvents()` com a anon key.
 > Os eventos não contêm dados pessoais — apenas métricas de uso agregável.
 > Para produção com escala, adicionar rate limiting via Supabase Edge Functions.
 
@@ -115,10 +115,10 @@ Criar arquivo `.env.local` na raiz do projeto:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<sua-anon-key>
-NEXT_PUBLIC_ADMIN_KEY=<senha-para-o-painel-admin>
+ADMIN_KEY=<senha-para-o-painel-admin>
 ```
 
-> **IMPORTANTE — segurança do `NEXT_PUBLIC_ADMIN_KEY`:**
+> **IMPORTANTE — segurança do `ADMIN_KEY`:**
 > - Esta senha protege o painel `/admin` em produção
 > - Sem ela configurada, o painel `/admin` é bloqueado automaticamente em produção
 > - Em desenvolvimento local, sem a variável, o painel abre sem senha (modo dev)
@@ -135,7 +135,7 @@ Se o app está hospedado no Vercel:
 2. Adicionar as 3 variáveis:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_ADMIN_KEY`
+   - `ADMIN_KEY`
 3. Marcar scope: **Production** (e opcionalmente Preview)
 4. Fazer um novo deploy para aplicar
 
@@ -155,7 +155,7 @@ Se o app está hospedado no Vercel:
 
 ### Painel `/admin`
 
-1. Acessar `/admin` — vai pedir senha (`NEXT_PUBLIC_ADMIN_KEY`)
+1. Acessar `/admin` — vai pedir senha (`ADMIN_KEY`)
 2. Na seção "Telemetria (Supabase)", deve aparecer dados reais
 3. Se Supabase não responder, o painel cai silenciosamente para dados locais
 

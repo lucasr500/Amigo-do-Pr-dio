@@ -5,7 +5,7 @@
 // 3. Como está o prédio?        4. Está salvo?
 
 import { useEffect, useState } from "react";
-import { buildCommandCenter, type CommandCenterResult } from "@/lib/command-center";
+import { buildCommandCenterCached, type CommandCenterResult } from "@/lib/command-center";
 import { getSyncStatus, formatLastSync } from "@/lib/sync/syncStatus";
 import { isEnabled } from "@/lib/feature-flags";
 import { buildSinceLastVisitContext, type SinceLastVisitContext } from "@/lib/since-last-visit";
@@ -38,7 +38,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const cc = buildCommandCenter();
+    const cc = buildCommandCenterCached();
     setData(cc);
     setSinceLastVisit(buildSinceLastVisitContext());
 
@@ -238,7 +238,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
         {/* Linha 4: sync status discreto */}
         {syncLabel && (
           <p className="mt-1 text-[10.5px] text-navy-400">
-            {syncLabel.includes("Falha") ? "⚠️ " : "✓ "}{syncLabel}
+            {syncLabel.includes("Falha") ? "Falha: " : "OK: "}{syncLabel}
           </p>
         )}
       </div>

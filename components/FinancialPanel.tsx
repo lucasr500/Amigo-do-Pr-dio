@@ -29,6 +29,7 @@ import { addPendencia, getPendencias } from "@/lib/session-pendencias";
 import { addAgendaEvent, getAgendaEvents } from "@/lib/session-agenda";
 import EmptyState from "@/components/ui/EmptyState";
 import ActionButton from "@/components/ui/ActionButton";
+import MetricCard from "@/components/ui/MetricCard";
 
 type Props = {
   onSaved?: () => void;
@@ -64,10 +65,10 @@ function formatMoneyCompact(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-const RISK_COLORS: Record<string, string> = {
-  "crítico": "text-terracotta-700",
-  "atenção": "text-amber-700",
-  "baixo":   "text-teal-700",
+const RISK_STATUS: Record<string, "good" | "warning" | "danger"> = {
+  "crítico": "danger",
+  "atenção": "warning",
+  "baixo":   "good",
 };
 
 export default function FinancialPanel({ onSaved }: Props) {
@@ -265,7 +266,6 @@ export default function FinancialPanel({ onSaved }: Props) {
     return true;
   });
 
-  const riskColor = RISK_COLORS[risk.level] ?? "text-navy-600";
   const hasData = entries.length > 0 || summary.estimatedBalance !== 0;
 
   return (
@@ -295,33 +295,27 @@ export default function FinancialPanel({ onSaved }: Props) {
 
         {/* ── 4 cards executivos ── */}
         <div className="grid grid-cols-2 gap-2 px-4 sm:grid-cols-4">
-          <div className="rounded-[14px] bg-navy-50/60 px-3 py-2.5">
-            <p className="text-[10.5px] font-medium text-navy-400">Saldo estimado</p>
-            <p className={`mt-0.5 text-[13px] font-semibold ${summary.estimatedBalance < 0 ? "text-terracotta-700" : "text-navy-800"}`}>
-              {formatMoneyCompact(summary.estimatedBalance)}
-            </p>
-          </div>
-          <div className="rounded-[14px] bg-navy-50/60 px-3 py-2.5">
-            <p className="text-[10.5px] font-medium text-navy-400">Resultado do mês</p>
-            <p className={`mt-0.5 text-[13px] font-semibold ${resultado < 0 ? "text-terracotta-700" : "text-teal-700"}`}>
-              {resultado >= 0 ? "+" : ""}{formatMoneyCompact(resultado)}
-            </p>
-          </div>
-          <div className="rounded-[14px] bg-navy-50/60 px-3 py-2.5">
-            <p className="text-[10.5px] font-medium text-navy-400">Contas próximas</p>
-            <p className="mt-0.5 text-[13px] font-semibold text-navy-800">
-              {totalUpcoming > 0 ? `${totalUpcoming} conta${totalUpcoming > 1 ? "s" : ""}` : "—"}
-            </p>
-            {windows.next3Days.length > 0 && (
-              <p className="text-[10px] text-terracotta-600">{windows.next3Days.length} em 3 dias</p>
-            )}
-          </div>
-          <div className="rounded-[14px] bg-navy-50/60 px-3 py-2.5">
-            <p className="text-[10.5px] font-medium text-navy-400">Risco de caixa</p>
-            <p className={`mt-0.5 text-[13px] font-semibold capitalize ${riskColor}`}>
-              {risk.level}
-            </p>
-          </div>
+          <MetricCard
+            label="Saldo estimado"
+            value={formatMoneyCompact(summary.estimatedBalance)}
+            status={summary.estimatedBalance < 0 ? "danger" : "neutral"}
+          />
+          <MetricCard
+            label="Resultado do mês"
+            value={`${resultado >= 0 ? "+" : ""}${formatMoneyCompact(resultado)}`}
+            status={resultado < 0 ? "danger" : "good"}
+          />
+          <MetricCard
+            label="Contas próximas"
+            value={totalUpcoming > 0 ? `${totalUpcoming} conta${totalUpcoming > 1 ? "s" : ""}` : "—"}
+            detail={windows.next3Days.length > 0 ? `${windows.next3Days.length} em 3 dias` : undefined}
+            status={windows.next3Days.length > 0 ? "danger" : totalUpcoming > 0 ? "warning" : "neutral"}
+          />
+          <MetricCard
+            label="Risco de caixa"
+            value={risk.level}
+            status={RISK_STATUS[risk.level] ?? "neutral"}
+          />
         </div>
 
         {/* ── Frase de insight + ação ── */}

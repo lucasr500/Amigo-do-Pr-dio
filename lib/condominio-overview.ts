@@ -1,6 +1,6 @@
 import { hasMemoriaOperacional, hasProfile, getLastBackupAt } from "@/lib/session";
 import { computeHealthScore } from "@/lib/health-score";
-import { buildCommandCenter } from "@/lib/command-center";
+import { buildCommandCenterCached } from "@/lib/command-center";
 import { getFinancialSummary, currentMonthKey } from "@/lib/financial";
 import { getDocumentosSummary } from "@/lib/session-documentos";
 import {
@@ -110,7 +110,7 @@ export function buildCondominioOverview(): CondominioOverviewModel {
   try { health = computeHealthScore(); } catch { health = null; }
 
   let cmd;
-  try { cmd = buildCommandCenter(); } catch { cmd = null; }
+  try { cmd = buildCommandCenterCached(); } catch { cmd = null; }
 
   let financial;
   try { financial = getFinancialSummary(month); } catch { financial = null; }

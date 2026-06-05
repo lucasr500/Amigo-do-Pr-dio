@@ -1,6 +1,6 @@
 "use client";
 
-import { buildCommandCenter } from "@/lib/command-center";
+import { buildCommandCenterCached } from "@/lib/command-center";
 import { buildMonthlyFinancialExecutiveSummary, currentMonthKey } from "@/lib/financial";
 import { buildLocalIntegrityReport } from "@/lib/local-integrity";
 import { getAgendaEvents, getPendencias } from "@/lib/session";
@@ -15,7 +15,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function buildMonthlyOperationalSummary(month = currentMonthKey()): string {
-  const command   = buildCommandCenter();
+  const command   = buildCommandCenterCached();
   const integrity = buildLocalIntegrityReport();
   const pendencias = getPendencias();
   const agenda    = getAgendaEvents();

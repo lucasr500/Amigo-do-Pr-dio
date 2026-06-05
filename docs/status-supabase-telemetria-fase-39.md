@@ -28,7 +28,7 @@ O código de telemetria está **100% implementado e funcional**. Sem Supabase co
 |----------|--------|--------------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Não configurada | Telemetria desabilitada (no-op) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Não configurada | Idem |
-| `NEXT_PUBLIC_ADMIN_KEY` | Não configurada | /admin bloqueado em prod, auto-login em dev |
+| `ADMIN_KEY` | Não configurada | /admin bloqueado em prod, auto-login em dev |
 | `NEXT_PUBLIC_APP_URL` | Não configurada | Compartilhamento WhatsApp funciona sem link |
 
 ---
@@ -74,7 +74,7 @@ CREATE POLICY "read_admin"
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<project-id>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key-do-projeto>
-NEXT_PUBLIC_ADMIN_KEY=<senha-forte-para-o-painel>
+ADMIN_KEY=<senha-forte-para-o-painel>
 NEXT_PUBLIC_APP_URL=https://<url-do-app-no-vercel>.vercel.app
 ```
 
@@ -106,7 +106,7 @@ FROM events WHERE event = 'session_open'
 Após configurar Supabase e adicionar as env vars ao Vercel:
 
 1. Abrir o app em produção → usar normalmente por 2 minutos
-2. Acessar `/admin` → inserir `NEXT_PUBLIC_ADMIN_KEY`
+2. Acessar `/admin` → inserir `ADMIN_KEY`
 3. Seção "Telemetria" → deve mostrar **"Fonte: Supabase (dados reais)"**
 4. Verificar métricas: total de sessões, queries, fallback rate
 5. Se ainda mostrar "localStorage (dispositivo atual)": confirmar que env vars foram salvas e deploy foi feito após adicioná-las

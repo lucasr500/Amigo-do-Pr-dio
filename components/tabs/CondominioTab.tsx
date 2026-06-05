@@ -13,9 +13,7 @@ const CondominioOverview = dynamic(
 const OnboardingProfile              = dynamic(() => import("@/components/OnboardingProfile"), { ssr: false });
 const MemoriaPanel                   = dynamic(() => import("@/components/MemoriaPanel"), { ssr: false });
 const ImplantacaoChecklist           = dynamic(() => import("@/components/ImplantacaoChecklist"), { ssr: false });
-const RevisaoMensal                  = dynamic(() => import("@/components/RevisaoMensal"), { ssr: false });
 const MonthlyOperationalSummaryPanel = dynamic(() => import("@/components/MonthlyOperationalSummaryPanel"), { ssr: false });
-const RelatorioSaudePanel            = dynamic(() => import("@/components/RelatorioSaudePanel"), { ssr: false });
 const MonthlyReviewPanel             = dynamic(() => import("@/components/MonthlyReviewPanel"), { ssr: false });
 const MonthlyReviewHistoryPanel      = dynamic(() => import("@/components/MonthlyReviewHistoryPanel"), { ssr: false });
 const FinancialPanel                 = dynamic(() => import("@/components/FinancialPanel"), { ssr: false });
@@ -129,20 +127,15 @@ export default function CondominioTab({
         <CondominioSection
           id="revisao-mensal"
           title="Revisão mensal"
-          subtitle="Ritual de controle operacional com histórico."
+          subtitle="Revisão mensal guiada, resumo operacional copiável e histórico."
           eyebrow="Ritual"
           priority="high"
         >
-          <RevisaoMensal
-            refreshKey={refreshKey}
-            onDone={onRefresh}
-          />
-          <RelatorioSaudePanel />
-          <MonthlyOperationalSummaryPanel />
           <MonthlyReviewPanel
             refreshKey={refreshKey}
             onRefresh={onRefresh}
           />
+          <MonthlyOperationalSummaryPanel />
           <MonthlyReviewHistoryPanel
             refreshKey={refreshKey}
             onStartReview={onOpenMonthlyReview}

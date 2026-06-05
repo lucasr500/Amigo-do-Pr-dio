@@ -29,6 +29,8 @@ import { addAgendaEvent, getAgendaEvents } from "@/lib/session-agenda";
 import { addFinancialEntry, currentMonthKey } from "@/lib/financial";
 import { trackEvent } from "@/lib/telemetry";
 import EmptyState from "@/components/ui/EmptyState";
+import FilterChips from "@/components/ui/FilterChips";
+import MetricCard from "@/components/ui/MetricCard";
 import { getWhereToFind } from "@/lib/discovery-hints";
 
 type Props = { onSaved?: () => void };
@@ -245,6 +247,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
   const filteredIds = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => matchesFilter(id, effectiveFilter));
   const isFiltered = effectiveFilter !== "todos";
+  const filterOptions = FILTERS.map((f) => ({ value: f, label: FILTER_LABEL[f] }));
 
   const openEditor = (id: string) => {
     const doc = docs[id];
@@ -473,44 +476,30 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         {/* ── 4 cards executivos ── */}
         {cadastrados > 0 && (
           <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <button
-              type="button"
+            <MetricCard
+              label="Críticos pendentes"
+              value={String(summary.criticosPendentes)}
+              status={summary.criticosPendentes > 0 ? "danger" : "neutral"}
               onClick={() => setActiveFilter("criticos")}
-              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "criticos" ? "bg-terracotta-100/70" : "bg-navy-50/60 hover:bg-terracotta-50/40"}`}
-            >
-              <p className="text-[10.5px] font-medium text-navy-400">Críticos pendentes</p>
-              <p className={`mt-0.5 text-[16px] font-bold ${summary.criticosPendentes > 0 ? "text-terracotta-700" : "text-navy-800"}`}>
-                {summary.criticosPendentes}
-              </p>
-            </button>
-            <button
-              type="button"
+            />
+            <MetricCard
+              label="Vencidos"
+              value={String(summary.vencidos)}
+              status={summary.vencidos > 0 ? "danger" : "neutral"}
               onClick={() => setActiveFilter("vencidos")}
-              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "vencidos" ? "bg-terracotta-100/70" : "bg-navy-50/60 hover:bg-terracotta-50/40"}`}
-            >
-              <p className="text-[10.5px] font-medium text-navy-400">Vencidos</p>
-              <p className={`mt-0.5 text-[16px] font-bold ${summary.vencidos > 0 ? "text-terracotta-700" : "text-navy-800"}`}>
-                {summary.vencidos}
-              </p>
-            </button>
-            <button
-              type="button"
+            />
+            <MetricCard
+              label="Próximos 60 dias"
+              value={String(summary.proximos)}
+              status={summary.proximos > 0 ? "warning" : "neutral"}
               onClick={() => setActiveFilter("proximos")}
-              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "proximos" ? "bg-amber-100/70" : "bg-navy-50/60 hover:bg-amber-50/40"}`}
-            >
-              <p className="text-[10.5px] font-medium text-navy-400">Próximos 60 dias</p>
-              <p className={`mt-0.5 text-[16px] font-bold ${summary.proximos > 0 ? "text-amber-700" : "text-navy-800"}`}>
-                {summary.proximos}
-              </p>
-            </button>
-            <button
-              type="button"
+            />
+            <MetricCard
+              label="Regulares"
+              value={String(summary.tenho)}
+              status="good"
               onClick={() => setActiveFilter("regulares")}
-              className={`rounded-[12px] px-3 py-2.5 text-left transition-colors ${activeFilter === "regulares" ? "bg-teal-100/70" : "bg-navy-50/60 hover:bg-teal-50/40"}`}
-            >
-              <p className="text-[10.5px] font-medium text-navy-400">Regulares</p>
-              <p className="mt-0.5 text-[16px] font-bold text-teal-700">{summary.tenho}</p>
-            </button>
+            />
           </div>
         )}
 
@@ -530,22 +519,13 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         )}
 
         {/* ── Filtros ── */}
-        <div className="mb-3 no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setActiveFilter(f)}
-              className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-medium transition-colors ${
-                activeFilter === f
-                  ? "bg-navy-700 text-white"
-                  : "border border-navy-100 bg-white text-navy-500 hover:bg-navy-50"
-              }`}
-            >
-              {FILTER_LABEL[f]}
-            </button>
-          ))}
-        </div>
+        <FilterChips
+          value={activeFilter}
+          options={filterOptions}
+          onChange={setActiveFilter}
+          ariaLabel="Filtros de documentos essenciais"
+          className="mb-3"
+        />
 
         {/* ── Feedback de ação ── */}
         {actionFeedback && (

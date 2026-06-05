@@ -343,7 +343,7 @@ Ativado automaticamente no primeiro acesso via `isFirstRun()`. Detectado por aus
 
 ### 6.9 Admin / Fundador
 
-Painel em `/admin` protegido por senha (`NEXT_PUBLIC_ADMIN_KEY`):
+Painel em `/admin` protegido por senha (`ADMIN_KEY`):
 - Lê telemetria **real** via Supabase (fonte: "Supabase (dados reais)")
 - Fallback para localStorage quando Supabase indisponível
 - Exibe: sessões, queries, taxa de fallback, top queries, tokens de fallback, distribuição de habit tier

@@ -12,7 +12,7 @@
 
 A Fase 38 consolidou a camada de segurança e documentação do produto antes da beta pública. Foram entregues:
 
-- **Hardening do `/admin`:** acesso bloqueado automaticamente em produção sem `NEXT_PUBLIC_ADMIN_KEY`
+- **Hardening do `/admin`:** acesso bloqueado automaticamente em produção sem `ADMIN_KEY`
 - **Correção do aviso CCT:** copy mais claro quanto à limitação regional
 - **Setup Supabase documentado:** SQL, env vars, queries úteis para acompanhamento da beta
 - **Rascunhos legais:** termos de uso e política de privacidade (LGPD) para revisão jurídica
@@ -130,7 +130,7 @@ if (stored === "ok" || !ADMIN_KEY) { setAuthed(true); return; }
 
 | Cenário | Comportamento |
 |---------|---------------|
-| Dev local, sem `NEXT_PUBLIC_ADMIN_KEY` | Auto-login (modo dev mantido) |
+| Dev local, sem `ADMIN_KEY` | Auto-login (modo dev mantido) |
 | Dev local, com chave | Pede senha |
 | Produção, sem chave | Bloqueado — "Acesso negado" |
 | Produção, com chave | Pede senha normalmente |
@@ -286,7 +286,7 @@ Route (app)                              Size     First Load JS
 
 - [ ] Grupos 4–16 do checklist RC executados manualmente
 - [ ] Verificação de DevTools (Application → Manifest) confirmada
-- [ ] Verificar `NEXT_PUBLIC_ADMIN_KEY` está configurada no Vercel
+- [ ] Verificar `ADMIN_KEY` está configurada no Vercel
 
 ---
 
@@ -302,7 +302,7 @@ Transformar o produto tecnicamente pronto em produto operacionalmente pronto par
 
 1. **Executar checklist RC completo** (grupos 4–16) em dispositivo físico — ±90 minutos
 2. **Configurar Supabase** seguindo `docs/setup-supabase-telemetria.md` — ±20 minutos
-3. **Definir `NEXT_PUBLIC_ADMIN_KEY`** no Vercel + testar painel em produção — ±10 minutos
+3. **Definir `ADMIN_KEY`** no Vercel + testar painel em produção — ±10 minutos
 4. **Teste PWA** em Android e iOS — ±30 minutos por plataforma
 5. **Contratar ou consultar advogado** para revisar os rascunhos legais — processo externo
 6. **Definir canal de feedback** e preparar mensagem de convite para os primeiros síndicos

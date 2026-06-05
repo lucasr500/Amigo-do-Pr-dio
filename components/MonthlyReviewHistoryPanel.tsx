@@ -9,6 +9,7 @@ import {
   type MonthlyReviewSnapshot,
   type MonthlyReviewTrend,
 } from "@/lib/session-monthly-review";
+import Panel from "@/components/ui/Panel";
 
 // ─── Helpers visuais ──────────────────────────────────────────────────────────
 
@@ -144,16 +145,11 @@ export default function MonthlyReviewHistoryPanel({ refreshKey, onStartReview }:
   if (history.length === 0) {
     return (
       <section className="px-5 pb-3 pt-1 sm:px-6">
-        <div className="rounded-[18px] border border-navy-100 bg-white px-4 py-4 shadow-card">
-          <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">
-            Histórico de revisões
-          </p>
-          <p className="mt-1.5 text-[13px] font-semibold text-navy-800">
-            Evolução operacional mês a mês
-          </p>
-          <p className="mt-2 text-[12px] leading-relaxed text-navy-500">
-            Nenhuma revisão mensal concluída ainda. Quando você concluir a revisão deste mês, ela aparecerá aqui como parte do histórico operacional.
-          </p>
+        <Panel
+          eyebrow="Histórico de revisões"
+          title="Evolução operacional mês a mês"
+          subtitle="Nenhuma revisão mensal concluída ainda. Quando você concluir a revisão deste mês, ela aparecerá aqui como parte do histórico operacional."
+        >
           {onStartReview && (
             <button
               type="button"
@@ -166,7 +162,7 @@ export default function MonthlyReviewHistoryPanel({ refreshKey, onStartReview }:
           <p className="mt-3 text-[10.5px] leading-relaxed text-navy-400">
             Histórico de controle auxiliar — não substitui prestação de contas oficial.
           </p>
-        </div>
+        </Panel>
       </section>
     );
   }
@@ -175,22 +171,16 @@ export default function MonthlyReviewHistoryPanel({ refreshKey, onStartReview }:
 
   return (
     <section className="px-5 pb-3 pt-1 sm:px-6">
-      <div className="rounded-[18px] border border-navy-100 bg-white shadow-card">
-
-        {/* Cabeçalho */}
-        <div className="flex items-start justify-between px-4 pb-3 pt-4">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-navy-400">
-              Histórico de revisões
-            </p>
-            <p className="mt-0.5 text-[14px] font-semibold leading-snug text-navy-800">
-              Evolução operacional
-            </p>
-          </div>
+      <Panel
+        eyebrow="Histórico de revisões"
+        title="Evolução operacional"
+        bodyClassName=""
+        action={
           <span className={`mt-0.5 flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${trendCfg.style}`}>
             {trendCfg.icon} {trendCfg.label}
           </span>
-        </div>
+        }
+      >
 
         {/* Última revisão */}
         {last && (
@@ -229,7 +219,7 @@ export default function MonthlyReviewHistoryPanel({ refreshKey, onStartReview }:
             Histórico de controle auxiliar com dados locais. Não substitui prestação de contas oficial, demonstrativos contábeis ou documentos jurídicos.
           </p>
         </div>
-      </div>
+      </Panel>
     </section>
   );
 }

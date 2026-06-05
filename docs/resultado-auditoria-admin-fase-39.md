@@ -18,8 +18,8 @@ Motivo: a auditoria requer interação com navegador em ambiente de desenvolvime
 
 1. Rodar `npm run dev` ou acessar URL de produção
 2. Navegar para `/admin`
-3. Em dev: painel abre diretamente (sem senha se `NEXT_PUBLIC_ADMIN_KEY` não configurada)
-4. Em prod: inserir o valor de `NEXT_PUBLIC_ADMIN_KEY`
+3. Em dev: painel abre diretamente (sem senha se `ADMIN_KEY` não configurada)
+4. Em prod: inserir o valor de `ADMIN_KEY`
 5. Rolar até a seção **"Auditoria do Assistente"**
 6. Clicar em **"Rodar auditoria"**
 7. Aguardar resultado (< 1 segundo)

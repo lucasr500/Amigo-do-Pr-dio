@@ -186,7 +186,7 @@ da auditoria, não do motor.
 
 Para rodar: acesse `/admin` no browser → "Rodar auditoria" → analisar recall A, B e C.
 
-**Nota:** O painel /admin usa `NEXT_PUBLIC_ADMIN_KEY` para auth. Sem a variável configurada,
+**Nota:** O painel /admin usa `ADMIN_KEY` para auth. Sem a variável configurada,
 entra sem senha (modo dev). Sem Supabase configurado, usa localStorage local.
 
 ---

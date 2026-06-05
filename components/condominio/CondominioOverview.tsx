@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { CondominioOverviewModel, CondominioOverviewMetric } from "@/lib/condominio-overview";
 import { buildCondominioOverview } from "@/lib/condominio-overview";
 import type { AppTab } from "@/components/BottomNav";
+import MetricCard from "@/components/ui/MetricCard";
 
 // ─── Status colors & icons ────────────────────────────────────────────────────
 
@@ -11,7 +12,7 @@ const STATUS_RING: Record<string, string> = {
   bom:       "ring-emerald-200",
   atencao:   "ring-amber-200",
   critico:   "ring-red-200",
-  incompleto:"ring-navy-150",
+  incompleto:"ring-navy-100",
 };
 
 const STATUS_BG: Record<string, string> = {
@@ -35,18 +36,11 @@ const STATUS_TEXT: Record<string, string> = {
   incompleto:"text-navy-500",
 };
 
-const METRIC_VALUE_COLOR: Record<string, string> = {
-  bom:       "text-emerald-700",
-  atencao:   "text-amber-700",
-  critico:   "text-red-700",
-  incompleto:"text-navy-400",
-};
-
-const METRIC_BG: Record<string, string> = {
-  bom:       "bg-emerald-50 ring-emerald-100",
-  atencao:   "bg-amber-50 ring-amber-100",
-  critico:   "bg-red-50 ring-red-100",
-  incompleto:"bg-navy-50 ring-navy-100",
+const METRIC_STATUS: Record<string, "neutral" | "good" | "warning" | "danger"> = {
+  bom: "good",
+  atencao: "warning",
+  critico: "danger",
+  incompleto: "neutral",
 };
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -58,36 +52,6 @@ type Props = {
   onNavigateToSection?: (id: string) => void;
   onOpenMonthlyReview?: () => void;
 };
-
-// ─── Metric card ─────────────────────────────────────────────────────────────
-
-function MetricCard({
-  metric,
-  onPress,
-}: {
-  metric: CondominioOverviewMetric;
-  onPress: () => void;
-}) {
-  const st = metric.status;
-  return (
-    <button
-      type="button"
-      onClick={onPress}
-      className={`flex min-w-[88px] flex-1 flex-col items-start rounded-2xl px-3 py-2.5 ring-1 transition-all active:scale-[0.97] ${METRIC_BG[st]}`}
-      aria-label={`${metric.label}: ${metric.value}${metric.detail ? `, ${metric.detail}` : ""}`}
-    >
-      <span className="mb-1.5 text-[9.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-        {metric.label}
-      </span>
-      <span className={`text-[12.5px] font-bold leading-none ${METRIC_VALUE_COLOR[st]}`}>
-        {metric.value}
-      </span>
-      {metric.detail && (
-        <span className="mt-0.5 text-[10px] leading-snug text-navy-400">{metric.detail}</span>
-      )}
-    </button>
-  );
-}
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -201,8 +165,12 @@ export default function CondominioOverview({
             {model.metrics.map((m) => (
               <MetricCard
                 key={m.id}
-                metric={m}
-                onPress={() => handleMetricPress(m)}
+                label={m.label}
+                value={m.value}
+                detail={m.detail}
+                status={METRIC_STATUS[m.status]}
+                onClick={() => handleMetricPress(m)}
+                className="min-w-[88px] flex-1"
               />
             ))}
           </div>
@@ -214,7 +182,7 @@ export default function CondominioOverview({
         <div className="mx-4 mb-3 rounded-[14px] bg-white/60 px-3 py-2.5 ring-1 ring-red-100">
           {model.warnings.map((w, i) => (
             <p key={i} className="text-[11.5px] font-medium leading-snug text-red-700">
-              {i === 0 ? "⚠ " : "  "}{w}
+              {i === 0 ? "Atenção: " : ""}{w}
             </p>
           ))}
         </div>

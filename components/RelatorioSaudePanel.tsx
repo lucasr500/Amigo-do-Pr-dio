@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { buildCommandCenter } from "@/lib/command-center";
+import { buildCommandCenterCached } from "@/lib/command-center";
 import { getProfile, hasMemoriaOperacional } from "@/lib/session";
 
 function buildReportText(): string {
-  const cc = buildCommandCenter();
+  const cc = buildCommandCenterCached();
   const profile = getProfile();
   const name = profile?.nomeCondominio ?? "Condomínio";
   const today = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });

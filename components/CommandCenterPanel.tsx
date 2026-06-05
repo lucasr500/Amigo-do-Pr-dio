@@ -4,7 +4,7 @@
 // férias e notificações em um único painel coeso. Substitui PlanoAcaoPanel.
 
 import { useEffect, useState } from "react";
-import { buildCommandCenter, type CommandCenterResult, type CommandAction, type GuidanceEngineItem } from "@/lib/command-center";
+import { buildCommandCenterCached, type CommandCenterResult, type CommandAction, type GuidanceEngineItem } from "@/lib/command-center";
 import { buildDataMaturity } from "@/lib/data-maturity";
 
 type Props = {
@@ -27,14 +27,14 @@ const PRIORITY_GROUP_COLOR: Record<string, string> = {
 };
 
 const SOURCE_ICON: Record<string, string> = {
-  avcb:         "🛡️",
-  seguro:       "📋",
-  mandato:      "🏛️",
-  funcionarios: "👥",
-  documentos:   "📁",
-  rotina:       "🔧",
-  alerta:       "⚠️",
-  pendencias:   "📌",
+  avcb:         "AV",
+  seguro:       "SG",
+  mandato:      "MD",
+  funcionarios: "FN",
+  documentos:   "DC",
+  rotina:       "RT",
+  alerta:       "AT",
+  pendencias:   "PD",
   geral:        "•",
 };
 
@@ -52,7 +52,7 @@ function ActionRow({ item, onNavigate }: { item: CommandAction; onNavigate?: Pro
       onClick={() => item.resolveTarget && onNavigate?.(item.resolveTarget)}
       className="group flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-navy-50/60 active:scale-[0.99]"
     >
-      <span className="mt-0.5 text-[14px] leading-none flex-shrink-0" aria-hidden="true">
+      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md bg-navy-50 text-[9px] font-bold leading-none tracking-[0.08em] text-navy-500" aria-hidden="true">
         {SOURCE_ICON[item.sourceModule ?? "geral"] ?? "•"}
       </span>
       <div className="min-w-0 flex-1">
@@ -179,7 +179,7 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setData(buildCommandCenter());
+    setData(buildCommandCenterCached());
     setHydrated(true);
   }, [refreshKey]);
 
@@ -197,8 +197,8 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
           onClick={() => setExpanded(true)}
           className={`flex w-full items-center gap-3 rounded-[18px] border px-4 py-3.5 text-left transition-all hover:shadow-sm active:scale-[0.99] ${riskCfg.bg}`}
         >
-          <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/80 text-[15px]" aria-hidden="true">
-            🗺️
+          <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/80 text-[10px] font-bold tracking-[0.08em] text-navy-500" aria-hidden="true">
+            CC
             {urgentCount > 0 && (
               <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-terracotta-500 text-[9px] font-bold text-white">
                 {urgentCount > 9 ? "9+" : urgentCount}

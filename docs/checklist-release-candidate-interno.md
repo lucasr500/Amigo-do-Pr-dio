@@ -302,7 +302,7 @@ Beta com síndicos reais exige **todos** os seguintes:
 
 ### 17. Painel /admin — HARDENING APLICADO
 
-- [x] Hardening: produção sem `NEXT_PUBLIC_ADMIN_KEY` → bloqueio automático — **Fase 38**
+- [x] Hardening: produção sem `ADMIN_KEY` → bloqueio automático — **Fase 38**
 - [ ] Auditoria ao vivo: Recall A ≥ 75% — pendente (rodar em /admin)
 
 ### Itens novos — Fase 38

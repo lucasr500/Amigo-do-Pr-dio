@@ -47,6 +47,7 @@ import {
   getLastCompletedMonthlyReview,
   getMonthlyReviewTrend,
 } from "@/lib/session-monthly-review";
+import { KEYS } from "@/lib/session-core";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
 
@@ -103,6 +104,57 @@ export type CommandCenterResult = {
   guidanceMaiorMelhoria: GuidanceEngineItem | null;
   todayFocus: DailyFocusItem[];
 };
+
+const FINANCIAL_STORAGE_KEY = "amigo_financial_snapshots";
+export const COMMAND_CENTER_CACHE_TTL_MS = 3_000;
+
+const COMMAND_CENTER_SIGNATURE_KEYS = [
+  ...Object.values(KEYS),
+  FINANCIAL_STORAGE_KEY,
+] as const;
+
+type CommandCenterCacheEntry = {
+  signature: string;
+  createdAt: number;
+  value: CommandCenterResult;
+};
+
+type CommandCenterCacheOptions = {
+  force?: boolean;
+  now?: number;
+  build?: () => CommandCenterResult;
+};
+
+let commandCenterCache: CommandCenterCacheEntry | null = null;
+
+function hashString(input: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+export function getCommandCenterSignature(today = new Date().toISOString().slice(0, 10)): string {
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return `server:${today}`;
+  }
+
+  try {
+    const parts = COMMAND_CENTER_SIGNATURE_KEYS.map((key) => {
+      const raw = localStorage.getItem(key) ?? "";
+      return `${key}:${raw.length}:${hashString(raw)}`;
+    });
+    return `${today}|${parts.join("|")}`;
+  } catch {
+    return `storage-unavailable:${today}`;
+  }
+}
+
+export function clearCommandCenterCache(): void {
+  commandCenterCache = null;
+}
 
 function buildResolveTarget(item: ActionItem): CommandAction["resolveTarget"] {
   const id = item.id;
@@ -775,4 +827,27 @@ export function buildCommandCenter(): CommandCenterResult {
     guidanceMaiorMelhoria: engine.maiorMelhoria,
     todayFocus: todayFocus.slice(0, 3),
   };
+}
+
+export function buildCommandCenterCached(options: CommandCenterCacheOptions = {}): CommandCenterResult {
+  const now = options.now ?? Date.now();
+  const signature = getCommandCenterSignature();
+
+  if (
+    !options.force &&
+    commandCenterCache &&
+    commandCenterCache.signature === signature &&
+    now - commandCenterCache.createdAt <= COMMAND_CENTER_CACHE_TTL_MS
+  ) {
+    return commandCenterCache.value;
+  }
+
+  try {
+    const value = (options.build ?? buildCommandCenter)();
+    commandCenterCache = { signature, createdAt: now, value };
+    return value;
+  } catch (error) {
+    clearCommandCenterCache();
+    throw error;
+  }
 }
