@@ -9,6 +9,9 @@ import {
   toggleMonthlyReviewItem,
   completeMonthlyReview,
   resetMonthlyReview,
+  saveMonthlyReviewSnapshot,
+  buildSnapshotFromReport,
+  buildMonthlyReviewSnapshotSummary,
   type MonthlyReviewState,
 } from "@/lib/session-monthly-review";
 import { buildMonthlyOperationalSummary } from "@/lib/operational-summary";
@@ -117,6 +120,24 @@ export default function MonthlyReviewPanel({ refreshKey, onRefresh }: Props) {
 
   const handleComplete = () => {
     completeMonthlyReview(month);
+    // Salva snapshot estável do estado do mês no momento da conclusão
+    const topItems = report.items
+      .filter((i) => i.severity === "critical" || i.severity === "warning")
+      .slice(0, 5)
+      .map((i) => ({ id: i.id, title: i.title, section: i.section, severity: i.severity }));
+    saveMonthlyReviewSnapshot(
+      buildSnapshotFromReport(
+        month,
+        report.score,
+        report.headline,
+        report.criticalCount,
+        report.warningCount,
+        report.infoCount,
+        state.checkedItems.length,
+        report.items.length,
+        topItems,
+      )
+    );
     setDone(true);
     reload();
     onRefresh?.();
@@ -131,7 +152,10 @@ export default function MonthlyReviewPanel({ refreshKey, onRefresh }: Props) {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(buildMonthlyOperationalSummary(month));
+      const text = status === "concluida"
+        ? buildMonthlyReviewSnapshotSummary(month) || buildMonthlyOperationalSummary(month)
+        : buildMonthlyOperationalSummary(month);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch { /* noop */ }

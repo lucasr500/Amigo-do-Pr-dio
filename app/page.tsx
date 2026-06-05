@@ -115,6 +115,7 @@ const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetup
 const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
 const MonthlyReviewCard = dynamic(() => import("@/components/MonthlyReviewCard"), { ssr: false });
 const MonthlyReviewPanel = dynamic(() => import("@/components/MonthlyReviewPanel"), { ssr: false });
+const MonthlyReviewHistoryPanel = dynamic(() => import("@/components/MonthlyReviewHistoryPanel"), { ssr: false });
 
 // ── Profile completion helpers ────────────────────────────────────────────────
 
@@ -887,6 +888,10 @@ export default function HomePage() {
             <MonthlyReviewPanel
               refreshKey={refreshKey}
               onRefresh={() => setRefreshKey((k) => k + 1)}
+            />
+            <MonthlyReviewHistoryPanel
+              refreshKey={refreshKey}
+              onStartReview={handleOpenMonthlyReview}
             />
 
             {/* ── Financeiro operacional ────────────────────────────── */}

@@ -61,9 +61,14 @@ describe("parseAndValidateUserData — versões aceitas", () => {
     expect(result.success).toBe(true);
   });
 
-  test("versão desconhecida '9' → failure", () => {
+  test("v9 backup (com monthlyReviewHistory) → success", () => {
+    const result = parseAndValidateUserData(makeV8Backup({ version: "9", monthlyReviewHistory: [] }));
+    expect(result.success).toBe(true);
+  });
+
+  test("v9 backup sem monthlyReviewHistory → success (campo opcional)", () => {
     const result = parseAndValidateUserData(makeV8Backup({ version: "9" }));
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   test("versão '0' → failure", () => {
@@ -185,5 +190,54 @@ describe("parseAndValidateUserData — campos opcionais e extras", () => {
     const result = parseAndValidateUserData(makeV8Backup({ financialSnapshots: [snap] }));
     if (!result.success) throw new Error("Expected success");
     expect(result.summary.financialSnapshotsCount).toBe(1);
+  });
+});
+
+describe("parseAndValidateUserData — v9 específico", () => {
+  const reviewSnap = {
+    month: "2026-05",
+    score: 80,
+    status: "concluida" as const,
+    completedAt: "2026-05-31T10:00:00Z",
+    headline: "Condomínio em ordem",
+    criticalCount: 0,
+    warningCount: 1,
+    infoCount: 2,
+    checkedCount: 7,
+    totalItems: 9,
+    topItems: [],
+  };
+
+  test("monthlyReviewHistory como string em v9 → failure", () => {
+    const result = parseAndValidateUserData(
+      makeV8Backup({ version: "9", monthlyReviewHistory: "corrompido" })
+    );
+    expect(result.success).toBe(false);
+  });
+
+  test("monthlyReviewHistory como objeto em v9 → failure", () => {
+    const result = parseAndValidateUserData(
+      makeV8Backup({ version: "9", monthlyReviewHistory: {} })
+    );
+    expect(result.success).toBe(false);
+  });
+
+  test("summary.monthlyReviewHistoryCount reflete array em v9", () => {
+    const result = parseAndValidateUserData(
+      makeV8Backup({ version: "9", monthlyReviewHistory: [reviewSnap] })
+    );
+    if (!result.success) throw new Error("Expected success");
+    expect(result.summary.monthlyReviewHistoryCount).toBe(1);
+  });
+
+  test("monthlyReviewHistoryCount é undefined em v8", () => {
+    const result = parseAndValidateUserData(makeV8Backup());
+    if (!result.success) throw new Error("Expected success");
+    expect(result.summary.monthlyReviewHistoryCount).toBeUndefined();
+  });
+
+  test("versão '10' ainda → failure", () => {
+    const result = parseAndValidateUserData(makeV8Backup({ version: "10" }));
+    expect(result.success).toBe(false);
   });
 });

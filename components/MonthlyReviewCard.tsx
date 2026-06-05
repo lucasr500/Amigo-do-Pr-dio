@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { currentMonthKey } from "@/lib/financial";
-import { getMonthlyReviewState, type MonthlyReviewState } from "@/lib/session-monthly-review";
+import { getMonthlyReviewState, getLastCompletedMonthlyReview, getMonthlyReviewTrend, type MonthlyReviewState } from "@/lib/session-monthly-review";
 import { buildMonthlyReview } from "@/lib/monthly-review";
 
 type Props = {
@@ -14,6 +14,8 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
   const [hydrated, setHydrated] = useState(false);
   const [state, setState] = useState<MonthlyReviewState | null>(null);
   const [totalItems, setTotalItems] = useState(0);
+  const [lastCompletedLabel, setLastCompletedLabel] = useState<string | null>(null);
+  const [trendWarning, setTrendWarning] = useState(false);
 
   useEffect(() => {
     const month = currentMonthKey();
@@ -21,6 +23,16 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
     setState(s);
     const report = buildMonthlyReview(month, s.status);
     setTotalItems(report.items.length);
+
+    // Última revisão concluída (pode ser mês anterior)
+    const last = getLastCompletedMonthlyReview();
+    if (last && last.month !== month) {
+      const d = new Date(last.completedAt);
+      setLastCompletedLabel(`${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`);
+    }
+
+    const trend = getMonthlyReviewTrend();
+    setTrendWarning(trend === "piorando");
     setHydrated(true);
   }, [refreshKey]);
 
@@ -38,7 +50,9 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
 
   if (status === "concluida") {
     headline = `Revisão de ${mesFormatado} concluída`;
-    sub = "Condomínio revisado este mês.";
+    sub = trendWarning
+      ? "Score caiu em relação à última revisão. Vale revisar os pontos de atenção."
+      : "Condomínio revisado este mês.";
     ctaLabel = "Ver resumo";
     accentClass = "border-green-200/70 bg-green-50/60";
   } else if (status === "em_andamento") {
@@ -48,9 +62,11 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
     accentClass = "border-amber-200/70 bg-amber-50/50";
   } else {
     headline = `Revisão de ${mesFormatado} pendente`;
-    sub = totalItems > 0
-      ? `${totalItems} ponto${totalItems > 1 ? "s" : ""} para verificar este mês.`
-      : "Inicie para ver os pontos de atenção do mês.";
+    sub = lastCompletedLabel
+      ? `Última revisão concluída em ${lastCompletedLabel}.`
+      : totalItems > 0
+        ? `${totalItems} ponto${totalItems > 1 ? "s" : ""} para verificar este mês.`
+        : "Inicie para ver os pontos de atenção do mês.";
     ctaLabel = "Iniciar revisão";
     accentClass = "border-navy-100 bg-white";
   }

@@ -42,7 +42,11 @@ import {
   DOCUMENTO_CRITICIDADE as DOC_CRITICIDADE,
 } from "@/lib/session-documentos";
 import { buildMonthlyReview } from "@/lib/monthly-review";
-import { getMonthlyReviewState } from "@/lib/session-monthly-review";
+import {
+  getMonthlyReviewState,
+  getLastCompletedMonthlyReview,
+  getMonthlyReviewTrend,
+} from "@/lib/session-monthly-review";
 
 export type RiskLevel = "critico" | "atencao" | "estavel" | "sem-dados";
 
@@ -518,8 +522,10 @@ export function buildCommandCenter(): CommandCenterResult {
   {
     const reviewState = getMonthlyReviewState(month);
     const review = buildMonthlyReview(month, reviewState.status);
+    const lastCompleted = getLastCompletedMonthlyReview();
+    const trend = getMonthlyReviewTrend();
 
-    // Revisão com itens críticos — prioridade urgente
+    // Revisão com itens críticos — prioridade urgente (não duplica se já tem critical_review)
     if (review.criticalCount > 0 && reviewState.status !== "concluida") {
       actions.push({
         id: "monthly_review_critical",
@@ -535,7 +541,7 @@ export function buildCommandCenter(): CommandCenterResult {
         origemDados: "revisao-mensal",
       });
     } else if (reviewState.status === "pendente" && new Date().getDate() >= 20) {
-      // A partir do dia 20 do mês, nudge para revisão ainda não iniciada
+      // Nudge a partir do dia 20 se pendente — apenas se não há outra ação de revisão
       actions.push({
         id: "monthly_review_pending",
         titulo: "Revisão mensal deste mês ainda não foi iniciada",
@@ -561,6 +567,49 @@ export function buildCommandCenter(): CommandCenterResult {
         motivo: "Revisão mensal iniciada mas não concluída.",
         impacto: "Concluir a revisão mantém o condomínio bem acompanhado.",
         cta: "Continuar revisão",
+        origemDados: "revisao-mensal",
+      });
+    }
+
+    // Última revisão concluída há mais de 45 dias (novo mês ainda não iniciado)
+    if (reviewState.status === "pendente" && lastCompleted) {
+      const daysSinceLast = Math.floor(
+        (Date.now() - new Date(lastCompleted.completedAt).getTime()) / 86400000
+      );
+      if (daysSinceLast > 45 && !actions.some((a) => a.id.startsWith("monthly_review"))) {
+        actions.push({
+          id: "monthly_review_overdue_history",
+          titulo: `Última revisão mensal foi há ${daysSinceLast} dias`,
+          descricao: "A revisão mensal ajuda a identificar riscos e manter o condomínio organizado.",
+          prioridade: "este_mes",
+          categoria: "gestao",
+          sourceModule: "revisao_mensal",
+          resolveTarget: "condominio",
+          motivo: `Sem revisão concluída há mais de ${daysSinceLast} dias.`,
+          impacto: "Revisão regular mantém visibilidade sobre documentos, financeiro e pendências.",
+          cta: "Fazer revisão mensal",
+          origemDados: "revisao-mensal",
+        });
+      }
+    }
+
+    // Tendência piorando — sugestão leve (nunca urgente, não duplica)
+    if (
+      trend === "piorando" &&
+      reviewState.status === "concluida" &&
+      !actions.some((a) => a.id.startsWith("monthly_review"))
+    ) {
+      actions.push({
+        id: "monthly_review_trend_down",
+        titulo: "Score da revisão mensal caiu em relação ao mês anterior",
+        descricao: "Verifique os pontos de atenção recorrentes para identificar a causa da queda.",
+        prioridade: "este_mes",
+        categoria: "gestao",
+        sourceModule: "revisao_mensal",
+        resolveTarget: "condominio",
+        motivo: "Tendência de queda no score das revisões mensais.",
+        impacto: "Identificar padrão recorrente permite ações preventivas antes que vire risco.",
+        cta: "Ver histórico de revisões",
         origemDados: "revisao-mensal",
       });
     }

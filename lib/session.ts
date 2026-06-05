@@ -5,7 +5,7 @@
 //
 // Versão do schema de dados: SESSION_SCHEMA_VERSION
 // Incrementar aqui ao adicionar campos incompatíveis.
-export const SESSION_SCHEMA_VERSION = 8;
+export const SESSION_SCHEMA_VERSION = 9;
 
 // Caps de ocorrências (domínio ainda centralizado aqui)
 export const MAX_OCORRENCIAS    = 300;
@@ -27,6 +27,11 @@ import {
   getDocumentos,
   type DocumentoEssencial,
 } from "./session-documentos";
+import {
+  getMonthlyReviewHistory,
+  restoreMonthlyReviewHistory,
+  type MonthlyReviewSnapshot,
+} from "./session-monthly-review";
 
 // ─── Re-exports — preservam a API pública de @/lib/session ───────────────────
 export { getStorageSizeKB, clearAllData } from "./session-core";
@@ -1145,9 +1150,10 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v4 — idem + agenda do prédio (amigo_agenda)
 //   v7 — idem + resumo financeiro local (amigo_financial_snapshots)
 //   v8 — formato idêntico ao v7; bump de versão alinhado ao SESSION_SCHEMA_VERSION
+//   v9 — idem + histórico de revisões mensais concluídas (monthlyReviewHistory)
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+  version: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
@@ -1163,17 +1169,18 @@ export type UserBackup = {
   implantacaoMode?: ImplantacaoMode; // v5+
   manutencoes?: ManutencaoRecorrente[]; // v6+
   financialSnapshots?: MonthlyFinancialSnapshot[]; // v7+
+  monthlyReviewHistory?: MonthlyReviewSnapshot[]; // v9+
 };
 
 export type ImportResult =
-  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number; financialSnapshotsCount?: number } }
+  | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number; financialSnapshotsCount?: number; monthlyReviewHistoryCount?: number } }
   | { success: false; error: string };
 
 export function exportUserData(): void {
   if (typeof window === "undefined") return;
 
   const payload: UserBackup = {
-    version: "8",
+    version: "9",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1189,6 +1196,7 @@ export function exportUserData(): void {
     implantacaoMode: getImplantacaoMode() ?? undefined,
     manutencoes: getManutencoes(),
     financialSnapshots: getFinancialSnapshots(),
+    monthlyReviewHistory: getMonthlyReviewHistory(),
   };
 
   try {
@@ -1208,7 +1216,7 @@ export function exportUserData(): void {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "8",
+    version: "9",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1224,6 +1232,7 @@ export function getUserBackupJson(): string {
     implantacaoMode: getImplantacaoMode() ?? undefined,
     manutencoes: getManutencoes(),
     financialSnapshots: getFinancialSnapshots(),
+    monthlyReviewHistory: getMonthlyReviewHistory(),
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -1244,7 +1253,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8" && d.version !== "9") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1260,14 +1269,17 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
-    if ((d.version === "7" || d.version === "8") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8" || d.version === "9") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
       return { success: false, error: "Dados financeiros corrompidos no arquivo." };
+    }
+    if (d.version === "9" && d.monthlyReviewHistory !== undefined && !Array.isArray(d.monthlyReviewHistory)) {
+      return { success: false, error: "Dados do histórico de revisões corrompidos no arquivo." };
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -1275,18 +1287,19 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
-    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
 
     const pendenciasCount = isV2plus && Array.isArray(d.pendencias) ? (d.pendencias as Pendencia[]).length : undefined;
     const ocorrenciasCount = isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length : undefined;
     const agendaCount = isV4plus && Array.isArray(d.agenda) ? (d.agenda as AgendaEvent[]).length : undefined;
     const documentosCount = isV5plus && Array.isArray(d.documentos) ? (d.documentos as DocumentoEssencial[]).length : undefined;
     const funcionariosCount = isV5plus && Array.isArray(d.funcionarios) ? (d.funcionarios as FuncionarioFerias[]).length : undefined;
-    const manutencoesCount = (d.version === "6" || d.version === "7" || d.version === "8") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
-    const financialSnapshotsCount = (d.version === "7" || d.version === "8") && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
+    const manutencoesCount = (d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
+    const financialSnapshotsCount = (d.version === "7" || d.version === "8" || d.version === "9") && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
+    const monthlyReviewHistoryCount = d.version === "9" && Array.isArray(d.monthlyReviewHistory) ? (d.monthlyReviewHistory as MonthlyReviewSnapshot[]).length : undefined;
 
     return {
       success: true,
@@ -1301,6 +1314,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
         funcionariosCount,
         manutencoesCount,
         financialSnapshotsCount,
+        monthlyReviewHistoryCount,
       },
     };
   } catch {
@@ -1308,7 +1322,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
   }
 }
 
-// Importa backup v1–v8. Retrocompatível com todas as versões anteriores.
+// Importa backup v1–v9. Retrocompatível com todas as versões anteriores.
 export function importUserData(jsonString: string): ImportResult {
   try {
     const data = JSON.parse(jsonString) as unknown;
@@ -1323,7 +1337,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8" && d.version !== "9") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1339,14 +1353,17 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
-    if ((d.version === "7" || d.version === "8") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8" || d.version === "9") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
       return { success: false, error: "Dados financeiros corrompidos no arquivo." };
+    }
+    if (d.version === "9" && d.monthlyReviewHistory !== undefined && !Array.isArray(d.monthlyReviewHistory)) {
+      return { success: false, error: "Dados do histórico de revisões corrompidos no arquivo." };
     }
 
     if (d.profile) {
@@ -1358,10 +1375,10 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
-    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9";
 
     let pendenciasCount: number | undefined;
     if (isV2plus && Array.isArray(d.pendencias)) {
@@ -1412,7 +1429,7 @@ export function importUserData(jsonString: string): ImportResult {
       try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
 
-    if ((d.version === "6" || d.version === "7" || d.version === "8") && Array.isArray(d.manutencoes)) {
+    if ((d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9") && Array.isArray(d.manutencoes)) {
       safeWrite(KEYS.MANUTENCOES, d.manutencoes);
       manutencoesCount = (d.manutencoes as ManutencaoRecorrente[]).length;
     } else {
@@ -1420,11 +1437,17 @@ export function importUserData(jsonString: string): ImportResult {
     }
 
     let financialSnapshotsCount: number | undefined;
-    if ((d.version === "7" || d.version === "8") && Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8" || d.version === "9") && Array.isArray(d.financialSnapshots)) {
       saveFinancialSnapshots(d.financialSnapshots as MonthlyFinancialSnapshot[]);
       financialSnapshotsCount = (d.financialSnapshots as MonthlyFinancialSnapshot[]).length;
     } else {
       saveFinancialSnapshots([]);
+    }
+
+    let monthlyReviewHistoryCount: number | undefined;
+    if (d.version === "9" && Array.isArray(d.monthlyReviewHistory)) {
+      restoreMonthlyReviewHistory(d.monthlyReviewHistory as MonthlyReviewSnapshot[]);
+      monthlyReviewHistoryCount = (d.monthlyReviewHistory as MonthlyReviewSnapshot[]).length;
     }
 
     const profile = d.profile as CondominioProfile | null;
@@ -1445,6 +1468,7 @@ export function importUserData(jsonString: string): ImportResult {
         funcionariosCount,
         manutencoesCount,
         financialSnapshotsCount,
+        monthlyReviewHistoryCount,
       },
     };
   } catch {
