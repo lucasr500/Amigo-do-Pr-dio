@@ -13,6 +13,8 @@ import {
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import EmptyState from "@/components/ui/EmptyState";
+import FilterChips from "@/components/ui/FilterChips";
+import FormField from "@/components/ui/FormField";
 
 // ─── Priority helpers ─────────────────────────────────────────────────────────
 
@@ -342,6 +344,11 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
   }
 
   const isOverdueView = activeFilter !== "Concluídas";
+  const filterOptions = FILTERS.map((filter) => ({
+    value: filter,
+    label: filter,
+    count: filterCounts[filter] > 0 ? filterCounts[filter] : undefined,
+  }));
 
   return (
     <div className="flex w-full max-w-full flex-col overflow-x-hidden">
@@ -384,35 +391,13 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
 
       {/* ── Filter chips ─────────────────────────────────────────────── */}
       <div className="pb-3">
-        <div className="no-scrollbar flex gap-1.5 overflow-x-auto px-5 pb-0.5 sm:px-6">
-          {FILTERS.map((filter) => {
-            const count   = filterCounts[filter];
-            const isActive = activeFilter === filter;
-            const isAlert  = filter === "Vencidas" && count > 0 && !isActive;
-            return (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-                className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[12px] font-medium transition-all active:scale-[0.97] ${
-                  isActive
-                    ? filter === "Vencidas" && count > 0
-                      ? "bg-terracotta-600 text-white shadow-sm"
-                      : "bg-navy-700 text-white shadow-sm"
-                    : isAlert
-                    ? "border border-terracotta-200 bg-terracotta-50 text-terracotta-700 hover:bg-terracotta-100"
-                    : "border border-navy-100 bg-white text-navy-600 hover:bg-navy-50"
-                }`}
-              >
-                {filter}
-                {count > 0 && (
-                  <span className={`ml-1 text-[10px] ${isActive ? "opacity-70" : "opacity-55"}`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div className="px-5 sm:px-6">
+          <FilterChips
+            value={activeFilter}
+            options={filterOptions}
+            onChange={setActiveFilter}
+            ariaLabel="Filtros de pendências"
+          />
         </div>
       </div>
 
@@ -425,9 +410,7 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
             </p>
 
             <div className="mb-3">
-              <label className="mb-1 block text-[11.5px] font-medium text-navy-500">
-                Título <span className="text-terracotta-500">*</span>
-              </label>
+              <FormField label="Título" error={formError || undefined}>
               <input
                 type="text"
                 value={formTitulo}
@@ -437,15 +420,11 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                 autoFocus
                 className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
               />
-              {formError && (
-                <p className="mt-1 text-[11px] text-terracotta-600">{formError}</p>
-              )}
+              </FormField>
             </div>
 
             <div className="mb-3">
-              <label className="mb-1 block text-[11.5px] font-medium text-navy-500">
-                Descrição <span className="font-normal text-navy-300">(opcional)</span>
-              </label>
+              <FormField label="Descrição" hint="Opcional">
               <textarea
                 value={formDescricao}
                 onChange={(e) => setFormDescricao(e.target.value)}
@@ -454,6 +433,7 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                 rows={2}
                 className="w-full resize-none rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
               />
+              </FormField>
             </div>
 
             <div className="mb-3">
@@ -477,19 +457,15 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
             </div>
 
             <div className="mb-4 grid gap-3 sm:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-[11.5px] font-medium text-navy-500">
-                  Prazo <span className="font-normal text-navy-300">(opcional)</span>
-                </label>
+              <FormField label="Prazo" hint="Opcional">
                 <input
                   type="date"
                   value={formDueDate}
                   onChange={(e) => setFormDueDate(e.target.value)}
                   className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
                 />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11.5px] font-medium text-navy-500">Prioridade</label>
+              </FormField>
+              <FormField label="Prioridade">
                 <select
                   value={formPrioridade}
                   onChange={(e) => setFormPrioridade(e.target.value as Pendencia["prioridade"])}
@@ -500,9 +476,8 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                   <option value="media">Média</option>
                   <option value="baixa">Baixa</option>
                 </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-[11.5px] font-medium text-navy-500">Responsável</label>
+              </FormField>
+              <FormField label="Responsável">
                 <input
                   type="text"
                   value={formResponsavel}
@@ -511,7 +486,7 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                   maxLength={60}
                   className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
                 />
-              </div>
+              </FormField>
             </div>
 
             <div className="flex gap-2">

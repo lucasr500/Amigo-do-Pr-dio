@@ -14,7 +14,7 @@ export default function EmptyState({ title, description, actionLabel, onAction }
         <button
           type="button"
           onClick={onAction}
-          className="mt-3 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-semibold text-white hover:bg-navy-800"
+          className="mt-3 rounded-full bg-navy-700 px-3.5 py-1.5 text-[11.5px] font-semibold text-white hover:bg-navy-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40"
         >
           {actionLabel}
         </button>

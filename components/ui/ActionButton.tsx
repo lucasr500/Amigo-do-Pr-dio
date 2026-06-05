@@ -15,7 +15,7 @@ export default function ActionButton({ children, variant = "primary", className 
   return (
     <button
       type="button"
-      className={`inline-flex min-h-9 items-center justify-center rounded-full px-4 py-2 text-[12px] font-semibold transition-colors active:scale-[0.98] ${VARIANTS[variant]} ${className}`}
+      className={`inline-flex min-h-9 items-center justify-center rounded-full px-4 py-2 text-[12px] font-semibold transition-colors active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40 ${VARIANTS[variant]} ${className}`}
       {...props}
     >
       {children}

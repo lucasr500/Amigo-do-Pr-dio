@@ -16,9 +16,9 @@ const MONTH_NAMES_PT = [
 ];
 
 const EVENT_TYPE_ICONS: Record<string, string> = {
-  assembleia: "👥", manutencao: "🔧", dedetizacao: "🐛", caixa_agua: "💧",
-  extintores: "🧯", vistoria: "🔍", obra: "🏗️", cobranca: "💰",
-  reuniao: "🤝", fornecedor: "🛠️", comunicado: "📢", retorno: "📞", outro: "📅",
+  assembleia: "AS", manutencao: "MT", dedetizacao: "DD", caixa_agua: "CA",
+  extintores: "EX", vistoria: "VI", obra: "OB", cobranca: "CB",
+  reuniao: "RN", fornecedor: "FN", comunicado: "CM", retorno: "RT", outro: "EV",
 };
 
 const WEEKDAYS_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -197,8 +197,8 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
                   onClick={onNavigate}
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
                 >
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]">
-                    {EVENT_TYPE_ICONS[event.type] ?? "📅"}
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[9px] font-bold tracking-[0.08em] text-navy-500">
+                    {EVENT_TYPE_ICONS[event.type] ?? "EV"}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[12.5px] font-medium text-navy-800">{event.title}</p>

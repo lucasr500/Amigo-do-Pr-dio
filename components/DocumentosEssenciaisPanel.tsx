@@ -29,9 +29,11 @@ import { addAgendaEvent, getAgendaEvents } from "@/lib/session-agenda";
 import { addFinancialEntry, currentMonthKey } from "@/lib/financial";
 import { trackEvent } from "@/lib/telemetry";
 import EmptyState from "@/components/ui/EmptyState";
-import FilterChips from "@/components/ui/FilterChips";
-import MetricCard from "@/components/ui/MetricCard";
 import { getWhereToFind } from "@/lib/discovery-hints";
+import DocumentosCollapsedButton from "@/components/documentos/DocumentosCollapsedButton";
+import DocumentosGroupSection from "@/components/documentos/DocumentosGroupSection";
+import DocumentosStatsHeader from "@/components/documentos/DocumentosStatsHeader";
+import { CRIT_ORDER, GRUPOS, type DocFilter } from "@/components/documentos/documentos-config";
 
 type Props = { onSaved?: () => void };
 
@@ -47,24 +49,6 @@ const STATUS_BADGE: Record<DocumentoStatus, string> = {
   nao_tenho:         "bg-terracotta-50 text-terracotta-700 ring-terracotta-100",
   precisa_localizar: "bg-amber-50 text-amber-700 ring-amber-100",
   nao_se_aplica:     "bg-navy-50 text-navy-400 ring-navy-100",
-};
-
-const CATEGORIA_LABEL: Record<DocumentoCategoria, string> = {
-  seguranca:   "Segurança",
-  trabalhista: "Trabalhista",
-  juridico:    "Jurídico",
-  operacional: "Operacional",
-  fiscal:      "Fiscal",
-  manutencao:  "Manutenção",
-};
-
-const CATEGORIA_COR: Record<DocumentoCategoria, string> = {
-  seguranca:   "bg-terracotta-50 text-terracotta-700",
-  trabalhista: "bg-amber-50 text-amber-700",
-  juridico:    "bg-navy-50 text-navy-600",
-  operacional: "bg-teal-50 text-teal-700",
-  fiscal:      "bg-purple-50 text-purple-700",
-  manutencao:  "bg-orange-50 text-orange-700",
 };
 
 const PENDENCIA_TITULO: Partial<Record<DocumentoEssencialId, string>> = {
@@ -89,26 +73,6 @@ const PENDENCIA_TITULO: Partial<Record<DocumentoEssencialId, string>> = {
   cnd_condominio:          "Verificar situação fiscal (CND) do condomínio",
 };
 
-const GRUPOS: DocumentoCategoria[] = ["juridico", "seguranca", "manutencao", "trabalhista", "operacional", "fiscal"];
-
-const GRUPO_DESCRICAO: Record<DocumentoCategoria, string> = {
-  juridico:    "Base legal do condomínio",
-  seguranca:   "Documentos obrigatórios de segurança",
-  manutencao:  "Contratos e laudos técnicos",
-  trabalhista: "Documentação de pessoal",
-  operacional: "Contratos e comprovantes operacionais",
-  fiscal:      "Situação fiscal e tributária",
-};
-
-const EMPTY_STATE_EXPERT: Record<DocumentoCategoria, string> = {
-  juridico:    "Convenção, regimento e ata de eleição são a base legal do condomínio. Sem eles, decisões em assembleia podem ser contestadas.",
-  seguranca:   "AVCB, SPDA e brigada de incêndio são exigências do Corpo de Bombeiros. A falta pode gerar interdição do prédio.",
-  manutencao:  "Contratos de elevador e laudos técnicos comprovam que a manutenção obrigatória está sendo feita. Protegem o síndico em caso de acidente.",
-  trabalhista: "CCT, PPRA/PGR e PCMSO são obrigações trabalhistas para quem tem funcionários. A ausência gera passivo e autuação.",
-  operacional: "Comprovantes de serviços periódicos demonstram que o condomínio está em ordem. Podem ser exigidos em auditoria de administradora.",
-  fiscal:      "CND indica que o condomínio está quite com obrigações fiscais. Necessária em financiamentos e algumas negociações.",
-};
-
 const DOC_HINT_MAP: Partial<Record<DocumentoEssencialId, string>> = {
   avcb_clcb:               "avcb",
   apolice_seguro:          "seguro_apolice",
@@ -122,22 +86,6 @@ const DOC_HINT_MAP: Partial<Record<DocumentoEssencialId, string>> = {
   pcmso:                   "funcionarios",
   controle_ferias:         "ferias_funcionario",
 };
-
-const CRIT_ORDER: Record<string, number> = { critica: 0, importante: 1, recomendada: 2 };
-
-type DocFilter = "todos" | "criticos" | "faltam" | "vencidos" | "proximos" | "regulares" | "sem_revisao";
-
-const FILTER_LABEL: Record<DocFilter, string> = {
-  todos:       "Todos",
-  criticos:    "Críticos",
-  faltam:      "Faltam",
-  vencidos:    "Vencidos",
-  proximos:    "Próximos",
-  regulares:   "Regulares",
-  sem_revisao: "Sem revisão",
-};
-
-const FILTERS: DocFilter[] = ["todos", "criticos", "faltam", "vencidos", "proximos", "regulares", "sem_revisao"];
 
 export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   const [hydrated, setHydrated] = useState(false);
@@ -247,7 +195,6 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
   const filteredIds = DOCUMENTOS_ESSENCIAIS_IDS.filter((id) => matchesFilter(id, effectiveFilter));
   const isFiltered = effectiveFilter !== "todos";
-  const filterOptions = FILTERS.map((f) => ({ value: f, label: FILTER_LABEL[f] }));
 
   const openEditor = (id: string) => {
     const doc = docs[id];
@@ -412,39 +359,21 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
   // ── Collapsed ──────────────────────────────────────────────────────────────
   if (!expanded) {
-    const pct = cadastrados > 0 ? Math.round((tenho / Math.max(1, total - naoAplica)) * 100) : null;
-    const subtitle = cadastrados === 0
-      ? "AVCB, seguro, convenção, brigada e outros — mapeie a documentação do prédio"
-      : criticosNaoConfirmados > 0
-      ? `${tenho} confirmados · ${criticosNaoConfirmados} documento${criticosNaoConfirmados > 1 ? "s" : ""} crítico${criticosNaoConfirmados > 1 ? "s" : ""} sem confirmar`
-      : `${tenho} confirmados · ${precisa} a localizar · ${naoTenho} ausentes`;
-
     return (
       <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-        <button
-          type="button"
-          onClick={() => {
+        <DocumentosCollapsedButton
+          cadastrados={cadastrados}
+          criticosNaoConfirmados={criticosNaoConfirmados}
+          naoAplica={naoAplica}
+          naoTenho={naoTenho}
+          precisa={precisa}
+          tenho={tenho}
+          total={total}
+          onOpen={() => {
             setExpanded(true);
             setActiveFilter(defaultFilter);
           }}
-          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
-        >
-          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[10px] font-bold text-navy-500" aria-hidden="true">
-            DOC
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-navy-800">Documentos essenciais</p>
-            <p className="text-[11.5px] text-navy-400 truncate">{subtitle}</p>
-          </div>
-          {pct !== null && (
-            <span className={`shrink-0 text-[11px] font-semibold ${pct >= 70 ? "text-teal-600" : pct >= 40 ? "text-amber-600" : "text-terracotta-600"}`}>
-              {pct}%
-            </span>
-          )}
-          <span className="shrink-0 text-[11.5px] font-semibold text-navy-500">
-            {cadastrados === 0 ? "Mapear →" : "Ver →"}
-          </span>
-        </button>
+        />
       </section>
     );
   }
@@ -452,7 +381,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
+      <div id="documentos-essenciais-panel" className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
 
         {/* ── Cabeçalho ── */}
         <div className="mb-3 flex items-center justify-between">
@@ -467,64 +396,18 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="text-[11.5px] text-navy-400 hover:text-navy-600"
+            aria-label="Fechar documentos essenciais"
+            className="min-h-8 rounded-full px-2.5 text-[11.5px] text-navy-400 hover:bg-navy-50 hover:text-navy-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40"
           >
             Fechar
           </button>
         </div>
 
-        {/* ── 4 cards executivos ── */}
-        {cadastrados > 0 && (
-          <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <MetricCard
-              label="Críticos pendentes"
-              value={String(summary.criticosPendentes)}
-              status={summary.criticosPendentes > 0 ? "danger" : "neutral"}
-              onClick={() => setActiveFilter("criticos")}
-            />
-            <MetricCard
-              label="Vencidos"
-              value={String(summary.vencidos)}
-              status={summary.vencidos > 0 ? "danger" : "neutral"}
-              onClick={() => setActiveFilter("vencidos")}
-            />
-            <MetricCard
-              label="Próximos 60 dias"
-              value={String(summary.proximos)}
-              status={summary.proximos > 0 ? "warning" : "neutral"}
-              onClick={() => setActiveFilter("proximos")}
-            />
-            <MetricCard
-              label="Regulares"
-              value={String(summary.tenho)}
-              status="good"
-              onClick={() => setActiveFilter("regulares")}
-            />
-          </div>
-        )}
-
-        {/* ── Frase executiva ── */}
-        {cadastrados > 0 && (
-          <div className="mb-3 rounded-[10px] bg-navy-50/40 px-3 py-2">
-            <p className="text-[11.5px] leading-relaxed text-navy-600">
-              {summary.criticosPendentes > 0
-                ? `${summary.criticosPendentes} documento${summary.criticosPendentes > 1 ? "s" : ""} crítico${summary.criticosPendentes > 1 ? "s" : ""} pendente${summary.criticosPendentes > 1 ? "s" : ""} de ação.`
-                : summary.vencidos > 0
-                ? `${summary.vencidos} documento${summary.vencidos > 1 ? "s" : ""} vencido${summary.vencidos > 1 ? "s" : ""} para regularizar.`
-                : summary.proximos > 0
-                ? `${summary.proximos} documento${summary.proximos > 1 ? "s" : ""} vencem nos próximos 60 dias.`
-                : "Documentos sem pendências críticas registradas no app."}
-            </p>
-          </div>
-        )}
-
-        {/* ── Filtros ── */}
-        <FilterChips
-          value={activeFilter}
-          options={filterOptions}
-          onChange={setActiveFilter}
-          ariaLabel="Filtros de documentos essenciais"
-          className="mb-3"
+        <DocumentosStatsHeader
+          activeFilter={activeFilter}
+          cadastrados={cadastrados}
+          onFilterChange={setActiveFilter}
+          summary={summary}
         />
 
         {/* ── Feedback de ação ── */}
@@ -624,64 +507,22 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                 : "bg-terracotta-300";
 
               return (
-                <div key={cat} className="rounded-xl border border-navy-50 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setGrupoAberto(aberto ? null : cat)}
-                    className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left hover:bg-navy-50/50 transition-colors"
-                  >
-                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORIA_COR[cat]}`}>
-                      {CATEGORIA_LABEL[cat]}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[11.5px] text-navy-500">{GRUPO_DESCRICAO[cat]}</p>
-                      {cadastradosGrupo > 0 && (
-                        <div className="mt-1 h-0.5 w-full overflow-hidden rounded-full bg-navy-100">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${barColor}`}
-                            style={{ width: `${Math.round((tenhoGrupo / idsGrupo.length) * 100)}%` }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {cadastradosGrupo > 0 && (
-                        <span className="text-[10px] text-navy-400">
-                          {tenhoGrupo}/{idsGrupo.length}
-                        </span>
-                      )}
-                      {precisaGrupo > 0 && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden="true" />
-                      )}
-                      {naoTenhoGrupo > 0 && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-terracotta-400" aria-hidden="true" />
-                      )}
-                      <svg className={`h-3.5 w-3.5 text-navy-300 transition-transform ${aberto ? "rotate-90" : ""}`} viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {aberto && (
-                    <div className="border-t border-navy-50 bg-navy-50/20 px-3 py-2 space-y-1.5">
-                      {cadastradosGrupo === 0 && (
-                        <p className="text-[11px] leading-relaxed text-navy-500 px-0.5 py-1">
-                          {EMPTY_STATE_EXPERT[cat]}
-                        </p>
-                      )}
-                      {idsToShow.map((id) => renderDocCard(id as DocumentoEssencialId))}
-                      {hiddenCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setGrupoMostrandoTodos((prev) => new Set([...prev, cat]))}
-                          className="w-full py-2 text-[11px] text-navy-400 hover:text-navy-600 text-center transition-colors"
-                        >
-                          Ver {hiddenCount} mais →
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                <DocumentosGroupSection
+                  key={cat}
+                  aberto={aberto}
+                  barColor={barColor}
+                  cadastradosGrupo={cadastradosGrupo}
+                  cat={cat}
+                  hiddenCount={hiddenCount}
+                  idsGrupoLength={idsGrupo.length}
+                  idsToShow={idsToShow}
+                  naoTenhoGrupo={naoTenhoGrupo}
+                  onShowAll={() => setGrupoMostrandoTodos((prev) => new Set([...prev, cat]))}
+                  onToggle={() => setGrupoAberto(aberto ? null : cat)}
+                  precisaGrupo={precisaGrupo}
+                  renderDocCard={renderDocCard}
+                  tenhoGrupo={tenhoGrupo}
+                />
               );
             })}
           </div>
@@ -757,8 +598,8 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         {/* Metadados */}
         {!isEditing && (hasOnde || hasLink) && (
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-            {hasOnde && <span className="text-[10.5px] text-navy-400">📂 {doc!.ondeEsta}</span>}
-            {hasLink && <span className="text-[10.5px] text-navy-400 truncate max-w-[160px]">🔗 {doc!.linkExterno}</span>}
+            {hasOnde && <span className="text-[10.5px] text-navy-400">Local: {doc!.ondeEsta}</span>}
+            {hasLink && <span className="max-w-[160px] truncate text-[10.5px] text-navy-400">Ref.: {doc!.linkExterno}</span>}
           </div>
         )}
 

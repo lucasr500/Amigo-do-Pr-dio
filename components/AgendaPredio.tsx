@@ -16,6 +16,7 @@ import {
 import { trackEvent } from "@/lib/telemetry";
 import { ate } from "@/lib/urgency";
 import EmptyState from "@/components/ui/EmptyState";
+import FormField from "@/components/ui/FormField";
 
 const TYPE_LABELS: Record<AgendaEventType, string> = {
   assembleia: "Assembleia",
@@ -515,92 +516,85 @@ export default function AgendaPredio({ onSaved }: Props) {
                 </span>
               )}
             </div>
-            <div className="space-y-1">
-              <label className="text-[11.5px] font-medium text-navy-600">Descrição</label>
+            <FormField label="Descrição">
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder="Ex: Revisão dos extintores"
                 maxLength={100}
-                className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none"
+                className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
               />
-            </div>
+            </FormField>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[11.5px] font-medium text-navy-600">Data</label>
+              <FormField label="Data">
                 <input
                   type="date"
                   value={form.date}
                   min={today}
                   onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
                 />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11.5px] font-medium text-navy-600">Tipo</label>
+              </FormField>
+              <FormField label="Tipo">
                 <select
                   value={form.type}
                   onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as AgendaEventType }))}
-                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
                 >
                   {(Object.keys(TYPE_LABELS) as AgendaEventType[]).map((t) => (
                     <option key={t} value={t}>{TYPE_LABELS[t]}</option>
                   ))}
                 </select>
-              </div>
+              </FormField>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="space-y-1">
-                <label className="text-[11.5px] font-medium text-navy-600">Responsável</label>
+              <FormField label="Responsável">
                 <input
                   type="text"
                   value={form.responsavel}
                   onChange={(e) => setForm((f) => ({ ...f, responsavel: e.target.value }))}
                   placeholder="Síndico, zelador..."
                   maxLength={60}
-                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
                 />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11.5px] font-medium text-navy-600">Prioridade</label>
+              </FormField>
+              <FormField label="Prioridade">
                 <select
                   value={form.prioridade}
                   onChange={(e) => setForm((f) => ({ ...f, prioridade: e.target.value as FormState["prioridade"] }))}
-                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
                 >
                   {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-[11.5px] font-medium text-navy-600">Recorrência</label>
+              </FormField>
+              <FormField label="Recorrência">
                 <select
                   value={form.recurrence}
                   onChange={(e) => setForm((f) => ({ ...f, recurrence: e.target.value as AgendaRecurrence }))}
-                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none"
+                  className="w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
                 >
                   {(Object.keys(RECURRENCE_LABELS) as AgendaRecurrence[]).map((r) => (
                     <option key={r} value={r}>{RECURRENCE_LABELS[r]}</option>
                   ))}
                 </select>
-              </div>
+              </FormField>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[11.5px] font-medium text-navy-600">Observação (opcional)</label>
+            <FormField label="Observação" hint="Opcional">
               <textarea
                 value={form.note}
                 onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
                 placeholder="Detalhes ou lembrete"
                 maxLength={300}
                 rows={2}
-                className="w-full resize-none rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none"
+                className="w-full resize-none rounded-xl border border-navy-200 bg-white px-3 py-2 text-[13px] text-navy-800 placeholder:text-navy-300 focus:border-navy-400 focus:outline-none focus:ring-2 focus:ring-navy-300/20"
               />
-            </div>
+            </FormField>
 
             <label className="flex cursor-pointer items-center gap-2">
               <input

@@ -4,6 +4,7 @@
 import { isEnabled } from "@/lib/feature-flags";
 import { setSyncSyncing, setSyncSynced, setSyncError, setSyncOffline } from "@/lib/sync/syncStatus";
 import { getUserBackupJson, type UserBackup } from "@/lib/session";
+import { syncDebug } from "@/lib/sync/syncLogger";
 
 const QUEUE_KEY = "amigo_sync_queue";
 const DEBOUNCE_MS = 4_000;   // 4 s após última chamada
@@ -16,12 +17,6 @@ let retryCount = 0;
 interface SyncJob {
   userId: string;
   enqueuedAt: string;
-}
-
-function devLog(msg: string, data?: Record<string, unknown>): void {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[autoSync] ${msg}`, data ?? "");
-  }
 }
 
 function readQueue(): SyncJob | null {
@@ -57,11 +52,11 @@ async function executeSync(userId: string): Promise<boolean> {
       setSyncSynced();
       writeQueue(null);
       retryCount = 0;
-      devLog("sync ok", { userId: userId.slice(0, 8) + "…" });
+      syncDebug("autoSync", "sync ok", { userId: userId.slice(0, 8) + "…" });
       return true;
     } else {
       setSyncError(result.error ?? "Erro desconhecido.");
-      devLog("sync failed", { error: result.error });
+      syncDebug("autoSync", "sync failed", { error: result.error });
       return false;
     }
   } catch (e) {
@@ -72,12 +67,12 @@ async function executeSync(userId: string): Promise<boolean> {
 
 async function retryLoop(userId: string): Promise<void> {
   if (retryCount >= MAX_RETRIES) {
-    devLog("max retries reached, giving up");
+    syncDebug("autoSync", "max retries reached, giving up");
     retryCount = 0;
     return;
   }
   retryCount++;
-  devLog("retry", { attempt: retryCount });
+  syncDebug("autoSync", "retry", { attempt: retryCount });
   await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * retryCount));
   const ok = await executeSync(userId);
   if (!ok) await retryLoop(userId);
@@ -105,7 +100,7 @@ export async function flushPendingSync(): Promise<void> {
   if (!isEnabled("sync_enabled")) return;
   const job = readQueue();
   if (!job) return;
-  devLog("flushing pending job", { enqueuedAt: job.enqueuedAt });
+  syncDebug("autoSync", "flushing pending job", { enqueuedAt: job.enqueuedAt });
   await executeSync(job.userId);
 }
 

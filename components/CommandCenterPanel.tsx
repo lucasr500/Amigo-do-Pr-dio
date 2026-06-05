@@ -195,6 +195,8 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
+          aria-expanded={false}
+          aria-controls="command-center-expanded"
           className={`flex w-full items-center gap-3 rounded-[18px] border px-4 py-3.5 text-left transition-all hover:shadow-sm active:scale-[0.99] ${riskCfg.bg}`}
         >
           <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/80 text-[10px] font-bold tracking-[0.08em] text-navy-500" aria-hidden="true">
@@ -231,7 +233,7 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
 
   return (
     <section className="px-5 pb-3 sm:px-6">
-      <div className="rounded-[22px] border border-navy-100/80 bg-white/92 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.28)]">
+      <div id="command-center-expanded" className="rounded-[22px] border border-navy-100/80 bg-white/92 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.28)]">
 
         {/* Cabeçalho */}
         <div className="flex items-center justify-between px-4 pb-2 pt-4">
@@ -252,7 +254,10 @@ export default function CommandCenterPanel({ refreshKey, onNavigate }: Props) {
           <button
             type="button"
             onClick={() => setExpanded(false)}
-            className="rounded-full px-2.5 py-1 text-[11.5px] text-navy-400 hover:bg-navy-50 hover:text-navy-600"
+            aria-label="Fechar centro de comando"
+            aria-expanded={true}
+            aria-controls="command-center-expanded"
+            className="rounded-full px-2.5 py-1 text-[11.5px] text-navy-400 hover:bg-navy-50 hover:text-navy-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40"
           >
             Fechar
           </button>

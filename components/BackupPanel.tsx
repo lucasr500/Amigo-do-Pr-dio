@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { exportUserData, getUserBackupJson, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import AlertBox from "@/components/ui/AlertBox";
+import LocalFirstTrustNote from "@/components/LocalFirstTrustNote";
 
 type Props = {
   onImported?: () => void;
@@ -154,6 +155,7 @@ export default function BackupPanel({ onImported }: Props) {
         <div className="mx-5 border-t border-navy-50" />
 
         <div className="px-5 py-3.5 space-y-3">
+          <LocalFirstTrustNote compact />
 
           {/* Alerta de backup desatualizado */}
           {(() => {

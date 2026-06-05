@@ -198,7 +198,7 @@ export default function HomeTab({
               onClick={onActivateDemo}
               className="flex w-full items-center gap-3 rounded-[16px] border border-amber-200/70 bg-amber-50/60 px-4 py-3.5 text-left transition-all hover:border-amber-300 hover:bg-amber-50 active:scale-[0.98]"
             >
-              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-[16px]" aria-hidden="true">👁️</span>
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-[10px] font-bold tracking-[0.08em] text-amber-800" aria-hidden="true">DEMO</span>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold text-navy-800">Ver alertas de um prédio real em risco</p>
                 <p className="mt-0.5 text-[11.5px] text-navy-500">Exemplo com AVCB vencido, seguro próximo e pendências ativas</p>

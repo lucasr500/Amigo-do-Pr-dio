@@ -29,47 +29,19 @@ import { addPendencia, getPendencias } from "@/lib/session-pendencias";
 import { addAgendaEvent, getAgendaEvents } from "@/lib/session-agenda";
 import EmptyState from "@/components/ui/EmptyState";
 import ActionButton from "@/components/ui/ActionButton";
-import MetricCard from "@/components/ui/MetricCard";
+import AlertBox from "@/components/ui/AlertBox";
+import FormField from "@/components/ui/FormField";
+import FinancialExecutiveCards from "@/components/financial/FinancialExecutiveCards";
+import FinancialFilters from "@/components/financial/FinancialFilters";
+import { ENTRY_LABEL, type FinancialFilter, formatMoneyCompact } from "@/components/financial/financial-ui";
 
 type Props = {
   onSaved?: () => void;
 };
 
-const ENTRY_LABEL: Record<FinancialEntryType, string> = {
-  receita: "Receita",
-  despesa: "Despesa",
-  conta_a_pagar: "Conta a pagar",
-  investimento: "Investimento",
-};
-
-const FILTERS = ["todos", "receitas", "despesas", "contas", "vencidas", "pagas", "investimentos"] as const;
-type FinancialFilter = (typeof FILTERS)[number];
-
-const FILTER_LABEL: Record<FinancialFilter, string> = {
-  todos: "Todos",
-  receitas: "Receitas",
-  despesas: "Despesas",
-  contas: "Contas",
-  vencidas: "Vencidas",
-  pagas: "Pagas",
-  investimentos: "Reserva",
-};
-
 function formatMoney(value: number): string {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-
-function formatMoneyCompact(value: number): string {
-  if (Math.abs(value) >= 1_000_000) return `R$ ${(value / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(value) >= 1_000)     return `R$ ${(value / 1_000).toFixed(1)}K`;
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-const RISK_STATUS: Record<string, "good" | "warning" | "danger"> = {
-  "crítico": "danger",
-  "atenção": "warning",
-  "baixo":   "good",
-};
 
 export default function FinancialPanel({ onSaved }: Props) {
   const [month, setMonth] = useState(currentMonthKey());
@@ -293,30 +265,13 @@ export default function FinancialPanel({ onSaved }: Props) {
           />
         </div>
 
-        {/* ── 4 cards executivos ── */}
-        <div className="grid grid-cols-2 gap-2 px-4 sm:grid-cols-4">
-          <MetricCard
-            label="Saldo estimado"
-            value={formatMoneyCompact(summary.estimatedBalance)}
-            status={summary.estimatedBalance < 0 ? "danger" : "neutral"}
-          />
-          <MetricCard
-            label="Resultado do mês"
-            value={`${resultado >= 0 ? "+" : ""}${formatMoneyCompact(resultado)}`}
-            status={resultado < 0 ? "danger" : "good"}
-          />
-          <MetricCard
-            label="Contas próximas"
-            value={totalUpcoming > 0 ? `${totalUpcoming} conta${totalUpcoming > 1 ? "s" : ""}` : "—"}
-            detail={windows.next3Days.length > 0 ? `${windows.next3Days.length} em 3 dias` : undefined}
-            status={windows.next3Days.length > 0 ? "danger" : totalUpcoming > 0 ? "warning" : "neutral"}
-          />
-          <MetricCard
-            label="Risco de caixa"
-            value={risk.level}
-            status={RISK_STATUS[risk.level] ?? "neutral"}
-          />
-        </div>
+        <FinancialExecutiveCards
+          estimatedBalance={summary.estimatedBalance}
+          next3DaysCount={windows.next3Days.length}
+          resultado={resultado}
+          riskLevel={risk.level}
+          totalUpcoming={totalUpcoming}
+        />
 
         {/* ── Frase de insight + ação ── */}
         {hasData && insight.nextAction && (
@@ -331,10 +286,12 @@ export default function FinancialPanel({ onSaved }: Props) {
         {summary.alerts.length > 0 && (
           <div className="mt-3 space-y-1.5 px-4">
             {summary.alerts.map((alert) => (
-              <div key={alert.id} className="rounded-[12px] border border-terracotta-200 bg-terracotta-50/60 px-3 py-2">
-                <p className="text-[12px] font-semibold text-terracotta-800">{alert.title}</p>
-                <p className="mt-0.5 text-[11px] leading-relaxed text-terracotta-700">{alert.reason}</p>
-              </div>
+              <AlertBox
+                key={alert.id}
+                tone={alert.severity === "critical" ? "danger" : "warning"}
+                title={alert.title}
+                description={alert.reason}
+              />
             ))}
           </div>
         )}
@@ -451,18 +408,15 @@ export default function FinancialPanel({ onSaved }: Props) {
 
         {/* ── Campos de resumo ── */}
         <div className="mt-4 grid gap-3 px-4 sm:grid-cols-3">
-          <label className="space-y-1">
-            <span className="text-[11.5px] font-medium text-navy-500">Saldo estimado</span>
-            <input value={balance} onChange={(e) => setBalance(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800" />
-          </label>
-          <label className="space-y-1">
-            <span className="text-[11.5px] font-medium text-navy-500">Inadimplência (%)</span>
-            <input value={delinquency} onChange={(e) => setDelinquency(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800" />
-          </label>
-          <label className="space-y-1">
-            <span className="text-[11.5px] font-medium text-navy-500">Reserva com liquidez</span>
-            <input value={reserve} onChange={(e) => setReserve(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800" />
-          </label>
+          <FormField label="Saldo estimado">
+            <input value={balance} onChange={(e) => setBalance(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
+          </FormField>
+          <FormField label="Inadimplência (%)">
+            <input value={delinquency} onChange={(e) => setDelinquency(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
+          </FormField>
+          <FormField label="Reserva com liquidez">
+            <input value={reserve} onChange={(e) => setReserve(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
+          </FormField>
         </div>
         <div className="px-4 pt-2 pb-1">
           <ActionButton onClick={saveSnapshotFields}>
@@ -561,22 +515,7 @@ export default function FinancialPanel({ onSaved }: Props) {
             <p className="text-[12.5px] font-semibold text-navy-800">Lançamentos do mês</p>
             <span className="text-[10.5px] text-navy-400">controle auxiliar</span>
           </div>
-          <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter}
-                type="button"
-                onClick={() => setActiveFilter(filter)}
-                className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-medium transition-colors ${
-                  activeFilter === filter
-                    ? "bg-navy-700 text-white"
-                    : "border border-navy-100 bg-white text-navy-500 hover:bg-navy-50"
-                }`}
-              >
-                {FILTER_LABEL[filter]}
-              </button>
-            ))}
-          </div>
+          <FinancialFilters value={activeFilter} onChange={setActiveFilter} />
 
           {actionFeedback && (
             <div className="rounded-[10px] bg-teal-50 px-3 py-2 text-[11.5px] text-teal-800">

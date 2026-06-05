@@ -26,6 +26,7 @@ const LocalDataIntegrityPanel        = dynamic(() => import("@/components/LocalD
 const BackupPanel                    = dynamic(() => import("@/components/BackupPanel"), { ssr: false });
 const NotificationSettingsPanel      = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 const HealthTrendChart               = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
+const LocalFirstTrustNote            = dynamic(() => import("@/components/LocalFirstTrustNote"), { ssr: false });
 
 type Props = {
   refreshKey: number;
@@ -203,6 +204,9 @@ export default function CondominioTab({
           priority="normal"
           defaultOpen={false}
         >
+          <section className="px-5 pb-2 pt-2 sm:px-6">
+            <LocalFirstTrustNote />
+          </section>
           <section className="px-5 pb-2 pt-2 sm:px-6">
             <AccountPanel onRefresh={onRefresh} />
           </section>
