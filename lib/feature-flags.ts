@@ -15,6 +15,11 @@ const FLAG_DEFAULTS = {
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental
   premium_features:         false,  // Funcionalidades premium (futuro)
+  // Central Digital do Condomínio
+  community_portal_enabled: true,   // Central Digital — mural, solicitações, documentos
+  resident_access_enabled:  true,   // Modo de visualização morador
+  council_access_enabled:   true,   // Modo de visualização conselho
+  public_documents_enabled: true,   // Biblioteca de documentos públicos
 } as const;
 
 export type FeatureFlag = keyof typeof FLAG_DEFAULTS;

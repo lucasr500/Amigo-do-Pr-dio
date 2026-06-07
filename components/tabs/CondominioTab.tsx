@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { getViewMode, setViewMode } from "@/lib/community-permissions";
+import type { CommunityRole } from "@/lib/community-types";
 import type { AppTab } from "@/components/BottomNav";
 import CondominioSection from "@/components/condominio/CondominioSection";
 import CondominioQuickNav from "@/components/condominio/CondominioQuickNav";
@@ -34,6 +36,13 @@ const HandoffPanel                   = dynamic(() => import("@/components/Handof
 const SuppliersPanel                 = dynamic(() => import("@/components/SuppliersPanel"), { ssr: false });
 const DecisionsPanel                 = dynamic(() => import("@/components/DecisionsPanel"), { ssr: false });
 const UnitHistoryPanel               = dynamic(() => import("@/components/UnitHistoryPanel"), { ssr: false });
+const ViewModeSelector               = dynamic(() => import("@/components/community/ViewModeSelector"), { ssr: false });
+const MuralPanel                     = dynamic(() => import("@/components/community/MuralPanel"), { ssr: false });
+const RequestsPanel                  = dynamic(() => import("@/components/community/RequestsPanel"), { ssr: false });
+const PollsPanel                     = dynamic(() => import("@/components/community/PollsPanel"), { ssr: false });
+const PublicDocumentsPanel           = dynamic(() => import("@/components/community/PublicDocumentsPanel"), { ssr: false });
+const TimelinePanel                  = dynamic(() => import("@/components/community/TimelinePanel"), { ssr: false });
+const CommunityReportPanel           = dynamic(() => import("@/components/community/CommunityReportPanel"), { ssr: false });
 
 type Props = {
   refreshKey: number;
@@ -66,6 +75,14 @@ export default function CondominioTab({
   onToggleNotifSettings,
   onBackupOpened,
 }: Props) {
+  const [communityRole, setCommunityRole] = useState<CommunityRole>("manager");
+  useEffect(() => { setCommunityRole(getViewMode()); }, []);
+
+  const handleRoleChange = (role: CommunityRole) => {
+    setViewMode(role);
+    setCommunityRole(role);
+  };
+
   function scrollToSection(id: string) {
     const el = document.getElementById(id);
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -237,7 +254,31 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 8 — Segurança dos dados (recolhível)                 */}
+      {/* SEÇÃO 8 — Central Digital do Condomínio                    */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="central-digital"
+          title="Central Digital"
+          subtitle="Mural oficial, solicitações, enquetes consultivas, biblioteca e timeline institucional."
+          eyebrow="Comunidade"
+          priority="normal"
+          defaultOpen={false}
+        >
+          <section className="px-5 pb-3 sm:px-6">
+            <ViewModeSelector onChange={handleRoleChange} />
+          </section>
+          <MuralPanel role={communityRole} />
+          <RequestsPanel role={communityRole} />
+          <PollsPanel role={communityRole} />
+          <PublicDocumentsPanel role={communityRole} />
+          <TimelinePanel role={communityRole} />
+          <CommunityReportPanel role={communityRole} condoName={condoName || "Condomínio"} />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 9 — Segurança dos dados (recolhível)                 */}
       {/* ═══════════════════════════════════════════════════════════ */}
       {hasCondominioData && (
         <CondominioSection

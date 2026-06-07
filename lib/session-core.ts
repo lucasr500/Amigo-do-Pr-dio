@@ -40,6 +40,16 @@ export const KEYS = {
   SUPPLIERS:             "amigo_suppliers",
   DECISIONS:             "amigo_decisions",
   UNIT_EVENTS:           "amigo_unit_events",
+  // v11 — Central Digital do Condomínio
+  COMMUNITY_POSTS:       "amigo_community_posts",
+  COMMUNITY_REQUESTS:    "amigo_community_requests",
+  COMMUNITY_POLLS:       "amigo_community_polls",
+  COMMUNITY_POLL_VOTES:  "amigo_community_poll_votes",
+  COMMUNITY_DOCUMENTS:   "amigo_community_documents",
+  COMMUNITY_TIMELINE:    "amigo_community_timeline",
+  COMMUNITY_COMMENTS:    "amigo_community_comments",
+  COMMUNITY_AUDIT:       "amigo_community_audit",
+  VIEW_MODE:             "amigo_view_mode",
 } as const;
 
 // Lê de localStorage com fallback seguro.
