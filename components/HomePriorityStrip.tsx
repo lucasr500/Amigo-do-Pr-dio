@@ -168,7 +168,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
               type="button"
               onClick={onOpenNotifications}
               aria-label={`${data.unreadCount} notificações`}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-full bg-white/[0.82] px-2.5 py-1 text-[11px] font-semibold text-terracotta-700 shadow-card hover:bg-white transition-colors"
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-full bg-white/[0.82] px-2.5 py-1 text-[11px] font-semibold text-terracotta-700 shadow-card transition-colors hover:bg-white active:scale-[0.97] focus:outline-none focus-visible:ring-1 focus-visible:ring-navy-300/40"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-terracotta-500" aria-hidden="true" />
               {data.unreadCount}

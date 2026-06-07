@@ -88,7 +88,7 @@ export default function ToolsTab({
 
       {/* Cabeçalho */}
       <div className="px-5 pb-3 pt-1 sm:px-6">
-        <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.11em] text-navy-400">
           Ações
         </p>
         <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">

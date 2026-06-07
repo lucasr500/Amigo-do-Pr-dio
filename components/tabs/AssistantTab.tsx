@@ -128,7 +128,7 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
 
       {!submitted && !isLoading && (
         <div className="px-5 pb-2 pt-1 sm:px-6">
-          <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
+          <p className="text-[10.5px] font-semibold uppercase tracking-[0.11em] text-navy-400">
             Inteligência
           </p>
           <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">

@@ -261,7 +261,7 @@ export default function FinancialPanel({ onSaved }: Props) {
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value || currentMonthKey())}
-            className="max-w-[132px] rounded-lg border border-navy-100 bg-cream-50/50 px-2.5 py-2 text-[12px] text-navy-700"
+            className="max-w-[132px] rounded-lg border border-navy-100 bg-cream-50/50 px-2.5 py-2 text-[12px] text-navy-700 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
           />
         </div>
 

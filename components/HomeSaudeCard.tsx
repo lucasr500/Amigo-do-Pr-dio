@@ -94,7 +94,7 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
   }
   if (!result) return null;
 
-  const btnClass = `flex w-full items-center gap-3.5 rounded-lg border px-4 py-4 text-left shadow-card ${onClick ? "transition-all hover:bg-white hover:shadow-card-md active:scale-[0.99]" : ""}`;
+  const btnClass = `flex w-full items-center gap-3.5 rounded-lg border px-4 py-4 text-left shadow-card ${onClick ? "cursor-pointer transition-all hover:bg-white hover:shadow-card-md active:scale-[0.99]" : "cursor-default pointer-events-none"}`;
 
   if (!hasData) {
     return (
@@ -102,7 +102,6 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
         <button
           type="button"
           onClick={onClick}
-          disabled={!onClick}
           className={`${btnClass} border-navy-100/80 bg-white/[0.78]`}
         >
           <div className="relative flex h-[58px] w-[58px] flex-shrink-0 items-center justify-center">

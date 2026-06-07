@@ -41,7 +41,7 @@ const SOURCE_ICON: Record<string, string> = {
 const RISK_CONFIG = {
   critico:    { bg: "bg-terracotta-50 border-terracotta-200", dot: "bg-terracotta-500", label: "Ação necessária" },
   atencao:    { bg: "bg-amber-50 border-amber-200",           dot: "bg-amber-400",      label: "Atenção" },
-  estavel:    { bg: "bg-navy-50/60 border-navy-100",          dot: "bg-teal-500",       label: "Estável" },
+  estavel:    { bg: "bg-navy-50/60 border-navy-100",          dot: "bg-sage-500",       label: "Estável" },
   "sem-dados":{ bg: "bg-navy-50/40 border-navy-100",          dot: "bg-navy-300",       label: "Sem dados" },
 } as const;
 
@@ -87,7 +87,7 @@ function GuidanceTopItem({ item, rank }: { item: GuidanceEngineItem; rank: numbe
     <button
       type="button"
       onClick={() => setExpanded((v) => !v)}
-      className="w-full text-left focus:outline-none"
+      className="w-full rounded-lg text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-navy-300/40"
       aria-expanded={expanded}
     >
       <div className="flex items-start gap-2.5">
