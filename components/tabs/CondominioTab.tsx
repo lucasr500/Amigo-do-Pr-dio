@@ -28,6 +28,12 @@ const BackupPanel                    = dynamic(() => import("@/components/Backup
 const NotificationSettingsPanel      = dynamic(() => import("@/components/NotificationSettingsPanel"), { ssr: false });
 const HealthTrendChart               = dynamic(() => import("@/components/HealthTrendChart"), { ssr: false });
 const LocalFirstTrustNote            = dynamic(() => import("@/components/LocalFirstTrustNote"), { ssr: false });
+const FinancialIntelligencePanel     = dynamic(() => import("@/components/FinancialIntelligencePanel"), { ssr: false });
+const AgoReportPanel                 = dynamic(() => import("@/components/AgoReportPanel"), { ssr: false });
+const HandoffPanel                   = dynamic(() => import("@/components/HandoffPanel"), { ssr: false });
+const SuppliersPanel                 = dynamic(() => import("@/components/SuppliersPanel"), { ssr: false });
+const DecisionsPanel                 = dynamic(() => import("@/components/DecisionsPanel"), { ssr: false });
+const UnitHistoryPanel               = dynamic(() => import("@/components/UnitHistoryPanel"), { ssr: false });
 
 type Props = {
   refreshKey: number;
@@ -173,6 +179,8 @@ export default function CondominioTab({
           priority="high"
         >
           <FinancialPanel onSaved={onRefresh} />
+          <FinancialIntelligencePanel />
+          <AgoReportPanel />
         </CondominioSection>
       )}
 
@@ -210,7 +218,26 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 7 — Segurança dos dados (recolhível)                 */}
+      {/* SEÇÃO 7 — Memória institucional (recolhível)               */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && (
+        <CondominioSection
+          id="memoria-institucional"
+          title="Memória institucional"
+          subtitle="Histórico por unidade, fornecedores, decisões e handoff de mandato."
+          eyebrow="Memória"
+          priority="normal"
+          defaultOpen={false}
+        >
+          <UnitHistoryPanel />
+          <SuppliersPanel />
+          <DecisionsPanel />
+          <HandoffPanel />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 8 — Segurança dos dados (recolhível)                 */}
       {/* ═══════════════════════════════════════════════════════════ */}
       {hasCondominioData && (
         <CondominioSection

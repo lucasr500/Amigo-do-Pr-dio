@@ -6,13 +6,19 @@ import {
   useState,
   useCallback,
   useRef,
+  useEffect,
 } from "react";
 import dynamic from "next/dynamic";
 import AskInput from "@/components/AskInput";
 import type { AnswerResult, Topic } from "@/lib/data";
 import type { ToolAnchor } from "@/lib/app-navigation";
-import { incrementUsage } from "@/lib/session";
+import { incrementUsage, getProfile, getMemoriaOperacional, getPendencias } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import {
+  buildAssistantContext, buildContextualCards, getSuggestedQueriesForContext,
+  type ContextualCard,
+} from "@/lib/contextual-assistant";
+import { getDocumentos } from "@/lib/session-documentos";
 
 const QuickAccessCards = dynamic(() => import("@/components/QuickAccessCards"), { ssr: false });
 const Response         = dynamic(() => import("@/components/Response"), { ssr: false });
@@ -46,7 +52,19 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
   const [submitted, setSubmitted]         = useState("");
   const [answerResult, setAnswerResult]   = useState<AnswerResult | null>(null);
   const [isLoading, setIsLoading]         = useState(false);
+  const [ctxCards, setCtxCards]           = useState<ContextualCard[]>([]);
+  const [ctxSuggestions, setCtxSuggestions] = useState<string[]>([]);
   const abortRef = useRef(false);
+
+  useEffect(() => {
+    const profile = getProfile();
+    const memoria = getMemoriaOperacional();
+    const pendencias = getPendencias();
+    const documentos = getDocumentos();
+    const ctx = buildAssistantContext(profile, memoria, pendencias, documentos);
+    setCtxCards(buildContextualCards(ctx).slice(0, 3));
+    setCtxSuggestions(getSuggestedQueriesForContext(ctx));
+  }, [refreshKey]);
 
   const executeQuery = useCallback(async (q: string) => {
     if (!q.trim() || isLoading) return;
@@ -147,6 +165,55 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
 
       {!submitted && !isLoading && (
         <>
+          {/* Contextual alerts/suggestions based on condo state */}
+          {ctxCards.length > 0 && (
+            <div className="px-5 pb-2 pt-1 sm:px-6 space-y-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">
+                No seu condomínio
+              </p>
+              {ctxCards.map((card) => (
+                <button
+                  key={card.id}
+                  type="button"
+                  onClick={() => card.actionLabel && executeQuery(card.title)}
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
+                    card.type === "alert"
+                      ? "border-amber-100 bg-amber-50/80 hover:bg-amber-50"
+                      : "border-navy-100 bg-navy-50/60 hover:bg-navy-50"
+                  }`}
+                >
+                  <p className={`text-[12px] font-semibold ${card.type === "alert" ? "text-amber-800" : "text-navy-700"}`}>
+                    {card.title}
+                  </p>
+                  <p className={`mt-0.5 text-[11px] leading-relaxed ${card.type === "alert" ? "text-amber-700" : "text-navy-500"}`}>
+                    {card.body}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Context-aware suggested queries */}
+          {ctxSuggestions.length > 0 && (
+            <div className="px-5 pb-1 pt-0 sm:px-6">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">
+                Perguntas sugeridas
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {ctxSuggestions.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => executeQuery(q)}
+                    className="rounded-full border border-navy-100 bg-white px-2.5 py-1.5 text-[11px] text-navy-600 hover:bg-navy-50 active:scale-[0.97] transition-all"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <QuickAccessCards onSelect={handleTopicSelect} collapsed={false} />
           <HistoryPanel onSelect={(q) => executeQuery(q)} refreshKey={refreshKey} />
           <FavoritesPanel onSelect={(q) => executeQuery(q)} refreshKey={refreshKey} />

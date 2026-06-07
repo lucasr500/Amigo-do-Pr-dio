@@ -35,6 +35,11 @@ export const KEYS = {
   NOTIFICATIONS:         "amigo_notifications",
   HEALTH_HISTORY:        "amigo_health_history",
   AUDIT_LOG:             "amigo_audit_log",
+  // v10 — memória institucional profunda
+  HANDOFF_STATE:         "amigo_handoff",
+  SUPPLIERS:             "amigo_suppliers",
+  DECISIONS:             "amigo_decisions",
+  UNIT_EVENTS:           "amigo_unit_events",
 } as const;
 
 // Lê de localStorage com fallback seguro.
