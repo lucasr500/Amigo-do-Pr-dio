@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   addPendencia,
   completePendencia,
@@ -13,6 +13,37 @@ import {
 } from "@/lib/session";
 import { buildGuidanceItems, GuidanceItem } from "@/lib/guidance";
 import { trackEvent } from "@/lib/telemetry";
+
+// Mapeamento de emojis → SVG icons para eliminar emojis do GuidancePanel
+const GUIDANCE_ICON_MAP: Record<string, React.ReactNode> = {
+  "📋": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M6 6h6M6 9h6M6 12h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  "🛡️": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><path d="M9 2L4 5v4c0 3 2 5.5 5 6.5 3-1 5-3.5 5-6.5V5L9 2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /><path d="M6.5 9l2 2 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+  "👥": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M2.5 15.5c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /><circle cx="13" cy="7" r="2" stroke="currentColor" strokeWidth="1.3" /><path d="M16.5 15.5c0-2-1.4-3.5-3-3.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  "🐛": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><path d="M9 5c-2 0-3.5 1.5-3.5 4v1c0 2.5 1.5 4 3.5 4s3.5-1.5 3.5-4V9c0-2.5-1.5-4-3.5-4z" stroke="currentColor" strokeWidth="1.3" /><path d="M5.5 8H3M5.5 11H3M12.5 8H15M12.5 11H15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  "💧": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><path d="M9 3C7 6 5 8.5 5 11a4 4 0 008 0c0-2.5-2-5-4-8z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /></svg>,
+  "🛗": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><rect x="4" y="3" width="10" height="12" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M7 8h4M9 6v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  "🧯": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><rect x="6" y="5.5" width="6" height="9" rx="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M9 5.5V3.5M9 3.5H7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /><path d="M12 5c1 .5 1 2 0 2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg>,
+  "⚡": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><path d="M10 2L5 10h5l-2 6 7-8h-5l2-6z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /></svg>,
+  "🔌": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="5.5" stroke="currentColor" strokeWidth="1.3" /><path d="M7 7v2.5a2 2 0 004 0V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  "🗳️": <svg className="h-4.5 w-4.5" style={{height:"18px",width:"18px"}} viewBox="0 0 18 18" fill="none"><rect x="3" y="5" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M6 5V4a3 3 0 016 0v1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /><path d="M6 10l2 2 4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+};
+
+function GuidanceItemIcon({ icon }: { icon: string }) {
+  const svgIcon = GUIDANCE_ICON_MAP[icon];
+  if (svgIcon) {
+    return (
+      <span className="mt-0.5 flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-navy-100 text-navy-600">
+        {svgIcon}
+      </span>
+    );
+  }
+  // Fallback para emojis não mapeados
+  return (
+    <span className="mt-0.5 flex-shrink-0 text-[15px] leading-none" aria-hidden="true">
+      {icon}
+    </span>
+  );
+}
 
 // Sobreposição de título para pendências de itens com ação verbal mais precisa
 const GUIDANCE_TITULO_OVERRIDE: Partial<Record<string, string>> = {
@@ -85,8 +116,10 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
     return (
       <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
         <div className="flex items-center gap-3 rounded-[22px] border border-green-100 bg-white/90 px-5 py-4 shadow-card-md">
-          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-[15px]" aria-hidden="true">
-            ✓
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100" aria-hidden="true">
+            <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="none">
+              <path d="M5 10l4 4 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </span>
           <div>
             <p className="text-[12.5px] font-semibold text-navy-800">Tudo em ordem</p>
@@ -101,10 +134,10 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
   const hasCritico = items.some((i) => i.priority === "critico");
   const hasMixedPriorities = hasCritico && items.some((i) => i.priority === "atencao");
   const title = hasMixedPriorities
-    ? "Pendências prioritárias"
+    ? "Ações prioritárias do prédio"
     : hasCritico
-    ? "O que exige ação agora"
-    : "Alertas do prédio";
+    ? "Ação urgente requerida"
+    : "Alertas operacionais";
 
   const criticalItems = items.filter((i) => i.priority === "critico");
   const hasCriticalOverflow = criticalItems.length > INITIAL_LIMIT;
@@ -224,7 +257,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
         {/* Cabeçalho */}
         <div className="px-5 pt-5 pb-4">
           <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
-            Pendências
+            Monitoramento
           </p>
           <p className="mt-0.5 text-[13.5px] font-semibold text-navy-800">
             {title}
@@ -260,12 +293,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                   }`}
                   aria-expanded={isExpanded}
                 >
-                  <span
-                    className="mt-0.5 flex-shrink-0 text-[15px] leading-none"
-                    aria-hidden="true"
-                  >
-                    {item.icon}
-                  </span>
+                  <GuidanceItemIcon icon={item.icon} />
                   <div className="min-w-0 flex-1">
                     <p className={`text-[12.5px] leading-tight ${isMuted ? "font-medium text-navy-600" : "font-semibold text-navy-800"}`}>
                       {item.label}
@@ -283,13 +311,12 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                       {item.urgencyLabel}
                     </p>
                   </div>
-                  <span
-                    className="mt-1 flex-shrink-0 text-[12px] text-navy-300 transition-transform duration-200"
-                    aria-hidden="true"
-                    style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                  <svg
+                    className={`mt-1 h-4 w-4 flex-shrink-0 text-navy-300 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                    viewBox="0 0 16 16" fill="none" aria-hidden="true"
                   >
-                    ›
-                  </span>
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
 
                 {/* Expansão: contexto + ações */}

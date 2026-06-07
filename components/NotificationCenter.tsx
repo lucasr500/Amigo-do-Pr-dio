@@ -16,6 +16,7 @@ const ACTION_LABEL: Record<string, string> = {
   open_documentos:       "Ver documentos →",
   open_pendencias:       "Ver próximos passos →",
   open_revisao_semanal:  "Fazer revisão →",
+  open_dados:            "Exportar backup →",
 };
 
 const SEVERITY_STYLE: Record<AppNotification["severity"], string> = {

@@ -17,6 +17,8 @@ const RiskPreviewStrip   = dynamic(() => import("@/components/RiskPreviewStrip")
 const PushPromptStrip    = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
 const MonthlyReviewCard  = dynamic(() => import("@/components/MonthlyReviewCard"), { ssr: false });
 const Hero               = dynamic(() => import("@/components/Hero"), { ssr: false });
+const MilestoneCelebration = dynamic(() => import("@/components/MilestoneCelebration"), { ssr: false });
+const WeeklyReviewPrompt   = dynamic(() => import("@/components/WeeklyReviewPrompt"), { ssr: false });
 
 function completionBucket(pct: number): string {
   if (pct <= 25) return "0-25";
@@ -43,6 +45,7 @@ type Props = {
   onSuggestionSelect: (q: string) => void;
   onActivateDemo: () => void;
   onRefresh: () => void;
+  onOpenBackup?: () => void;
 };
 
 export default function HomeTab({
@@ -63,6 +66,7 @@ export default function HomeTab({
   onSuggestionSelect,
   onActivateDemo,
   onRefresh,
+  onOpenBackup,
 }: Props) {
   return (
     <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
@@ -103,28 +107,11 @@ export default function HomeTab({
             }}
             onOpenNotifications={onOpenNotifications}
           />
-          <MonthlyReviewCard
-            refreshKey={refreshKey}
-            onOpen={onOpenMonthlyReview}
-          />
-          <HomeAgendaCard
-            refreshKey={refreshKey}
-            onNavigate={() => onNavigateTab("agenda")}
-          />
-          <HomeSaudeCard
-            refreshKey={refreshKey}
-            onClick={() => onNavigateToSubView("saude")}
-          />
-          <ProgressiveSetupCard
-            refreshKey={refreshKey}
-            onNavigate={(target) => {
-              void trackEvent("profile_completion_cta_tap", {
-                completion_bucket: completionBucket(profileCompletion),
-              });
-              onNavigateTab(target);
-            }}
-          />
-          <PushPromptStrip />
+
+          {/* ── Marcos atingidos — aparecem ao abrir após conquista ── */}
+          <MilestoneCelebration refreshKey={refreshKey} onDismiss={onRefresh} />
+
+          {/* ── Alertas críticos — sempre visíveis antes dos cards ── */}
           {urgentCount > 0 && (
             <div className="px-5 pb-3 sm:px-6">
               <button
@@ -132,18 +119,18 @@ export default function HomeTab({
                 onClick={() => onNavigateToSubView("pendencias")}
                 className="flex w-full items-center gap-3 rounded-[14px] border border-terracotta-200 bg-terracotta-50 px-4 py-3 shadow-sm transition-all hover:bg-terracotta-100 active:scale-[0.98]"
               >
-                <span
-                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-terracotta-100 text-[14px]"
-                  aria-hidden="true"
-                >
-                  !
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-terracotta-100" aria-hidden="true">
+                  <svg className="h-4 w-4 text-terracotta-700" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3v5M8 10v1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    <path d="M7.15 1.5L1.5 11.5a1 1 0 00.85 1.5h11.3a1 1 0 00.85-1.5L8.85 1.5a1 1 0 00-1.7 0z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                  </svg>
                 </span>
                 <div className="min-w-0 flex-1 text-left">
                   <p className="text-[13px] font-semibold text-terracotta-800">
                     {urgentCount} {urgentCount !== 1 ? "pendências vencidas" : "pendência vencida"}
                   </p>
                   <p className="text-[11.5px] text-terracotta-600">
-                    Prazo passou — requer atenção
+                    Prazo passou — requer atenção imediata
                   </p>
                 </div>
                 <svg className="h-4 w-4 flex-shrink-0 text-terracotta-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -152,6 +139,21 @@ export default function HomeTab({
               </button>
             </div>
           )}
+
+          <MonthlyReviewCard
+            refreshKey={refreshKey}
+            onOpen={onOpenMonthlyReview}
+          />
+          <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
+          <HomeAgendaCard
+            refreshKey={refreshKey}
+            onNavigate={() => onNavigateTab("agenda")}
+          />
+          <HomeSaudeCard
+            refreshKey={refreshKey}
+            onClick={() => onNavigateToSubView("saude")}
+          />
+
           {showBackupNudge && !isDemo && (
             <div className="px-5 pb-3 sm:px-6">
               <div className="flex items-center gap-3 rounded-[14px] border border-amber-200/80 bg-amber-50/70 px-4 py-3">
@@ -166,7 +168,7 @@ export default function HomeTab({
                 </p>
                 <button
                   type="button"
-                  onClick={() => { onHideBackupNudge(); onNavigateTab("condominio"); }}
+                  onClick={() => { onHideBackupNudge(); if (onOpenBackup) { onOpenBackup(); } else { onNavigateTab("condominio"); } }}
                   className="flex-shrink-0 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-800 hover:bg-amber-200 active:scale-95"
                 >
                   Exportar
@@ -174,12 +176,25 @@ export default function HomeTab({
               </div>
             </div>
           )}
+
+          {/* Alertas operacionais — mais urgentes que setup tips */}
           <GuidancePanel
             onAsk={onSuggestionSelect}
             onResolved={onRefresh}
             onPendenciaSaved={onRefresh}
             refreshKey={refreshKey}
           />
+
+          <ProgressiveSetupCard
+            refreshKey={refreshKey}
+            onNavigate={(target) => {
+              void trackEvent("profile_completion_cta_tap", {
+                completion_bucket: completionBucket(profileCompletion),
+              });
+              onNavigateTab(target);
+            }}
+          />
+          <PushPromptStrip />
         </>
       )}
 

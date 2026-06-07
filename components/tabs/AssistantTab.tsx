@@ -1,56 +1,114 @@
 "use client";
 
+import {
+  forwardRef,
+  useImperativeHandle,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import dynamic from "next/dynamic";
 import AskInput from "@/components/AskInput";
 import type { AnswerResult, Topic } from "@/lib/data";
 import type { ToolAnchor } from "@/lib/app-navigation";
+import { incrementUsage } from "@/lib/session";
+import { trackEvent } from "@/lib/telemetry";
 
 const QuickAccessCards = dynamic(() => import("@/components/QuickAccessCards"), { ssr: false });
 const Response         = dynamic(() => import("@/components/Response"), { ssr: false });
 const HistoryPanel     = dynamic(() => import("@/components/HistoryPanel"), { ssr: false });
 const FavoritesPanel   = dynamic(() => import("@/components/FavoritesPanel"), { ssr: false });
 
-type Props = {
-  question: string;
-  submittedQuestion: string;
-  answerResult: AnswerResult | null;
-  isLoading: boolean;
-  refreshKey: number;
-  onQuestionChange: (q: string) => void;
-  onAsk: () => void;
-  onBack: () => void;
-  onRetry: () => void;
-  onNewQuestion: () => void;
-  onTopicSelect: (topic: Topic) => void;
-  onSuggestionSelect: (q: string) => void;
-  onSavePendencia: (titulo: string, categoria: string, matchedId: string) => void;
-  onNavigateToChecklist: (id: string) => void;
-  onNavigateToFerramentas: (anchor?: ToolAnchor) => void;
-  onFavorite: () => void;
+// ── Imperative handle exposed to parent ─────────────────────────────────────
+export type AssistantTabHandle = {
+  executeQuery: (q: string) => void;
 };
 
-export default function AssistantTab({
-  question,
-  submittedQuestion,
-  answerResult,
-  isLoading,
-  refreshKey,
-  onQuestionChange,
-  onAsk,
-  onBack,
-  onRetry,
-  onNewQuestion,
-  onTopicSelect,
-  onSuggestionSelect,
-  onSavePendencia,
-  onNavigateToChecklist,
-  onNavigateToFerramentas,
-  onFavorite,
-}: Props) {
+type Props = {
+  refreshKey: number;
+  onSavePendencia: (titulo: string, categoria: string, matchedId: string) => void;
+  onQueryExecuted: () => void;       // notifica page.tsx para refreshKey++
+  onNavigateToChecklist: (id: string) => void;
+  onNavigateToFerramentas: (anchor?: ToolAnchor) => void;
+};
+
+const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab(
+  {
+    refreshKey,
+    onSavePendencia,
+    onQueryExecuted,
+    onNavigateToChecklist,
+    onNavigateToFerramentas,
+  },
+  ref
+) {
+  const [question, setQuestion]           = useState("");
+  const [submitted, setSubmitted]         = useState("");
+  const [answerResult, setAnswerResult]   = useState<AnswerResult | null>(null);
+  const [isLoading, setIsLoading]         = useState(false);
+  const abortRef = useRef(false);
+
+  const executeQuery = useCallback(async (q: string) => {
+    if (!q.trim() || isLoading) return;
+    abortRef.current = false;
+    setQuestion("");
+    setIsLoading(true);
+    setSubmitted(q.trim());
+    setAnswerResult(null);
+
+    const [{ findAnswer, logQuery }] = await Promise.all([
+      import("@/lib/data"),
+      new Promise<void>((r) => setTimeout(r, 150)),
+    ]);
+
+    if (abortRef.current) return;
+
+    const result = findAnswer(q.trim());
+    logQuery(q.trim(), result);
+    incrementUsage();
+
+    if (result.isDefault) {
+      void trackEvent("query_fallback", {
+        detected_category: result.detectedCategory,
+        score: result.score,
+        blocked_by_domain: result.blockedByDomainAnchor,
+        query_length: q.length,
+      });
+    } else {
+      void trackEvent("query_submitted", {
+        matched_id: result.matched?.id ?? null,
+        categoria: result.matched?.categoria ?? null,
+        score: result.score,
+        query_length: q.length,
+      });
+    }
+
+    setAnswerResult(result);
+    setIsLoading(false);
+    onQueryExecuted();
+  }, [isLoading, onQueryExecuted]);
+
+  // Expõe executeQuery para o parent via ref
+  useImperativeHandle(ref, () => ({ executeQuery }), [executeQuery]);
+
+  const handleAsk  = () => executeQuery(question.trim());
+  const handleBack = () => { setQuestion(submitted); setSubmitted(""); setAnswerResult(null); };
+  const handleRetry = () => executeQuery(submitted);
+  const handleNewQuestion = () => { setQuestion(""); setSubmitted(""); setAnswerResult(null); };
+
+  const handleTopicSelect = (topic: Topic) => {
+    setQuestion(topic.examplePrompt);
+    setTimeout(() => {
+      const el = document.getElementById("ask-question") as HTMLTextAreaElement;
+      el?.focus();
+      el?.setSelectionRange(el.value.length, el.value.length);
+    }, 50);
+  };
+
   return (
     <div key="assistente" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
 
-      {!submittedQuestion && !isLoading && (
+      {!submitted && !isLoading && (
         <div className="px-5 pb-2 pt-1 sm:px-6">
           <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
             Assistente
@@ -64,11 +122,11 @@ export default function AssistantTab({
         </div>
       )}
 
-      {submittedQuestion && !isLoading && (
+      {submitted && !isLoading && (
         <div className="px-4 pb-0 pt-2 sm:px-5">
           <button
             type="button"
-            onClick={onBack}
+            onClick={handleBack}
             aria-label="Voltar para nova pergunta"
             className="inline-flex items-center gap-1.5 rounded-full px-2 py-1.5 text-navy-400 transition-colors hover:bg-navy-100/70 hover:text-navy-600 active:scale-[0.97]"
           >
@@ -82,30 +140,30 @@ export default function AssistantTab({
 
       <AskInput
         value={question}
-        onChange={onQuestionChange}
-        onSubmit={onAsk}
+        onChange={setQuestion}
+        onSubmit={handleAsk}
         isLoading={isLoading}
       />
 
-      {!submittedQuestion && !isLoading && (
+      {!submitted && !isLoading && (
         <>
-          <p className="px-5 pb-3 text-[11px] leading-relaxed text-navy-400 sm:px-6">
+          <QuickAccessCards onSelect={handleTopicSelect} collapsed={false} />
+          <HistoryPanel onSelect={(q) => executeQuery(q)} refreshKey={refreshKey} />
+          <FavoritesPanel onSelect={(q) => executeQuery(q)} refreshKey={refreshKey} />
+          <p className="px-5 pb-4 pt-1 text-[10.5px] leading-relaxed text-navy-300 sm:px-6">
             As orientações têm caráter informativo. Para decisões específicas, consulte administradora, assessoria jurídica ou profissional responsável.
           </p>
-          <QuickAccessCards onSelect={onTopicSelect} collapsed={false} />
-          <HistoryPanel onSelect={onSuggestionSelect} refreshKey={refreshKey} />
-          <FavoritesPanel onSelect={onSuggestionSelect} refreshKey={refreshKey} />
         </>
       )}
 
       <Response
-        question={submittedQuestion}
+        question={submitted}
         answerResult={answerResult}
         isLoading={isLoading}
-        onRetry={onRetry}
-        onSuggestionSelect={onSuggestionSelect}
-        onFavorite={onFavorite}
-        onNewQuestion={onNewQuestion}
+        onRetry={handleRetry}
+        onSuggestionSelect={(q) => executeQuery(q)}
+        onFavorite={onQueryExecuted}
+        onNewQuestion={handleNewQuestion}
         onNavigateToChecklist={onNavigateToChecklist}
         onNavigateToFerramentas={onNavigateToFerramentas}
         onSavePendencia={onSavePendencia}
@@ -113,4 +171,6 @@ export default function AssistantTab({
 
     </div>
   );
-}
+});
+
+export default AssistantTab;

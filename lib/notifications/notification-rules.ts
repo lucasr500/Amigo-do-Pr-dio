@@ -10,6 +10,7 @@ import {
   getPendenciasAbertas,
   getWeeklyReviewState,
   getCurrentWeekKey,
+  getLastBackupAt,
   DOCUMENTOS_ESSENCIAIS_IDS,
 } from "@/lib/session";
 import type { AppNotification } from "@/lib/session";
@@ -20,16 +21,20 @@ type NotificationCandidate = Omit<AppNotification, "id" | "createdAt" | "read" |
 // Cooldown mínimo em ms entre re-geração do mesmo tipo de notificação.
 // Previne spam ao reabrir o app várias vezes no mesmo dia.
 const COOLDOWN_MS: Record<NotificationType, number> = {
-  critical_deadline:      6 * 3_600_000,  // 6 horas
-  weekly_review:          24 * 3_600_000, // 24 horas
-  monthly_review:         7 * 24 * 3_600_000, // 7 dias
-  overdue_document:       7 * 24 * 3_600_000, // 7 dias
-  overdue_vacation:       3 * 24 * 3_600_000, // 3 dias
-  implementation_gap:     7 * 24 * 3_600_000, // 7 dias
-  health_drop:            24 * 3_600_000, // 24 horas
-  stale_pending:          3 * 24 * 3_600_000, // 3 dias
-  routine_overdue:        7 * 24 * 3_600_000, // 7 dias
-  onboarding_incomplete:  7 * 24 * 3_600_000, // 7 dias
+  critical_deadline:      6 * 3_600_000,      // 6 horas
+  weekly_review:          24 * 3_600_000,      // 24 horas
+  monthly_review:         7 * 24 * 3_600_000,  // 7 dias
+  overdue_document:       7 * 24 * 3_600_000,  // 7 dias
+  overdue_vacation:       3 * 24 * 3_600_000,  // 3 dias
+  implementation_gap:     7 * 24 * 3_600_000,  // 7 dias
+  health_drop:            24 * 3_600_000,      // 24 horas
+  stale_pending:          3 * 24 * 3_600_000,  // 3 dias
+  routine_overdue:        7 * 24 * 3_600_000,  // 7 dias
+  onboarding_incomplete:  7 * 24 * 3_600_000,  // 7 dias
+  mandate_expiring:       3 * 24 * 3_600_000,  // 3 dias
+  ago_overdue:            14 * 24 * 3_600_000, // 14 dias
+  backup_overdue:         7 * 24 * 3_600_000,  // 7 dias
+  score_milestone:        30 * 24 * 3_600_000, // 30 dias (não repetir muito)
 };
 
 export type CooldownMap = Partial<Record<string, number>>; // tipo → lastGeneratedMs
@@ -199,6 +204,72 @@ export function evaluateNotificationRules(
       sourceModule: "memoria",
       actionKey: "open_memoria",
     });
+  }
+
+  // ── Regra 8: Mandato do síndico vencendo ─────────────────────────────────
+  const mandatoDate  = m.fimMandatoSindico || assistida.mandato?.value;
+  const mandatoDays  = daysUntil(mandatoDate);
+  const mandatoKey   = "mandate_expiring:syndic";
+  if (!isCoolingDown("mandate_expiring", mandatoKey, cooldownMap)) {
+    if (mandatoDate && mandatoDays !== null && mandatoDays <= 60) {
+      candidates.push({
+        type: "mandate_expiring",
+        severity: mandatoDays <= 0 ? "critical" : mandatoDays <= 30 ? "warning" : "info",
+        title: mandatoDays <= 0
+          ? "Mandato do síndico vencido"
+          : `Mandato vence em ${mandatoDays} dia${mandatoDays !== 1 ? "s" : ""}`,
+        body: mandatoDays <= 0
+          ? "Mandato vencido sem renovação gera irregularidade jurídica na gestão. Convoque assembleia imediatamente."
+          : "É hora de planejar a assembleia de renovação ou eleição do síndico.",
+        sourceModule: "memoria",
+        actionKey: "open_memoria",
+      });
+    }
+  }
+
+  // ── Regra 9: AGO atrasada ────────────────────────────────────────────────
+  const agoKey = "ago_overdue:long";
+  if (!isCoolingDown("ago_overdue", agoKey, cooldownMap)) {
+    const ultimaAGO = m.ultimaAGO;
+    if (ultimaAGO) {
+      const mesesSemAGO = Math.floor((daysSince(ultimaAGO) ?? 0) / 30);
+      if (mesesSemAGO >= 14) {
+        candidates.push({
+          type: "ago_overdue",
+          severity: "critical",
+          title: `AGO atrasada — ${mesesSemAGO} meses sem assembleia`,
+          body: "A Assembleia Geral Ordinária deve ser realizada anualmente. Condomínio está em irregularidade.",
+          sourceModule: "memoria",
+          actionKey: "open_memoria",
+        });
+      } else if (mesesSemAGO >= 10) {
+        candidates.push({
+          type: "ago_overdue",
+          severity: "warning",
+          title: "Planejar próxima AGO",
+          body: `Última assembleia foi há ${mesesSemAGO} meses. Hora de começar o planejamento.`,
+          sourceModule: "memoria",
+          actionKey: "open_memoria",
+        });
+      }
+    }
+  }
+
+  // ── Regra 10: Backup não feito há muito tempo ─────────────────────────────
+  const backupKey = "backup_overdue:local";
+  if (!isCoolingDown("backup_overdue", backupKey, cooldownMap)) {
+    const lastBackup = getLastBackupAt();
+    const daysSinceBackup = lastBackup ? (daysSince(lastBackup.slice(0, 10)) ?? 0) : 999;
+    if (daysSinceBackup > 14) {
+      candidates.push({
+        type: "backup_overdue",
+        severity: "info",
+        title: "Backup pendente há " + (daysSinceBackup > 30 ? "+30" : daysSinceBackup) + " dias",
+        body: "Exporte um backup dos dados para proteger o histórico do condomínio.",
+        sourceModule: "dados",
+        actionKey: "open_dados",
+      });
+    }
   }
 
   // Filtra notificações que já existem e não estão dismissed (evita duplicatas visuais)

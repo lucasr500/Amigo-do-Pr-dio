@@ -12,7 +12,7 @@ import {
   hasMinimumHealthData as checkMinHealth,
 } from "@/lib/health-config";
 import { getMemoriaOperacional } from "@/lib/session";
-import { getHealthHistoryStats } from "@/lib/health-history";
+import { getHealthHistoryStats, getScoreStreak } from "@/lib/health-history";
 
 function hasMinimumHealthData(): boolean {
   return checkMinHealth(getMemoriaOperacional());
@@ -65,6 +65,7 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
   const [result, setResult]     = useState<HealthScoreResult | null>(null);
   const [hasData, setHasData]   = useState(false);
   const [trendBadge, setTrendBadge] = useState<TrendBadge>(null);
+  const [streak, setStreak]     = useState(0);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
       setTrendBadge({ label: "→ Estável esta semana", color: "text-navy-400" });
     }
 
+    setStreak(getScoreStreak(60));
     setHydrated(true);
   }, [refreshKey]);
 
@@ -131,6 +133,16 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
   const cardBg    = CARD_BG[result.statusKey];
   const phrase    = SHORT_PHRASE[result.statusKey];
 
+  // Mapeia statusKey para label de badge e estilo
+  const statusBadgeMap: Record<string, { label: string; style: string }> = {
+    "critico":         { label: "Crítico",         style: "bg-red-100 text-red-700" },
+    "atencao":         { label: "Atenção",          style: "bg-amber-100 text-amber-700" },
+    "em-evolucao":     { label: "Em evolução",      style: "bg-blue-100 text-blue-700" },
+    "bem-acompanhado": { label: "Bem acompanhado",  style: "bg-teal-100 text-teal-700" },
+    "tudo-em-ordem":   { label: "Tudo em ordem",    style: "bg-emerald-100 text-emerald-700" },
+  };
+  const statusBadge = statusBadgeMap[result.statusKey];
+
   return (
     <section className="px-5 pb-3 sm:px-6">
       <button
@@ -142,13 +154,25 @@ export default function HomeSaudeCard({ refreshKey, onClick }: Props) {
         <RingIndicator pct={result.percentage} color={ringColor} />
 
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold leading-snug text-navy-800">
-            Saúde operacional
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-[14px] font-semibold leading-snug text-navy-800">
+              Saúde operacional
+            </p>
+            {statusBadge && (
+              <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusBadge.style}`}>
+                {statusBadge.label}
+              </span>
+            )}
+          </div>
           <p className="mt-0.5 text-[12px] leading-snug text-navy-600">{phrase}</p>
           {trendBadge && (
             <p className={`mt-0.5 text-[10.5px] font-medium ${trendBadge.color}`}>
               {trendBadge.label}
+            </p>
+          )}
+          {streak >= 3 && (
+            <p className="mt-0.5 text-[10.5px] font-medium text-teal-600">
+              {streak} dia{streak !== 1 ? "s" : ""} com score acima de 60%
             </p>
           )}
         </div>

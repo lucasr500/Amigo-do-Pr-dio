@@ -106,10 +106,24 @@ export type CommandCenterResult = {
 };
 
 const FINANCIAL_STORAGE_KEY = "amigo_financial_snapshots";
-export const COMMAND_CENTER_CACHE_TTL_MS = 3_000;
+export const COMMAND_CENTER_CACHE_TTL_MS = 15_000;
 
+// Inclui apenas keys que afetam decisões operacionais.
+// Exclui QUERIES, AUDIT_LOG, INTERACTIONS, STATS, SHARES (alta frequência, não afetam guidance).
 const COMMAND_CENTER_SIGNATURE_KEYS = [
-  ...Object.values(KEYS),
+  KEYS.PROFILE,
+  KEYS.MEMORIA,
+  KEYS.MEMORIA_ASSISTIDA,
+  KEYS.DOCUMENTOS,
+  KEYS.FUNCIONARIOS,
+  KEYS.MANUTENCOES,
+  KEYS.PENDENCIAS,
+  KEYS.OCORRENCIAS,
+  KEYS.AGENDA,
+  KEYS.NOTIFICATIONS,
+  KEYS.MONTHLY_REVIEW_STATE,
+  KEYS.REVISAO_SEMANAL,
+  KEYS.HEALTH_HISTORY,
   FINANCIAL_STORAGE_KEY,
 ] as const;
 

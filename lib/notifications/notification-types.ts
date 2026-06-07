@@ -2,7 +2,7 @@
 // Sem push real ainda — notificações aparecem no centro interno ao abrir o app.
 
 export type NotificationType =
-  | "critical_deadline"      // AVCB/seguro vencendo/vencido
+  | "critical_deadline"      // AVCB/seguro/mandato vencendo/vencido
   | "weekly_review"          // revisão semanal não feita
   | "monthly_review"         // revisão mensal disponível
   | "overdue_document"       // documento essencial sem status
@@ -11,7 +11,11 @@ export type NotificationType =
   | "health_drop"            // Health Score caiu significativamente
   | "stale_pending"          // próximo passo parado >21 dias
   | "routine_overdue"        // manutenção rotineira atrasada
-  | "onboarding_incomplete"; // onboarding não finalizado
+  | "onboarding_incomplete"  // onboarding não finalizado
+  | "mandate_expiring"       // mandato do síndico vencendo
+  | "ago_overdue"            // AGO atrasada (>14 meses sem assembleia)
+  | "backup_overdue"         // backup não feito há muito tempo
+  | "score_milestone";       // health score atingiu marco importante
 
 export type NotificationSeverity = "info" | "warning" | "critical";
 

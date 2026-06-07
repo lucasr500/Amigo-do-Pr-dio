@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import type { AppTab } from "@/components/BottomNav";
 import CondominioSection from "@/components/condominio/CondominioSection";
@@ -34,12 +35,14 @@ type Props = {
   condoName: string;
   shouldExpandMemoria: boolean;
   showNotifSettings: boolean;
+  shouldOpenBackup?: boolean;
   onRefresh: () => void;
   onMemoriaSaved: () => void;
   onSetupMemoria: () => void;
   onOpenMonthlyReview: () => void;
   onNavigateTab: (tab: AppTab) => void;
   onToggleNotifSettings: () => void;
+  onBackupOpened?: () => void;
 };
 
 export default function CondominioTab({
@@ -48,17 +51,31 @@ export default function CondominioTab({
   condoName,
   shouldExpandMemoria,
   showNotifSettings,
+  shouldOpenBackup,
   onRefresh,
   onMemoriaSaved,
   onSetupMemoria,
   onOpenMonthlyReview,
   onNavigateTab,
   onToggleNotifSettings,
+  onBackupOpened,
 }: Props) {
   function scrollToSection(id: string) {
     const el = document.getElementById(id);
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+
+  // Quando shouldOpenBackup ativa, rola até a seção de dados
+  useEffect(() => {
+    if (!shouldOpenBackup) return;
+    const timer = window.setTimeout(() => {
+      const el = document.getElementById("dados");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      onBackupOpened?.();
+    }, 200);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldOpenBackup]);
 
   return (
     <div key="condominio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getChecklistStorage,
   getRecentQueries,
@@ -12,11 +12,18 @@ import {
 } from "@/lib/session";
 import { CHECKLISTS } from "@/lib/checklists";
 
-const CHECKLIST_META: Record<string, { title: string; icon: string; total: number }> = {
-  assembleia:    { title: "Assembleia",           icon: "👥", total: 10 },
-  admissao:      { title: "Admissão de funcionário", icon: "🧹", total: 10 },
-  manutencao:    { title: "Manutenção preventiva", icon: "🔨", total: 10 },
-  "sindico-novo": { title: "Síndico novo",         icon: "🏛️", total: 10 },
+const CHECKLIST_ICON: Record<string, React.ReactNode> = {
+  assembleia: <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none"><circle cx="6.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.4"/><circle cx="13.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.4"/><circle cx="10" cy="13" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9 8.5l-1 2M11 8.5l1 2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>,
+  admissao: <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="currentColor" strokeWidth="1.4"/><path d="M4 17c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M13.5 10l2 2-2 2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  manutencao: <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none"><path d="M13.5 3.5a3.5 3.5 0 00-3.5 5.5L4 15a1.5 1.5 0 002.1 2.1L12 11a3.5 3.5 0 001.5-7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>,
+  "sindico-novo": <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M7 12.5l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+};
+
+const CHECKLIST_META: Record<string, { title: string; total: number }> = {
+  assembleia:    { title: "Assembleia",           total: 10 },
+  admissao:      { title: "Admissão de funcionário", total: 10 },
+  manutencao:    { title: "Manutenção preventiva", total: 10 },
+  "sindico-novo": { title: "Síndico novo",         total: 10 },
 };
 
 // Pergunta representativa por categoria — dispara ao clicar na pill
@@ -106,7 +113,6 @@ type ActiveChecklist = {
 
 type ReviewDueItem = {
   id: string;
-  icon: string;
   title: string;
   daysSince: number;
   recurrenceLabel: string;
@@ -181,7 +187,7 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
         const ds = daysSince(data.lastUsed);
         if (ds < clDef.recurrenceDays) return [];
         const m = CHECKLIST_META[id];
-        return [{ id, icon: m.icon, title: m.title, daysSince: ds, recurrenceLabel: clDef.recurrenceLabel! }];
+        return [{ id, title: m.title, daysSince: ds, recurrenceLabel: clDef.recurrenceLabel! }];
       });
     setReviewDue(due);
 
@@ -225,8 +231,13 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
             onClick={scrollToChecklist}
             className="mb-3 flex w-full items-center gap-3 rounded-xl bg-white/90 px-3 py-3 text-left shadow-[0_1px_2px_rgba(31,49,71,0.04)] transition-colors hover:bg-white active:bg-navy-50"
           >
-            <span className="text-[18px] leading-none" aria-hidden="true">
-              {meta.icon}
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-navy-50" aria-hidden="true">
+              {CHECKLIST_ICON[activeChecklist.id] ?? (
+                <svg className="h-5 w-5 text-navy-500" viewBox="0 0 20 20" fill="none">
+                  <rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                  <path d="M7 9l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[12.5px] font-medium text-navy-800">{meta.title}</p>
@@ -326,7 +337,14 @@ export default function PainelOperacional({ onAsk, refreshKey }: PainelOperacion
                 }}
                 className="mb-1.5 flex w-full items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50/60 px-3 py-2 text-left transition-colors hover:bg-amber-50 active:bg-amber-100"
               >
-                <span className="text-[16px] leading-none" aria-hidden="true">{item.icon}</span>
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-amber-100" aria-hidden="true">
+                  {CHECKLIST_ICON[item.id] ?? (
+                    <svg className="h-4 w-4 text-amber-700" viewBox="0 0 16 16" fill="none">
+                      <rect x="3" y="2" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3"/>
+                      <path d="M5 7l2 2 4-4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[12px] font-medium text-navy-800">{item.title}</p>
                   <p className="text-[10.5px] text-amber-600">
