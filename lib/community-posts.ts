@@ -35,18 +35,24 @@ export function addPost(
   return post;
 }
 
-export function updatePost(id: string, patch: Partial<InstitutionalPost>): void {
+// Atualiza campos do post sem emitir entrada de auditoria (chamado internamente).
+function _patchPost(id: string, patch: Partial<InstitutionalPost>): void {
   savePosts(getPosts().map((p) => p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p));
+}
+
+// Atualização genérica com auditoria — para edições diretas pelo gestor.
+export function updatePost(id: string, patch: Partial<InstitutionalPost>): void {
+  _patchPost(id, patch);
   appendAudit("post_updated", "post", id, "manager", "Post atualizado");
 }
 
 export function archivePost(id: string): void {
-  updatePost(id, { archived: true });
+  _patchPost(id, { archived: true });
   appendAudit("post_archived", "post", id, "manager", "Post arquivado");
 }
 
 export function pinPost(id: string, pinned: boolean): void {
-  updatePost(id, { pinned });
+  _patchPost(id, { pinned });
   appendAudit("post_pinned", "post", id, "manager", pinned ? "Post fixado" : "Post desafixado");
 }
 

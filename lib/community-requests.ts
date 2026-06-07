@@ -31,7 +31,7 @@ export function addRequest(
     updatedAt: now,
   };
   saveRequests([req, ...getRequests()]);
-  addAuditEntry("request_updated", "request", req.id, "resident", `Solicitação aberta: ${req.title}`);
+  addAuditEntry("request_opened", "request", req.id, "resident", `Solicitação aberta: ${req.title}`);
   return req;
 }
 
@@ -113,7 +113,7 @@ export function seedDemoRequests(): void {
 
   const demo: ResidentRequest[] = [
     {
-      id: `req-${Date.now()}-1`,
+      id: `demo-req-${Date.now()}-1`,
       unitNumber: "302",
       authorName: "Morador da 302",
       type: "barulho",
@@ -125,7 +125,7 @@ export function seedDemoRequests(): void {
       updatedAt: past,
     },
     {
-      id: `req-${Date.now()}-2`,
+      id: `demo-req-${Date.now()}-2`,
       unitNumber: "105",
       authorName: "Morador da 105",
       type: "manutencao",
@@ -139,7 +139,7 @@ export function seedDemoRequests(): void {
       closedAt: now,
     },
     {
-      id: `req-${Date.now()}-3`,
+      id: `demo-req-${Date.now()}-3`,
       unitNumber: "201",
       authorName: "Morador da 201",
       type: "sugestao",

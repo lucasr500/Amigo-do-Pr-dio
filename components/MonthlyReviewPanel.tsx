@@ -24,6 +24,7 @@ const SECTION_LABEL: Record<MonthlyReviewSectionKey, string> = {
   agenda:      "Agenda",
   pendencias:  "Pendências",
   integridade: "Integridade dos dados",
+  comunidade:  "Central Digital",
   resumo:      "Resumo",
 };
 
@@ -40,7 +41,7 @@ const SEV_LABEL: Record<MonthlyReviewItem["severity"], string> = {
 };
 
 const SECTION_ORDER: MonthlyReviewSectionKey[] = [
-  "financeiro", "documentos", "pendencias", "agenda", "integridade",
+  "financeiro", "documentos", "pendencias", "agenda", "integridade", "comunidade",
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

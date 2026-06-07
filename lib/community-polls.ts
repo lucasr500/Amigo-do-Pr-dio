@@ -121,7 +121,7 @@ export function seedDemoPolls(): void {
   const future = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
 
   const demo: Poll = {
-    id: `poll-${Date.now()}-1`,
+    id: `demo-poll-${Date.now()}-1`,
     title: "Qual o melhor horário para manutenção das áreas comuns?",
     description: "Estamos planejando a manutenção bimestral. Sua opinião ajuda a minimizar o impacto no cotidiano.",
     options: [

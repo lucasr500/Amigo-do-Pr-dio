@@ -11,7 +11,7 @@ import {
   POST_CATEGORY_LABELS, VISIBILITY_LABELS, type PostCategory, type Visibility,
   type CommunityRole, type Comment,
 } from "@/lib/community-types";
-import { can, filterByVisibility } from "@/lib/community-permissions";
+import { can, filterByVisibility, isAllDemoData } from "@/lib/community-permissions";
 
 const CATEGORIES = Object.entries(POST_CATEGORY_LABELS) as [PostCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -71,7 +71,7 @@ export default function MuralPanel({ role, onSeed }: Props) {
       updatePost(editId, form);
     } else {
       const post = addPost(form);
-      if (form.visibility !== "gestao") emitPostPublished(post.id, post.title, post.category);
+      if (post.visibility !== "gestao") emitPostPublished(post.id, post.title, post.category, post.visibility);
     }
     setShowForm(false);
     setEditId(null);
@@ -207,6 +207,16 @@ export default function MuralPanel({ role, onSeed }: Props) {
           </p>
           <p className="text-[11.5px] text-navy-400 leading-relaxed">
             {isManager ? "Publique o primeiro aviso oficial para substituir mensagens perdidas no WhatsApp." : "A gestão ainda não publicou comunicados para seu perfil."}
+          </p>
+        </div>
+      )}
+
+      {/* Aviso de dados demo */}
+      {isManager && posts.length > 0 && isAllDemoData(posts) && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-2.5 flex items-start gap-2">
+          <span className="text-[11px] text-amber-700 font-medium flex-shrink-0 mt-0.5">Demonstração</span>
+          <p className="text-[11px] text-amber-600 leading-relaxed">
+            Estes são avisos de exemplo. Crie seu primeiro aviso oficial para substituí-los.
           </p>
         </div>
       )}

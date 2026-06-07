@@ -57,7 +57,7 @@ export function seedDemoDocuments(): void {
 
   const demo: PublicDocument[] = [
     {
-      id: `doc-${Date.now()}-1`,
+      id: `demo-doc-${Date.now()}-1`,
       title: "Convenção do Condomínio",
       category: "convencao",
       description: "Documento base que rege o condomínio. Aprovado em assembleia.",
@@ -68,7 +68,7 @@ export function seedDemoDocuments(): void {
       updatedAt: now,
     },
     {
-      id: `doc-${Date.now()}-2`,
+      id: `demo-doc-${Date.now()}-2`,
       title: "Regimento Interno",
       category: "regimento_interno",
       description: "Normas de convivência, uso de áreas comuns e condutas esperadas.",
@@ -79,7 +79,7 @@ export function seedDemoDocuments(): void {
       updatedAt: now,
     },
     {
-      id: `doc-${Date.now()}-3`,
+      id: `demo-doc-${Date.now()}-3`,
       title: "Ata da AGO — Março 2025",
       category: "ata",
       description: "Ata da Assembleia Geral Ordinária com aprovação do orçamento anual.",
@@ -89,7 +89,7 @@ export function seedDemoDocuments(): void {
       updatedAt: now,
     },
     {
-      id: `doc-${Date.now()}-4`,
+      id: `demo-doc-${Date.now()}-4`,
       title: "Prestação de Contas — 1º Trimestre",
       category: "prestacao_de_contas",
       description: "Resumo financeiro do 1º trimestre com receitas, despesas e saldo.",

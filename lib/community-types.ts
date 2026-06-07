@@ -261,7 +261,7 @@ export type TimelineEvent = {
 export type AuditAction =
   | "post_created" | "post_archived" | "post_pinned" | "post_updated"
   | "comment_hidden" | "comment_removed" | "comment_approved"
-  | "request_updated" | "request_resolved" | "request_closed"
+  | "request_opened" | "request_updated" | "request_resolved" | "request_closed"
   | "poll_created" | "poll_closed"
   | "document_published" | "document_updated" | "document_removed"
   | "timeline_event_created";

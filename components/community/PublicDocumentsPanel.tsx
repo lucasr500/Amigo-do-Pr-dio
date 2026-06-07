@@ -49,7 +49,7 @@ export default function PublicDocumentsPanel({ role, onSeed }: Props) {
       updatePublicDocument(editId, form);
     } else {
       const doc = addPublicDocument(form);
-      emitDocumentPublished(doc.id, doc.title);
+      emitDocumentPublished(doc.id, doc.title, doc.visibility);
     }
     setShowForm(false);
     setEditId(null);

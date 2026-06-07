@@ -17,6 +17,8 @@ import { getAgendaEvents } from "@/lib/session-agenda";
 import { getMemoriaOperacional, getMemoriaAssistida } from "@/lib/session";
 import { STALE_TASK_DAYS } from "@/lib/health-config";
 import { buildLocalIntegrityReport } from "@/lib/local-integrity";
+import { getRequests } from "@/lib/community-requests";
+import { getActivePosts, getComments } from "@/lib/community-posts";
 
 export type MonthlyReviewStatus = "pendente" | "em_andamento" | "concluida";
 
@@ -26,6 +28,7 @@ export type MonthlyReviewSectionKey =
   | "agenda"
   | "pendencias"
   | "integridade"
+  | "comunidade"
   | "resumo";
 
 export type MonthlyReviewSeverity = "info" | "warning" | "critical";
@@ -445,6 +448,83 @@ function buildProspectivaItems(today: string): MonthlyReviewItem[] {
   return items;
 }
 
+// ─── Seção de comunidade — Central Digital ────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function buildComunidadeItems(_today: string): MonthlyReviewItem[] {
+  const items: MonthlyReviewItem[] = [];
+
+  // Wrap in try/catch — community data is optional and may not exist
+  try {
+    const requests = getRequests();
+    const closedStatuses = ["resolvido", "recusado", "arquivado"] as const;
+    const openRequests = requests.filter((r) => !closedStatuses.includes(r.status as typeof closedStatuses[number]));
+
+    // Solicitações urgentes sem resposta há mais de 7 dias
+    const urgentStale = openRequests.filter((r) => {
+      if (r.priority !== "urgente") return false;
+      const days = Math.floor((Date.now() - new Date(r.updatedAt).getTime()) / 86400000);
+      return days > 7;
+    });
+    if (urgentStale.length > 0) {
+      items.push(makeItem(
+        "com_urgent_requests", "comunidade",
+        `${urgentStale.length} solicitação${urgentStale.length > 1 ? "ões" : ""} urgente${urgentStale.length > 1 ? "s" : ""} sem resposta há mais de 7 dias`,
+        "Solicitações urgentes pendentes geram insatisfação e risco reputacional. Responda ou altere o status.",
+        "critical", "Ver solicitações", "condominio"
+      ));
+    }
+
+    // Volume alto de solicitações abertas
+    if (openRequests.length >= 10) {
+      items.push(makeItem(
+        "com_open_requests", "comunidade",
+        `${openRequests.length} solicitações abertas na Central`,
+        "Volume elevado de solicitações sem resolução. Revise e priorize para manter a operação organizada.",
+        "warning", "Ver solicitações", "condominio"
+      ));
+    }
+
+    // Comunicação: último post oficial muito antigo (> 30 dias)
+    const posts = getActivePosts();
+    if (posts.length > 0) {
+      const mostRecent = posts[0];
+      const daysSincePost = Math.floor((Date.now() - new Date(mostRecent.createdAt).getTime()) / 86400000);
+      if (daysSincePost > 30) {
+        items.push(makeItem(
+          "com_no_recent_post", "comunidade",
+          `Último comunicado oficial há ${daysSincePost} dias`,
+          "Comunicação ativa com moradores reduz conflitos e aumenta percepção de gestão profissional.",
+          "info", "Ver mural", "condominio"
+        ));
+      }
+    } else {
+      items.push(makeItem(
+        "com_no_posts", "comunidade",
+        "Nenhum comunicado oficial publicado",
+        "Publique avisos, regras e informações no Mural Oficial para manter moradores informados.",
+        "info", "Ver mural", "condominio"
+      ));
+    }
+
+    // Comentários pendentes de moderação
+    const comments = getComments();
+    const pendingComments = comments.filter((c) => c.status === "pendente");
+    if (pendingComments.length > 0) {
+      items.push(makeItem(
+        "com_pending_comments", "comunidade",
+        `${pendingComments.length} comentário${pendingComments.length > 1 ? "s" : ""} aguardando moderação`,
+        "Comentários pendentes ficam invisíveis para moradores. Modere para manter o mural ativo.",
+        "info", "Ver mural", "condominio"
+      ));
+    }
+  } catch {
+    // Dados de comunidade indisponíveis — seção fica vazia
+  }
+
+  return items;
+}
+
 // ─── Motor principal ──────────────────────────────────────────────────────────
 
 export function buildMonthlyReview(month?: string, status: MonthlyReviewStatus = "pendente"): MonthlyReviewReport {
@@ -457,6 +537,7 @@ export function buildMonthlyReview(month?: string, status: MonthlyReviewStatus =
   const pendItems       = buildPendenciasItems(today);
   const integItems      = buildIntegridadeItems();
   const prospectivaItems = buildProspectivaItems(today);
+  const comunidadeItems  = buildComunidadeItems(today);
 
   const allItems: MonthlyReviewItem[] = [
     ...finItems,
@@ -465,6 +546,7 @@ export function buildMonthlyReview(month?: string, status: MonthlyReviewStatus =
     ...prospectivaItems,
     ...pendItems,
     ...integItems,
+    ...comunidadeItems,
   ];
 
   const criticalCount = allItems.filter((i) => i.severity === "critical").length;
@@ -506,6 +588,7 @@ export function buildMonthlyReview(month?: string, status: MonthlyReviewStatus =
     agenda:      [...agendaItems, ...prospectivaItems],
     pendencias:  pendItems,
     integridade: integItems,
+    comunidade:  comunidadeItems,
     resumo:      [],
   };
 

@@ -2,7 +2,8 @@
 // Controla rollout incremental de módulos futuros.
 // Armazenado em localStorage como override local de flags.
 
-const FLAG_KEY = "amigo_feature_flags";
+import { KEYS } from "./session-core";
+const FLAG_KEY = KEYS.FEATURE_FLAGS;
 
 // Definição de todos os flags existentes.
 // Mudar default aqui ativa/desativa globalmente.

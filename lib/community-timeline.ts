@@ -39,12 +39,19 @@ export function deleteTimelineEvent(id: string): void {
 
 // ─── Auto-geração de eventos por módulo ──────────────────────────────────────
 
-export function emitPostPublished(postId: string, title: string, category: string): void {
+// visibility defaults to "moradores" — pass post.visibility to reflect actual access level.
+// Posts with gestao visibility do NOT emit public timeline events (no leakage).
+export function emitPostPublished(
+  postId: string,
+  title: string,
+  category: string,
+  visibility: Visibility = "moradores"
+): void {
   addTimelineEvent({
     type: "aviso_publicado",
     title: `Aviso publicado: ${title}`,
     description: `Categoria: ${category}`,
-    visibility: "moradores",
+    visibility,
     sourceModule: "mural",
     sourceId: postId,
     relatedPostId: postId,
@@ -102,11 +109,16 @@ export function emitPollClosed(pollId: string, title: string): void {
   });
 }
 
-export function emitDocumentPublished(docId: string, title: string): void {
+// visibility defaults to "moradores" — pass doc.visibility to reflect actual access level.
+export function emitDocumentPublished(
+  docId: string,
+  title: string,
+  visibility: Visibility = "moradores"
+): void {
   addTimelineEvent({
     type: "documento_publicado",
     title: `Documento publicado: ${title}`,
-    visibility: "moradores",
+    visibility,
     sourceModule: "documents",
     sourceId: docId,
     relatedDocumentId: docId,

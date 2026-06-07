@@ -20,6 +20,9 @@ import {
 } from "./session";
 import { buildGuidanceItems } from "./guidance";
 import { contarStatusManutencoes } from "./recorrencias";
+import { getRequests } from "./community-requests";
+import { getPosts } from "./community-posts";
+import { isAllDemoData } from "./community-permissions";
 
 export type HealthStatusKey =
   | "critico"
@@ -209,6 +212,23 @@ export function computeHealthScore(): HealthScoreResult {
   }
   raw += manutPts;
 
+  // ── 10. Central Digital — sinais (sem impacto no MAX_RAW; fator informativo) ─
+  const allRequests  = getRequests();
+  const allPosts     = getPosts();
+  const hasCommunityData =
+    (allRequests.length > 0 && !isAllDemoData(allRequests)) ||
+    (allPosts.length > 0 && !isAllDemoData(allPosts));
+  const urgentOverdue7d = hasCommunityData
+    ? allRequests.filter((r) => {
+        if (r.priority !== "urgente" || r.status === "resolvido" || r.status === "arquivado" || r.status === "recusado") return false;
+        return now - new Date(r.createdAt).getTime() > 7 * 86_400_000;
+      }).length
+    : 0;
+  const lastPostMs = hasCommunityData && allPosts.length > 0
+    ? Math.max(...allPosts.map((p) => new Date(p.createdAt).getTime()))
+    : null;
+  const postRecent60d = lastPostMs !== null && now - lastPostMs < 60 * 86_400_000;
+
   const percentage     = Math.min(100, Math.round((raw / MAX_RAW) * 100));
   const statusKey      = statusFromPct(percentage);
   const statusLabel    = STATUS_LABELS[statusKey];
@@ -341,6 +361,23 @@ export function computeHealthScore(): HealthScoreResult {
     });
   }
 
+  // Central Digital (only when real data exists)
+  if (hasCommunityData) {
+    if (urgentOverdue7d > 0) {
+      factors.push({
+        label: `Central Digital: ${urgentOverdue7d} urgente${urgentOverdue7d > 1 ? "s" : ""} sem resposta +7 dias`,
+        status: "missing",
+      });
+    } else if (!postRecent60d) {
+      factors.push({
+        label: "Central Digital: sem comunicado nos últimos 60 dias",
+        status: "partial",
+      });
+    } else {
+      factors.push({ label: "Central Digital ativa e em dia", status: "ok" });
+    }
+  }
+
   // ── Sugestões (máx 3) ─────────────────────────────────────────────────────
   const suggestions: string[] = [];
 
@@ -364,6 +401,8 @@ export function computeHealthScore(): HealthScoreResult {
     suggestions.push("Atualizar manutenções recorrentes atrasadas");
   else if ((manutStatus === null || manutStatus.total === 0) && filledRoutines < 3 && suggestions.length < 3)
     suggestions.push("Cadastrar manutenções recorrentes");
+  if (hasCommunityData && urgentOverdue7d > 0 && suggestions.length < 3)
+    suggestions.push("Responder solicitações urgentes na Central Digital");
   if (suggestions.length < 3)
     suggestions.push("Exportar backup dos dados");
 
@@ -429,7 +468,7 @@ export function computeHealthScore(): HealthScoreResult {
     statusKey,
     statusLabel,
     diagnosticPhrase,
-    factors: factors.slice(0, 6),
+    factors: factors.slice(0, 7),
     suggestions: suggestions.slice(0, 3),
     howToGain10Pts: howToGain10Pts.slice(0, 3),
     biggestBottleneck,

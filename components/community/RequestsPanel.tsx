@@ -10,7 +10,7 @@ import {
   REQUEST_TYPE_LABELS, REQUEST_STATUS_LABELS, REQUEST_PRIORITY_LABELS,
   type RequestType, type RequestStatus, type RequestPriority, type CommunityRole,
 } from "@/lib/community-types";
-import { can } from "@/lib/community-permissions";
+import { can, isAllDemoData } from "@/lib/community-permissions";
 
 const TYPES = Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][];
 const STATUSES = Object.entries(REQUEST_STATUS_LABELS) as [RequestStatus, string][];
@@ -229,6 +229,16 @@ export default function RequestsPanel({ role, onSeed }: Props) {
           <p className="text-[13px] font-medium text-navy-600 mb-1">Nenhuma solicitação encontrada</p>
           <p className="text-[11.5px] text-navy-400 leading-relaxed">
             {can(role, "canCreateRequest") ? "Abra uma solicitação para começar." : "Aguarde comunicados da gestão."}
+          </p>
+        </div>
+      )}
+
+      {/* Aviso de dados demo */}
+      {isManager && requests.length > 0 && isAllDemoData(requests) && (
+        <div className="rounded-2xl border border-amber-100 bg-amber-50/80 px-4 py-2.5 flex items-start gap-2">
+          <span className="text-[11px] text-amber-700 font-medium flex-shrink-0 mt-0.5">Demonstração</span>
+          <p className="text-[11px] text-amber-600 leading-relaxed">
+            Estas são solicitações de exemplo. Registre uma solicitação real para substituí-las.
           </p>
         </div>
       )}

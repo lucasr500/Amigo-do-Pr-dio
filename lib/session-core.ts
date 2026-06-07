@@ -40,6 +40,7 @@ export const KEYS = {
   SUPPLIERS:             "amigo_suppliers",
   DECISIONS:             "amigo_decisions",
   UNIT_EVENTS:           "amigo_unit_events",
+  FEATURE_FLAGS:         "amigo_feature_flags",
   // v11 — Central Digital do Condomínio
   COMMUNITY_POSTS:       "amigo_community_posts",
   COMMUNITY_REQUESTS:    "amigo_community_requests",

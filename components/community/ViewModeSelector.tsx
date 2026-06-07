@@ -62,7 +62,7 @@ export default function ViewModeSelector({ onChange }: Props) {
               Modo de visualização
             </p>
             <p className="mt-0.5 text-[11px] text-navy-400">
-              Simule como diferentes perfis enxergam a Central.
+              Pré-visualize como cada perfil enxerga a Central. Os dados são os mesmos — apenas a visibilidade muda.
             </p>
           </div>
           <div className="p-2 space-y-1">
@@ -87,9 +87,9 @@ export default function ViewModeSelector({ onChange }: Props) {
               </button>
             ))}
           </div>
-          <div className="border-t border-navy-50 px-3 py-2">
-            <p className="text-[10px] text-navy-300">
-              Esta simulação é apenas visual. Dados reais exigem autenticação futura.
+          <div className="border-t border-navy-50 px-3 py-2.5">
+            <p className="text-[10px] leading-relaxed text-navy-300">
+              <span className="font-medium text-navy-400">Simulação visual</span> — tudo roda localmente neste dispositivo. Perfis separados com login real são uma evolução futura planejada.
             </p>
           </div>
         </div>

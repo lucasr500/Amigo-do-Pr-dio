@@ -25,7 +25,7 @@ export type MonthlyReviewState = {
 // ─── Tipos de snapshot histórico ─────────────────────────────────────────────
 
 export type MonthlyReviewSectionKey =
-  | "financeiro" | "documentos" | "agenda" | "pendencias" | "integridade" | "resumo";
+  | "financeiro" | "documentos" | "agenda" | "pendencias" | "integridade" | "comunidade" | "resumo";
 
 export type MonthlyReviewSeverity = "info" | "warning" | "critical";
 

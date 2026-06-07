@@ -66,7 +66,7 @@ const PERMISSIONS_MAP: Record<CommunityRole, Permissions> = {
     canViewFinancialData: false,
     canViewInternalDocuments: false,
     canSwitchViewMode: false,
-    canExportReport: false,
+    canExportReport: true,  // conselho pode exportar relatório de gestão
   },
   resident: {
     canCreatePost: false,
@@ -169,4 +169,12 @@ export function getViewMode(): ViewMode {
 export function setViewMode(mode: ViewMode): void {
   if (typeof window === "undefined") return;
   try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch { /* empty */ }
+}
+
+// ─── Detecção de dados demo ────────────────────────────────────────────────────
+// Seeds usam IDs com prefixo "demo-" ou "tl-demo-". Esta função detecta se a
+// coleção contém APENAS dados de demonstração (nenhum dado real do usuário).
+export function isAllDemoData(items: { id: string }[]): boolean {
+  if (items.length === 0) return false;
+  return items.every((item) => item.id.startsWith("demo-") || item.id.startsWith("tl-demo-"));
 }

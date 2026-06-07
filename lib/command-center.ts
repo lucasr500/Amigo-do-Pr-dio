@@ -125,6 +125,9 @@ const COMMAND_CENTER_SIGNATURE_KEYS = [
   KEYS.REVISAO_SEMANAL,
   KEYS.HEALTH_HISTORY,
   FINANCIAL_STORAGE_KEY,
+  // v11 — Central Digital afeta guidance quando solicitações urgentes ficam abertas
+  KEYS.COMMUNITY_REQUESTS,
+  KEYS.COMMUNITY_POSTS,
 ] as const;
 
 type CommandCenterCacheEntry = {
