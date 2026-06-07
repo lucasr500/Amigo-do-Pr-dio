@@ -27,24 +27,24 @@ type ToolAnchor =
   | "checklists";
 
 // Mapa categoria → checklist operacional relacionado
-const CAT_TO_CHECKLIST: Partial<Record<string, { id: string; title: string; icon: string }>> = {
-  assembleias: { id: "assembleia",    title: "Assembleia",            icon: "👥" },
-  funcionarios: { id: "admissao",    title: "Admissão de funcionário", icon: "🧹" },
-  trabalhista:  { id: "admissao",    title: "Admissão de funcionário", icon: "🧹" },
-  manutencao:   { id: "manutencao",  title: "Manutenção preventiva",  icon: "🔨" },
+const CAT_TO_CHECKLIST: Partial<Record<string, { id: string; title: string }>> = {
+  assembleias: { id: "assembleia",    title: "Assembleia" },
+  funcionarios: { id: "admissao",    title: "Admissão de funcionário" },
+  trabalhista:  { id: "admissao",    title: "Admissão de funcionário" },
+  manutencao:   { id: "manutencao",  title: "Manutenção preventiva" },
 };
 
 // Mapa categoria → comunicado sugerido
-const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; icon: string; hint: string; anchor: ToolAnchor }>> = {
-  multas:           { label: "Gerar notificação de infração", icon: "!", hint: "Documente antes de aplicar sanção", anchor: "comunicado-infracao" },
-  obras:            { label: "Gerar comunicado de obra", icon: "Obra", hint: "Informe os moradores com antecedência", anchor: "comunicado-obra" },
-  assembleias:      { label: "Preparar convocação", icon: "Ata", hint: "Gere o texto da convocação", anchor: "comunicado-convocacao" },
-  inadimplencia:    { label: "Gerar notificação de cobrança", icon: "R$", hint: "Formalize a comunicação ao condômino", anchor: "comunicado-cobranca" },
-  cobranca:         { label: "Gerar notificação de cobrança", icon: "R$", hint: "Formalize a comunicação ao condômino", anchor: "comunicado-cobranca" },
-  responsabilidade: { label: "Registrar ocorrência formal", icon: "Doc", hint: "Documente o dano antes de acionar responsáveis", anchor: "comunicado" },
-  gestao:           { label: "Gerar comunicado interno", icon: "Doc", hint: "Formalize a decisão por escrito", anchor: "comunicado" },
-  manutencao:       { label: "Gerar comunicado de serviço", icon: "Serv", hint: "Informe os moradores sobre a manutenção", anchor: "comunicado" },
-  financeiro:       { label: "Simular reajuste de cota", icon: "R$", hint: "Calcule o reajuste antes de propor em assembleia", anchor: "simulador-reajuste" },
+const CAT_TO_COMUNICADO: Partial<Record<string, { label: string; hint: string; anchor: ToolAnchor }>> = {
+  multas:           { label: "Gerar notificação de infração", hint: "Documente antes de aplicar sanção", anchor: "comunicado-infracao" },
+  obras:            { label: "Gerar comunicado de obra", hint: "Informe os moradores com antecedência", anchor: "comunicado-obra" },
+  assembleias:      { label: "Preparar convocação", hint: "Gere o texto da convocação", anchor: "comunicado-convocacao" },
+  inadimplencia:    { label: "Gerar notificação de cobrança", hint: "Formalize a comunicação ao condômino", anchor: "comunicado-cobranca" },
+  cobranca:         { label: "Gerar notificação de cobrança", hint: "Formalize a comunicação ao condômino", anchor: "comunicado-cobranca" },
+  responsabilidade: { label: "Registrar ocorrência formal", hint: "Documente o dano antes de acionar responsáveis", anchor: "comunicado" },
+  gestao:           { label: "Gerar comunicado interno", hint: "Formalize a decisão por escrito", anchor: "comunicado" },
+  manutencao:       { label: "Gerar comunicado de serviço", hint: "Informe os moradores sobre a manutenção", anchor: "comunicado" },
+  financeiro:       { label: "Simular reajuste de cota", hint: "Calcule o reajuste antes de propor em assembleia", anchor: "simulador-reajuste" },
 };
 
 // Próximo passo por categoria — mostrado quando a entrada KB não tem dica específica
@@ -665,16 +665,21 @@ export default function Response({
                             }}
                             className="flex w-full items-center gap-3 rounded-xl border border-navy-100 bg-navy-50/50 px-3 py-2.5 text-left transition-colors hover:bg-navy-50 active:bg-navy-100"
                           >
-                            <span className="text-[17px] leading-none" aria-hidden="true">{cl.icon}</span>
+                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-navy-100" aria-hidden="true">
+                              <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+                                <rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+                                <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              </svg>
+                            </span>
                             <div className="flex-1">
                               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
                                 Checklist operacional
                               </p>
                               <p className="text-[12.5px] font-medium text-navy-800">{cl.title}</p>
                             </div>
-                            <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-500">
-                              Abrir →
-                            </span>
+                            <svg className="h-4 w-4 flex-shrink-0 text-navy-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                           </button>
                         );
                       })()}
@@ -692,16 +697,20 @@ export default function Response({
                             }}
                             className="flex w-full items-center gap-3 rounded-xl border border-navy-100 bg-navy-50/40 px-3 py-2.5 text-left transition-colors hover:bg-navy-50 active:bg-navy-100"
                           >
-                            <span className="text-[17px] leading-none" aria-hidden="true">{cm.icon}</span>
+                            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-50" aria-hidden="true">
+                              <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="none">
+                                <path d="M4 4h12a1 1 0 011 1v8a1 1 0 01-1 1H10l-3 3v-3H4a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                              </svg>
+                            </span>
                             <div className="flex-1">
                               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">
                                 {cm.hint}
                               </p>
                               <p className="text-[12.5px] font-medium text-navy-800">{cm.label}</p>
                             </div>
-                            <span className="flex-shrink-0 text-[11.5px] font-semibold text-navy-500">
-                              Abrir →
-                            </span>
+                            <svg className="h-4 w-4 flex-shrink-0 text-navy-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                           </button>
                         );
                       })()}

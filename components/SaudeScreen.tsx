@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   computeHealthScore,
+  buildScoreProjection,
   type HealthScoreResult,
   type HealthStatusKey,
+  type ScoreProjection,
 } from "@/lib/health-score";
 import {
   HEALTH_RING_COLOR,
@@ -64,9 +66,53 @@ function RingLarge({ pct, color }: { pct: number; color: string }) {
 
 type AreaStatus = "ok" | "partial" | "missing";
 
+// SVG icons as React components para substituir emojis
+const IconShield = () => (
+  <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M10 2L4 5v5c0 3.5 2.5 6.5 6 7.5C13.5 16.5 16 13.5 16 10V5L10 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M7.5 10l2 2 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconCalendar = () => (
+  <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <rect x="3" y="4" width="14" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M3 8.5h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M7 3v2.5M13 3v2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="7.5" cy="12" r="1" fill="currentColor" />
+    <circle cx="10" cy="12" r="1" fill="currentColor" />
+    <circle cx="12.5" cy="12" r="1" fill="currentColor" />
+  </svg>
+);
+
+const IconWrench = () => (
+  <svg className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <path d="M13.5 3.5a3.5 3.5 0 00-3.47 4L4.5 13a1.5 1.5 0 002.1 2.1l5.5-5.53A3.5 3.5 0 0013.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <circle cx="13.5" cy="6.5" r="1" fill="currentColor" />
+  </svg>
+);
+
+const IconPeople = () => (
+  <svg className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    <circle cx="7.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M2.5 16c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="14" cy="7" r="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M17.5 16c0-2.21-1.57-4-3.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const AREA_ICONS = {
+  shield: IconShield,
+  calendar: IconCalendar,
+  wrench: IconWrench,
+  people: IconPeople,
+} as const;
+
+type AreaIconKey = keyof typeof AREA_ICONS;
+
 type MonitoredArea = {
   bgColor: string;
-  icon: string;
+  iconKey: AreaIconKey;
   label: string;
   subLabel: string;
   status: AreaStatus;
@@ -85,7 +131,7 @@ function computeAreas(
 
   const docArea: MonitoredArea = {
     bgColor: "bg-blue-50",
-    icon: "🛡️",
+    iconKey: "shield",
     label: "Documentação",
     subLabel:
       ef.status === "ok"
@@ -98,7 +144,7 @@ function computeAreas(
 
   const prazosArea: MonitoredArea = {
     bgColor: "bg-blue-50",
-    icon: "📅",
+    iconKey: "calendar",
     label: "Prazos e vencimentos",
     subLabel:
       alertF.status === "ok"
@@ -111,7 +157,7 @@ function computeAreas(
 
   const manuArea: MonitoredArea = {
     bgColor: "bg-amber-50",
-    icon: "🔧",
+    iconKey: "wrench",
     label: "Manutenções",
     subLabel:
       routF?.status === "ok"
@@ -127,7 +173,7 @@ function computeAreas(
   const hasSupplier = !!(m.administradora || m.prestadoraElevador);
   const fornecedoresArea: MonitoredArea = {
     bgColor: "bg-purple-50",
-    icon: "👥",
+    iconKey: "people",
     label: "Fornecedores",
     subLabel: hasSupplier ? "Contratos ativos" : "Sem fornecedores cadastrados",
     status: hasSupplier ? "ok" : "partial",
@@ -258,6 +304,7 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
   const [areas, setAreas]           = useState<MonitoredArea[]>([]);
   const [records, setRecords]       = useState<RecordItem[]>([]);
   const [histStats, setHistStats]   = useState<HealthHistoryStats | null>(null);
+  const [projection, setProjection] = useState<ScoreProjection | null>(null);
   const [hasData, setHasData]       = useState(false);
   const [hydrated, setHydrated]     = useState(false);
   const [showCalc, setShowCalc]     = useState(false);
@@ -271,6 +318,7 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
     setAreas(computeAreas(r, m));
     setRecords(buildLastRecords());
     setHistStats(getHealthHistoryStats());
+    setProjection(buildScoreProjection(r.percentage));
     setHydrated(true);
   }, [refreshKey]);
 
@@ -380,17 +428,6 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         </div>
       </div>
 
-      {/* ── Disclaimer antes do score ────────────────────────────── */}
-      <div className="mx-5 mb-3 flex items-start gap-2.5 rounded-[14px] border border-amber-100 bg-amber-50/60 px-3.5 py-3 sm:mx-6">
-        <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M8 6v4M8 12v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-          <path d="M7.15 2.5L1.5 12.5a1 1 0 00.85 1.5h11.3a1 1 0 00.85-1.5L8.85 2.5a1 1 0 00-1.7 0z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-        </svg>
-        <p className="text-[11px] leading-relaxed text-amber-800">
-          Este índice reflete os dados cadastrados no app. <strong>Não representa certificação técnica, jurídica ou de compliance</strong> do condomínio.
-        </p>
-      </div>
-
       {/* ── Card principal de status ────────────────────────────────── */}
       <section className="px-5 pb-4 sm:px-6">
         <div className="flex items-center gap-4 rounded-[18px] border border-navy-100/70 bg-white px-5 py-5 shadow-card">
@@ -413,35 +450,71 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
         </div>
       </section>
 
+      {/* ── Disclaimer discreto ──────────────────────────────────────── */}
+      <p className="mx-5 mb-3 text-[10.5px] leading-relaxed text-navy-300 sm:mx-6">
+        Índice operacional baseado nos dados cadastrados. Não representa certificação técnica, jurídica ou de compliance.
+      </p>
+
       {/* ── Áreas monitoradas ───────────────────────────────────────── */}
       <section className="px-5 pb-4 sm:px-6">
         <p className="mb-3 text-[14px] font-semibold text-navy-800">Áreas monitoradas</p>
         <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
-          {areas.map((area, idx) => (
-            <div key={area.label}>
-              {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
-              <div className="flex items-center gap-3 px-4 py-3.5">
-                <span
-                  className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[17px] ${area.bgColor}`}
-                  aria-hidden="true"
-                >
-                  {area.icon}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-semibold text-navy-800">{area.label}</p>
-                  <p className="mt-0.5 text-[11.5px] text-navy-400">{area.subLabel}</p>
-                </div>
-                <div className="flex flex-shrink-0 items-center gap-2">
-                  <AreaIcon status={area.status} />
-                  <svg className="h-4 w-4 text-navy-200" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+          {areas.map((area, idx) => {
+            const AreaSvgIcon = AREA_ICONS[area.iconKey];
+            return (
+              <div key={area.label}>
+                {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${area.bgColor}`}>
+                    <AreaSvgIcon />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-semibold text-navy-800">{area.label}</p>
+                    <p className="mt-0.5 text-[11.5px] text-navy-400">{area.subLabel}</p>
+                  </div>
+                  <div className="flex flex-shrink-0 items-center gap-2">
+                    <AreaIcon status={area.status} />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
+
+      {/* ── Projeção dos próximos 30 dias ───────────────────────────── */}
+      {projection && projection.events.length > 0 && (
+        <section className="px-5 pb-4 sm:px-6">
+          <p className="mb-3 text-[14px] font-semibold text-navy-800">Próximos 30 dias</p>
+          <div className="overflow-hidden rounded-[18px] border border-amber-200/70 bg-amber-50/50 shadow-sm">
+            <div className="px-4 py-3 border-b border-amber-100/60">
+              <p className="text-[12px] leading-relaxed text-amber-800">{projection.narrativa}</p>
+            </div>
+            {projection.events.map((evt, idx) => (
+              <div key={idx}>
+                {idx > 0 && <div className="mx-4 border-t border-amber-100/40" />}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${evt.type === "critical" ? "bg-red-100" : "bg-amber-100"}`}>
+                    <svg className={`h-4 w-4 ${evt.type === "critical" ? "text-red-600" : "text-amber-600"}`} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M8 4v5M8 11v.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      <path d="M7.15 1.5L1.5 12a1 1 0 00.85 1.5h11.3A1 1 0 0014.5 12L8.85 1.5a1 1 0 00-1.7 0z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12.5px] font-medium text-navy-800">{evt.label}</p>
+                    <p className="mt-0.5 text-[11px] text-navy-500">
+                      Em {evt.dayOffset} dia{evt.dayOffset !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <span className={`flex-shrink-0 text-[11.5px] font-semibold ${evt.type === "critical" ? "text-red-600" : "text-amber-600"}`}>
+                    {evt.deltaEstimado}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── Como é calculada ────────────────────────────────────────── */}
       <section className="px-5 pb-4 sm:px-6">
@@ -451,7 +524,13 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
             onClick={toggleCalc}
             className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
           >
-            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-50 text-[15px]" aria-hidden="true">ℹ️</span>
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-50" aria-hidden="true">
+              <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M10 9v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <circle cx="10" cy="7" r="0.8" fill="currentColor" />
+              </svg>
+            </span>
             <div className="min-w-0 flex-1">
               <p className="text-[13.5px] font-semibold text-navy-800">Como a pontuação é calculada</p>
               <p className="mt-0.5 text-[11.5px] text-navy-400">Entenda o que influencia o índice</p>
@@ -470,14 +549,29 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
               </p>
               <ul className="space-y-2.5">
                 {([
-                  { icon: "🛡️", label: "Documentação essencial", desc: "AVCB, seguro obrigatório e mandato do síndico cadastrados" },
-                  { icon: "📅", label: "Prazos e alertas", desc: "Vencimentos próximos ou itens críticos detectados" },
-                  { icon: "📌", label: "Próximos passos", desc: "Pendências abertas ou antigas sem resolução" },
-                  { icon: "🏢", label: "Perfil do prédio", desc: "Dados de contratos, fornecedores e estrutura informados" },
-                  { icon: "🔧", label: "Rotinas de manutenção", desc: "Serviços recorrentes registrados (elevador, extintores etc.)" },
-                ] as const).map(({ icon, label, desc }) => (
+                  {
+                    svg: <svg className="h-4 w-4 text-blue-500" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3 4v4c0 2.8 2 5.2 5 6 3-0.8 5-3.2 5-6V4L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /><path d="M6 8l1.5 1.5 2.5-2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+                    label: "Documentação essencial", desc: "AVCB, seguro obrigatório e mandato do síndico cadastrados"
+                  },
+                  {
+                    svg: <svg className="h-4 w-4 text-blue-500" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M2 7h12M5 2v2M11 2v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+                    label: "Prazos e alertas", desc: "Vencimentos próximos ou itens críticos detectados"
+                  },
+                  {
+                    svg: <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.3" /><path d="M8 5v3.5l2 1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+                    label: "Próximos passos", desc: "Pendências abertas ou antigas sem resolução"
+                  },
+                  {
+                    svg: <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><rect x="2" y="6" width="12" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M5 6V4.5a3 3 0 016 0V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+                    label: "Perfil do prédio", desc: "Dados de contratos, fornecedores e estrutura informados"
+                  },
+                  {
+                    svg: <svg className="h-4 w-4 text-amber-600" viewBox="0 0 16 16" fill="none"><path d="M11 3a3 3 0 00-2.8 4L3.5 11.5a1.2 1.2 0 001.7 1.7L9.5 8a3 3 0 002.5-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /></svg>,
+                    label: "Rotinas de manutenção", desc: "Serviços recorrentes registrados (elevador, extintores etc.)"
+                  },
+                ] as const).map(({ svg, label, desc }) => (
                   <li key={label} className="flex items-start gap-2.5">
-                    <span className="mt-0.5 flex-shrink-0 text-[14px]" aria-hidden="true">{icon}</span>
+                    <span className="mt-0.5 flex-shrink-0" aria-hidden="true">{svg}</span>
                     <div>
                       <p className="text-[12.5px] font-medium text-navy-700">{label}</p>
                       <p className="text-[11px] text-navy-400">{desc}</p>
@@ -558,12 +652,32 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
           <p className="mb-3 text-[14px] font-semibold text-navy-800">Ações práticas</p>
           <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
             {([
-              onGoToPendencias && { fn: onGoToPendencias, icon: "📌", label: "Ver pendências", sub: "Revisar tarefas em aberto e vencidas", eventKey: "pendencias" },
-              onGoToAgenda     && { fn: onGoToAgenda,     icon: "📅", label: "Abrir agenda",   sub: "Ver próximas datas e manutenções",  eventKey: "agenda" },
-              onGoToRevisao    && { fn: onGoToRevisao,    icon: "✓",  label: "Revisão mensal", sub: "Avaliar a rotina operacional do prédio", eventKey: "revisao" },
-              onGoToCondominio && { fn: onGoToCondominio, icon: "🏢", label: "Atualizar dados", sub: "Completar dados do perfil do prédio", eventKey: "condominio" },
+              onGoToPendencias && {
+                fn: onGoToPendencias,
+                svgIcon: <svg className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" /><path d="M10 7v4M10 12.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>,
+                bg: "bg-amber-50",
+                label: "Ver pendências", sub: "Revisar tarefas em aberto e vencidas", eventKey: "pendencias"
+              },
+              onGoToAgenda && {
+                fn: onGoToAgenda,
+                svgIcon: <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.5" /><path d="M3 8.5h14M7 3v2.5M13 3v2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>,
+                bg: "bg-blue-50",
+                label: "Abrir agenda", sub: "Ver próximas datas e manutenções", eventKey: "agenda"
+              },
+              onGoToRevisao && {
+                fn: onGoToRevisao,
+                svgIcon: <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.5" /><path d="M6 10l3 3 5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+                bg: "bg-green-50",
+                label: "Revisão mensal", sub: "Avaliar a rotina operacional do prédio", eventKey: "revisao"
+              },
+              onGoToCondominio && {
+                fn: onGoToCondominio,
+                svgIcon: <svg className="h-5 w-5 text-navy-500" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M8 18v-5h4v5M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>,
+                bg: "bg-navy-50",
+                label: "Atualizar dados", sub: "Completar dados do perfil do prédio", eventKey: "condominio"
+              },
             ] as const).filter(Boolean).map((action, idx) => {
-              const a = action as { fn: () => void; icon: string; label: string; sub: string; eventKey: string };
+              const a = action as { fn: () => void; svgIcon: React.ReactNode; bg: string; label: string; sub: string; eventKey: string };
               return (
                 <div key={a.label}>
                   {idx > 0 && <div className="mx-4 border-t border-navy-50" />}
@@ -575,11 +689,9 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
                     }}
                     className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
                   >
-                    <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[15px] ${
-                      a.eventKey === "pendencias" ? "bg-amber-50" :
-                      a.eventKey === "agenda"     ? "bg-blue-50" :
-                      a.eventKey === "revisao"    ? "bg-green-50" : "bg-navy-50"
-                    }`} aria-hidden="true">{a.icon}</span>
+                    <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full ${a.bg}`}>
+                      {a.svgIcon}
+                    </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[13px] font-semibold text-navy-800">{a.label}</p>
                       <p className="mt-0.5 text-[11.5px] text-navy-400">{a.sub}</p>
@@ -658,7 +770,13 @@ export default function SaudeScreen({ refreshKey, onBack, onNavigateToTimeline, 
                   }}
                   className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
                 >
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]" aria-hidden="true">?</span>
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50" aria-hidden="true">
+                    <svg className="h-4 w-4 text-navy-400" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.4" />
+                      <path d="M8 5.5C7 5.5 6.5 6 6.5 7c0 .5.5 1 1 1h1v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                      <circle cx="8" cy="10.5" r="0.6" fill="currentColor" />
+                    </svg>
+                  </span>
                   <p className="min-w-0 flex-1 text-[12.5px] leading-snug text-navy-700">{q}</p>
                   <svg className="h-4 w-4 flex-shrink-0 text-navy-200" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />

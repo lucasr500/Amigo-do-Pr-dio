@@ -6,6 +6,7 @@ import { runNotificationEngine } from "./notifications";
 import { captureHealthSnapshot } from "./health-history";
 import { isEnabled } from "./feature-flags";
 import { addAuditEntry, getHealthHistory } from "./session";
+import { evaluateMilestones } from "./milestones";
 
 const SCHEDULER_INTERVAL_MS = 30 * 60 * 1000; // 30 minutos
 
@@ -40,6 +41,19 @@ const TASKS: SchedulerTask[] = [
       // Só captura se ainda não tiver snapshot de hoje
       if (!history.some((s) => s.date === today)) {
         captureHealthSnapshot();
+      }
+    },
+  },
+  {
+    id: "milestones",
+    run: () => {
+      const newMilestones = evaluateMilestones();
+      if (newMilestones.length > 0) {
+        addAuditEntry({
+          category: "health",
+          action: `Marco atingido: ${newMilestones.join(", ")}`,
+          impact: "positive",
+        });
       }
     },
   },

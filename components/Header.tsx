@@ -94,27 +94,58 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
   }
 
   // ── Marca compacta — demais telas ────────────────────────────────────────────
+  const TAB_CONTEXT: Partial<Record<NonNullable<typeof activeTab>, { title: string; sub: string }>> = {
+    agenda:     { title: "Agenda",      sub: "Manutenções e compromissos do prédio" },
+    assistente: { title: "Assistente",  sub: "Orientações práticas para o síndico" },
+    ferramentas:{ title: "Ações",       sub: "Comunicados, simuladores e checklists" },
+    condominio: { title: "Meu prédio",  sub: nomeCondominio ?? "Perfil, dados e configurações" },
+  };
+
+  const tabCtx = activeTab ? TAB_CONTEXT[activeTab] : undefined;
+
   return (
     <header
       className="px-5 pb-4 pt-[calc(env(safe-area-inset-top,0px)+0.875rem)] sm:px-6"
       aria-label="Cabeçalho"
     >
-      <div className="flex items-center gap-3 animate-fade-in">
-        <BrandMark className="h-9 w-9 flex-shrink-0 shadow-[0_1px_2px_rgba(12,29,39,0.08),0_4px_12px_-6px_rgba(12,29,39,0.30)]" />
-        <div className="flex flex-col leading-tight">
-          <h1 className="font-display text-[17px] font-semibold text-navy-800">
-            Amigo do Prédio
-          </h1>
-          {!isOnline ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-              Offline
-            </span>
-          ) : (
-            <p className="max-w-[200px] truncate text-[11px] text-navy-400 transition-all duration-300">
-              {nomeCondominio ?? "Central operacional"}
-            </p>
-          )}
+      <div className="flex items-center justify-between gap-3 animate-fade-in">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <BrandMark className="h-9 w-9 flex-shrink-0 shadow-[0_1px_2px_rgba(12,29,39,0.08),0_4px_12px_-6px_rgba(12,29,39,0.30)]" />
+          <div className="min-w-0 flex flex-col leading-tight">
+            {tabCtx ? (
+              <>
+                <h1 className="font-display text-[17px] font-semibold text-navy-800">
+                  {tabCtx.title}
+                </h1>
+                {!isOnline ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                    Offline
+                  </span>
+                ) : (
+                  <p className="max-w-[220px] truncate text-[11px] text-navy-400">
+                    {tabCtx.sub}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <h1 className="font-display text-[17px] font-semibold text-navy-800">
+                  Amigo do Prédio
+                </h1>
+                {!isOnline ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                    Offline
+                  </span>
+                ) : (
+                  <p className="max-w-[200px] truncate text-[11px] text-navy-400">
+                    {nomeCondominio ?? "Central operacional"}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     </header>

@@ -10,6 +10,7 @@ import { getSyncStatus, formatLastSync } from "@/lib/sync/syncStatus";
 import { isEnabled } from "@/lib/feature-flags";
 import { buildSinceLastVisitContext, type SinceLastVisitContext } from "@/lib/since-last-visit";
 import { buildDataMaturity } from "@/lib/data-maturity";
+import { getMemoriaOperacional, getMemoriaAssistida } from "@/lib/session";
 
 type Props = {
   refreshKey?: number;
@@ -32,15 +33,39 @@ const RISK_DOT = {
 } as const;
 
 export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifications }: Props) {
+  type UpcomingVenc = { label: string; days: number };
+
   const [data, setData] = useState<CommandCenterResult | null>(null);
   const [syncLabel, setSyncLabel] = useState<string | null>(null);
   const [sinceLastVisit, setSinceLastVisit] = useState<SinceLastVisitContext | null>(null);
+  const [upcomingVenc, setUpcomingVenc] = useState<UpcomingVenc[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const cc = buildCommandCenterCached();
     setData(cc);
     setSinceLastVisit(buildSinceLastVisitContext());
+
+    // Calcula próximos vencimentos para estado estável (31-90 dias)
+    if (cc.riskLevel === "estavel") {
+      const m = getMemoriaOperacional();
+      const a = getMemoriaAssistida();
+      const now = new Date(); now.setHours(0, 0, 0, 0);
+      function daysTo(iso: string | undefined): number | null {
+        if (!iso) return null;
+        const d = new Date(`${iso}T00:00:00`);
+        if (isNaN(d.getTime())) return null;
+        return Math.floor((d.getTime() - now.getTime()) / 86400000);
+      }
+      const candidates: UpcomingVenc[] = [
+        { label: "AVCB",   days: daysTo(m.vencimentoAVCB   || a.avcb?.value) ?? 999 },
+        { label: "Seguro", days: daysTo(m.vencimentoSeguro || a.seguro?.value) ?? 999 },
+        { label: "Mandato", days: daysTo(m.fimMandatoSindico || a.mandato?.value) ?? 999 },
+      ].filter((x) => x.days >= 31 && x.days <= 90).sort((a, b) => a.days - b.days).slice(0, 2);
+      setUpcomingVenc(candidates);
+    } else {
+      setUpcomingVenc([]);
+    }
 
     // Sync status discreto
     const syncEnabled = isEnabled("sync_enabled");
@@ -172,11 +197,6 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
                   {topAction.motivo}{topAction.impacto ? ` Impacto: ${topAction.impacto}` : ""}
                 </p>
               )}
-              {!hasUrgent && sinceLastVisit && data && data.guidanceTopTres[0] && (
-                <p className="mt-0.5 line-clamp-1 text-[10.5px] leading-snug text-navy-500">
-                  {data.guidanceTopTres[0].proximoPasso}
-                </p>
-              )}
             </div>
             <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 14 14" fill="none" aria-hidden="true">
               <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -184,24 +204,43 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           </button>
         )}
 
-        {data.todayFocus.length > 0 && (
-          <div className="mt-2 rounded-xl bg-white/45 px-3 py-2">
-            <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-navy-400">
-              3 coisas para olhar hoje
+        {/* "O que eu faria hoje" — inteligência operacional visível */}
+        {!hasUrgent && data.todayAnswer && (
+          <div className="mt-2 rounded-xl bg-white/40 px-3 py-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.09em] text-navy-400">
+              O que fazer hoje
             </p>
-            <div className="mt-1.5 space-y-1.5">
+            <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-700">
+              {data.todayAnswer}
+            </p>
+          </div>
+        )}
+
+        {data.todayFocus.length > 0 && (
+          <div className="mt-2 rounded-xl bg-white/50 px-3 py-2.5">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy-400">
+              Foco de hoje
+            </p>
+            <div className="space-y-1">
               {data.todayFocus.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onNavigate?.(item.target)}
-                  className="flex w-full items-start gap-2 rounded-lg px-1 py-1 text-left hover:bg-white/60"
+                  className="flex min-h-[36px] w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/70 active:scale-[0.99]"
                 >
-                  <span className="mt-1 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-navy-300" aria-hidden="true" />
-                  <span className="min-w-0">
-                    <span className="block text-[11.5px] font-medium leading-snug text-navy-700">{item.title}</span>
-                    <span className="line-clamp-1 text-[10.5px] leading-snug text-navy-400">{item.reason}</span>
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-navy-100">
+                    <span className="h-1.5 w-1.5 rounded-full bg-navy-500" aria-hidden="true" />
                   </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12px] font-semibold leading-snug text-navy-800">{item.title}</span>
+                    {item.reason && (
+                      <span className="line-clamp-1 text-[10.5px] leading-snug text-navy-500">{item.reason}</span>
+                    )}
+                  </span>
+                  <svg className="h-3 w-3 flex-shrink-0 text-navy-300" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M4.5 3l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
               ))}
             </div>
@@ -210,9 +249,24 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
 
         {/* Linha 3: contexto desde última visita */}
         {sinceLastVisit?.hasContext && sinceLastVisit.contextPhrase && (
-          <p className="mt-1.5 text-[10.5px] text-navy-400 leading-snug">
-            {sinceLastVisit.newNotificationsCount > 0 ? "⚑ " : "· "}{sinceLastVisit.contextPhrase}
+          <p className={`mt-1.5 text-[10.5px] leading-snug font-medium ${
+            sinceLastVisit.contextPhrase.includes("vencido") || sinceLastVisit.contextPhrase.includes("vence em")
+              ? "text-terracotta-600"
+              : "text-navy-400"
+          }`}>
+            {sinceLastVisit.contextPhrase}
           </p>
+        )}
+
+        {/* Próximos vencimentos no horizonte (31-90 dias) — estado estável */}
+        {upcomingVenc.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+            {upcomingVenc.map((v) => (
+              <span key={v.label} className="text-[10.5px] text-amber-600 font-medium">
+                {v.label} em {v.days} dias
+              </span>
+            ))}
+          </div>
         )}
 
         {/* Linha 3b: resumo últimos 30 dias */}

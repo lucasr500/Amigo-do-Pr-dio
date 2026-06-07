@@ -14,6 +14,7 @@ import {
 } from "@/lib/session-documentos";
 import { getPendencias } from "@/lib/session-pendencias";
 import { getAgendaEvents } from "@/lib/session-agenda";
+import { getMemoriaOperacional, getMemoriaAssistida } from "@/lib/session";
 import { STALE_TASK_DAYS } from "@/lib/health-config";
 import { buildLocalIntegrityReport } from "@/lib/local-integrity";
 
@@ -369,22 +370,99 @@ function buildIntegridadeItems(): MonthlyReviewItem[] {
   return items;
 }
 
+// ─── Seção prospectiva — próximos 30 dias ────────────────────────────────────
+
+function buildProspectivaItems(today: string): MonthlyReviewItem[] {
+  const items: MonthlyReviewItem[] = [];
+
+  function daysUntil(iso: string | undefined): number | null {
+    if (!iso) return null;
+    const d = new Date(`${iso}T00:00:00`);
+    if (isNaN(d.getTime())) return null;
+    const now = new Date(today + "T00:00:00");
+    return Math.floor((d.getTime() - now.getTime()) / 86400000);
+  }
+
+  const m        = getMemoriaOperacional();
+  const assistida = getMemoriaAssistida();
+
+  const avcbDate    = m.vencimentoAVCB || assistida.avcb?.value;
+  const seguroDate  = m.vencimentoSeguro || assistida.seguro?.value;
+  const mandatoDate = m.fimMandatoSindico || assistida.mandato?.value;
+
+  const avcbDays    = daysUntil(avcbDate);
+  const seguroDays  = daysUntil(seguroDate);
+  const mandatoDays = daysUntil(mandatoDate);
+
+  // AVCB vencendo nos próximos 30 dias
+  if (avcbDays !== null && avcbDays > 0 && avcbDays <= 30) {
+    items.push(makeItem(
+      "prosp_avcb", "agenda",
+      `AVCB vence em ${avcbDays} dia${avcbDays !== 1 ? "s" : ""}`,
+      "Inicie o processo de renovação agora para evitar vencimento durante a tramitação.",
+      avcbDays <= 7 ? "critical" : "warning", "Ver datas", "condominio"
+    ));
+  }
+
+  // Seguro vencendo nos próximos 30 dias
+  if (seguroDays !== null && seguroDays > 0 && seguroDays <= 30) {
+    items.push(makeItem(
+      "prosp_seguro", "agenda",
+      `Seguro predial vence em ${seguroDays} dia${seguroDays !== 1 ? "s" : ""}`,
+      "Contate a corretora para renovação. Condomínio não pode ficar sem cobertura.",
+      seguroDays <= 7 ? "critical" : "warning", "Ver datas", "condominio"
+    ));
+  }
+
+  // Mandato vencendo nos próximos 60 dias
+  if (mandatoDays !== null && mandatoDays > 0 && mandatoDays <= 60) {
+    items.push(makeItem(
+      "prosp_mandato", "agenda",
+      `Mandato do síndico vence em ${mandatoDays} dia${mandatoDays !== 1 ? "s" : ""}`,
+      mandatoDays <= 30
+        ? "Convoque a assembleia de renovação ou eleição com antecedência mínima exigida pela convenção."
+        : "Planeje a convocação da assembleia com antecedência para garantir quórum.",
+      mandatoDays <= 30 ? "warning" : "info", "Ver datas", "condominio"
+    ));
+  }
+
+  // Documentos vencendo nos próximos 30 dias (usa dataVencimento — campo string)
+  const docs = getDocumentos();
+  const docsVencendo = docs.filter((d) => {
+    if (d.status !== "tenho" || !d.dataVencimento) return false;
+    const days = daysUntil(d.dataVencimento);
+    return days !== null && days > 0 && days <= 30;
+  });
+  if (docsVencendo.length > 0 && !items.some((i) => ["prosp_avcb", "prosp_seguro"].includes(i.id))) {
+    items.push(makeItem(
+      "prosp_docs_vencendo", "agenda",
+      `${docsVencendo.length} documento${docsVencendo.length > 1 ? "s" : ""} vence${docsVencendo.length > 1 ? "m" : ""} em até 30 dias`,
+      docsVencendo.slice(0, 2).map((d) => DOCUMENTO_LABEL[d.id as DocumentoEssencialId] ?? d.id).join(", ") + (docsVencendo.length > 2 ? " e outros" : "") + ". Inicie renovação.",
+      "warning", "Ver documentos", "condominio"
+    ));
+  }
+
+  return items;
+}
+
 // ─── Motor principal ──────────────────────────────────────────────────────────
 
 export function buildMonthlyReview(month?: string, status: MonthlyReviewStatus = "pendente"): MonthlyReviewReport {
   const today = todayISO();
   const resolvedMonth = month ?? currentMonthKey();
 
-  const finItems      = buildFinancialItems();
-  const docItems      = buildDocumentosItems(today);
-  const agendaItems   = buildAgendaItems(today);
-  const pendItems     = buildPendenciasItems(today);
-  const integItems    = buildIntegridadeItems();
+  const finItems        = buildFinancialItems();
+  const docItems        = buildDocumentosItems(today);
+  const agendaItems     = buildAgendaItems(today);
+  const pendItems       = buildPendenciasItems(today);
+  const integItems      = buildIntegridadeItems();
+  const prospectivaItems = buildProspectivaItems(today);
 
   const allItems: MonthlyReviewItem[] = [
     ...finItems,
     ...docItems,
     ...agendaItems,
+    ...prospectivaItems,
     ...pendItems,
     ...integItems,
   ];
@@ -425,7 +503,7 @@ export function buildMonthlyReview(month?: string, status: MonthlyReviewStatus =
   const sections: MonthlyReviewReport["sections"] = {
     financeiro:  finItems,
     documentos:  docItems,
-    agenda:      agendaItems,
+    agenda:      [...agendaItems, ...prospectivaItems],
     pendencias:  pendItems,
     integridade: integItems,
     resumo:      [],

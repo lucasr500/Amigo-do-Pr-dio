@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import dynamic from "next/dynamic";
 import type { AppTab } from "@/components/BottomNav";
 import type { ToolAnchor, ToolGroup } from "@/lib/app-navigation";
@@ -14,12 +15,45 @@ const SimuladorReajusteCota = dynamic(() => import("@/components/SimuladorReajus
 const CommandCenterPanel    = dynamic(() => import("@/components/CommandCenterPanel"), { ssr: false });
 const DecisoesSindicoPanel  = dynamic(() => import("@/components/DecisoesSindicoPanel"), { ssr: false });
 
-const TOOL_CATEGORIES: Array<{ id: ToolGroup; code: string; title: string; description: string }> = [
-  { id: "rotina",      code: "RT", title: "Rotina do síndico", description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
-  { id: "comunicados", code: "CM", title: "Comunicados",        description: "Gere avisos formais para moradores em segundos." },
-  { id: "simuladores", code: "SM", title: "Simuladores",        description: "Estime multas, juros e reajuste de cota condominial." },
-  { id: "checklists",  code: "CK", title: "Checklists",         description: "Conferência guiada para assembleias, obras e manutenção." },
-  { id: "temas",       code: "TM", title: "Explorar por tema",  description: "Orientações práticas organizadas por tema de gestão." },
+const TOOL_CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  rotina: (
+    <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 7v4l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  comunicados: (
+    <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+      <path d="M4 5h12a1 1 0 011 1v7a1 1 0 01-1 1H11.5l-3 2.5L5.5 14H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M7 9h6M7 11.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  simuladores: (
+    <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+      <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M7 13l2-4 2 2 2-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  checklists: (
+    <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+      <path d="M5 10l3 3 7-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  ),
+  temas: (
+    <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 7v2M10 11v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+};
+
+const TOOL_CATEGORIES: Array<{ id: ToolGroup; title: string; description: string }> = [
+  { id: "rotina",      title: "Rotina do síndico", description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
+  { id: "comunicados", title: "Comunicados",        description: "Gere avisos formais para moradores em segundos." },
+  { id: "simuladores", title: "Simuladores",        description: "Estime multas, juros e reajuste de cota condominial." },
+  { id: "checklists",  title: "Checklists",         description: "Conferência guiada para assembleias, obras e manutenção." },
+  { id: "temas",       title: "Explorar por tema",  description: "Orientações práticas organizadas por tema de gestão." },
 ];
 
 type Props = {
@@ -94,8 +128,8 @@ export default function ToolsTab({
                 onClick={() => onSetActiveToolGroup(cat.id)}
                 className="flex items-center gap-4 rounded-xl border border-navy-100 bg-white px-4 py-4 text-left shadow-sm transition-all hover:border-navy-200 hover:shadow active:scale-[0.98]"
               >
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-navy-50 text-[10.5px] font-bold tracking-[0.08em] text-navy-500" aria-hidden="true">
-                  {cat.code}
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-navy-50" aria-hidden="true">
+                  {TOOL_CATEGORY_ICONS[cat.id]}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13.5px] font-semibold text-navy-800">{cat.title}</p>

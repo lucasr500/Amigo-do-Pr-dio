@@ -90,3 +90,28 @@ export function getRecentSnapshots(days = 30): HealthSnapshot[] {
     .filter((s) => s.date >= cutoff)
     .sort((a, b) => a.date.localeCompare(b.date));
 }
+
+// Streak: quantos dias consecutivos o score esteve acima de `threshold` (default 60).
+// Conta de hoje para trás, parando no primeiro dia abaixo do threshold.
+export function getScoreStreak(threshold = 60): number {
+  const history = getHealthHistory();
+  if (history.length === 0) return 0;
+
+  const sorted = [...history].sort((a, b) => b.date.localeCompare(a.date)); // mais recente primeiro
+  const today = new Date().toISOString().slice(0, 10);
+
+  let streak = 0;
+  let expectedDate = today;
+
+  for (const snap of sorted) {
+    if (snap.date !== expectedDate) break; // dia faltando — quebra o streak
+    if (snap.percentage < threshold) break;
+    streak++;
+    // Volta um dia
+    const d = new Date(expectedDate + "T00:00:00");
+    d.setDate(d.getDate() - 1);
+    expectedDate = d.toISOString().slice(0, 10);
+  }
+
+  return streak;
+}

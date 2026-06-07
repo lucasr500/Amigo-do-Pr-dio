@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getAgendaEvents,
   getMemoriaOperacional,
@@ -15,10 +15,19 @@ const MONTH_NAMES_PT = [
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
 ];
 
-const EVENT_TYPE_ICONS: Record<string, string> = {
-  assembleia: "AS", manutencao: "MT", dedetizacao: "DD", caixa_agua: "CA",
-  extintores: "EX", vistoria: "VI", obra: "OB", cobranca: "CB",
-  reuniao: "RN", fornecedor: "FN", comunicado: "CM", retorno: "RT", outro: "EV",
+// SVG paths para tipos de evento
+const EVENT_SVG: Record<string, React.ReactNode> = {
+  assembleia: <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><circle cx="5" cy="5" r="2" stroke="currentColor" strokeWidth="1.3" /><circle cx="11" cy="5" r="2" stroke="currentColor" strokeWidth="1.3" /><circle cx="8" cy="11" r="2" stroke="currentColor" strokeWidth="1.3" /><path d="M7 6.5l-1 2M9 6.5l1 2M6.5 9.5h3" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg>,
+  manutencao: <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><path d="M11 3a3 3 0 00-2.8 4L3.5 11.5a1.2 1.2 0 001.7 1.7L9.5 8.5A3 3 0 1011 3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /></svg>,
+  dedetizacao:<svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M5 6l3-3 3 3M5 10l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+  caixa_agua: <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><path d="M8 2C6 5 4 7 4 10a4 4 0 008 0c0-3-2-5-4-8z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /></svg>,
+  extintores: <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="5" width="5" height="8" rx="2" stroke="currentColor" strokeWidth="1.3" /><path d="M8 5V3M8 3H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /><path d="M10.5 4c.5.5.5 1.5 0 2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" /></svg>,
+  vistoria:   <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><circle cx="7.5" cy="7.5" r="4" stroke="currentColor" strokeWidth="1.3" /><path d="M10.5 10.5l2.5 2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  obra:       <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><path d="M3 13h10M5 13V8l3-5 3 5v5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" /><path d="M6.5 13v-3h3v3" stroke="currentColor" strokeWidth="1.3" /></svg>,
+  cobranca:   <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="4.5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M2.5 7.5h11M6 4.5V3M10 4.5V3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  reuniao:    <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><path d="M2.5 4.5h11a1 1 0 011 1v5a1 1 0 01-1 1H10l-2.5 2.5-2.5-2.5H2.5a1 1 0 01-1-1v-5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" /></svg>,
+  fornecedor: <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M3 13c0-2.5 2.24-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
+  outro:      <svg className="h-4 w-4 text-navy-600" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2.5" stroke="currentColor" strokeWidth="1.3" /><path d="M5 8h6M8 5v6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" /></svg>,
 };
 
 const WEEKDAYS_SHORT = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
@@ -197,8 +206,8 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
                   onClick={onNavigate}
                   className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-navy-50/40 active:scale-[0.99]"
                 >
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[9px] font-bold tracking-[0.08em] text-navy-500">
-                    {EVENT_TYPE_ICONS[event.type] ?? "EV"}
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50">
+                    {EVENT_SVG[event.type] ?? EVENT_SVG.outro}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[12.5px] font-medium text-navy-800">{event.title}</p>

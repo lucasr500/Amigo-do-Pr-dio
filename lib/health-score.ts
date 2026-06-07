@@ -435,3 +435,111 @@ export function computeHealthScore(): HealthScoreResult {
     biggestBottleneck,
   };
 }
+
+// ── Projeção de score nos próximos 30 dias ────────────────────────────────────
+// Analisa o que vai mudar automaticamente nos próximos 30 dias
+// (vencimentos chegando, revisão semanal pendente, etc.) sem ação do síndico.
+
+export type ScoreProjectionEvent = {
+  dayOffset: number;  // Daqui a quantos dias ocorre
+  label: string;
+  deltaEstimado: number; // negativo = queda de score
+  type: "warning" | "critical";
+};
+
+export type ScoreProjection = {
+  events: ScoreProjectionEvent[];
+  projectedIn30Days: number;
+  projectedStatusKey: HealthStatusKey;
+  narrativa: string;
+};
+
+export function buildScoreProjection(currentPct: number): ScoreProjection {
+  const m        = getMemoriaOperacional();
+  const assistida = getMemoriaAssistida();
+  const events: ScoreProjectionEvent[] = [];
+
+  function daysUntil(iso: string | undefined): number | null {
+    if (!iso) return null;
+    const d = new Date(`${iso}T00:00:00`);
+    if (isNaN(d.getTime())) return null;
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.floor((d.getTime() - now.getTime()) / 86400000);
+  }
+
+  // AVCB
+  const avcbDate  = m.vencimentoAVCB || assistida.avcb?.value;
+  const avcbDays  = daysUntil(avcbDate);
+  if (avcbDays !== null && avcbDays > 0 && avcbDays <= 30) {
+    events.push({
+      dayOffset: avcbDays,
+      label: `AVCB vence`,
+      deltaEstimado: -15,
+      type: "critical",
+    });
+  }
+
+  // Seguro
+  const seguroDate = m.vencimentoSeguro || assistida.seguro?.value;
+  const seguroDays = daysUntil(seguroDate);
+  if (seguroDays !== null && seguroDays > 0 && seguroDays <= 30) {
+    events.push({
+      dayOffset: seguroDays,
+      label: `Seguro predial vence`,
+      deltaEstimado: -15,
+      type: "critical",
+    });
+  }
+
+  // Mandato
+  const mandatoDate = m.fimMandatoSindico || assistida.mandato?.value;
+  const mandatoDays = daysUntil(mandatoDate);
+  if (mandatoDays !== null && mandatoDays > 0 && mandatoDays <= 30) {
+    events.push({
+      dayOffset: mandatoDays,
+      label: `Mandato do síndico vence`,
+      deltaEstimado: -10,
+      type: "warning",
+    });
+  }
+
+  // Revisão semanal vai expirar esta semana (sexta-feira)
+  const weekKey = getCurrentWeekKey();
+  const weekly  = getWeeklyReviewState();
+  const dayOfWeek = new Date().getDay(); // 0=dom, 5=sex
+  if (weekly.lastCompletedWeekKey !== weekKey) {
+    const daysToFriday = (5 - dayOfWeek + 7) % 7;
+    if (daysToFriday <= 7) {
+      events.push({
+        dayOffset: daysToFriday || 7,
+        label: `Semana fecha sem revisão semanal`,
+        deltaEstimado: -8,
+        type: "warning",
+      });
+    }
+  }
+
+  events.sort((a, b) => a.dayOffset - b.dayOffset);
+
+  const totalDelta = events.reduce((sum, e) => sum + e.deltaEstimado, 0);
+  const projectedPct = Math.max(0, Math.min(100, currentPct + totalDelta));
+
+  const projectedStatusKey = (
+    projectedPct <= 39 ? "critico" :
+    projectedPct <= 59 ? "atencao" :
+    projectedPct <= 79 ? "em-evolucao" :
+    projectedPct <= 94 ? "bem-acompanhado" : "tudo-em-ordem"
+  ) as HealthStatusKey;
+
+  let narrativa = "";
+  if (events.length === 0) {
+    narrativa = "Nenhum vencimento crítico previsto nos próximos 30 dias.";
+  } else if (events.length === 1) {
+    const e = events[0];
+    narrativa = `${e.label} em ${e.dayOffset} dia${e.dayOffset !== 1 ? "s" : ""} — sem ação, score pode cair para ~${projectedPct}%.`;
+  } else {
+    narrativa = `${events.length} eventos nos próximos 30 dias podem reduzir o score para ~${projectedPct}% se não tratados.`;
+  }
+
+  return { events, projectedIn30Days: projectedPct, projectedStatusKey, narrativa };
+}

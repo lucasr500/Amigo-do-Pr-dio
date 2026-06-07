@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   addPendencia,
   getMemoriaOperacional,
@@ -210,6 +210,34 @@ const MANUTENCAO_KEYS: Array<keyof MemoriaOperacional> = [
   "ultimaVistoriaSPDA", "ultimaVistoriaEletrica",
 ];
 
+// SVG icons para campos do MemoriaPanel
+const CAMPO_ICON_SVG: Record<string, React.ReactNode> = {
+  "📋": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><rect x="3" y="2" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M5 5.5h6M5 8h6M5 10.5h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  "🛡️": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L3.5 4v3.5c0 2.8 2 5.2 4.5 6 2.5-.8 4.5-3.2 4.5-6V4L8 1.5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/><path d="M5.5 8l2 2 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  "🗳️": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="5" width="11" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M2.5 8h11M5.5 5V3.5a2.5 2.5 0 015 0V5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  "👥": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><circle cx="5.5" cy="5.5" r="2" stroke="currentColor" strokeWidth="1.3"/><circle cx="10.5" cy="5.5" r="2" stroke="currentColor" strokeWidth="1.3"/><circle cx="8" cy="10.5" r="2" stroke="currentColor" strokeWidth="1.3"/><path d="M7.5 7l-1 2M8.5 7l1 2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/></svg>,
+  "🐛": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><path d="M8 4.5c-1.5 0-2.5 1-2.5 3V9c0 2 1 3 2.5 3s2.5-1 2.5-3V7.5c0-2-1-3-2.5-3z" stroke="currentColor" strokeWidth="1.3"/><path d="M5.5 7H4M5.5 9H4M10.5 7H12M10.5 9H12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  "💧": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><path d="M8 2C6.5 4.5 5 6.5 5 9.5a3 3 0 006 0C11 6.5 9.5 4.5 8 2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>,
+  "🛗": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><rect x="3.5" y="2" width="9" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.3"/><path d="M6.5 7.5h3M8 6v3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  "🧯": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="5" width="5" height="8" rx="2" stroke="currentColor" strokeWidth="1.3"/><path d="M8 5V3.5M8 3.5H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M10.5 4c.8.4.8 1.6 0 2" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round"/></svg>,
+  "⚡": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><path d="M9.5 2L5 9h4.5L7 14l7.5-7H10l2-5z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>,
+  "🔌": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" stroke="currentColor" strokeWidth="1.3"/><path d="M6.5 6.5v2.5a1.5 1.5 0 003 0V6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  "🏢": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><rect x="3" y="5" width="10" height="9" rx="1" stroke="currentColor" strokeWidth="1.3"/><path d="M6 5V4a2 2 0 014 0v1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/><path d="M6.5 9h3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>,
+  "🔧": <svg className="h-4 w-4 text-navy-500" viewBox="0 0 16 16" fill="none"><path d="M11 3a3 3 0 00-2.8 4L3.5 11.5a1.2 1.2 0 001.7 1.7L9.5 8A3 3 0 1011 3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>,
+};
+
+function CampoIcon({ icon }: { icon: string }) {
+  const svg = CAMPO_ICON_SVG[icon];
+  if (svg) {
+    return (
+      <span className="mt-3 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50" aria-hidden="true">
+        {svg}
+      </span>
+    );
+  }
+  return <span className="mt-3.5 flex-shrink-0 text-[15px] leading-none" aria-hidden="true">{icon}</span>;
+}
+
 const GRUPO_LABEL: Record<string, string> = {
   vencimentos:  "Essenciais",
   manutencoes:  "Manutenções e rotinas",
@@ -394,11 +422,11 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
           }}
           className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
-          <span
-            className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]"
-            aria-hidden="true"
-          >
-            📋
+          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50" aria-hidden="true">
+            <svg className="h-3.5 w-3.5 text-navy-500" viewBox="0 0 14 14" fill="none">
+              <rect x="2.5" y="1.5" width="9" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+              <path d="M4.5 5h5M4.5 7h5M4.5 9h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium text-navy-800">
@@ -465,8 +493,11 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                       </span>
                     )}
                   </p>
-                  <span className="text-[11px] text-navy-400">
-                    {showManutencoes ? "Recolher ↑" : "Expandir ↓"}
+                  <span className="inline-flex items-center gap-1 text-[11px] text-navy-400">
+                    {showManutencoes ? "Recolher" : "Expandir"}
+                    <svg className={`h-3 w-3 transition-transform ${showManutencoes ? "rotate-180" : ""}`} viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                      <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </span>
                 </button>
               ) : grupo === "vencimentos" ? (
@@ -500,9 +531,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                     const assistidaValue = assistidaKey ? assistidaDraft[assistidaKey] : undefined;
                     return (
                     <div key={key} className="flex items-start gap-2.5">
-                      <span className="mt-3.5 flex-shrink-0 text-[15px] leading-none" aria-hidden="true">
-                        {icon}
-                      </span>
+                      <CampoIcon icon={icon} />
                       <div className="flex-1 min-w-0">
                         {/* Campos essenciais usam AssistedDateInput; manutenções usam FlexDateInput; texto usa input simples */}
                         {isEssential && tipo === "data" ? (

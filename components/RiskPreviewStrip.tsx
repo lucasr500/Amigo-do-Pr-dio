@@ -1,47 +1,89 @@
 "use client";
 
-type Props = {
-  onAssistente?: (q: string) => void;
+import React from "react";
+
+type RiskCard = {
+  icon: React.ReactNode;
+  title: string;
+  risk: string;
+  question: string;
 };
 
-const RISK_CARDS = [
+const RISK_CARDS: RiskCard[] = [
   {
-    icon: "🛡️",
+    icon: (
+      <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L4 5v5c0 4 2.5 7 6 8 3.5-1 6-4 6-8V5L10 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
     title: "AVCB",
     risk: "Vencido, o prédio fica sujeito à autuação e interdição pelos bombeiros.",
     question: "O que acontece se o AVCB do condomínio vencer?",
   },
   {
-    icon: "📋",
+    icon: (
+      <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L4 5v5c0 4 2.5 7 6 8 3.5-1 6-4 6-8V5L10 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <circle cx="10" cy="10" r="2" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    ),
     title: "Seguro predial",
     risk: "Sem seguro vigente, o condomínio fica sem cobertura para incêndio, raio e explosão.",
     question: "Qual o prazo para renovar o seguro predial do condomínio?",
   },
   {
-    icon: "🏛️",
+    icon: (
+      <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+        <rect x="3" y="5" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 9h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="8" cy="7" r="0.8" fill="currentColor" />
+        <path d="M7 13l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
     title: "Mandato do síndico",
     risk: "Mandato vencido sem eleição gera irregularidade jurídica na gestão do condomínio.",
     question: "O que acontece quando o mandato do síndico vence sem renovação?",
   },
   {
-    icon: "👥",
+    icon: (
+      <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+        <circle cx="7" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M2.5 16c0-2.5 2-4.5 4.5-4.5s4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <circle cx="14" cy="7" r="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M17.5 16c0-2-1.4-3.5-3-3.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
     title: "Férias de funcionários",
     risk: "Férias vencidas acumulam passivo trabalhista — o síndico responde pessoalmente.",
     question: "Quais são os riscos trabalhistas de férias vencidas no condomínio?",
   },
   {
-    icon: "📁",
+    icon: (
+      <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+        <rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
     title: "Documentação essencial",
     risk: "Convenção, laudos e contratos inacessíveis atrasam decisões e expõem o condomínio juridicamente.",
     question: "Quais documentos o condomínio é obrigado a manter organizados?",
   },
   {
-    icon: "🔧",
+    icon: (
+      <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none">
+        <path d="M13.5 3.5a3.5 3.5 0 00-3.5 5.5L4 15a1.5 1.5 0 002.1 2.1L12 11.5a3.5 3.5 0 001.5-8z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      </svg>
+    ),
     title: "Manutenções periódicas",
     risk: "Elevador, extintores e caixa d'água sem manutenção geram responsabilidade penal para o síndico.",
     question: "Quais manutenções periódicas são obrigatórias no condomínio?",
   },
-] as const;
+];
+
+type Props = {
+  onAssistente?: (q: string) => void;
+};
 
 export default function RiskPreviewStrip({ onAssistente }: Props) {
   return (
@@ -62,7 +104,9 @@ export default function RiskPreviewStrip({ onAssistente }: Props) {
             onClick={() => onAssistente?.(card.question)}
             className="flex flex-col gap-1.5 rounded-[16px] border border-navy-100/70 bg-white/70 px-3.5 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.04)] transition-all hover:border-navy-200 hover:bg-white hover:shadow-sm active:scale-[0.97]"
           >
-            <span className="text-[18px] leading-none" aria-hidden="true">{card.icon}</span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-navy-50" aria-hidden="true">
+              {card.icon}
+            </span>
             <p className="text-[12.5px] font-semibold leading-snug text-navy-800">{card.title}</p>
             <p className="text-[11px] leading-relaxed text-navy-500">{card.risk}</p>
           </button>

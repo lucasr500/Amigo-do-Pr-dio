@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getAgendaEvents,
   getMemoriaOperacional,
@@ -26,35 +26,62 @@ const TYPE_LABELS: Record<AgendaEventType, string> = {
   outro: "Outro",
 };
 
-// ── Ícones por tipo de evento manual ──────────────────────────────────────────
-const TYPE_ICONS: Record<AgendaEventType, string> = {
-  assembleia: "🧾",
-  manutencao: "🛠️",
-  dedetizacao: "🌿",
-  caixa_agua: "💧",
-  extintores: "🧯",
-  vistoria:   "🔍",
-  obra:       "🧱",
-  cobranca:   "📌",
-  reuniao:    "🧾",
-  fornecedor: "📌",
-  comunicado: "📢",
-  retorno:    "↩️",
-  outro:      "📍",
+// ── SVG icons para cada tipo de evento ────────────────────────────────────────
+const EventIcon = ({ iconKey, small = false }: { iconKey: string; small?: boolean }) => {
+  const s = small ? "h-4 w-4" : "h-5 w-5";
+  const cls = `${s} text-navy-500`;
+  switch (iconKey) {
+    case "assembleia":
+    case "reuniao":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><circle cx="6.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.4"/><circle cx="13.5" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.4"/><circle cx="10" cy="13" r="2.5" stroke="currentColor" strokeWidth="1.4"/><path d="M9 8.5l-1 2.5M11 8.5l1 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>;
+    case "manutencao":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M13.5 3.5a3.5 3.5 0 00-3.5 5.5L4 15a1.5 1.5 0 002.1 2.1L12 11a3.5 3.5 0 001.5-7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
+    case "dedetizacao":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M10 3C8 6 6 8.5 6 12a4 4 0 008 0c0-3.5-2-6-4-9z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M8 9l4 3M12 9l-4 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>;
+    case "caixa_agua":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M10 3C8 6 6 8.5 6 12a4 4 0 008 0c0-3.5-2-6-4-9z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
+    case "extintores":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="6" height="9" rx="3" stroke="currentColor" strokeWidth="1.4"/><path d="M10 7V5M10 5H7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><path d="M13 6.5c1 .5 1 2 0 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>;
+    case "vistoria":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><circle cx="9" cy="9" r="5" stroke="currentColor" strokeWidth="1.4"/><path d="M13 13l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+    case "obra":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M4 16h12M6 16V10l4-6 4 6v6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 16v-4h4v4" stroke="currentColor" strokeWidth="1.4"/></svg>;
+    case "cobranca":
+    case "fornecedor":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><rect x="3" y="5" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M3 9h14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="7" cy="12.5" r="1" fill="currentColor"/></svg>;
+    case "comunicado":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M3.5 5.5h13a1 1 0 011 1v7a1 1 0 01-1 1H12l-3 2.5-3-2.5H3.5a1 1 0 01-1-1v-7a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
+    case "retorno":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M7 9l-4-4 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 5h10a4 4 0 010 8H7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+    case "AVCB":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M10 2L4 5v5c0 4 2.5 7 6 8 3.5-1 6-4 6-8V5L10 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/><path d="M7.5 10l2 2 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    case "Seguro":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M10 2L4 5v5c0 4 2.5 7 6 8 3.5-1 6-4 6-8V5L10 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
+    case "Mandato":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><rect x="4" y="5" width="12" height="11" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M4 9h12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/><circle cx="8" cy="7" r="1" fill="currentColor"/><path d="M7 13l2 2 4-4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    case "AGO":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="13" cy="7" r="2" stroke="currentColor" strokeWidth="1.4"/><circle cx="10" cy="13" r="2" stroke="currentColor" strokeWidth="1.4"/><path d="M9 8.5L8 11M11 8.5l1 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>;
+    case "SPDA":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><path d="M11 3L6 11h5l-2 6 7-8h-5l2-6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/></svg>;
+    case "Elétrica":
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="1.4"/><path d="M11 7l-2 4h3l-2 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    default:
+      return <svg className={cls} viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="2" stroke="currentColor" strokeWidth="1.4"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>;
+  }
 };
 
-// ── Ícones para vencimentos monitorados do sistema ────────────────────────────
+// Manter compat com código existente que referencia icon string
+const TYPE_ICONS: Record<AgendaEventType, string> = {
+  assembleia: "assembleia", manutencao: "manutencao", dedetizacao: "dedetizacao",
+  caixa_agua: "caixa_agua", extintores: "extintores", vistoria: "vistoria",
+  obra: "obra", cobranca: "cobranca", reuniao: "reuniao", fornecedor: "fornecedor",
+  comunicado: "comunicado", retorno: "retorno", outro: "outro",
+};
+
 const SYSTEM_ICONS: Record<string, string> = {
-  "AVCB":          "🧯",
-  "Seguro":        "🛡️",
-  "Mandato":       "🗳️",
-  "AGO":           "🧾",
-  "Dedetização":   "🌿",
-  "Caixa d'água":  "💧",
-  "Elevador":      "⬆️",
-  "Extintores":    "🧯",
-  "SPDA":          "⚡",
-  "Elétrica":      "💡",
+  "AVCB": "AVCB", "Seguro": "Seguro", "Mandato": "Mandato",
+  "AGO": "AGO", "Dedetização": "dedetizacao", "Caixa d'água": "caixa_agua",
+  "Elevador": "vistoria", "Extintores": "extintores", "SPDA": "SPDA", "Elétrica": "Elétrica",
 };
 
 const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -287,14 +314,11 @@ export default function AgendaMensal({ refreshKey, onNavigateToAgenda }: Props) 
               Nada agendado para este dia.
             </p>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {selectedEntries.map((entry, idx) => (
-                <li key={idx} className="flex items-start gap-2.5">
-                  <span
-                    className="mt-px flex-shrink-0 text-[15px] leading-snug"
-                    aria-hidden="true"
-                  >
-                    {entry.icon}
+                <li key={idx} className="flex items-center gap-2.5 rounded-[10px] bg-navy-50/50 px-2.5 py-2">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white shadow-sm" aria-hidden="true">
+                    <EventIcon iconKey={entry.icon} small />
                   </span>
                   <div className="min-w-0">
                     <p className="text-[12.5px] font-medium leading-snug text-navy-700">

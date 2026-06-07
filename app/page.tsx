@@ -6,13 +6,12 @@ import Header from "@/components/Header";
 import BottomNav, { AppTab } from "@/components/BottomNav";
 import HomeTab from "@/components/tabs/HomeTab";
 import AgendaTab from "@/components/tabs/AgendaTab";
-import AssistantTab from "@/components/tabs/AssistantTab";
+import AssistantTab, { type AssistantTabHandle } from "@/components/tabs/AssistantTab";
 import ToolsTab from "@/components/tabs/ToolsTab";
 import CondominioTab from "@/components/tabs/CondominioTab";
 import type { ToolAnchor, ToolGroup } from "@/lib/app-navigation";
 import { ANCHOR_TO_GROUP } from "@/lib/app-navigation";
 import {
-  incrementUsage,
   exportTelemetry,
   recordSessionOpen,
   hasMemoriaOperacional,
@@ -31,7 +30,6 @@ import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
-import type { AnswerResult, Topic } from "@/lib/data";
 
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const DemoModeBanner     = dynamic(() => import("@/components/DemoModeBanner"), { ssr: false });
@@ -54,11 +52,8 @@ function computeProfileCompletion(prof: CondominioProfile | null, m: MemoriaOper
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  // ── Assistente state ────────────────────────────────────────────
-  const [question, setQuestion]             = useState("");
-  const [submittedQuestion, setSubmittedQuestion] = useState("");
-  const [answerResult, setAnswerResult]     = useState<AnswerResult | null>(null);
-  const [isLoading, setIsLoading]           = useState(false);
+  // ── AssistantTab ref (estado movido para o componente) ──────────
+  const assistantRef = useRef<AssistantTabHandle>(null);
 
   // ── App-wide state ──────────────────────────────────────────────
   const [refreshKey, setRefreshKey]         = useState(0);
@@ -74,6 +69,7 @@ export default function HomePage() {
   const [shouldExpandMemoria, setShouldExpandMemoria] = useState(false);
   const [showNotifSettings, setShowNotifSettings]     = useState(false);
   const [focusRevisaoMensal, setFocusRevisaoMensal]   = useState(false);
+  const [shouldOpenBackup, setShouldOpenBackup]       = useState(false);
 
   // ── Ferramentas state ───────────────────────────────────────────
   const [activeToolGroup, setActiveToolGroup]     = useState<ToolGroup | null>(null);
@@ -196,57 +192,11 @@ export default function HomePage() {
   };
 
   // ── Handlers do assistente ──────────────────────────────────────
-  const executeAsk = async (q: string) => {
-    if (!q || isLoading) return;
-    setQuestion("");
-    setIsLoading(true);
-    setSubmittedQuestion(q);
-    setAnswerResult(null);
-    const [{ findAnswer, logQuery }] = await Promise.all([
-      import("@/lib/data"),
-      new Promise<void>((resolve) => setTimeout(resolve, 150)),
-    ]);
-    const result = findAnswer(q);
-    logQuery(q, result);
-    incrementUsage();
-    if (result.isDefault) {
-      void trackEvent("query_fallback", {
-        detected_category: result.detectedCategory,
-        score: result.score,
-        blocked_by_domain: result.blockedByDomainAnchor,
-        query_length: q.length,
-      });
-    } else {
-      void trackEvent("query_submitted", {
-        matched_id: result.matched?.id ?? null,
-        categoria: result.matched?.categoria ?? null,
-        score: result.score,
-        query_length: q.length,
-      });
-    }
-    setAnswerResult(result);
-    setRefreshKey((k) => k + 1);
-    setIsLoading(false);
-  };
-
-  const handleAsk         = () => executeAsk(question.trim());
-  const handleRetry       = () => executeAsk(submittedQuestion);
-  const handleBack        = () => { setQuestion(submittedQuestion); setSubmittedQuestion(""); setAnswerResult(null); };
-  const handleNewQuestion = () => { setQuestion(""); setSubmittedQuestion(""); setAnswerResult(null); };
-
+  // ── Handlers do assistente — state vive em AssistantTab ────────
   const handleSuggestionSelect = (q: string) => {
     navigateTab("assistente");
-    setQuestion(q);
-    executeAsk(q);
-  };
-
-  const handleTopicSelect = (topic: Topic) => {
-    setQuestion(topic.examplePrompt);
-    setTimeout(() => {
-      const el = document.getElementById("ask-question") as HTMLTextAreaElement;
-      el?.focus();
-      el?.setSelectionRange(el.value.length, el.value.length);
-    }, 50);
+    // Executa query via ref após navegação (pequeno delay para montar o componente)
+    setTimeout(() => assistantRef.current?.executeQuery(q), 50);
   };
 
   const handleSavePendencia = (titulo: string, categoria: string, matchedId: string) => {
@@ -321,6 +271,7 @@ export default function HomePage() {
             onSuggestionSelect={handleSuggestionSelect}
             onActivateDemo={handleActivateDemo}
             onRefresh={() => setRefreshKey((k) => k + 1)}
+            onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
           />
         )}
 
@@ -333,22 +284,12 @@ export default function HomePage() {
 
         {activeTab === "assistente" && (
           <AssistantTab
-            question={question}
-            submittedQuestion={submittedQuestion}
-            answerResult={answerResult}
-            isLoading={isLoading}
+            ref={assistantRef}
             refreshKey={refreshKey}
-            onQuestionChange={setQuestion}
-            onAsk={handleAsk}
-            onBack={handleBack}
-            onRetry={handleRetry}
-            onNewQuestion={handleNewQuestion}
-            onTopicSelect={handleTopicSelect}
-            onSuggestionSelect={handleSuggestionSelect}
             onSavePendencia={handleSavePendencia}
+            onQueryExecuted={() => setRefreshKey((k) => k + 1)}
             onNavigateToChecklist={handleNavigateToChecklist}
             onNavigateToFerramentas={handleNavigateToFerramentas}
-            onFavorite={() => setRefreshKey((k) => k + 1)}
           />
         )}
 
@@ -375,12 +316,14 @@ export default function HomePage() {
             condoName={condoName}
             shouldExpandMemoria={shouldExpandMemoria}
             showNotifSettings={showNotifSettings}
+            shouldOpenBackup={shouldOpenBackup}
             onRefresh={() => setRefreshKey((k) => k + 1)}
             onMemoriaSaved={() => { setRefreshKey((k) => k + 1); setShouldExpandMemoria(false); }}
             onSetupMemoria={handleSetupMemoria}
             onOpenMonthlyReview={handleOpenMonthlyReview}
             onNavigateTab={navigateTab}
             onToggleNotifSettings={() => setShowNotifSettings((v) => !v)}
+            onBackupOpened={() => setShouldOpenBackup(false)}
           />
         )}
 
@@ -405,8 +348,9 @@ export default function HomePage() {
           }}
           onAction={(actionKey) => {
             setShowNotificationCenter(false);
-            if (actionKey === "open_memoria" || actionKey === "open_funcionarios" || actionKey === "open_documentos") {
+            if (actionKey === "open_memoria" || actionKey === "open_funcionarios" || actionKey === "open_documentos" || actionKey === "open_dados") {
               navigateTab("condominio");
+              if (actionKey === "open_dados") setShouldOpenBackup(true);
             } else if (actionKey === "open_pendencias") {
               navigateToSubView("pendencias");
               navigateTab("inicio");
