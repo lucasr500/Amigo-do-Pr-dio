@@ -4,7 +4,7 @@ export const ENTRY_LABEL: Record<FinancialEntryType, string> = {
   receita: "Receita",
   despesa: "Despesa",
   conta_a_pagar: "Conta a pagar",
-  investimento: "Investimento",
+  investimento: "Reserva",
 };
 
 export const FINANCIAL_FILTERS = ["todos", "receitas", "despesas", "contas", "vencidas", "pagas", "investimentos"] as const;
@@ -14,7 +14,7 @@ export const FINANCIAL_FILTER_LABEL: Record<FinancialFilter, string> = {
   todos: "Todos",
   receitas: "Receitas",
   despesas: "Despesas",
-  contas: "Contas",
+  contas: "Prazos",
   vencidas: "Vencidas",
   pagas: "Pagas",
   investimentos: "Reserva",

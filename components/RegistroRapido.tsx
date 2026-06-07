@@ -174,7 +174,7 @@ export default function RegistroRapido({ onSaved }: Props) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="flex w-full items-center gap-2.5 rounded-[18px] border border-navy-100/80 bg-white/78 px-4 py-3 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
+          className="flex w-full items-center gap-2.5 rounded-[18px] border border-navy-100/80 bg-white/[0.78] px-4 py-3 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
           <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[14px]" aria-hidden="true">
             +

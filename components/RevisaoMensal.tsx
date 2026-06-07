@@ -214,7 +214,7 @@ export default function RevisaoMensal({ refreshKey, onDone }: RevisaoMensalProps
           </div>
         )}
 
-        <div className="mb-3 rounded-xl bg-navy-50/55 px-3 py-2.5">
+        <div className="mb-3 rounded-lg bg-navy-50/60 px-3 py-2.5">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
             O que foi resolvido neste mês
           </p>

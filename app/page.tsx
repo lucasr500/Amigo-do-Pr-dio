@@ -239,7 +239,7 @@ export default function HomePage() {
   // ── Render ──────────────────────────────────────────────────────
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
-      <div className="relative z-10 mx-auto flex w-full max-w-[440px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
+      <div className="relative z-10 mx-auto flex w-full max-w-[760px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
         {isDemo && <DemoModeBanner onExit={handleExitDemo} />}
 

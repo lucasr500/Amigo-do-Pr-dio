@@ -33,10 +33,10 @@ export default function FilterChips<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             aria-pressed={active}
-            className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-navy-300/40 ${
+            className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-navy-300/40 ${
               active
-                ? "bg-navy-700 text-white"
-                : "border border-navy-100 bg-white text-navy-500 hover:bg-navy-50"
+                ? "bg-navy-800 text-white shadow-card"
+                : "border border-navy-100 bg-white/[0.84] text-navy-500 hover:bg-white hover:text-navy-700"
             }`}
           >
             {option.label}

@@ -1,9 +1,5 @@
 "use client";
 
-// Strip de prioridade na Home — responde as 4 perguntas essenciais do síndico:
-// 1. Qual a ação mais urgente?  2. Há notificações críticas?
-// 3. Como está o prédio?        4. Está salvo?
-
 import { useEffect, useState } from "react";
 import { buildCommandCenterCached, type CommandCenterResult } from "@/lib/command-center";
 import { getSyncStatus, formatLastSync } from "@/lib/sync/syncStatus";
@@ -19,16 +15,16 @@ type Props = {
 };
 
 const RISK_STRIP_STYLE = {
-  critico:    "border-terracotta-200 bg-terracotta-50/80",
-  atencao:    "border-amber-200 bg-amber-50/70",
-  estavel:    "border-teal-200/60 bg-teal-50/40",
-  "sem-dados": "border-navy-100 bg-navy-50/40",
+  critico: "border-terracotta-200/80 bg-terracotta-50/70",
+  atencao: "border-amber-200/80 bg-amber-50/70",
+  estavel: "border-sage-200/70 bg-sage-50/60",
+  "sem-dados": "border-navy-100/80 bg-white/[0.74]",
 } as const;
 
 const RISK_DOT = {
-  critico:     "bg-terracotta-500",
-  atencao:     "bg-amber-400",
-  estavel:     "bg-teal-500",
+  critico: "bg-terracotta-500",
+  atencao: "bg-amber-400",
+  estavel: "bg-sage-500",
   "sem-dados": "bg-navy-300",
 } as const;
 
@@ -46,11 +42,11 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
     setData(cc);
     setSinceLastVisit(buildSinceLastVisitContext());
 
-    // Calcula próximos vencimentos para estado estável (31-90 dias)
     if (cc.riskLevel === "estavel") {
       const m = getMemoriaOperacional();
       const a = getMemoriaAssistida();
-      const now = new Date(); now.setHours(0, 0, 0, 0);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
       function daysTo(iso: string | undefined): number | null {
         if (!iso) return null;
         const d = new Date(`${iso}T00:00:00`);
@@ -58,7 +54,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
         return Math.floor((d.getTime() - now.getTime()) / 86400000);
       }
       const candidates: UpcomingVenc[] = [
-        { label: "AVCB",   days: daysTo(m.vencimentoAVCB   || a.avcb?.value) ?? 999 },
+        { label: "AVCB", days: daysTo(m.vencimentoAVCB || a.avcb?.value) ?? 999 },
         { label: "Seguro", days: daysTo(m.vencimentoSeguro || a.seguro?.value) ?? 999 },
         { label: "Mandato", days: daysTo(m.fimMandatoSindico || a.mandato?.value) ?? 999 },
       ].filter((x) => x.days >= 31 && x.days <= 90).sort((a, b) => a.days - b.days).slice(0, 2);
@@ -67,9 +63,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
       setUpcomingVenc([]);
     }
 
-    // Sync status discreto
-    const syncEnabled = isEnabled("sync_enabled");
-    if (syncEnabled) {
+    if (isEnabled("sync_enabled")) {
       const status = getSyncStatus();
       if (status.state === "synced" && status.lastSyncAt) {
         setSyncLabel(formatLastSync(status.lastSyncAt));
@@ -80,34 +74,32 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
     setHydrated(true);
   }, [refreshKey]);
 
-  if (!hydrated) return <div className="mx-5 h-[58px] animate-pulse rounded-[16px] bg-navy-50/80 sm:mx-6" />;
+  if (!hydrated) return <div className="mx-5 h-[72px] animate-pulse rounded-lg bg-navy-50/80 sm:mx-6" />;
 
-  // Estado parcial: usuário tem algum dado mas sem datas essenciais
   if (!data || data.riskLevel === "sem-dados") {
     const maturity = buildDataMaturity();
 
-    // Zero dados — teaser de risco em vez de null
     if (maturity.knownCount === 0) {
       return (
         <section className="px-5 pb-3 sm:px-6">
-          <div className="rounded-[16px] border border-navy-100 bg-navy-50/40 px-4 py-3">
+          <div className="rounded-lg border border-navy-100/80 bg-white/[0.78] px-4 py-3 shadow-card">
             <div className="flex items-center gap-2.5">
               <span className="h-2 w-2 flex-shrink-0 rounded-full bg-navy-300" aria-hidden="true" />
-              <p className="flex-1 min-w-0 text-[12px] font-medium leading-snug text-navy-600">
-                Monitoramento inativo — nenhuma data cadastrada
+              <p className="min-w-0 flex-1 text-[12px] font-semibold leading-snug text-navy-700">
+                Base de gestão ainda em aberto
               </p>
             </div>
-            <p className="mt-1.5 text-[10.5px] leading-relaxed text-navy-400">
-              Com as datas cadastradas, o app detecta AVCB vencido, seguro próximo ao vencimento e mandato expirado automaticamente.
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-navy-500">
+              Cadastre AVCB, seguro e mandato para o app acompanhar prazos sensíveis automaticamente.
             </p>
             <button
               type="button"
               onClick={() => onNavigate?.("condominio")}
-              className="mt-2 flex min-h-[44px] w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
+              className="mt-3 flex min-h-[44px] w-full items-center gap-2 rounded-lg bg-navy-50/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-semibold leading-snug text-navy-800">Ativar monitoramento de risco</p>
-                <p className="mt-0.5 text-[10.5px] leading-snug text-navy-500">Cadastre AVCB, seguro ou mandato para começar</p>
+                <p className="text-[12px] font-semibold leading-snug text-navy-800">Montar base essencial</p>
+                <p className="mt-0.5 text-[10.5px] leading-snug text-navy-500">Segurança jurídica primeiro</p>
               </div>
               <svg className="h-3.5 w-3.5 flex-shrink-0 text-navy-300" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -119,13 +111,13 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
     }
 
     const activeCount = maturity.unlockedCapabilities.length;
-    const nextField   = maturity.nextBestFields[0];
+    const nextField = maturity.nextBestFields[0];
     return (
       <section className="px-5 pb-3 sm:px-6">
-        <div className="rounded-[16px] border border-navy-100 bg-navy-50/40 px-4 py-3">
+        <div className="rounded-lg border border-navy-100/80 bg-white/[0.78] px-4 py-3 shadow-card">
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 flex-shrink-0 rounded-full bg-navy-300" aria-hidden="true" />
-            <p className="flex-1 min-w-0 text-[12px] font-medium leading-snug text-navy-600 truncate">
+            <p className="min-w-0 flex-1 truncate text-[12px] font-semibold leading-snug text-navy-700">
               {maturity.knownCount} dado{maturity.knownCount > 1 ? "s" : ""} registrado{maturity.knownCount > 1 ? "s" : ""}
               {activeCount > 0 && ` · ${activeCount} recurso${activeCount > 1 ? "s" : ""} ativo${activeCount > 1 ? "s" : ""}`}
             </p>
@@ -134,7 +126,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
             <button
               type="button"
               onClick={() => onNavigate?.("condominio")}
-              className="mt-2 flex min-h-[44px] w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
+              className="mt-3 flex min-h-[44px] w-full items-center gap-2 rounded-lg bg-navy-50/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
             >
               <div className="min-w-0 flex-1">
                 <p className="text-[12px] font-semibold leading-snug text-navy-800">{nextField.label}</p>
@@ -156,24 +148,27 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
   const hasUrgent = data.urgentActions.length > 0;
   const hasCriticalNotif = data.criticalNotifications.length > 0;
   const stripStyle = RISK_STRIP_STYLE[data.riskLevel];
-  const dotColor   = RISK_DOT[data.riskLevel];
+  const dotColor = RISK_DOT[data.riskLevel];
 
   return (
     <section className="px-5 pb-3 sm:px-6">
-      <div className={`rounded-[16px] border px-4 py-3 ${stripStyle}`}>
-
-        {/* Linha 1: status dot + summary + notif badge */}
+      <div className={`rounded-lg border px-4 py-3 shadow-card ${stripStyle}`}>
         <div className="flex items-center gap-2.5">
           <span className={`h-2 w-2 flex-shrink-0 rounded-full ${dotColor}`} aria-hidden="true" />
-          <p className="flex-1 min-w-0 text-[12px] font-medium leading-snug text-navy-700 truncate">
-            {data.summaryText}
-          </p>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">
+              Status geral
+            </p>
+            <p className="truncate text-[12.5px] font-semibold leading-snug text-navy-800">
+              {data.summaryText}
+            </p>
+          </div>
           {(hasCriticalNotif || data.unreadCount > 0) && (
             <button
               type="button"
               onClick={onOpenNotifications}
               aria-label={`${data.unreadCount} notificações`}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-terracotta-700 hover:bg-white transition-colors"
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-full bg-white/[0.82] px-2.5 py-1 text-[11px] font-semibold text-terracotta-700 shadow-card hover:bg-white transition-colors"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-terracotta-500" aria-hidden="true" />
               {data.unreadCount}
@@ -181,15 +176,14 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           )}
         </div>
 
-        {/* Linha 2: ação prioritária #1 */}
         {topAction && (
           <button
             type="button"
             onClick={() => topAction.resolveTarget && onNavigate?.(topAction.resolveTarget)}
-            className="mt-2 flex min-h-[44px] w-full items-center gap-2 rounded-xl bg-white/70 px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
+            className="mt-3 flex min-h-[48px] w-full items-center gap-2 rounded-lg bg-white/[0.76] px-3 py-2.5 text-left transition-colors hover:bg-white active:scale-[0.99]"
           >
             <div className="min-w-0 flex-1">
-              <p className={`text-[12px] font-semibold leading-snug ${hasUrgent ? "text-terracotta-800" : "text-navy-800"}`}>
+              <p className={`text-[12.5px] font-semibold leading-snug ${hasUrgent ? "text-terracotta-800" : "text-navy-800"}`}>
                 {topAction.titulo}
               </p>
               {(topAction.motivo || topAction.impacto) && (
@@ -204,9 +198,8 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           </button>
         )}
 
-        {/* "O que eu faria hoje" — inteligência operacional visível */}
         {!hasUrgent && data.todayAnswer && (
-          <div className="mt-2 rounded-xl bg-white/40 px-3 py-2">
+          <div className="mt-3 rounded-lg bg-white/[0.52] px-3 py-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.09em] text-navy-400">
               O que fazer hoje
             </p>
@@ -217,7 +210,7 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
         )}
 
         {data.todayFocus.length > 0 && (
-          <div className="mt-2 rounded-xl bg-white/50 px-3 py-2.5">
+          <div className="mt-3 rounded-lg bg-white/[0.56] px-3 py-2.5">
             <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-navy-400">
               Foco de hoje
             </p>
@@ -247,34 +240,31 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
           </div>
         )}
 
-        {/* Linha 3: contexto desde última visita */}
         {sinceLastVisit?.hasContext && sinceLastVisit.contextPhrase && (
-          <p className={`mt-1.5 text-[10.5px] leading-snug font-medium ${
+          <p className={`mt-2 text-[10.5px] leading-snug font-medium ${
             sinceLastVisit.contextPhrase.includes("vencido") || sinceLastVisit.contextPhrase.includes("vence em")
-              ? "text-terracotta-600"
-              : "text-navy-400"
+              ? "text-terracotta-700"
+              : "text-navy-500"
           }`}>
             {sinceLastVisit.contextPhrase}
           </p>
         )}
 
-        {/* Próximos vencimentos no horizonte (31-90 dias) — estado estável */}
         {upcomingVenc.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5">
             {upcomingVenc.map((v) => (
-              <span key={v.label} className="text-[10.5px] text-amber-600 font-medium">
+              <span key={v.label} className="text-[10.5px] text-amber-700 font-medium">
                 {v.label} em {v.days} dias
               </span>
             ))}
           </div>
         )}
 
-        {/* Linha 3b: resumo últimos 30 dias */}
         {sinceLastVisit && (sinceLastVisit.pendenciasConcluidasMes > 0 || sinceLastVisit.novasOcorrenciasMes > 0) && (
-          <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-navy-400">
-            <span className="font-medium text-navy-400">Últimos 30d:</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10.5px] text-navy-500">
+            <span className="font-medium text-navy-500">Últimos 30 dias:</span>
             {sinceLastVisit.pendenciasConcluidasMes > 0 && (
-              <span className="text-teal-600">
+              <span className="text-sage-700">
                 {sinceLastVisit.pendenciasConcluidasMes} resolvida{sinceLastVisit.pendenciasConcluidasMes > 1 ? "s" : ""}
               </span>
             )}
@@ -284,15 +274,14 @@ export default function HomePriorityStrip({ refreshKey, onNavigate, onOpenNotifi
               </span>
             )}
             {data && (
-              <span className="text-navy-400">Score {data.healthPercentage}%</span>
+              <span>Score {data.healthPercentage}%</span>
             )}
           </div>
         )}
 
-        {/* Linha 4: sync status discreto */}
         {syncLabel && (
-          <p className="mt-1 text-[10.5px] text-navy-400">
-            {syncLabel.includes("Falha") ? "Falha: " : "OK: "}{syncLabel}
+          <p className="mt-2 text-[10.5px] text-navy-400">
+            {syncLabel.includes("Falha") ? "Revisar sincronização: " : "Sincronizado: "}{syncLabel}
           </p>
         )}
       </div>

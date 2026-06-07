@@ -115,9 +115,9 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
     if (!hasMemoriaOperacional()) return null;
     return (
       <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
-        <div className="flex items-center gap-3 rounded-[22px] border border-green-100 bg-white/90 px-5 py-4 shadow-card-md">
-          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100" aria-hidden="true">
-            <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="none">
+        <div className="flex items-center gap-3 rounded-lg border border-sage-200/80 bg-sage-50/60 px-5 py-4 shadow-card">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.70]" aria-hidden="true">
+            <svg className="h-5 w-5 text-sage-700" viewBox="0 0 20 20" fill="none">
               <path d="M5 10l4 4 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </span>
@@ -134,10 +134,10 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
   const hasCritico = items.some((i) => i.priority === "critico");
   const hasMixedPriorities = hasCritico && items.some((i) => i.priority === "atencao");
   const title = hasMixedPriorities
-    ? "Ações prioritárias do prédio"
+    ? "Pontos que precisam de atenção"
     : hasCritico
-    ? "Ação urgente requerida"
-    : "Alertas operacionais";
+    ? "Precisa de atenção agora"
+    : "Em acompanhamento";
 
   const criticalItems = items.filter((i) => i.priority === "critico");
   const hasCriticalOverflow = criticalItems.length > INITIAL_LIMIT;
@@ -252,7 +252,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up">
-      <div className="overflow-hidden rounded-[22px] border border-cream-200/90 bg-white/90 shadow-card-md">
+      <div className="overflow-hidden rounded-lg border border-navy-100/70 bg-white/[0.88] shadow-card-md">
 
         {/* Cabeçalho */}
         <div className="px-5 pt-5 pb-4">
@@ -264,7 +264,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
           </p>
         </div>
 
-        <div className="mx-5 border-t border-navy-50" />
+        <div className="mx-5 border-t border-navy-100/60" />
 
         {/* Lista de itens */}
         <div className="px-2 py-1">
@@ -286,9 +286,9 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                 <button
                   type="button"
                   onClick={() => handleToggle(item.id)}
-                  className={`flex min-h-11 w-full items-start gap-3 rounded-xl px-2 ${isMuted ? "py-3" : "py-3.5"} text-left transition-colors active:bg-navy-50 ${
+                  className={`flex min-h-11 w-full items-start gap-3 rounded-lg px-2 ${isMuted ? "py-3" : "py-3.5"} text-left transition-colors active:bg-navy-50 ${
                     isFirstCriticalResolution
-                      ? "bg-terracotta-50/80 ring-1 ring-terracotta-200/70 hover:bg-terracotta-50"
+                      ? "bg-terracotta-50/70 ring-1 ring-terracotta-200/70 hover:bg-terracotta-50"
                       : "hover:bg-navy-50/60"
                   }`}
                   aria-expanded={isExpanded}
@@ -300,7 +300,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                     </p>
                     {isFirstCriticalResolution && (
                       <p className="mt-1 text-[10.5px] font-semibold uppercase tracking-[0.11em] text-terracotta-700">
-                        Resolva isto primeiro
+                        Prioridade de hoje
                       </p>
                     )}
                     <p
@@ -321,7 +321,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
 
                 {/* Expansão: contexto + ações */}
                 {isExpanded && (
-                  <div className="mx-2 mb-2.5 overflow-hidden rounded-xl bg-navy-50/50 px-4 py-3.5">
+                  <div className="mx-2 mb-2.5 overflow-hidden rounded-lg bg-navy-50/50 px-4 py-3.5">
 
                     {/* Feedback de sucesso */}
                     {isSuccess ? (
@@ -356,16 +356,16 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                         {/* Se ignorar */}
                         {item.consequencia && (
                           <div className="mt-2.5 rounded-lg bg-terracotta-50/60 px-3 py-2">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-terracotta-500">Se ignorar</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-terracotta-600">Risco se ficar parado</p>
                             <p className="mt-0.5 text-[11.5px] leading-snug text-terracotta-800">{item.consequencia}</p>
                           </div>
                         )}
 
                         {/* Próximo passo concreto */}
                         {item.proximoPasso && (
-                          <div className="mt-2 rounded-lg bg-teal-50/60 px-3 py-2">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-teal-600">Próximo passo</p>
-                            <p className="mt-0.5 text-[11.5px] leading-snug text-teal-800">{item.proximoPasso}</p>
+                          <div className="mt-2 rounded-lg bg-sage-50/70 px-3 py-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-sage-700">Próximo passo</p>
+                            <p className="mt-0.5 text-[11.5px] leading-snug text-sage-900">{item.proximoPasso}</p>
                           </div>
                         )}
 
@@ -392,7 +392,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                               <button
                                 type="button"
                                 onClick={() => handleStartResolve(item)}
-                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-800 px-3.5 py-2 text-[12px] font-semibold text-white shadow-card transition-all hover:bg-navy-900 active:scale-[0.97]"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -405,7 +405,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                                 <button
                                   type="button"
                                   onClick={() => handleAsk(item)}
-                                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-navy-200 bg-white px-3.5 py-2 text-[12px] font-medium text-navy-700 transition-all hover:bg-navy-50 active:scale-[0.97]"
+                                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-navy-200 bg-white/[0.86] px-3.5 py-2 text-[12px] font-semibold text-navy-700 transition-all hover:bg-white active:scale-[0.97]"
                                 >
                                   Ver orientação
                                   <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -444,7 +444,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                               <button
                                 type="button"
                                 onClick={() => handleConfirmDone(item)}
-                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97]"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-800 px-3.5 py-2 text-[12px] font-semibold text-white shadow-card transition-all hover:bg-navy-900 active:scale-[0.97]"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -479,7 +479,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                                 type="button"
                                 onClick={() => handleConfirmExpiry(item)}
                                 disabled={!expiryDate}
-                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-700 px-3.5 py-2 text-[12px] font-medium text-white transition-all hover:bg-navy-800 active:scale-[0.97] disabled:opacity-40"
+                                className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-navy-800 px-3.5 py-2 text-[12px] font-semibold text-white shadow-card transition-all hover:bg-navy-900 active:scale-[0.97] disabled:opacity-40"
                               >
                                 <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -514,7 +514,7 @@ export default function GuidancePanel({ onAsk, onResolved, onPendenciaSaved, ref
                 setShowAll(true);
                 void trackEvent("guidance_panel_see_all", { total: items.length });
               }}
-              className={`flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[12px] font-medium transition-colors active:bg-navy-100 ${
+              className={`flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border py-2.5 text-[12px] font-semibold transition-colors active:bg-navy-100 ${
                 hasCriticalOverflow
                   ? "border-terracotta-200 bg-terracotta-50/70 text-terracotta-700 hover:bg-terracotta-50"
                   : "border-navy-100 bg-navy-50/40 text-navy-600 hover:bg-navy-50"

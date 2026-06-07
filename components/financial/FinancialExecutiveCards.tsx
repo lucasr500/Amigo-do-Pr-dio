@@ -10,9 +10,9 @@ type Props = {
 };
 
 const RISK_STATUS: Record<string, "good" | "warning" | "danger"> = {
-  "crítico": "danger",
-  "atenção": "warning",
-  "baixo": "good",
+  crítico: "danger",
+  atenção: "warning",
+  baixo: "good",
 };
 
 export default function FinancialExecutiveCards({
@@ -25,24 +25,27 @@ export default function FinancialExecutiveCards({
   return (
     <div className="grid grid-cols-2 gap-2 px-4 sm:grid-cols-4">
       <MetricCard
-        label="Saldo estimado"
+        label="Caixa previsto"
         value={formatMoneyCompact(estimatedBalance)}
+        detail="saldo local"
         status={estimatedBalance < 0 ? "danger" : "neutral"}
       />
       <MetricCard
-        label="Resultado do mês"
+        label="Resultado"
         value={`${resultado >= 0 ? "+" : ""}${formatMoneyCompact(resultado)}`}
+        detail="receitas - despesas"
         status={resultado < 0 ? "danger" : "good"}
       />
       <MetricCard
-        label="Contas próximas"
-        value={totalUpcoming > 0 ? `${totalUpcoming} conta${totalUpcoming > 1 ? "s" : ""}` : "—"}
-        detail={next3DaysCount > 0 ? `${next3DaysCount} em 3 dias` : undefined}
+        label="Próximos prazos"
+        value={totalUpcoming > 0 ? `${totalUpcoming} conta${totalUpcoming > 1 ? "s" : ""}` : "Tudo certo"}
+        detail={next3DaysCount > 0 ? `${next3DaysCount} nos próximos 3 dias` : "sem urgência"}
         status={next3DaysCount > 0 ? "danger" : totalUpcoming > 0 ? "warning" : "neutral"}
       />
       <MetricCard
         label="Risco de caixa"
         value={riskLevel}
+        detail="visão executiva"
         status={RISK_STATUS[riskLevel] ?? "neutral"}
       />
     </div>

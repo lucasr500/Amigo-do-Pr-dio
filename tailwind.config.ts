@@ -75,11 +75,11 @@ const config: Config = {
         },
       },
       boxShadow: {
-        card:       "0 1px 3px rgba(35,75,99,0.06), 0 1px 2px rgba(35,75,99,0.04)",
-        "card-md":  "0 2px 8px rgba(35,75,99,0.08), 0 1px 3px rgba(35,75,99,0.05)",
-        "card-hover":"0 4px 16px rgba(35,75,99,0.10), 0 1px 4px rgba(35,75,99,0.06)",
-        nav:        "0 -1px 0 rgba(35,75,99,0.06)",
-        elevated:   "0 8px 32px rgba(35,75,99,0.12), 0 2px 8px rgba(35,75,99,0.06)",
+        card:       "0 1px 2px rgba(12,29,39,0.045), 0 0 0 1px rgba(35,75,99,0.015)",
+        "card-md":  "0 6px 18px -14px rgba(12,29,39,0.42), 0 1px 2px rgba(12,29,39,0.045)",
+        "card-hover":"0 12px 28px -20px rgba(12,29,39,0.46), 0 1px 3px rgba(12,29,39,0.055)",
+        nav:        "0 -1px 0 rgba(35,75,99,0.07), 0 -8px 24px -22px rgba(12,29,39,0.35)",
+        elevated:   "0 18px 48px -32px rgba(12,29,39,0.54), 0 2px 8px rgba(12,29,39,0.08)",
       },
       fontFamily: {
         display: ["var(--font-fraunces)", "Georgia", "serif"],

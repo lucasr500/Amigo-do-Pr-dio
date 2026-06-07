@@ -58,8 +58,8 @@ function FlexDateInput({ value, onChange }: FlexDateInputProps) {
             onClick={() => handleModeSwitch(key)}
             className={`rounded-full px-2.5 py-0.5 text-[10.5px] font-medium ring-1 transition-all active:scale-95 ${
               mode === key
-                ? "bg-navy-700 text-white ring-navy-700"
-                : "bg-white text-navy-500 ring-navy-150 hover:ring-navy-300"
+                ? "bg-navy-800 text-white ring-navy-800"
+                : "bg-white text-navy-500 ring-navy-100 hover:ring-navy-300"
             }`}
           >
             {label}
@@ -71,7 +71,7 @@ function FlexDateInput({ value, onChange }: FlexDateInputProps) {
           type="month"
           value={monthValue}
           onChange={(e) => onChange(e.target.value ? `${e.target.value}-01` : "")}
-          className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+          className="min-h-10 w-full rounded-lg border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
         />
       )}
       {mode === "exact" && (
@@ -79,11 +79,11 @@ function FlexDateInput({ value, onChange }: FlexDateInputProps) {
           type="date"
           value={exactValue}
           onChange={(e) => onChange(e.target.value || "")}
-          className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+          className="min-h-10 w-full rounded-lg border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
         />
       )}
       {mode === "unknown" && (
-        <p className="rounded-xl border border-navy-100/60 bg-navy-50/40 px-3 py-2.5 text-[11.5px] text-navy-500">
+        <p className="rounded-lg border border-navy-100/60 bg-navy-50/40 px-3 py-2.5 text-[11.5px] text-navy-500">
           Sem data registrada — o app não vai incluir este campo no calendário.
         </p>
       )}
@@ -398,9 +398,9 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   // ── Collapsed ──────────────────────────────────────────────────────────────
   if (!expanded) {
     const ctaLabel =
-      essentialCount === 0 ? "Registrar →"
-      : essentialCount < 3 ? "Completar →"
-      : "Atualizar →";
+      essentialCount === 0 ? "Registrar"
+      : essentialCount < 3 ? "Completar"
+      : "Atualizar";
 
     const collapsedSubtitle =
       essentialCount === 0
@@ -420,7 +420,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
             setShowManutencoes(essentialCount >= 3 || manutencaoFilled > 0);
             logInteraction("memoria-panel-aberto", "");
           }}
-          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
+          className="flex w-full items-center gap-2.5 rounded-lg border border-navy-100/80 bg-white/[0.82] px-4 py-3.5 text-left shadow-card transition-colors hover:bg-white active:bg-navy-50"
         >
           <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50" aria-hidden="true">
             <svg className="h-3.5 w-3.5 text-navy-500" viewBox="0 0 14 14" fill="none">
@@ -429,8 +429,8 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
             </svg>
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-navy-800">
-              Vencimentos e manutenções
+            <p className="text-[13px] font-semibold text-navy-800">
+              Memória operacional
             </p>
             <p className="text-[11.5px] text-navy-400">
               {collapsedSubtitle}
@@ -447,10 +447,10 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
+      <div className="rounded-lg border border-navy-100/80 bg-white/[0.88] p-4 shadow-card-md">
         <div className="mb-4 flex items-center justify-between">
           <p className="text-[13px] font-semibold text-navy-800">
-            Vencimentos e manutenções
+            Memória operacional
           </p>
           <button
             type="button"
@@ -463,9 +463,9 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
 
         {/* Nota introdutória — visível apenas quando nenhum essencial foi preenchido */}
         {essentialCount === 0 && (
-          <div className="mb-4 rounded-xl bg-navy-50/60 px-3.5 py-3">
+          <div className="mb-4 rounded-lg border border-navy-100/70 bg-navy-50/60 px-3.5 py-3">
             <p className="text-[12px] leading-relaxed text-navy-600">
-              Comece pelas três datas mais importantes — AVCB, seguro e mandato do síndico. Não sabe uma data agora? Use &ldquo;lembrar depois&rdquo; no campo e preencha quando encontrar o documento. As manutenções podem ser adicionadas depois.
+              Comece pelas três datas mais importantes: AVCB, seguro e mandato do síndico. Se ainda não souber uma data, salve um lembrete e preencha quando encontrar o documento.
             </p>
           </div>
         )}
@@ -564,7 +564,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                               value={draft[key] as string ?? ""}
                               onChange={(e) => set(key, e.target.value || undefined)}
                               placeholder={placeholder}
-                              className="min-h-10 w-full rounded-xl border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
+                              className="min-h-10 w-full rounded-lg border border-navy-100 bg-cream-50/50 px-3 py-2 text-[13px] text-navy-800 placeholder-navy-300 focus:border-navy-300 focus:outline-none focus:ring-1 focus:ring-navy-100"
                             />
                           </>
                         )}
@@ -580,7 +580,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
                                 : "text-navy-400 hover:text-navy-600"
                             }`}
                           >
-                            {savedMemoriaIds.has(key) ? "Lembrete salvo ✓" : "Não sei agora — lembrar depois"}
+                            {savedMemoriaIds.has(key) ? "Lembrete salvo" : "Não sei agora · lembrar depois"}
                           </button>
                         )}
                       </div>
@@ -596,7 +596,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
         <div className="mt-2 border-t border-navy-50 pt-3">
           {saved ? (
             <div className="animate-fade-in">
-              <p className="mb-1 text-[12.5px] font-semibold text-navy-700">✓ Dados atualizados</p>
+              <p className="mb-1 text-[12.5px] font-semibold text-navy-700">Dados atualizados</p>
               {savedSummary.length > 0 && (
                 <div className="flex flex-col gap-0.5">
                   {savedSummary.map((line) => (
@@ -610,7 +610,7 @@ export default function MemoriaPanel({ onSaved, autoExpand }: Props) {
               <button
                 type="button"
                 onClick={salvar}
-                className="min-h-10 rounded-xl bg-navy-700 px-5 py-2 text-[13px] font-semibold text-white transition-all hover:bg-navy-800 active:scale-[0.98]"
+                className="min-h-10 rounded-full bg-navy-800 px-5 py-2 text-[13px] font-semibold text-white shadow-card transition-all hover:bg-navy-900 active:scale-[0.98]"
               >
                 Salvar
               </button>

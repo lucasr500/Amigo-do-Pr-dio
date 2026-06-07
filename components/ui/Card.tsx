@@ -26,7 +26,7 @@ export default function Card<T extends ElementType = "div">({
   const Tag = (as ?? "div") as ElementType;
   return (
     <Tag
-      className={`rounded-[18px] border border-navy-100/70 bg-white shadow-card ${PADDING[padding]} ${className}`}
+      className={`rounded-lg border border-navy-100/70 bg-white/[0.92] shadow-card ${PADDING[padding]} ${className}`}
       {...rest}
     >
       {children}

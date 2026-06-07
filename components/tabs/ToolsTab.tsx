@@ -49,11 +49,11 @@ const TOOL_CATEGORY_ICONS: Record<string, React.ReactNode> = {
 };
 
 const TOOL_CATEGORIES: Array<{ id: ToolGroup; title: string; description: string }> = [
-  { id: "rotina",      title: "Rotina do síndico", description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
-  { id: "comunicados", title: "Comunicados",        description: "Gere avisos formais para moradores em segundos." },
-  { id: "simuladores", title: "Simuladores",        description: "Estime multas, juros e reajuste de cota condominial." },
+  { id: "rotina",      title: "Hoje e rotina",      description: "Registre ocorrências e acompanhe próximos passos do dia a dia." },
+  { id: "comunicados", title: "Comunicados",        description: "Prepare mensagens formais com tom claro e institucional." },
+  { id: "simuladores", title: "Financeiro rápido",  description: "Estime multas, juros e reajuste de cota condominial." },
   { id: "checklists",  title: "Checklists",         description: "Conferência guiada para assembleias, obras e manutenção." },
-  { id: "temas",       title: "Explorar por tema",  description: "Orientações práticas organizadas por tema de gestão." },
+  { id: "temas",       title: "Inteligência",       description: "Orientações práticas organizadas por tema de gestão." },
 ];
 
 type Props = {
@@ -89,14 +89,14 @@ export default function ToolsTab({
       {/* Cabeçalho */}
       <div className="px-5 pb-3 pt-1 sm:px-6">
         <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
-          Ferramentas
+          Ações
         </p>
         <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-          Ferramentas do síndico
+          Central de ações
         </p>
         {activeToolGroup === null && (
           <p className="mt-1.5 text-[13px] leading-relaxed text-navy-500">
-            Registre ocorrências, gere comunicados, faça simulações e consulte checklists.
+            Rotina, comunicados, simulações e checklists em uma camada operacional.
           </p>
         )}
       </div>
@@ -112,7 +112,7 @@ export default function ToolsTab({
             <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M10 4L6 8l4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="text-[11.5px] font-medium">Voltar para ferramentas</span>
+            <span className="text-[11.5px] font-medium">Voltar para ações</span>
           </button>
         </div>
       )}
@@ -126,9 +126,9 @@ export default function ToolsTab({
                 key={cat.id}
                 type="button"
                 onClick={() => onSetActiveToolGroup(cat.id)}
-                className="flex items-center gap-4 rounded-xl border border-navy-100 bg-white px-4 py-4 text-left shadow-sm transition-all hover:border-navy-200 hover:shadow active:scale-[0.98]"
+                className="flex items-center gap-4 rounded-lg border border-navy-100/80 bg-white/[0.82] px-4 py-4 text-left shadow-card transition-all hover:border-navy-200 hover:bg-white active:scale-[0.99]"
               >
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-navy-50" aria-hidden="true">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50" aria-hidden="true">
                   {TOOL_CATEGORY_ICONS[cat.id]}
                 </span>
                 <div className="min-w-0 flex-1">

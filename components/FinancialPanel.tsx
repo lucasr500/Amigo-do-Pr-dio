@@ -242,26 +242,26 @@ export default function FinancialPanel({ onSaved }: Props) {
 
   return (
     <section className="px-5 pb-3 pt-2 sm:px-6">
-      <div className="rounded-[18px] border border-navy-100 bg-white shadow-card">
+      <div className="rounded-lg border border-navy-100/80 bg-white/[0.88] shadow-card">
 
         {/* ── Cabeçalho ── */}
         <div className="flex items-start justify-between gap-3 px-4 pb-3 pt-4">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-navy-300">
-              Financeiro local
+              Financeiro
             </p>
             <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">
               {insight.subtitle}
             </h2>
             <p className="mt-0.5 text-[11px] leading-relaxed text-navy-400">
-              Visão operacional · dados neste dispositivo
+              Saúde financeira · dados neste dispositivo
             </p>
           </div>
           <input
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value || currentMonthKey())}
-            className="max-w-[132px] rounded-xl border border-navy-100 bg-cream-50/50 px-2.5 py-2 text-[12px] text-navy-700"
+            className="max-w-[132px] rounded-lg border border-navy-100 bg-cream-50/50 px-2.5 py-2 text-[12px] text-navy-700"
           />
         </div>
 
@@ -275,7 +275,7 @@ export default function FinancialPanel({ onSaved }: Props) {
 
         {/* ── Frase de insight + ação ── */}
         {hasData && insight.nextAction && (
-          <div className="mx-4 mt-3 rounded-[12px] bg-navy-50/40 px-3 py-2.5">
+          <div className="mx-4 mt-3 rounded-lg border border-navy-100/70 bg-navy-50/45 px-3 py-2.5">
             <p className="text-[11.5px] leading-relaxed text-navy-600">
               {insight.nextAction}
             </p>
@@ -298,28 +298,28 @@ export default function FinancialPanel({ onSaved }: Props) {
 
         {/* ── Comparação MoM ── */}
         {mom.hasPreviousMonth && (
-          <div className="mx-4 mt-3 rounded-[12px] border border-navy-100 bg-white px-3 py-2.5">
+          <div className="mx-4 mt-3 rounded-lg border border-navy-100 bg-white/[0.78] px-3 py-2.5">
             <p className="text-[11.5px] font-semibold text-navy-700">
               vs. {mom.previousMonth}
             </p>
             <div className="mt-1.5 grid grid-cols-3 gap-1">
               <div>
                 <p className="text-[10px] text-navy-400">Receitas</p>
-                <p className={`text-[11.5px] font-medium ${mom.direction.revenue === "up" ? "text-teal-700" : mom.direction.revenue === "down" ? "text-terracotta-700" : "text-navy-600"}`}>
+                <p className={`text-[11.5px] font-medium ${mom.direction.revenue === "up" ? "text-sage-700" : mom.direction.revenue === "down" ? "text-terracotta-700" : "text-navy-600"}`}>
                   {mom.revenueDelta >= 0 ? "+" : ""}{formatMoneyCompact(mom.revenueDelta)}
                   {mom.revenueDeltaPct !== undefined && ` (${mom.revenueDeltaPct >= 0 ? "+" : ""}${mom.revenueDeltaPct}%)`}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] text-navy-400">Despesas</p>
-                <p className={`text-[11.5px] font-medium ${mom.direction.expenses === "up" ? "text-terracotta-700" : mom.direction.expenses === "down" ? "text-teal-700" : "text-navy-600"}`}>
+                <p className={`text-[11.5px] font-medium ${mom.direction.expenses === "up" ? "text-terracotta-700" : mom.direction.expenses === "down" ? "text-sage-700" : "text-navy-600"}`}>
                   {mom.expenseDelta >= 0 ? "+" : ""}{formatMoneyCompact(mom.expenseDelta)}
                   {mom.expenseDeltaPct !== undefined && ` (${mom.expenseDeltaPct >= 0 ? "+" : ""}${mom.expenseDeltaPct}%)`}
                 </p>
               </div>
               <div>
                 <p className="text-[10px] text-navy-400">Saldo</p>
-                <p className={`text-[11.5px] font-medium ${mom.direction.balance === "up" ? "text-teal-700" : mom.direction.balance === "down" ? "text-terracotta-700" : "text-navy-600"}`}>
+                <p className={`text-[11.5px] font-medium ${mom.direction.balance === "up" ? "text-sage-700" : mom.direction.balance === "down" ? "text-terracotta-700" : "text-navy-600"}`}>
                   {mom.balanceDelta >= 0 ? "+" : ""}{formatMoneyCompact(mom.balanceDelta)}
                 </p>
               </div>
@@ -329,7 +329,7 @@ export default function FinancialPanel({ onSaved }: Props) {
 
         {/* ── Contas próximas ── */}
         {totalUpcoming > 0 && (
-          <div className="mx-4 mt-3 rounded-[12px] border border-navy-100 bg-white px-3 py-2.5">
+          <div className="mx-4 mt-3 rounded-lg border border-navy-100 bg-white/[0.78] px-3 py-2.5">
             <p className="mb-1.5 text-[11.5px] font-semibold text-navy-700">Próximas contas</p>
             {windows.next3Days.length > 0 && (
               <div className="mb-1">
@@ -388,12 +388,12 @@ export default function FinancialPanel({ onSaved }: Props) {
         )}
 
         {/* ── Visão executiva copiável ── */}
-        <div className="mx-4 mt-3 rounded-[14px] border border-navy-100 bg-cream-50/40 px-3 py-3">
+        <div className="mx-4 mt-3 rounded-lg border border-navy-100 bg-cream-50/45 px-3 py-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[12px] font-semibold text-navy-800">Visão executiva copiável</p>
+              <p className="text-[12px] font-semibold text-navy-800">Resumo executivo copiável</p>
               <p className="mt-0.5 text-[10.5px] leading-relaxed text-navy-400">
-                Resumo mensal para pasta, administradora ou WhatsApp.
+                Texto curto para administradora, conselho ou prestação de contas.
               </p>
             </div>
             <button
@@ -409,13 +409,13 @@ export default function FinancialPanel({ onSaved }: Props) {
         {/* ── Campos de resumo ── */}
         <div className="mt-4 grid gap-3 px-4 sm:grid-cols-3">
           <FormField label="Saldo estimado">
-            <input value={balance} onChange={(e) => setBalance(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
+            <input value={balance} onChange={(e) => setBalance(e.target.value)} inputMode="decimal" className="w-full rounded-lg border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
           </FormField>
           <FormField label="Inadimplência (%)">
-            <input value={delinquency} onChange={(e) => setDelinquency(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
+            <input value={delinquency} onChange={(e) => setDelinquency(e.target.value)} inputMode="decimal" className="w-full rounded-lg border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
           </FormField>
           <FormField label="Reserva com liquidez">
-            <input value={reserve} onChange={(e) => setReserve(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
+            <input value={reserve} onChange={(e) => setReserve(e.target.value)} inputMode="decimal" className="w-full rounded-lg border border-navy-100 bg-cream-50/40 px-3 py-2 text-[13px] text-navy-800 focus:border-navy-300 focus:outline-none focus:ring-2 focus:ring-navy-300/20" />
           </FormField>
         </div>
         <div className="px-4 pt-2 pb-1">
@@ -425,7 +425,7 @@ export default function FinancialPanel({ onSaved }: Props) {
         </div>
 
         {/* ── Novo lançamento ── */}
-        <div className="mx-4 mt-4 rounded-[14px] border border-navy-100 bg-navy-50/30 p-3">
+        <div className="mx-4 mt-4 rounded-lg border border-navy-100 bg-navy-50/30 p-3">
           <div className="flex items-center justify-between gap-2">
             <p className="text-[12.5px] font-semibold text-navy-800">
               {editingEntryId ? "Editar lançamento" : "Lançamentos"}
@@ -440,7 +440,7 @@ export default function FinancialPanel({ onSaved }: Props) {
                 <button
                   type="button"
                   onClick={() => { setShowForm(!showForm); clearEntryForm(); }}
-                  className={`rounded-full px-3 py-1 text-[11.5px] font-medium ${showForm ? "bg-navy-100 text-navy-700" : "bg-navy-700 text-white hover:bg-navy-800"}`}
+                  className={`rounded-full px-3 py-1 text-[11.5px] font-semibold ${showForm ? "bg-navy-100 text-navy-700" : "bg-navy-800 text-white shadow-card hover:bg-navy-900"}`}
                 >
                   {showForm ? "Fechar" : "+ Novo"}
                 </button>
@@ -450,17 +450,17 @@ export default function FinancialPanel({ onSaved }: Props) {
 
           {(showForm || editingEntryId) && (
             <div className="mt-3 grid gap-2 sm:grid-cols-5">
-              <select value={entryType} onChange={(e) => setEntryType(e.target.value as FinancialEntryType)} className="rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700">
+              <select value={entryType} onChange={(e) => setEntryType(e.target.value as FinancialEntryType)} className="rounded-lg border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700">
                 {Object.entries(ENTRY_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
-              <input value={entryTitle} onChange={(e) => setEntryTitle(e.target.value)} placeholder="Título" className="rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700 sm:col-span-2" />
-              <input value={entryAmount} onChange={(e) => setEntryAmount(e.target.value)} inputMode="decimal" placeholder="Valor" className="rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700" />
-              <input type="date" value={entryDueDate} onChange={(e) => setEntryDueDate(e.target.value)} className="rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700" />
-              <select value={entryCategory} onChange={(e) => setEntryCategory(e.target.value)} className="rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700 sm:col-span-4">
+              <input value={entryTitle} onChange={(e) => setEntryTitle(e.target.value)} placeholder="Título" className="rounded-lg border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700 sm:col-span-2" />
+              <input value={entryAmount} onChange={(e) => setEntryAmount(e.target.value)} inputMode="decimal" placeholder="Valor" className="rounded-lg border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700" />
+              <input type="date" value={entryDueDate} onChange={(e) => setEntryDueDate(e.target.value)} className="rounded-lg border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700" />
+              <select value={entryCategory} onChange={(e) => setEntryCategory(e.target.value)} className="rounded-lg border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-700 sm:col-span-4">
                 <option value="">Categoria (opcional)</option>
                 {FINANCIAL_CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
-              <button type="button" onClick={saveEntry} className="rounded-xl bg-navy-700 px-3 py-2 text-[12px] font-semibold text-white hover:bg-navy-800">
+              <button type="button" onClick={saveEntry} className="rounded-lg bg-navy-800 px-3 py-2 text-[12px] font-semibold text-white shadow-card hover:bg-navy-900">
                 {editingEntryId ? "Salvar" : "Adicionar"}
               </button>
             </div>
@@ -468,13 +468,13 @@ export default function FinancialPanel({ onSaved }: Props) {
         </div>
 
         {/* ── Entrada rápida ── */}
-        <div className="mx-4 mt-3 rounded-[14px] border border-navy-100 bg-white p-3">
+        <div className="mx-4 mt-3 rounded-lg border border-navy-100 bg-white/[0.78] p-3">
           <button
             type="button"
             onClick={() => setShowQuickText(!showQuickText)}
             className="flex w-full items-center justify-between text-left"
           >
-            <p className="text-[12px] font-semibold text-navy-800">Entrada rápida por texto</p>
+            <p className="text-[12px] font-semibold text-navy-800">Entrada rápida</p>
             <span className="text-[11px] text-navy-400">{showQuickText ? "Fechar" : "Abrir"}</span>
           </button>
           {showQuickText && (
@@ -484,7 +484,7 @@ export default function FinancialPanel({ onSaved }: Props) {
                 onChange={(e) => setQuickText(e.target.value)}
                 placeholder="Ex: saldo 42000; limpeza 1200; elevador 980; água 740 vence 10/06; inadimplência 8%; investido 30000"
                 rows={3}
-                className="mt-2 w-full resize-none rounded-xl border border-navy-100 bg-cream-50/30 px-3 py-2 text-[12.5px] text-navy-800 placeholder:text-navy-300"
+                className="mt-2 w-full resize-none rounded-lg border border-navy-100 bg-cream-50/30 px-3 py-2 text-[12.5px] text-navy-800 placeholder:text-navy-300"
               />
               <div className="mt-2 flex gap-2">
                 <button type="button" onClick={previewQuickText} className="rounded-full border border-navy-100 px-3 py-1.5 text-[11.5px] font-medium text-navy-600 hover:bg-navy-50">
@@ -499,7 +499,7 @@ export default function FinancialPanel({ onSaved }: Props) {
               {parsedLines.length > 0 && (
                 <div className="mt-3 space-y-1.5">
                   {parsedLines.map((line) => (
-                    <div key={line.raw} className={`rounded-lg px-2.5 py-1.5 text-[11px] ${line.warning ? "bg-amber-50 text-amber-700" : "bg-teal-50 text-teal-800"}`}>
+                    <div key={line.raw} className={`rounded-lg px-2.5 py-1.5 text-[11px] ${line.warning ? "bg-amber-50 text-amber-700" : "bg-sage-50 text-sage-800"}`}>
                       {line.warning ? line.warning : `Pronto: ${line.entry?.title ?? "campo do resumo"}`}
                     </div>
                   ))}
@@ -518,16 +518,16 @@ export default function FinancialPanel({ onSaved }: Props) {
           <FinancialFilters value={activeFilter} onChange={setActiveFilter} />
 
           {actionFeedback && (
-            <div className="rounded-[10px] bg-teal-50 px-3 py-2 text-[11.5px] text-teal-800">
+            <div className="rounded-lg bg-sage-50 px-3 py-2 text-[11.5px] text-sage-800">
               {actionFeedback}
             </div>
           )}
 
           {activeEntries.length === 0 ? (
             <EmptyState
-              title={entries.length === 0 ? "Nenhum lançamento financeiro." : "Nenhum item neste filtro."}
-              description={entries.length === 0 ? "Comece pelo saldo estimado ou cole um resumo simples do mês." : "Troque o filtro ou registre um novo lançamento."}
-              actionLabel={entries.length === 0 ? "Preencher primeiro lançamento" : undefined}
+              title={entries.length === 0 ? "Nenhum lançamento financeiro ainda" : "Nenhum item neste filtro"}
+              description={entries.length === 0 ? "Comece pelo saldo estimado ou registre as principais receitas e despesas do mês." : "Troque o filtro ou registre um novo lançamento."}
+              actionLabel={entries.length === 0 ? "Adicionar lançamento" : undefined}
               onAction={entries.length === 0 ? () => { setEntryTitle("Cota condominial"); setShowForm(true); } : undefined}
             />
           ) : (
@@ -538,7 +538,7 @@ export default function FinancialPanel({ onSaved }: Props) {
                   isFinancialEntryOverdue(entry)
                     ? "border-terracotta-200 bg-terracotta-50/40"
                     : entry.status === "pago"
-                      ? "border-teal-100 bg-teal-50/30"
+                      ? "border-sage-100 bg-sage-50/40"
                       : "border-navy-100 bg-white"
                 }`}
               >
@@ -554,12 +554,12 @@ export default function FinancialPanel({ onSaved }: Props) {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-[12px] font-semibold text-navy-800">{formatMoney(entry.amount)}</p>
-                    {entry.status === "pago" && <p className="text-[10.5px] text-teal-700">Paga</p>}
+                    {entry.status === "pago" && <p className="text-[10.5px] text-sage-700">Paga</p>}
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-navy-50 pt-2">
                   {entry.type === "conta_a_pagar" && entry.status !== "pago" && (
-                    <button type="button" onClick={() => { markFinancialEntryPaid(month, entry.id); reload(); onSaved?.(); }} className="text-[11px] font-medium text-teal-700 hover:text-teal-800">
+                    <button type="button" onClick={() => { markFinancialEntryPaid(month, entry.id); reload(); onSaved?.(); }} className="text-[11px] font-medium text-sage-700 hover:text-sage-800">
                       Marcar paga
                     </button>
                   )}

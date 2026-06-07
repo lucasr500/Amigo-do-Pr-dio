@@ -14,10 +14,10 @@ export type MetricCardProps = {
 };
 
 const STATUS_CLASS: Record<MetricStatus, string> = {
-  neutral: "bg-navy-50/60 text-navy-800 ring-navy-100",
-  good: "bg-teal-50/70 text-teal-700 ring-teal-100",
-  warning: "bg-amber-50/70 text-amber-700 ring-amber-100",
-  danger: "bg-terracotta-50/70 text-terracotta-700 ring-terracotta-100",
+  neutral: "bg-white/90 text-navy-800 ring-navy-100/80",
+  good: "bg-sage-50/80 text-sage-800 ring-sage-100",
+  warning: "bg-amber-50/70 text-amber-800 ring-amber-100",
+  danger: "bg-terracotta-50/70 text-terracotta-800 ring-terracotta-100",
 };
 
 export default function MetricCard({
@@ -35,7 +35,7 @@ export default function MetricCard({
       <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.10em] text-navy-400">
         {label}
       </span>
-      <span className="block text-[14px] font-bold leading-none">
+      <span className="block text-[15px] font-semibold leading-none">
         {value}
       </span>
       {detail && (
@@ -47,7 +47,7 @@ export default function MetricCard({
     </>
   );
 
-  const baseClass = `min-h-[70px] rounded-[14px] px-3 py-2.5 text-left ring-1 transition-all ${STATUS_CLASS[status]} ${className}`;
+  const baseClass = `min-h-[74px] rounded-lg px-3.5 py-3 text-left ring-1 shadow-card transition-all ${STATUS_CLASS[status]} ${className}`;
 
   if (onClick) {
     return (
@@ -55,7 +55,7 @@ export default function MetricCard({
         type="button"
         onClick={onClick}
         aria-label={actionLabel ?? `${label}: ${value}${detail ? `, ${detail}` : ""}`}
-        className={`${baseClass} active:scale-[0.98] hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-navy-300/40`}
+        className={`${baseClass} active:scale-[0.99] hover:-translate-y-px hover:bg-white focus:outline-none focus:ring-2 focus:ring-navy-300/40`}
       >
         {content}
       </button>

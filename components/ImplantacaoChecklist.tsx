@@ -262,7 +262,7 @@ export default function ImplantacaoChecklist({ onNavigate }: Props) {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6">
-      <div className="rounded-[22px] border border-navy-100/80 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.28)]">
+      <div className="rounded-[22px] border border-navy-100/80 bg-white/[0.92] p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.28)]">
 
         {/* Cabeçalho */}
         <div className="mb-4 flex items-center justify-between">

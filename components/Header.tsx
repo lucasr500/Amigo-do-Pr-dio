@@ -39,25 +39,27 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
     };
   }, []);
 
-  // ── Saudação premium — tela Início ──────────────────────────────────────────
   if (activeTab === "inicio") {
     return (
       <header
-        className="px-5 pb-5 pt-[calc(env(safe-area-inset-top,0px)+1.125rem)] sm:px-6"
+        className="px-5 pb-4 pt-[calc(env(safe-area-inset-top,0px)+1.125rem)] sm:px-6"
         aria-label="Cabeçalho"
       >
         <div className="flex items-start justify-between animate-fade-in">
           <div className="min-w-0 flex-1">
-            <h1 className="font-display text-[28px] font-bold leading-tight text-navy-800">
-              {getGreeting()}, Síndico!
+            <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-400">
+              Hoje no condomínio
+            </p>
+            <h1 className="mt-1 font-display text-[27px] font-semibold leading-tight text-navy-800">
+              {getGreeting()}, síndico
             </h1>
-            <p className="mt-1.5 max-w-[280px] truncate text-[13px] leading-relaxed text-navy-500">
-              {nomeCondominio ?? "Aqui está o que acontece no seu condomínio."}
+            <p className="mt-1.5 max-w-[310px] truncate text-[13px] leading-relaxed text-navy-500">
+              {nomeCondominio ?? "Acompanhe o que merece atenção agora."}
             </p>
             {!isOnline && (
-              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10.5px] font-medium text-amber-700">
+              <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10.5px] font-semibold text-amber-800">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                Sem conexão — dados locais
+                Dados locais
               </span>
             )}
           </div>
@@ -66,7 +68,7 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
             type="button"
             aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificações não lidas` : "Notificações"}
             onClick={onNotificationsClick}
-            className="relative ml-3 mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-navy-300 transition-colors hover:bg-navy-50 hover:text-navy-500 active:scale-[0.96]"
+            className="relative ml-3 mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-navy-100/70 bg-white/[0.68] text-navy-400 shadow-card transition-colors hover:bg-white hover:text-navy-700 active:scale-[0.97]"
           >
             <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" aria-hidden="true">
               <path
@@ -93,12 +95,11 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
     );
   }
 
-  // ── Marca compacta — demais telas ────────────────────────────────────────────
   const TAB_CONTEXT: Partial<Record<NonNullable<typeof activeTab>, { title: string; sub: string }>> = {
-    agenda:     { title: "Agenda",      sub: "Manutenções e compromissos do prédio" },
-    assistente: { title: "Assistente",  sub: "Orientações práticas para o síndico" },
-    ferramentas:{ title: "Ações",       sub: "Comunicados, simuladores e checklists" },
-    condominio: { title: "Meu prédio",  sub: nomeCondominio ?? "Perfil, dados e configurações" },
+    agenda: { title: "Gestão", sub: "Agenda, prazos e rotina do prédio" },
+    assistente: { title: "Inteligência", sub: "Orientação prática para decidir melhor" },
+    ferramentas: { title: "Ações", sub: "Comunicados, registros, checklists e simulações" },
+    condominio: { title: "Meu prédio", sub: nomeCondominio ?? "Financeiro, documentos, memória e backup" },
   };
 
   const tabCtx = activeTab ? TAB_CONTEXT[activeTab] : undefined;
@@ -110,40 +111,20 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
     >
       <div className="flex items-center justify-between gap-3 animate-fade-in">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <BrandMark className="h-9 w-9 flex-shrink-0 shadow-[0_1px_2px_rgba(12,29,39,0.08),0_4px_12px_-6px_rgba(12,29,39,0.30)]" />
+          <BrandMark className="h-9 w-9 flex-shrink-0 shadow-card" />
           <div className="min-w-0 flex flex-col leading-tight">
-            {tabCtx ? (
-              <>
-                <h1 className="font-display text-[17px] font-semibold text-navy-800">
-                  {tabCtx.title}
-                </h1>
-                {!isOnline ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                    Offline
-                  </span>
-                ) : (
-                  <p className="max-w-[220px] truncate text-[11px] text-navy-400">
-                    {tabCtx.sub}
-                  </p>
-                )}
-              </>
+            <h1 className="font-display text-[18px] font-semibold text-navy-800">
+              {tabCtx?.title ?? "Amigo do Prédio"}
+            </h1>
+            {!isOnline ? (
+              <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                Dados locais
+              </span>
             ) : (
-              <>
-                <h1 className="font-display text-[17px] font-semibold text-navy-800">
-                  Amigo do Prédio
-                </h1>
-                {!isOnline ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                    Offline
-                  </span>
-                ) : (
-                  <p className="max-w-[200px] truncate text-[11px] text-navy-400">
-                    {nomeCondominio ?? "Central operacional"}
-                  </p>
-                )}
-              </>
+              <p className="max-w-[250px] truncate text-[11.5px] text-navy-400">
+                {tabCtx?.sub ?? nomeCondominio ?? "Central operacional"}
+              </p>
             )}
           </div>
         </div>

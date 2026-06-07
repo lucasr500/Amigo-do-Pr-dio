@@ -117,13 +117,13 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
 
   return (
     <section className="px-5 pb-3 sm:px-6">
-      <div className="overflow-hidden rounded-[18px] border border-navy-100/70 bg-white shadow-card">
+      <div className="overflow-hidden rounded-lg border border-navy-100/70 bg-white/[0.86] shadow-card">
 
         {/* Header row — tappable */}
         <button
           type="button"
           onClick={onNavigate}
-          className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors hover:bg-gray-50/60 active:scale-[0.99]"
+          className="flex w-full items-center gap-3 px-4 py-3.5 transition-colors hover:bg-white active:scale-[0.99]"
         >
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-navy-50">
             <svg
@@ -156,7 +156,7 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
         </button>
 
         {/* Week strip */}
-        <div className="border-t border-navy-50 px-2 pb-3 pt-2.5">
+        <div className="border-t border-navy-100/60 px-2 pb-3 pt-2.5">
           <div className="grid grid-cols-7">
             {WEEK_LABELS.map((label, i) => (
               <div
@@ -185,7 +185,7 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
                   </div>
                   <div
                     className={`h-[5px] w-[5px] rounded-full transition-opacity ${
-                      hasEvent ? "bg-green-500 opacity-100" : "opacity-0"
+                      hasEvent ? "bg-sage-500 opacity-100" : "opacity-0"
                     }`}
                     aria-hidden="true"
                   />
@@ -197,7 +197,7 @@ export default function HomeAgendaCard({ refreshKey, onNavigate }: Props) {
 
         {/* Upcoming events list — only when events exist */}
         {hydrated && upcoming.length > 0 && (
-          <div className="border-t border-navy-50 pb-1">
+          <div className="border-t border-navy-100/60 pb-1">
             {upcoming.map((event, idx) => (
               <div key={event.id}>
                 {idx > 0 && <div className="mx-4 border-t border-navy-50/80" />}

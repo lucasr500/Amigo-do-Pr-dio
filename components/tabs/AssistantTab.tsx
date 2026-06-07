@@ -129,13 +129,13 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
       {!submitted && !isLoading && (
         <div className="px-5 pb-2 pt-1 sm:px-6">
           <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">
-            Assistente
+            Inteligência
           </p>
           <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
-            Orientações práticas
+            Orientação do síndico
           </p>
           <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
-            Descreva a situação. O app organiza o próximo passo com clareza.
+            Faça uma pergunta e receba um próximo passo claro, com contexto do prédio.
           </p>
         </div>
       )}
@@ -176,10 +176,10 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
                   key={card.id}
                   type="button"
                   onClick={() => card.actionLabel && executeQuery(card.title)}
-                  className={`w-full rounded-2xl border px-4 py-3 text-left transition-colors ${
+                  className={`w-full rounded-lg border px-4 py-3 text-left shadow-card transition-colors ${
                     card.type === "alert"
-                      ? "border-amber-100 bg-amber-50/80 hover:bg-amber-50"
-                      : "border-navy-100 bg-navy-50/60 hover:bg-navy-50"
+                      ? "border-amber-200/80 bg-amber-50/70 hover:bg-amber-50"
+                      : "border-navy-100 bg-white/[0.78] hover:bg-white"
                   }`}
                 >
                   <p className={`text-[12px] font-semibold ${card.type === "alert" ? "text-amber-800" : "text-navy-700"}`}>
@@ -205,7 +205,7 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
                     key={q}
                     type="button"
                     onClick={() => executeQuery(q)}
-                    className="rounded-full border border-navy-100 bg-white px-2.5 py-1.5 text-[11px] text-navy-600 hover:bg-navy-50 active:scale-[0.97] transition-all"
+                    className="rounded-full border border-navy-100 bg-white/[0.82] px-2.5 py-1.5 text-[11px] font-medium text-navy-600 hover:bg-white active:scale-[0.97] transition-all"
                   >
                     {q}
                   </button>

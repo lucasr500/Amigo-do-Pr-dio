@@ -11,18 +11,18 @@ type Props = {
 };
 
 const STYLES: Record<Variant, string> = {
-  success: "bg-green-100  text-green-700",
-  warning: "bg-amber-100  text-amber-700",
-  danger:  "bg-red-100    text-red-600",
-  info:    "bg-navy-100   text-navy-700",
-  neutral: "bg-gray-100   text-gray-600",
-  pending: "bg-cream-100  text-navy-500",
+  success: "border-sage-200 bg-sage-50 text-sage-800",
+  warning: "border-amber-200 bg-amber-50 text-amber-800",
+  danger:  "border-terracotta-200 bg-terracotta-50 text-terracotta-800",
+  info:    "border-navy-100 bg-navy-50 text-navy-700",
+  neutral: "border-navy-100 bg-white text-navy-500",
+  pending: "border-cream-200 bg-cream-50 text-navy-500",
 };
 
 export default function StatusBadge({ variant, children, className = "" }: Props) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold leading-none ${STYLES[variant]} ${className}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10.5px] font-semibold leading-none ${STYLES[variant]} ${className}`}
     >
       {children}
     </span>

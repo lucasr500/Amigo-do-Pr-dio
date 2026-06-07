@@ -441,7 +441,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
               className={`min-h-[36px] rounded-full px-3 py-1.5 text-[10.5px] font-medium ring-1 transition-all active:scale-95 ${
                 unknown
                   ? "bg-navy-100 text-navy-700 ring-navy-200"
-                  : "bg-white text-navy-400 ring-navy-150 hover:ring-navy-300"
+                  : "bg-white text-navy-400 ring-navy-100 hover:ring-navy-300"
               }`}
             >
               {unknown ? "Informar data" : "Não sei"}
@@ -608,7 +608,7 @@ export default function OnboardingFlow({ onComplete }: Props) {
 function Overlay({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/55 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-navy-900/[0.55] backdrop-blur-sm sm:items-center"
       role="dialog"
       aria-modal="true"
       aria-label="Configuração inicial"

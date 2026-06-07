@@ -24,7 +24,6 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
     const report = buildMonthlyReview(month, s.status);
     setTotalItems(report.items.length);
 
-    // Última revisão concluída (pode ser mês anterior)
     const last = getLastCompletedMonthlyReview();
     if (last && last.month !== month) {
       const d = new Date(last.completedAt);
@@ -51,15 +50,15 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
   if (status === "concluida") {
     headline = `Revisão de ${mesFormatado} concluída`;
     sub = trendWarning
-      ? "Score caiu em relação à última revisão. Vale revisar os pontos de atenção."
-      : "Condomínio revisado este mês.";
+      ? "A saúde caiu desde a última revisão. Vale olhar os pontos sensíveis."
+      : "Condomínio revisado neste mês.";
     ctaLabel = "Ver resumo";
-    accentClass = "border-green-200/70 bg-green-50/60";
+    accentClass = "border-sage-200/80 bg-sage-50/60";
   } else if (status === "em_andamento") {
     headline = `${checkedCount} de ${totalItems} pontos revisados`;
-    sub = `Revisão de ${mesFormatado} em andamento.`;
+    sub = `Revisão de ${mesFormatado} em acompanhamento.`;
     ctaLabel = "Continuar";
-    accentClass = "border-amber-200/70 bg-amber-50/50";
+    accentClass = "border-amber-200/80 bg-amber-50/60";
   } else {
     headline = `Revisão de ${mesFormatado} pendente`;
     sub = lastCompletedLabel
@@ -67,8 +66,8 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
       : totalItems > 0
         ? `${totalItems} ponto${totalItems > 1 ? "s" : ""} para verificar este mês.`
         : "Inicie para ver os pontos de atenção do mês.";
-    ctaLabel = "Iniciar revisão";
-    accentClass = "border-navy-100 bg-white";
+    ctaLabel = "Iniciar";
+    accentClass = "border-navy-100/80 bg-white/[0.78]";
   }
 
   return (
@@ -76,9 +75,9 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
       <button
         type="button"
         onClick={onOpen}
-        className={`flex w-full items-center gap-3 rounded-[14px] border px-4 py-3 text-left shadow-sm transition-all hover:opacity-90 active:scale-[0.98] ${accentClass}`}
+        className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left shadow-card transition-all hover:bg-white active:scale-[0.99] ${accentClass}`}
       >
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-navy-100/70">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.70]">
           <svg className="h-5 w-5 text-navy-600" viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M5 10l3.5 3.5L15 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             <rect x="2.5" y="2.5" width="15" height="15" rx="3" stroke="currentColor" strokeWidth="1.5" />
@@ -89,7 +88,7 @@ export default function MonthlyReviewCard({ refreshKey, onOpen }: Props) {
           <p className="mt-0.5 text-[11.5px] leading-snug text-navy-500">{sub}</p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1">
-          <span className="text-[11px] font-medium text-navy-600">{ctaLabel}</span>
+          <span className="text-[11px] font-semibold text-navy-700">{ctaLabel}</span>
           <svg className="h-4 w-4 text-navy-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

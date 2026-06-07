@@ -41,7 +41,7 @@ export default function DocumentosGroupSection({
   const contentId = `documentos-grupo-${cat}`;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-navy-50">
+    <div className="overflow-hidden rounded-lg border border-navy-100/70 bg-white/[0.68]">
       <button
         type="button"
         onClick={onToggle}
@@ -49,13 +49,13 @@ export default function DocumentosGroupSection({
         aria-controls={contentId}
         className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-navy-50/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40"
       >
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORIA_COR[cat]}`}>
+        <span className={`inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold ${CATEGORIA_COR[cat]}`}>
           {CATEGORIA_LABEL[cat]}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[11.5px] text-navy-500">{GRUPO_DESCRICAO[cat]}</span>
+          <span className="block text-[11.5px] leading-snug text-navy-500">{GRUPO_DESCRICAO[cat]}</span>
           {cadastradosGrupo > 0 && (
-            <span className="mt-1 block h-0.5 w-full overflow-hidden rounded-full bg-navy-100">
+            <span className="mt-1.5 block h-1 w-full overflow-hidden rounded-full bg-navy-100">
               <span
                 className={`block h-full rounded-full transition-all duration-300 ${barColor}`}
                 style={{ width: `${Math.round((tenhoGrupo / idsGrupoLength) * 100)}%` }}
@@ -65,7 +65,7 @@ export default function DocumentosGroupSection({
         </span>
         <span className="flex shrink-0 items-center gap-1.5">
           {cadastradosGrupo > 0 && (
-            <span className="text-[10px] text-navy-400">
+            <span className="text-[10px] font-medium text-navy-400">
               {tenhoGrupo}/{idsGrupoLength}
             </span>
           )}
@@ -82,9 +82,9 @@ export default function DocumentosGroupSection({
       </button>
 
       {aberto && (
-        <div id={contentId} className="space-y-1.5 border-t border-navy-50 bg-navy-50/20 px-3 py-2">
+        <div id={contentId} className="space-y-1.5 border-t border-navy-100/60 bg-navy-50/20 px-3 py-2">
           {cadastradosGrupo === 0 && (
-            <p className="px-0.5 py-1 text-[11px] leading-relaxed text-navy-500">
+            <p className="px-0.5 py-1 text-[11.5px] leading-relaxed text-navy-500">
               {EMPTY_STATE_EXPERT[cat]}
             </p>
           )}
@@ -93,9 +93,9 @@ export default function DocumentosGroupSection({
             <button
               type="button"
               onClick={onShowAll}
-              className="w-full py-2 text-center text-[11px] text-navy-400 transition-colors hover:text-navy-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40"
+              className="w-full rounded-full py-2 text-center text-[11px] font-medium text-navy-400 transition-colors hover:bg-white/70 hover:text-navy-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-300/40"
             >
-              Ver {hiddenCount} mais →
+              Ver {hiddenCount} mais
             </button>
           )}
         </div>

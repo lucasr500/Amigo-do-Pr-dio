@@ -60,13 +60,13 @@ type TabItem = {
 };
 
 const LEFT_TABS: TabItem[] = [
-  { id: "inicio",     label: "Início",     Icon: IconHome },
-  { id: "agenda",     label: "Agenda",     Icon: IconCalendar },
+  { id: "inicio",     label: "Hoje",       Icon: IconHome },
+  { id: "agenda",     label: "Gestão",     Icon: IconCalendar },
 ];
 
 const RIGHT_TABS: TabItem[] = [
-  { id: "assistente", label: "Assistente", Icon: IconChat },
-  { id: "condominio", label: "Meu prédio", Icon: IconAccount },
+  { id: "assistente", label: "Intelig.",   Icon: IconChat },
+  { id: "condominio", label: "Prédio",     Icon: IconAccount },
 ];
 
 type Props = {
@@ -84,9 +84,9 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
       role="tablist"
       aria-label="Navegação principal"
     >
-      <div className="mx-auto max-w-[440px]">
+      <div className="mx-auto max-w-[760px]">
         <div
-          className="border-t border-gray-100 bg-white shadow-nav"
+          className="border-t border-navy-100/70 bg-white/[0.94] shadow-nav backdrop-blur"
           style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 6px)" }}
         >
           <div className="flex items-stretch px-1 pt-1">
@@ -103,7 +103,7 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
                   aria-selected={isActive}
                   onClick={() => onChange(tab.id)}
                   className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 transition-colors duration-150 active:scale-[0.96] ${
-                    isActive ? "text-navy-700" : "text-gray-400 hover:text-gray-500"
+                    isActive ? "text-navy-800" : "text-navy-300 hover:text-navy-500"
                   }`}
                 >
                   <div className="relative">
@@ -114,7 +114,7 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
                       </span>
                     )}
                   </div>
-                  <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
+                  <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-800" : "text-navy-300"}`}>
                     {tab.label}
                   </span>
                 </button>
@@ -130,15 +130,15 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
                 onClick={() => onChange("ferramentas")}
                 className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-all duration-150 active:scale-[0.93] ${
                   plusActive
-                    ? "bg-navy-800 shadow-elevated"
-                    : "bg-navy-700 shadow-card-md"
+                    ? "bg-navy-900 shadow-elevated"
+                    : "bg-navy-800 shadow-card-md"
                 }`}
               >
                 <svg viewBox="0 0 20 20" className="h-[22px] w-[22px] text-white" fill="none" aria-hidden="true">
                   <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
                 </svg>
               </button>
-              <span className={`mt-1.5 whitespace-nowrap text-[10px] font-semibold leading-none ${plusActive ? "text-navy-700" : "text-gray-400"}`}>
+              <span className={`mt-1.5 whitespace-nowrap text-[10px] font-semibold leading-none ${plusActive ? "text-navy-800" : "text-navy-300"}`}>
                 Ações
               </span>
             </div>
@@ -154,11 +154,11 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
                   aria-selected={isActive}
                   onClick={() => onChange(tab.id)}
                   className={`flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 transition-colors duration-150 active:scale-[0.96] ${
-                    isActive ? "text-navy-700" : "text-gray-400 hover:text-gray-500"
+                    isActive ? "text-navy-800" : "text-navy-300 hover:text-navy-500"
                   }`}
                 >
                   <tab.Icon active={isActive} />
-                  <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-700" : "text-gray-400"}`}>
+                  <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-800" : "text-navy-300"}`}>
                     {tab.label}
                   </span>
                 </button>

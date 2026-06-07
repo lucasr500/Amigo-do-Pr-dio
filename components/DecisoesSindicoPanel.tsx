@@ -386,7 +386,7 @@ export default function DecisoesSindicoPanel() {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/78 px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
+          className="flex w-full items-center gap-2.5 rounded-[18px] border border-cream-200/90 bg-white/[0.78] px-4 py-3.5 text-left shadow-[0_1px_2px_rgba(31,49,71,0.03)] transition-colors hover:bg-white active:bg-navy-50"
         >
           <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-navy-50 text-[13px]" aria-hidden="true">
             ⚖️
@@ -406,7 +406,7 @@ export default function DecisoesSindicoPanel() {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
+      <div className="rounded-[22px] border border-cream-200/90 bg-white/[0.92] p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-[13px] font-semibold text-navy-800">Decisões do síndico</p>

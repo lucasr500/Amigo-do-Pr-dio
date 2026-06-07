@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 
 const NAV_ITEMS = [
-  { id: "visao-geral",    label: "Meu prédio" },
-  { id: "revisao-mensal", label: "Revisão" },
-  { id: "financeiro",     label: "Financeiro" },
-  { id: "documentos",     label: "Documentos" },
-  { id: "operacao",       label: "Operação" },
-  { id: "dados",          label: "Dados" },
+  { id: "visao-geral", label: "Prédio" },
+  { id: "revisao-mensal", label: "Hoje" },
+  { id: "financeiro", label: "Financeiro" },
+  { id: "documentos", label: "Documentos" },
+  { id: "operacao", label: "Gestão" },
+  { id: "memoria-institucional", label: "Memória" },
+  { id: "dados", label: "Backup" },
 ] as const;
 
 type NavId = (typeof NAV_ITEMS)[number]["id"];
@@ -29,11 +30,13 @@ export default function CondominioQuickNav() {
       const obs = new IntersectionObserver(
         ([entry]) => {
           thresholds.set(item.id, entry.isIntersecting ? entry.intersectionRatio : 0);
-          // Escolhe o item com maior interseção
           let best: NavId | null = null;
           let bestRatio = 0;
           for (const [id, ratio] of thresholds) {
-            if (ratio > bestRatio) { bestRatio = ratio; best = id as NavId; }
+            if (ratio > bestRatio) {
+              bestRatio = ratio;
+              best = id as NavId;
+            }
           }
           if (best) setActiveId(best);
         },
@@ -46,20 +49,15 @@ export default function CondominioQuickNav() {
     return () => observers.forEach((o) => o.disconnect());
   }, []);
 
-  // Scroll o botão ativo para o centro da nav horizontal
   useEffect(() => {
     if (!activeId || !navRef.current) return;
     const btn = btnRefs.current[activeId];
     if (!btn) return;
     const nav = navRef.current;
-    const btnLeft = btn.offsetLeft;
-    const btnWidth = btn.offsetWidth;
-    const navWidth = nav.offsetWidth;
-    nav.scrollTo({ left: btnLeft - navWidth / 2 + btnWidth / 2, behavior: "smooth" });
+    nav.scrollTo({ left: btn.offsetLeft - nav.offsetWidth / 2 + btn.offsetWidth / 2, behavior: "smooth" });
   }, [activeId]);
 
   const scrollTo = (id: string) => {
-    if (typeof window === "undefined") return;
     const el = document.getElementById(id);
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -69,10 +67,9 @@ export default function CondominioQuickNav() {
     <nav
       ref={navRef}
       aria-label="Seções do condomínio"
-      className="overflow-x-auto px-5 pb-2 pt-1 sm:px-6"
-      style={{ scrollbarWidth: "none" }}
+      className="no-scrollbar overflow-x-auto px-5 pb-3 pt-1 sm:px-6"
     >
-      <div className="flex gap-2" style={{ minWidth: "max-content" }}>
+      <div className="flex gap-1.5 rounded-full border border-navy-100/70 bg-white/[0.70] p-1 shadow-card" style={{ minWidth: "max-content" }}>
         {NAV_ITEMS.map((item) => {
           const isActive = activeId === item.id;
           return (
@@ -81,10 +78,10 @@ export default function CondominioQuickNav() {
               ref={(el) => { btnRefs.current[item.id] = el; }}
               type="button"
               onClick={() => scrollTo(item.id)}
-              className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-medium shadow-sm transition-all active:scale-[0.97] ${
+              className={`flex-shrink-0 rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition-all active:scale-[0.98] ${
                 isActive
-                  ? "border-navy-600 bg-navy-700 text-white shadow-[0_2px_8px_rgba(35,75,99,0.3)]"
-                  : "border-navy-100 bg-white text-navy-600 hover:border-navy-200 hover:bg-navy-50"
+                  ? "bg-navy-800 text-white shadow-card"
+                  : "text-navy-500 hover:bg-white hover:text-navy-800"
               }`}
             >
               {item.label}

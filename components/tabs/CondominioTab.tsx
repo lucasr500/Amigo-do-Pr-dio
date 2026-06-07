@@ -167,9 +167,9 @@ export default function CondominioTab({
       {hasCondominioData && (
         <CondominioSection
           id="revisao-mensal"
-          title="Revisão mensal"
+          title="Hoje e revisão"
           subtitle="Revisão mensal guiada, resumo operacional copiável e histórico."
-          eyebrow="Ritual"
+          eyebrow="Hoje"
           priority="high"
         >
           <MonthlyReviewPanel
@@ -190,8 +190,8 @@ export default function CondominioTab({
       {hasCondominioData && (
         <CondominioSection
           id="financeiro"
-          title="Financeiro auxiliar"
-          subtitle="Caixa, contas e riscos para acompanhamento local."
+          title="Financeiro"
+          subtitle="Caixa, contas, inadimplência e riscos para acompanhamento local."
           eyebrow="Financeiro"
           priority="high"
         >
@@ -207,8 +207,8 @@ export default function CondominioTab({
       {hasCondominioData && (
         <CondominioSection
           id="documentos"
-          title="Documentos essenciais"
-          subtitle="Convenção, AVCB, seguro, laudos e contratos."
+          title="Documentos"
+          subtitle="Convenção, AVCB, seguro, laudos e contratos em uma base segura."
           eyebrow="Documentos"
           priority="high"
         >
@@ -223,9 +223,9 @@ export default function CondominioTab({
       {hasCondominioData && (
         <CondominioSection
           id="operacao"
-          title="Operação e pessoas"
-          subtitle="Funcionários, férias, contratos e histórico."
-          eyebrow="Operação"
+          title="Gestão"
+          subtitle="Funcionários, férias, contratos e histórico operacional."
+          eyebrow="Gestão"
           priority="normal"
           defaultOpen={false}
         >
@@ -242,7 +242,7 @@ export default function CondominioTab({
           id="memoria-institucional"
           title="Memória institucional"
           subtitle="Histórico por unidade, fornecedores, decisões e handoff de mandato."
-          eyebrow="Memória"
+          eyebrow="Inteligência"
           priority="normal"
           defaultOpen={false}
         >
@@ -283,7 +283,7 @@ export default function CondominioTab({
       {hasCondominioData && (
         <CondominioSection
           id="dados"
-          title="Segurança dos dados"
+          title="Backup e confiança"
           subtitle="Backup, integridade, conta e configurações."
           eyebrow="Dados"
           priority="normal"
@@ -318,7 +318,7 @@ export default function CondominioTab({
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">
               Evolução da saúde operacional
             </p>
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+            <div className="rounded-lg bg-white/[0.86] p-4 shadow-card ring-1 ring-navy-100">
               <HealthTrendChart />
             </div>
           </section>
@@ -327,18 +327,18 @@ export default function CondominioTab({
 
       {/* ── Sobre o app ─────────────────────────────────────────────── */}
       <section className="px-5 pb-3 pt-5 sm:px-6">
-        <div className="rounded-[18px] border border-navy-100/60 bg-white/70 px-4 py-4 shadow-[0_1px_2px_rgba(31,49,71,0.03)]">
+        <div className="rounded-lg border border-navy-100/60 bg-white/[0.78] px-4 py-4 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Sobre o app</p>
           </div>
           <div className="space-y-2">
-            <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+            <div className="rounded-lg bg-navy-50/60 px-3.5 py-3">
               <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Ferramenta de apoio operacional</p>
               <p className="text-[11px] leading-relaxed text-navy-500">
                 O Amigo do Prédio auxilia síndicos no dia a dia, mas não substitui advogado, administradora ou profissional especializado. As orientações têm caráter informativo.
               </p>
             </div>
-            <div className="rounded-[12px] bg-navy-50/60 px-3.5 py-3">
+            <div className="rounded-lg bg-navy-50/60 px-3.5 py-3">
               <p className="mb-1 text-[11.5px] font-semibold text-navy-700">Seus dados ficam no dispositivo</p>
               <p className="text-[11px] leading-relaxed text-navy-500">
                 Os dados do condomínio são salvos localmente neste aparelho. Nada é enviado a terceiros. Use "Exportar dados" para fazer backup.

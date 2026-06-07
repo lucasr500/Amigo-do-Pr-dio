@@ -38,14 +38,14 @@ import { CRIT_ORDER, GRUPOS, type DocFilter } from "@/components/documentos/docu
 type Props = { onSaved?: () => void };
 
 const STATUS_LABEL: Record<DocumentoStatus, string> = {
-  tenho:             "Tenho",
-  nao_tenho:         "Não tenho",
-  precisa_localizar: "Localizar",
+  tenho:             "Em arquivo",
+  nao_tenho:         "Ausente",
+  precisa_localizar: "Revisar",
   nao_se_aplica:     "N/A",
 };
 
 const STATUS_BADGE: Record<DocumentoStatus, string> = {
-  tenho:             "bg-navy-50 text-navy-600 ring-navy-100",
+  tenho:             "bg-sage-50 text-sage-800 ring-sage-100",
   nao_tenho:         "bg-terracotta-50 text-terracotta-700 ring-terracotta-100",
   precisa_localizar: "bg-amber-50 text-amber-700 ring-amber-100",
   nao_se_aplica:     "bg-navy-50 text-navy-400 ring-navy-100",
@@ -381,16 +381,16 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
   // ── Expanded ───────────────────────────────────────────────────────────────
   return (
     <section className="px-5 pb-3 sm:px-6 animate-fade-in-up">
-      <div id="documentos-essenciais-panel" className="rounded-[22px] border border-cream-200/90 bg-white/92 p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
+      <div id="documentos-essenciais-panel" className="rounded-lg border border-navy-100/80 bg-white/[0.88] p-4 shadow-card-md">
 
         {/* ── Cabeçalho ── */}
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-[13px] font-semibold text-navy-800">Documentos essenciais</p>
             {savedFeedback ? (
-              <p className="text-[11px] text-teal-600 animate-fade-in">✓ Salvo</p>
+              <p className="text-[11px] text-sage-700 animate-fade-in">Salvo</p>
             ) : (
-              <p className="text-[11px] text-navy-400">{total} documentos em 6 categorias</p>
+              <p className="text-[11px] text-navy-400">{total} documentos essenciais em 6 categorias</p>
             )}
           </div>
           <button
@@ -412,7 +412,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
         {/* ── Feedback de ação ── */}
         {actionFeedback && (
-          <div className="mb-2 rounded-[10px] bg-teal-50 px-3 py-2 text-[11.5px] text-teal-800">
+          <div className="mb-2 rounded-lg bg-sage-50 px-3 py-2 text-[11.5px] text-sage-800">
             {actionFeedback}
           </div>
         )}
@@ -421,8 +421,8 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
         {cadastrados === 0 && (
           <div className="mb-3">
             <EmptyState
-              title="Documentos essenciais ainda não revisados."
-              description="Marque o que está regular, pendente ou vencido para o app priorizar riscos do condomínio."
+              title="Nenhum documento revisado ainda"
+              description="Comece pelos essenciais para montar a base de segurança jurídica do condomínio."
               actionLabel="Começar pelo AVCB"
               onAction={() => quickSave("avcb_clcb", "precisa_localizar")}
             />
@@ -431,11 +431,11 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
 
         {/* ── Cartão de prioridade: próximo crítico a confirmar ── */}
         {!isFiltered && criticosNaoConfirmados > 0 && firstUnfilledCritical && (
-          <div className="mb-3 rounded-xl border border-amber-100 bg-amber-50/50 px-3.5 py-3">
+          <div className="mb-3 rounded-lg border border-amber-200/80 bg-amber-50/60 px-3.5 py-3">
             <p className="text-[10.5px] font-semibold text-amber-700 mb-1.5">
               {cadastrados === 0
-                ? "Comece pelo mais importante"
-                : "Próximo documento crítico a confirmar"}
+                ? "Comece pelo essencial"
+                : "Próximo documento essencial a confirmar"}
             </p>
             <p className="text-[13px] font-semibold leading-snug text-navy-800 mb-2.5">
               {DOCUMENTO_LABEL[firstUnfilledCritical]}
@@ -446,7 +446,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
                   key={s}
                   type="button"
                   onClick={() => quickSave(firstUnfilledCritical, s)}
-                  className="min-h-[44px] rounded-full bg-white px-4 py-1 text-[11.5px] font-medium text-navy-700 ring-1 ring-navy-200 hover:ring-navy-400 active:scale-95 transition-all"
+                  className="min-h-[44px] rounded-full bg-white/[0.86] px-4 py-1 text-[11.5px] font-semibold text-navy-700 ring-1 ring-navy-200 hover:bg-white hover:ring-navy-400 active:scale-95 transition-all"
                 >
                   {STATUS_LABEL[s]}
                 </button>
@@ -501,7 +501,7 @@ export default function DocumentosEssenciaisPanel({ onSaved }: Props) {
               const barColor = cadastradosGrupo === 0
                 ? ""
                 : tenhoGrupo === idsGrupo.length
-                ? "bg-teal-400"
+                ? "bg-sage-500"
                 : tenhoGrupo > 0
                 ? "bg-amber-400"
                 : "bg-terracotta-300";
