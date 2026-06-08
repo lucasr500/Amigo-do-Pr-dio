@@ -5,6 +5,7 @@ import AgendaQuickStats from "@/components/AgendaQuickStats";
 
 const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
 const AgendaPredio = dynamic(() => import("@/components/AgendaPredio"), { ssr: false });
+const AgendaMonthGrid = dynamic(() => import("@/components/AgendaMonthGrid"), { ssr: false });
 
 type Props = {
   refreshKey: number;
@@ -26,6 +27,7 @@ export default function AgendaTab({ refreshKey, onSaved }: Props) {
         </p>
       </div>
       <AgendaQuickStats refreshKey={refreshKey} />
+      <AgendaMonthGrid />
       <AgendaMensal refreshKey={refreshKey} onNavigateToAgenda={() => {}} />
       <AgendaPredio onSaved={onSaved} />
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { exportUserData, getUserBackupJson, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
+import { getStorageQuotaStatus } from "@/lib/storage-quota";
 import AlertBox from "@/components/ui/AlertBox";
 import LocalFirstTrustNote from "@/components/LocalFirstTrustNote";
 
@@ -427,6 +428,23 @@ export default function BackupPanel({ onImported }: Props) {
             </div>
           )}
         </div>
+
+        {/* Aviso de quota de armazenamento */}
+        {storageSizeKB !== null && storageSizeKB > 0 && (() => {
+          const quota = getStorageQuotaStatus(storageSizeKB);
+          if (quota.level === "ok") return null;
+          const colors = {
+            warn:     "border-amber-200/80 bg-amber-50/70 text-amber-800",
+            danger:   "border-terracotta-200/80 bg-terracotta-50/70 text-terracotta-800",
+            critical: "border-terracotta-300 bg-terracotta-100/80 text-terracotta-900",
+          };
+          return (
+            <div className={`mx-5 mb-3 rounded-lg border px-3.5 py-2.5 ${colors[quota.level]}`}>
+              <p className="text-[11.5px] font-medium leading-snug">{quota.message}</p>
+              <p className="mt-0.5 text-[10.5px] opacity-80">{quota.usedKB} KB usados de ~{quota.maxKB} KB ({quota.pct}%)</p>
+            </div>
+          );
+        })()}
 
         {/* Nota de privacidade + indicador de armazenamento */}
         <div className="border-t border-navy-50 px-5 py-2.5 space-y-0.5">

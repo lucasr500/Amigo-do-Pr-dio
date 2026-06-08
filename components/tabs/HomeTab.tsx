@@ -19,6 +19,10 @@ const MonthlyReviewCard = dynamic(() => import("@/components/MonthlyReviewCard")
 const Hero = dynamic(() => import("@/components/Hero"), { ssr: false });
 const MilestoneCelebration = dynamic(() => import("@/components/MilestoneCelebration"), { ssr: false });
 const WeeklyReviewPrompt = dynamic(() => import("@/components/WeeklyReviewPrompt"), { ssr: false });
+const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard"), { ssr: false });
+const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
+const HomeFeatureShortcuts = dynamic(() => import("@/components/HomeFeatureShortcuts"), { ssr: false });
+const HealthScoreProgressCard = dynamic(() => import("@/components/HealthScoreProgressCard"), { ssr: false });
 
 function completionBucket(pct: number): string {
   if (pct <= 25) return "0-25";
@@ -46,6 +50,8 @@ type Props = {
   onActivateDemo: () => void;
   onRefresh: () => void;
   onOpenBackup?: () => void;
+  onNavigateToSection?: (sectionId: string) => void;
+  onSetToolGroup?: (group: string) => void;
 };
 
 export default function HomeTab({
@@ -67,6 +73,8 @@ export default function HomeTab({
   onActivateDemo,
   onRefresh,
   onOpenBackup,
+  onNavigateToSection,
+  onSetToolGroup,
 }: Props) {
   return (
     <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
@@ -93,6 +101,8 @@ export default function HomeTab({
       {!subView && hasCondominioData && (
         <>
           <DynamicGreeting condoName={condoName} />
+          <DailyBriefingCard refreshKey={refreshKey} />
+          <RecentActivityCard refreshKey={refreshKey} />
           <HomePriorityStrip
             refreshKey={refreshKey}
             onNavigate={(target) => {
@@ -147,6 +157,7 @@ export default function HomeTab({
             refreshKey={refreshKey}
             onClick={() => onNavigateToSubView("saude")}
           />
+          <HealthScoreProgressCard refreshKey={refreshKey} />
 
           {showBackupNudge && !isDemo && (
             <div className="px-5 pb-3 sm:px-6">
@@ -176,6 +187,13 @@ export default function HomeTab({
             onResolved={onRefresh}
             onPendenciaSaved={onRefresh}
             refreshKey={refreshKey}
+          />
+
+          <HomeFeatureShortcuts
+            onNavigateTab={onNavigateTab}
+            onNavigateToSection={onNavigateToSection}
+            onOpenMonthlyReview={onOpenMonthlyReview}
+            onSetToolGroup={onSetToolGroup}
           />
 
           <ProgressiveSetupCard

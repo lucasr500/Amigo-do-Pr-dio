@@ -9,6 +9,7 @@ import AgendaTab from "@/components/tabs/AgendaTab";
 import AssistantTab, { type AssistantTabHandle } from "@/components/tabs/AssistantTab";
 import ToolsTab from "@/components/tabs/ToolsTab";
 import CondominioTab from "@/components/tabs/CondominioTab";
+import TabErrorBoundary from "@/components/TabErrorBoundary";
 import type { ToolAnchor, ToolGroup } from "@/lib/app-navigation";
 import { ANCHOR_TO_GROUP } from "@/lib/app-navigation";
 import {
@@ -34,6 +35,7 @@ import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const DemoModeBanner     = dynamic(() => import("@/components/DemoModeBanner"), { ssr: false });
 const OnboardingFlow     = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
+const GlobalSearch       = dynamic(() => import("@/components/GlobalSearch"), { ssr: false });
 
 // ── Profile helpers ───────────────────────────────────────────────────────────
 
@@ -70,6 +72,10 @@ export default function HomePage() {
   const [showNotifSettings, setShowNotifSettings]     = useState(false);
   const [focusRevisaoMensal, setFocusRevisaoMensal]   = useState(false);
   const [shouldOpenBackup, setShouldOpenBackup]       = useState(false);
+  const [pendingCondominioSection, setPendingCondominioSection] = useState<string | null>(null);
+
+  // ── Search state ─────────────────────────────────────────────────
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
   // ── Ferramentas state ───────────────────────────────────────────
   const [activeToolGroup, setActiveToolGroup]     = useState<ToolGroup | null>(null);
@@ -174,6 +180,21 @@ export default function HomePage() {
     return () => { window.clearTimeout(first); window.clearTimeout(second); };
   }, [activeTab, focusRevisaoMensal]);
 
+  // Scroll para seção específica após navegação para aba condomínio
+  useEffect(() => {
+    if (activeTab !== "condominio" || !pendingCondominioSection) return;
+    const section = pendingCondominioSection;
+    const scrollToSection = () => {
+      const el = document.getElementById(section);
+      if (!el) return false;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    };
+    const first = window.setTimeout(scrollToSection, 140);
+    const second = window.setTimeout(() => { scrollToSection(); setPendingCondominioSection(null); }, 340);
+    return () => { window.clearTimeout(first); window.clearTimeout(second); };
+  }, [activeTab, pendingCondominioSection]);
+
   // ── Handlers de navegação ───────────────────────────────────────
   const navigateTab = (tab: AppTab) => {
     if (typeof window !== "undefined") scrollByTab.current[activeTab] = window.scrollY;
@@ -223,6 +244,16 @@ export default function HomePage() {
   const handleOpenRevisaoMensal = () => { setFocusRevisaoMensal(true); navigateTab("condominio"); };
   const handleOpenMonthlyReview = () => { setFocusRevisaoMensal(true); navigateTab("condominio"); };
 
+  const handleNavigateToSection = (sectionId: string) => {
+    setPendingCondominioSection(sectionId);
+    navigateTab("condominio");
+  };
+
+  const handleSetToolGroup = (group: string) => {
+    setActiveToolGroup(group as ToolGroup);
+    navigateTab("ferramentas");
+  };
+
   // ── Handlers de demo ────────────────────────────────────────────
   const handleActivateDemo = async () => {
     const { activateDemo } = await import("@/lib/demo");
@@ -249,6 +280,7 @@ export default function HomePage() {
             activeTab={activeTab}
             unreadNotifications={unreadNotifications}
             onNotificationsClick={() => setShowNotificationCenter(true)}
+            onSearchOpen={() => setShowGlobalSearch(true)}
           />
         )}
 
@@ -272,59 +304,69 @@ export default function HomePage() {
             onActivateDemo={handleActivateDemo}
             onRefresh={() => setRefreshKey((k) => k + 1)}
             onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
+            onNavigateToSection={handleNavigateToSection}
+            onSetToolGroup={handleSetToolGroup}
           />
         )}
 
         {activeTab === "agenda" && (
-          <AgendaTab
-            refreshKey={refreshKey}
-            onSaved={() => setRefreshKey((k) => k + 1)}
-          />
+          <TabErrorBoundary tabName="Agenda">
+            <AgendaTab
+              refreshKey={refreshKey}
+              onSaved={() => setRefreshKey((k) => k + 1)}
+            />
+          </TabErrorBoundary>
         )}
 
         {activeTab === "assistente" && (
-          <AssistantTab
-            ref={assistantRef}
-            refreshKey={refreshKey}
-            onSavePendencia={handleSavePendencia}
-            onQueryExecuted={() => setRefreshKey((k) => k + 1)}
-            onNavigateToChecklist={handleNavigateToChecklist}
-            onNavigateToFerramentas={handleNavigateToFerramentas}
-          />
+          <TabErrorBoundary tabName="Assistente">
+            <AssistantTab
+              ref={assistantRef}
+              refreshKey={refreshKey}
+              onSavePendencia={handleSavePendencia}
+              onQueryExecuted={() => setRefreshKey((k) => k + 1)}
+              onNavigateToChecklist={handleNavigateToChecklist}
+              onNavigateToFerramentas={handleNavigateToFerramentas}
+            />
+          </TabErrorBoundary>
         )}
 
         {activeTab === "ferramentas" && (
-          <ToolsTab
-            refreshKey={refreshKey}
-            activeToolGroup={activeToolGroup}
-            pendingToolAnchor={pendingToolAnchor}
-            highlightToolAnchor={highlightToolAnchor}
-            pendingChecklistId={pendingChecklistId}
-            onSetActiveToolGroup={setActiveToolGroup}
-            onSuggestionSelect={handleSuggestionSelect}
-            onNavigateTab={navigateTab}
-            onNavigateToSubView={navigateToSubView}
-            onChecklistConsumed={() => setPendingChecklistId(null)}
-            onSaved={() => setRefreshKey((k) => k + 1)}
-          />
+          <TabErrorBoundary tabName="Ferramentas">
+            <ToolsTab
+              refreshKey={refreshKey}
+              activeToolGroup={activeToolGroup}
+              pendingToolAnchor={pendingToolAnchor}
+              highlightToolAnchor={highlightToolAnchor}
+              pendingChecklistId={pendingChecklistId}
+              onSetActiveToolGroup={setActiveToolGroup}
+              onSuggestionSelect={handleSuggestionSelect}
+              onNavigateTab={navigateTab}
+              onNavigateToSubView={navigateToSubView}
+              onChecklistConsumed={() => setPendingChecklistId(null)}
+              onSaved={() => setRefreshKey((k) => k + 1)}
+            />
+          </TabErrorBoundary>
         )}
 
         {activeTab === "condominio" && (
-          <CondominioTab
-            refreshKey={refreshKey}
-            hasCondominioData={hasCondominioData}
-            condoName={condoName}
-            shouldExpandMemoria={shouldExpandMemoria}
-            showNotifSettings={showNotifSettings}
-            shouldOpenBackup={shouldOpenBackup}
-            onRefresh={() => setRefreshKey((k) => k + 1)}
-            onMemoriaSaved={() => { setRefreshKey((k) => k + 1); setShouldExpandMemoria(false); }}
-            onSetupMemoria={handleSetupMemoria}
-            onOpenMonthlyReview={handleOpenMonthlyReview}
-            onNavigateTab={navigateTab}
-            onToggleNotifSettings={() => setShowNotifSettings((v) => !v)}
-            onBackupOpened={() => setShouldOpenBackup(false)}
-          />
+          <TabErrorBoundary tabName="Condomínio">
+            <CondominioTab
+              refreshKey={refreshKey}
+              hasCondominioData={hasCondominioData}
+              condoName={condoName}
+              shouldExpandMemoria={shouldExpandMemoria}
+              showNotifSettings={showNotifSettings}
+              shouldOpenBackup={shouldOpenBackup}
+              onRefresh={() => setRefreshKey((k) => k + 1)}
+              onMemoriaSaved={() => { setRefreshKey((k) => k + 1); setShouldExpandMemoria(false); }}
+              onSetupMemoria={handleSetupMemoria}
+              onOpenMonthlyReview={handleOpenMonthlyReview}
+              onNavigateTab={navigateTab}
+              onToggleNotifSettings={() => setShowNotifSettings((v) => !v)}
+              onBackupOpened={() => setShouldOpenBackup(false)}
+            />
+          </TabErrorBoundary>
         )}
 
       </div>
@@ -359,6 +401,18 @@ export default function HomePage() {
             }
             setRefreshKey((k) => k + 1);
           }}
+        />
+      )}
+
+      {showGlobalSearch && (
+        <GlobalSearch
+          onNavigateTab={navigateTab}
+          onNavigateToSection={handleNavigateToSection}
+          onOpenMonthlyReview={handleOpenMonthlyReview}
+          onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
+          onExpandMemoria={() => setShouldExpandMemoria(true)}
+          onSetToolGroup={handleSetToolGroup}
+          onClose={() => setShowGlobalSearch(false)}
         />
       )}
     </div>

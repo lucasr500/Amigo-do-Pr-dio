@@ -11,6 +11,7 @@ import {
   logInteraction,
   type Pendencia,
 } from "@/lib/session";
+import type { PendencyEvent } from "@/lib/session-pendencias";
 import { trackEvent } from "@/lib/telemetry";
 import EmptyState from "@/components/ui/EmptyState";
 import FilterChips from "@/components/ui/FilterChips";
@@ -103,6 +104,20 @@ function getDueBadge(dueDate: string): DueBadge {
   return { label: formatDateShort(dueDate), style: neutralStyle, overdue: false };
 }
 
+// ─── Event history helpers ────────────────────────────────────────────────────
+
+const EVENT_LABEL: Record<PendencyEvent["type"], string> = {
+  criado:    "Criado",
+  concluido: "Concluído",
+  reaberto:  "Reaberto",
+  editado:   "Editado",
+  nota:      "Nota",
+};
+
+function formatEventTs(ts: string): string {
+  return new Date(ts).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
 // ─── Sorting by urgency ───────────────────────────────────────────────────────
 
 function sortByUrgency(list: Pendencia[]): Pendencia[] {
@@ -163,6 +178,9 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
   // Resolução inline
   const [completingId,  setCompletingId]  = useState<string | null>(null);
   const [completingObs, setCompletingObs] = useState("");
+
+  // Histórico de eventos
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
 
   useEffect(() => {
     setAll(getPendencias());
@@ -688,6 +706,38 @@ export default function PendenciasScreen({ refreshKey, onBack, initialTab }: Pro
                         >
                           Reabrir pendência
                         </button>
+                      )}
+
+                      {/* Histórico de eventos */}
+                      {p.events && p.events.length > 0 && (
+                        <div className="mt-2 border-t border-navy-50 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedHistoryId(expandedHistoryId === p.id ? null : p.id)}
+                            className="flex items-center gap-1 text-[11px] text-navy-400 hover:text-navy-600 transition-colors"
+                          >
+                            <svg className={`h-3 w-3 transition-transform ${expandedHistoryId === p.id ? "rotate-180" : ""}`} viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                              <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            {expandedHistoryId === p.id ? "Ocultar" : "Histórico"} ({p.events.length})
+                          </button>
+                          {expandedHistoryId === p.id && (
+                            <ol className="mt-2 space-y-1.5 pl-2 border-l-2 border-navy-100">
+                              {[...p.events].reverse().map((ev, idx) => (
+                                <li key={idx} className="relative pl-3">
+                                  <span className="absolute -left-[7px] top-[5px] h-2 w-2 rounded-full border-2 border-white bg-navy-300" aria-hidden="true" />
+                                  <p className="text-[10.5px] leading-snug">
+                                    <span className="font-medium text-navy-600">{EVENT_LABEL[ev.type]}</span>
+                                    <span className="ml-1 text-navy-400">{formatEventTs(ev.ts)}</span>
+                                  </p>
+                                  {ev.note && (
+                                    <p className="mt-0.5 text-[10px] text-navy-400 italic">{ev.note}</p>
+                                  )}
+                                </li>
+                              ))}
+                            </ol>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

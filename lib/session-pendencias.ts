@@ -12,6 +12,16 @@ export const WARN_PENDENCIAS = 150;
 
 export type PendenciaPrioridade = "critica" | "alta" | "media" | "baixa";
 
+export type PendencyEventType = "criado" | "concluido" | "reaberto" | "editado" | "nota";
+
+export type PendencyEvent = {
+  ts: string;               // ISO timestamp
+  type: PendencyEventType;
+  note?: string;            // observação (resolução, motivo de edição, nota livre)
+};
+
+const MAX_EVENTS_PER_PENDENCIA = 20;
+
 export type Pendencia = {
   id: string;
   titulo: string;
@@ -29,6 +39,7 @@ export type Pendencia = {
   linkedType?: "agenda" | "documento" | "financeiro" | "ocorrencia" | "assistente";
   linkedId?: string | null;
   observacaoResolucao?: string;              // v8+ — preenchido ao concluir
+  events?: PendencyEvent[];                  // v10+ — log de eventos por item
 };
 
 // ─── Normalizador ─────────────────────────────────────────────────────────────
@@ -63,6 +74,7 @@ export function normalizePendencia(raw: Partial<Pendencia>): Pendencia {
     linkedType: raw.linkedType,
     linkedId: raw.linkedId ?? null,
     observacaoResolucao: raw.observacaoResolucao?.trim() || undefined,
+    events: Array.isArray(raw.events) ? raw.events : undefined,
   };
 }
 
@@ -72,15 +84,23 @@ export function getPendencias(): Pendencia[] {
   return safeRead<Partial<Pendencia>[]>(KEYS.PENDENCIAS, []).map(normalizePendencia);
 }
 
+function appendEvent(p: Pendencia, event: PendencyEvent): Pendencia {
+  const existing = p.events ?? [];
+  const updated  = [...existing, event];
+  return { ...p, events: updated.length > MAX_EVENTS_PER_PENDENCIA ? updated.slice(-MAX_EVENTS_PER_PENDENCIA) : updated };
+}
+
 export function addPendencia(
   p: Omit<Pendencia, "id" | "createdAt" | "status">
 ): Pendencia {
   const all = getPendencias();
+  const now = new Date().toISOString();
   const nova: Pendencia = {
     ...p,
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     status: "aberta",
-    createdAt: new Date().toISOString(),
+    createdAt: now,
+    events: [{ ts: now, type: "criado" }],
   };
   all.push(nova);
   // Preserva todas as pendências abertas; descarta apenas concluídas antigas se necessário
@@ -96,18 +116,19 @@ export function addPendencia(
 }
 
 export function completePendencia(id: string, observacao?: string): void {
+  const now = new Date().toISOString();
   safeWrite(
     KEYS.PENDENCIAS,
-    getPendencias().map((p) =>
-      p.id === id
-        ? {
-            ...p,
-            status: "concluida" as const,
-            completedAt: new Date().toISOString(),
-            ...(observacao?.trim() ? { observacaoResolucao: observacao.trim() } : {}),
-          }
-        : p
-    )
+    getPendencias().map((p) => {
+      if (p.id !== id) return p;
+      const updated: Pendencia = {
+        ...p,
+        status: "concluida",
+        completedAt: now,
+        ...(observacao?.trim() ? { observacaoResolucao: observacao.trim() } : {}),
+      };
+      return appendEvent(updated, { ts: now, type: "concluido", note: observacao?.trim() || undefined });
+    })
   );
 }
 
@@ -115,18 +136,26 @@ export function updatePendencia(
   id: string,
   patch: Partial<Omit<Pendencia, "id" | "createdAt">>
 ): void {
+  const now = new Date().toISOString();
   safeWrite(
     KEYS.PENDENCIAS,
-    getPendencias().map((p) => (p.id === id ? { ...p, ...patch } : p))
+    getPendencias().map((p) => {
+      if (p.id !== id) return p;
+      const updated: Pendencia = { ...p, ...patch };
+      return appendEvent(updated, { ts: now, type: "editado" });
+    })
   );
 }
 
 export function reopenPendencia(id: string): void {
+  const now = new Date().toISOString();
   safeWrite(
     KEYS.PENDENCIAS,
-    getPendencias().map((p) =>
-      p.id === id ? { ...p, status: "aberta" as const, completedAt: undefined, observacaoResolucao: undefined } : p
-    )
+    getPendencias().map((p) => {
+      if (p.id !== id) return p;
+      const updated: Pendencia = { ...p, status: "aberta", completedAt: undefined, observacaoResolucao: undefined };
+      return appendEvent(updated, { ts: now, type: "reaberto" });
+    })
   );
 }
 

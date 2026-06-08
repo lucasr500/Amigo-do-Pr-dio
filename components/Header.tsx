@@ -10,6 +10,7 @@ type Props = {
   activeTab?: AppTab;
   unreadNotifications?: number;
   onNotificationsClick?: () => void;
+  onSearchOpen?: () => void;
 };
 
 function getGreeting(): string {
@@ -19,7 +20,7 @@ function getGreeting(): string {
   return "Boa noite";
 }
 
-export default function Header({ refreshKey, activeTab, unreadNotifications = 0, onNotificationsClick }: Props) {
+export default function Header({ refreshKey, activeTab, unreadNotifications = 0, onNotificationsClick, onSearchOpen }: Props) {
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
 
@@ -64,11 +65,25 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
             )}
           </div>
 
+          <div className="flex items-center gap-2 ml-3 mt-0.5">
+            {onSearchOpen && (
+              <button
+                type="button"
+                aria-label="Busca global"
+                onClick={onSearchOpen}
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-navy-100/70 bg-white/[0.68] text-navy-400 shadow-card transition-colors hover:bg-white hover:text-navy-700 active:scale-[0.97]"
+              >
+                <svg viewBox="0 0 20 20" className="h-[17px] w-[17px]" fill="none" aria-hidden="true">
+                  <circle cx="9" cy="9" r="5" stroke="currentColor" strokeWidth="1.6" />
+                  <path d="M13 13l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+              </button>
+            )}
           <button
             type="button"
             aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificações não lidas` : "Notificações"}
             onClick={onNotificationsClick}
-            className="relative ml-3 mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-navy-100/70 bg-white/[0.68] text-navy-400 shadow-card transition-colors hover:bg-white hover:text-navy-700 active:scale-[0.97]"
+            className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-navy-100/70 bg-white/[0.68] text-navy-400 shadow-card transition-colors hover:bg-white hover:text-navy-700 active:scale-[0.97]"
           >
             <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" aria-hidden="true">
               <path
@@ -90,6 +105,7 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
               </span>
             )}
           </button>
+          </div>
         </div>
       </header>
     );

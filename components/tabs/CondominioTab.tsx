@@ -37,6 +37,7 @@ const SuppliersPanel                 = dynamic(() => import("@/components/Suppli
 const DecisionsPanel                 = dynamic(() => import("@/components/DecisionsPanel"), { ssr: false });
 const UnitHistoryPanel               = dynamic(() => import("@/components/UnitHistoryPanel"), { ssr: false });
 const ViewModeSelector               = dynamic(() => import("@/components/community/ViewModeSelector"), { ssr: false });
+const FinancialMonthlyChart          = dynamic(() => import("@/components/financial/FinancialMonthlyChart"), { ssr: false });
 const MuralPanel                     = dynamic(() => import("@/components/community/MuralPanel"), { ssr: false });
 const RequestsPanel                  = dynamic(() => import("@/components/community/RequestsPanel"), { ssr: false });
 const PollsPanel                     = dynamic(() => import("@/components/community/PollsPanel"), { ssr: false });
@@ -195,6 +196,7 @@ export default function CondominioTab({
           eyebrow="Financeiro"
           priority="high"
         >
+          <FinancialMonthlyChart refreshKey={refreshKey} />
           <FinancialPanel onSaved={onRefresh} />
           <FinancialIntelligencePanel />
           <AgoReportPanel />
