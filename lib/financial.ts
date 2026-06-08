@@ -105,6 +105,17 @@ export type FinancialSummary = {
   alerts: FinancialAlert[];
 };
 
+export type FinancialHealthSignal = {
+  hasData: boolean;
+  points: number;
+  maxPoints: number;
+  status: "ok" | "partial" | "missing";
+  label: string;
+  note: string;
+  bottleneck?: string;
+  suggestions: string[];
+};
+
 export type ParsedFinancialLine = {
   raw: string;
   entry?: Omit<FinancialEntry, "id" | "createdAt" | "updatedAt">;
@@ -638,6 +649,105 @@ export function getFinancialSummary(month = currentMonthKey()): FinancialSummary
   };
 }
 
+export function buildFinancialHealthSignal(month = currentMonthKey()): FinancialHealthSignal {
+  const snapshot = getCurrentFinancialSnapshot(month);
+  const summary = getFinancialSummary(month);
+  const mom = getMonthOverMonthComparison(month);
+  const hasData =
+    snapshot.entries.length > 0 ||
+    snapshot.estimatedBalance !== 0 ||
+    snapshot.delinquencyRate !== undefined ||
+    snapshot.liquidityReserve !== undefined;
+
+  const maxPoints = 12;
+  const suggestions: string[] = [];
+
+  if (!hasData) {
+    return {
+      hasData: false,
+      points: 4,
+      maxPoints,
+      status: "partial",
+      label: "Financeiro: mês sem resumo registrado",
+      note: "Registrar saldo, inadimplência e principais contas aumenta a precisão operacional.",
+      bottleneck: "Resumo financeiro do mês ausente",
+      suggestions: ["Registrar resumo financeiro mensal"],
+    };
+  }
+
+  let points = 0;
+  const delinquency = summary.delinquencyRate;
+  if (delinquency === undefined || delinquency <= 5) {
+    points += 4;
+  } else if (delinquency <= 10) {
+    points += 3;
+    suggestions.push("Acompanhar evolução da inadimplência");
+  } else if (delinquency <= 20) {
+    points += 1;
+    suggestions.push("Registrar plano de acompanhamento da inadimplência");
+  } else {
+    suggestions.push("Revisar inadimplência registrada com a administradora");
+  }
+
+  const reserve = summary.liquidityReserve ?? 0;
+  if (summary.estimatedBalance < 0) {
+    suggestions.push("Revisar despesas previstas e caixa estimado");
+  } else if (reserve > 0 && summary.totalDespesas > 0) {
+    if (reserve >= summary.totalDespesas) points += 4;
+    else if (reserve >= summary.totalDespesas * 0.5) {
+      points += 3;
+      suggestions.push("Acompanhar reserva com liquidez");
+    } else {
+      points += 1;
+      suggestions.push("Avaliar recomposição gradual da reserva");
+    }
+  } else if (summary.estimatedBalance > 0) {
+    points += 2;
+    suggestions.push("Informar reserva com liquidez, se existir");
+  } else {
+    points += 1;
+    suggestions.push("Registrar saldo ou reserva para melhorar a leitura financeira");
+  }
+
+  if (summary.contasVencidas.length > 0) {
+    suggestions.push("Regularizar ou acompanhar contas vencidas");
+  } else if (mom.hasPreviousMonth) {
+    const expensesUpStrong = mom.expenseDeltaPct !== undefined && mom.expenseDeltaPct >= 20 && mom.expenseDelta > 500;
+    const revenueDownStrong = mom.revenueDeltaPct !== undefined && mom.revenueDeltaPct <= -10 && mom.revenueDelta < -500;
+    if (expensesUpStrong || revenueDownStrong || mom.direction.balance === "down") {
+      points += 1;
+      suggestions.push("Revisar variação financeira em relação ao mês anterior");
+    } else {
+      points += 4;
+    }
+  } else {
+    points += 2;
+    suggestions.push("Manter histórico mensal para comparar evolução");
+  }
+
+  const capped = Math.max(0, Math.min(maxPoints, points));
+  const status: FinancialHealthSignal["status"] =
+    capped >= 10 ? "ok" : capped >= 6 ? "partial" : "missing";
+  const mainAlert = summary.alerts[0]?.title;
+  const label =
+    status === "ok"
+      ? "Financeiro: sinais operacionais saudáveis"
+      : status === "partial"
+        ? "Financeiro: pontos de atenção"
+        : "Financeiro: risco operacional registrado";
+
+  return {
+    hasData,
+    points: capped,
+    maxPoints,
+    status,
+    label,
+    note: mainAlert ?? summary.cashRiskAnalysis.nextAction,
+    bottleneck: mainAlert ?? (status === "ok" ? undefined : "Sinal financeiro de atenção"),
+    suggestions: Array.from(new Set(suggestions)).slice(0, 3),
+  };
+}
+
 export function parseFinancialQuickText(text: string): ParsedFinancialLine[] {
   return text
     .split(/\n|;/)
@@ -766,6 +876,35 @@ export function buildMonthlyFinancialExecutiveSummary(month = currentMonthKey())
 
   lines.push("", "Controle auxiliar com dados informados manualmente. Não substitui demonstrativo contábil oficial, prestação de contas ou documentos da administradora.");
   return lines.join("\n");
+}
+
+export function buildFinancialCouncilMessage(month = currentMonthKey()): string {
+  const summary = getFinancialSummary(month);
+  const risk = summary.cashRiskAnalysis;
+  const resultado = summary.totalReceitas - summary.totalDespesas;
+  const attention =
+    summary.alerts[0]?.title ??
+    (risk.level === "baixo" ? "Sem ponto crítico registrado no resumo financeiro." : risk.reasons[0] ?? risk.nextAction);
+  const nextStep =
+    summary.contasVencidas.length > 0
+      ? `Acompanhar ${summary.contasVencidas.length} conta${summary.contasVencidas.length !== 1 ? "s" : ""} vencida${summary.contasVencidas.length !== 1 ? "s" : ""}.`
+      : risk.nextAction;
+
+  return [
+    `💰 Resumo financeiro auxiliar — ${month}`,
+    "",
+    `Receitas registradas: ${moneyBRL(summary.totalReceitas)}`,
+    `Despesas registradas: ${moneyBRL(summary.totalDespesas)}`,
+    `Saldo estimado: ${moneyBRL(summary.estimatedBalance)}`,
+    `Resultado do mês: ${resultado >= 0 ? "+" : ""}${moneyBRL(resultado)}`,
+    `Reserva com liquidez: ${summary.liquidityReserve !== undefined ? moneyBRL(summary.liquidityReserve) : "não informada"}`,
+    `Inadimplência registrada: ${summary.delinquencyRate !== undefined ? `${summary.delinquencyRate}%` : "não informada"}`,
+    "",
+    `Ponto de atenção: ${attention}`,
+    `Próximo passo sugerido: ${nextStep}`,
+    "",
+    "Resumo auxiliar de gestão. Não substitui prestação de contas oficial, balancete da administradora ou análise contábil.",
+  ].join("\n");
 }
 
 // ─── Helpers para integração com pendências e agenda ─────────────────────────

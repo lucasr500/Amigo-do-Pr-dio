@@ -4,6 +4,8 @@ import {
   getMonthOverMonthComparison,
   getUpcomingBillsByWindow,
   buildFinancialExecutiveInsight,
+  buildFinancialHealthSignal,
+  buildFinancialCouncilMessage,
   buildMonthlyFinancialExecutiveSummary,
   inferCategory,
   buildPendenciaPayloadFromEntry,
@@ -452,6 +454,43 @@ describe("getFinancialSummary — cashRiskAnalysis", () => {
     const summary = getFinancialSummary("2026-06");
     const map: Record<string, string> = { "crítico": "critico", "atenção": "atencao", "baixo": "baixo" };
     expect(summary.cashRisk).toBe(map[summary.cashRiskAnalysis.level]);
+  });
+});
+
+describe("buildFinancialHealthSignal — HealthScore integration", () => {
+  test("inadimplência alta gera sinal financeiro ausente/risco", () => {
+    saveFinancialSnapshots([
+      makeSnapshot({ month: "2026-06", delinquencyRate: 22, estimatedBalance: 5000, liquidityReserve: 1000, entries: [] }),
+    ]);
+    const signal = buildFinancialHealthSignal("2026-06");
+    expect(signal.hasData).toBe(true);
+    expect(signal.status).not.toBe("ok");
+    expect(signal.suggestions.join(" ")).toContain("inadimplência");
+  });
+
+  test("reserva suficiente e inadimplência baixa geram sinal saudável", () => {
+    saveFinancialSnapshots([
+      makeSnapshot({
+        month: "2026-06",
+        delinquencyRate: 3,
+        estimatedBalance: 25000,
+        liquidityReserve: 15000,
+        entries: [makeEntry({ type: "despesa", amount: 10000, dueDate: undefined })],
+      }),
+    ]);
+    const signal = buildFinancialHealthSignal("2026-06");
+    expect(signal.status).toBe("ok");
+    expect(signal.points).toBeGreaterThanOrEqual(10);
+  });
+
+  test("mensagem para conselho usa dados registrados", () => {
+    saveFinancialSnapshots([
+      makeSnapshot({ month: "2026-06", estimatedBalance: 9000, delinquencyRate: 12, entries: [] }),
+    ]);
+    const text = buildFinancialCouncilMessage("2026-06");
+    expect(text).toContain("R$");
+    expect(text).toContain("12%");
+    expect(text).toContain("Resumo auxiliar de gestão");
   });
 });
 

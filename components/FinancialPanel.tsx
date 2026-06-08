@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import {
   addFinancialEntry,
   buildFinancialExecutiveInsight,
-  buildMonthlyFinancialExecutiveSummary,
+  buildFinancialCouncilMessage,
   buildPendenciaPayloadFromEntry,
   buildAgendaPayloadFromEntry,
   currentMonthKey,
@@ -172,7 +172,7 @@ export default function FinancialPanel({ onSaved }: Props) {
 
   async function copyMonthlySummary() {
     try {
-      await navigator.clipboard.writeText(buildMonthlyFinancialExecutiveSummary(month));
+      await navigator.clipboard.writeText(buildFinancialCouncilMessage(month));
       setSummaryCopied(true);
       setTimeout(() => setSummaryCopied(false), 2200);
     } catch {
@@ -391,9 +391,9 @@ export default function FinancialPanel({ onSaved }: Props) {
         <div className="mx-4 mt-3 rounded-lg border border-navy-100 bg-cream-50/45 px-3 py-3">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[12px] font-semibold text-navy-800">Resumo executivo copiável</p>
+              <p className="text-[12px] font-semibold text-navy-800">Resumo financeiro auxiliar</p>
               <p className="mt-0.5 text-[10.5px] leading-relaxed text-navy-400">
-                Texto curto para administradora, conselho ou prestação de contas.
+                Texto curto para conselho ou WhatsApp. Não substitui balancete ou prestação oficial.
               </p>
             </div>
             <button

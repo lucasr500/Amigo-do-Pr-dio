@@ -23,6 +23,7 @@ import { contarStatusManutencoes } from "./recorrencias";
 import { getRequests } from "./community-requests";
 import { getPosts } from "./community-posts";
 import { isAllDemoData } from "./community-permissions";
+import { buildFinancialHealthSignal, currentMonthKey } from "./financial";
 
 export type HealthStatusKey =
   | "critico"
@@ -60,7 +61,7 @@ const ROUTINE_FIELDS: Array<keyof MemoriaOperacional> = [
 ];
 
 // Máximo de pontos brutos — v2 com cobertura operacional
-const MAX_RAW = 123;
+const MAX_RAW = 135;
 
 // Pontua um campo de data essencial considerando precisão da AssistedDateField.
 // Fallback para string legada (dados pré-v5) tratados como precisão parcial.
@@ -120,6 +121,7 @@ export function computeHealthScore(): HealthScoreResult {
   const funcionarios = getFuncionarios();
   const manutencoes  = getManutencoes();
   const manutStatus  = manutencoes.length > 0 ? contarStatusManutencoes() : null;
+  const financialSignal = buildFinancialHealthSignal(currentMonthKey());
 
   const now     = Date.now();
   const weekAgo = now - 7 * 86_400_000;
@@ -212,7 +214,12 @@ export function computeHealthScore(): HealthScoreResult {
   }
   raw += manutPts;
 
-  // ── 10. Central Digital — sinais (sem impacto no MAX_RAW; fator informativo) ─
+  // ── 10. Financeiro operacional — até 12 pts ─────────────────────────────
+  // Índice auxiliar: mede sinais de caixa, inadimplência e histórico mensal.
+  // Não representa auditoria, balancete ou prestação de contas.
+  raw += financialSignal.points;
+
+  // ── 11. Central Digital — sinais (sem impacto no MAX_RAW; fator informativo) ─
   const allRequests  = getRequests();
   const allPosts     = getPosts();
   const hasCommunityData =
@@ -361,6 +368,13 @@ export function computeHealthScore(): HealthScoreResult {
     });
   }
 
+  // Financeiro
+  factors.push({
+    label: financialSignal.label,
+    status: financialSignal.status,
+    note: financialSignal.note,
+  });
+
   // Central Digital (only when real data exists)
   if (hasCommunityData) {
     if (urgentOverdue7d > 0) {
@@ -403,6 +417,11 @@ export function computeHealthScore(): HealthScoreResult {
     suggestions.push("Cadastrar manutenções recorrentes");
   if (hasCommunityData && urgentOverdue7d > 0 && suggestions.length < 3)
     suggestions.push("Responder solicitações urgentes na Central Digital");
+  for (const financialSuggestion of financialSignal.suggestions) {
+    if (suggestions.length < 3 && !suggestions.includes(financialSuggestion)) {
+      suggestions.push(financialSuggestion);
+    }
+  }
   if (suggestions.length < 3)
     suggestions.push("Exportar backup dos dados");
 
@@ -438,6 +457,10 @@ export function computeHealthScore(): HealthScoreResult {
     howToGain10Pts.push("Atualizar manutenções atrasadas (+até 15 pts brutos ao zerar)");
   }
 
+  if (financialSignal.status !== "ok" && howToGain10Pts.length < 3) {
+    howToGain10Pts.push(financialSignal.suggestions[0] ?? "Atualizar resumo financeiro mensal (+até 12 pts brutos)");
+  }
+
   if (howToGain10Pts.length < 1) {
     howToGain10Pts.push("Continue mantendo os dados atualizados e a revisão semanal em dia");
   }
@@ -459,6 +482,8 @@ export function computeHealthScore(): HealthScoreResult {
   if (pendMissing > 0) maxRawMissing.push([pendMissing, "Próximos passos parados ou em excesso"]);
 
   if (!reviewedThisWeek) maxRawMissing.push([10, "Revisão semanal não concluída esta semana"]);
+  const financialMissing = financialSignal.maxPoints - financialSignal.points;
+  if (financialMissing >= 6) maxRawMissing.push([financialMissing, financialSignal.bottleneck ?? "Financeiro com sinal de atenção"]);
 
   maxRawMissing.sort((a, b) => b[0] - a[0]);
   biggestBottleneck = maxRawMissing[0]?.[1] ?? "Nenhum gargalo significativo identificado";
@@ -468,7 +493,7 @@ export function computeHealthScore(): HealthScoreResult {
     statusKey,
     statusLabel,
     diagnosticPhrase,
-    factors: factors.slice(0, 7),
+    factors: factors.slice(0, 9),
     suggestions: suggestions.slice(0, 3),
     howToGain10Pts: howToGain10Pts.slice(0, 3),
     biggestBottleneck,

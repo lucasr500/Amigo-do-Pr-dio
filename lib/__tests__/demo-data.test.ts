@@ -20,4 +20,11 @@ describe("demo-data — primeiros 10 minutos", () => {
     expect(demo.communityDocuments?.some((doc) => doc.visibility === "moradores")).toBe(true);
     expect(demo.communityTimeline?.some((event) => event.visibility === "moradores")).toBe(true);
   });
+
+  test("inclui snapshots financeiros para demonstrar cockpit recorrente", () => {
+    const demo = getDemoUserBackup();
+    expect(demo.financialSnapshots?.length).toBeGreaterThanOrEqual(2);
+    expect(demo.financialSnapshots?.some((snapshot) => snapshot.delinquencyRate !== undefined)).toBe(true);
+    expect(demo.financialSnapshots?.some((snapshot) => snapshot.liquidityReserve !== undefined)).toBe(true);
+  });
 });

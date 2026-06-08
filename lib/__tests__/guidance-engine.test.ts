@@ -98,4 +98,45 @@ describe("buildGuidanceEngine — regras sprint 4.2", () => {
     const result = buildGuidanceEngine();
     expect(result.items.find((i) => i.id === "eng_elevador_fornecedor_ausente")).toBeUndefined();
   });
+
+  test("gera guidance quando o financeiro do mês ainda não foi registrado", () => {
+    const result = buildGuidanceEngine();
+    const item = result.items.find((i) => i.id === "eng_fin_snapshot_ausente");
+    expect(item).toBeDefined();
+    expect(item?.prioridade).toBe("planejamento");
+  });
+
+  test("gera guidance para inadimplência registrada acima de 10%", () => {
+    localStorage.setItem("amigo_financial_snapshots", JSON.stringify([{
+      id: "fin_test",
+      month: new Date().toISOString().slice(0, 7),
+      estimatedBalance: 12000,
+      delinquencyRate: 15,
+      liquidityReserve: 8000,
+      entries: [],
+      createdAt: new Date().toISOString(),
+    }]));
+    const result = buildGuidanceEngine();
+    const item = result.items.find((i) => i.id === "eng_fin_inadimplencia_alta");
+    expect(item).toBeDefined();
+    expect(item?.checklist).toContain("Evitar tratar o resumo como cobrança oficial");
+  });
+
+  test("gera guidance para reserva financeira baixa", () => {
+    localStorage.setItem("amigo_financial_snapshots", JSON.stringify([{
+      id: "fin_test",
+      month: new Date().toISOString().slice(0, 7),
+      estimatedBalance: 5000,
+      delinquencyRate: 4,
+      liquidityReserve: 1000,
+      entries: [
+        { id: "d1", type: "despesa", title: "Manutenção", amount: 10000, status: "previsto", createdAt: new Date().toISOString() },
+      ],
+      createdAt: new Date().toISOString(),
+    }]));
+    const result = buildGuidanceEngine();
+    const item = result.items.find((i) => i.id === "eng_fin_reserva_baixa");
+    expect(item).toBeDefined();
+    expect(item?.proximoPasso).toContain("Revisar despesas previstas");
+  });
 });

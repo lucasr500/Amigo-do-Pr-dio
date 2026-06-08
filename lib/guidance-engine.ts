@@ -21,6 +21,7 @@ import {
   type DocumentoEssencialId,
 } from "./session";
 import { getDecisions } from "./decisions";
+import { currentMonthKey, getCurrentFinancialSnapshot, getFinancialSummary } from "./financial";
 import { getHandoffProgress } from "./handoff";
 import { getActiveSuppliers } from "./suppliers";
 import { desde, past } from "./urgency";
@@ -81,6 +82,14 @@ export function buildGuidanceEngine(): GuidanceEngineResult {
   const decisions  = getDecisions();
   const suppliers  = getActiveSuppliers();
   const handoff    = getHandoffProgress();
+  const financialMonth = currentMonthKey();
+  const financialSnapshot = getCurrentFinancialSnapshot(financialMonth);
+  const financialSummary = getFinancialSummary(financialMonth);
+  const hasFinancialData =
+    financialSnapshot.entries.length > 0 ||
+    financialSnapshot.estimatedBalance !== 0 ||
+    financialSnapshot.delinquencyRate !== undefined ||
+    financialSnapshot.liquidityReserve !== undefined;
   const items: GuidanceEngineItem[] = [];
   const ids = new Set<string>();
 
@@ -372,6 +381,72 @@ export function buildGuidanceEngine(): GuidanceEngineResult {
       checklist: PLAYBOOKS.documento_critico_ausente.checklist,
       playbookId: "documento_critico_ausente",
     });
+  }
+
+  // ── Financeiro operacional ────────────────────────────────────────────────
+  if (!hasFinancialData) {
+    add({
+      id: "eng_fin_snapshot_ausente",
+      icon: "💰",
+      titulo: "Revisão financeira do mês ainda não registrada",
+      categoria: "gestao",
+      prioridade: "planejamento",
+      contexto: "O mês ainda não tem snapshot financeiro registrado. Um resumo simples ajuda o HealthScore, o MonthlyReview e o plano do mês.",
+      consequencia: "Sem esse registro, o cockpit perde visibilidade sobre caixa, inadimplência e próximas contas.",
+      proximoPasso: "Registrar resumo financeiro mensal.",
+      checklist: [
+        "Informar saldo estimado",
+        "Registrar receitas e despesas principais",
+        "Informar inadimplência, se houver dado",
+        "Registrar reserva com liquidez, se aplicável",
+        "Revisar pontos de atenção antes da revisão mensal",
+      ],
+    });
+  } else {
+    const delinquency = financialSummary.delinquencyRate ?? 0;
+    if (delinquency >= 10) {
+      add({
+        id: "eng_fin_inadimplencia_alta",
+        icon: "💰",
+        titulo: "Inadimplência merece acompanhamento",
+        categoria: "gestao",
+        prioridade: delinquency >= 20 ? "importante" : "planejamento",
+        contexto: "O índice financeiro registrado indica atenção operacional.",
+        consequencia: "A inadimplência reduz previsibilidade de caixa e pode dificultar decisões de manutenção ou contratação.",
+        proximoPasso: "Registrar ou revisar uma pendência financeira para acompanhar o tema neste mês.",
+        checklist: [
+          "Conferir boletos em aberto",
+          "Verificar evolução em relação ao mês anterior",
+          "Conversar com administradora, se aplicável",
+          "Registrar plano de acompanhamento",
+          "Evitar tratar o resumo como cobrança oficial",
+        ],
+      });
+    }
+
+    const reserve = financialSummary.liquidityReserve ?? 0;
+    const reserveLow =
+      financialSummary.estimatedBalance < 0 ||
+      (financialSummary.totalDespesas > 0 && reserve > 0 && reserve < financialSummary.totalDespesas * 0.5);
+    if (reserveLow) {
+      add({
+        id: "eng_fin_reserva_baixa",
+        icon: "💰",
+        titulo: "Reserva financeira baixa",
+        categoria: "gestao",
+        prioridade: financialSummary.estimatedBalance < 0 ? "importante" : "planejamento",
+        contexto: "O saldo ou reserva registrado está baixo para absorver imprevistos.",
+        consequencia: "Isso não significa irregularidade, mas merece atenção operacional antes de novas despesas relevantes.",
+        proximoPasso: "Revisar despesas previstas e registrar uma ação de acompanhamento financeiro.",
+        checklist: [
+          "Revisar contas a pagar do mês",
+          "Conferir saldo estimado",
+          "Identificar despesas adiáveis",
+          "Registrar uma pendência financeira de acompanhamento",
+          "Tratar o resumo como apoio interno, não como balancete oficial",
+        ],
+      });
+    }
   }
 
   // ── Manutenções recorrentes ───────────────────────────────────────────────

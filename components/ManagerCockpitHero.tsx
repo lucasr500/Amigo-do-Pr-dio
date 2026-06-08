@@ -19,6 +19,7 @@ type Props = {
 type CockpitState = {
   score: number;
   diagnostic: string;
+  bottleneck: string;
   topRisk: GuidanceEngineItem | null;
   guidanceCount: number;
   balance: number;
@@ -95,6 +96,7 @@ export default function ManagerCockpitHero({
     setState({
       score: health.percentage,
       diagnostic: health.diagnosticPhrase,
+      bottleneck: health.biggestBottleneck,
       topRisk: guidance.topRisco,
       guidanceCount: guidance.items.length,
       balance: fin.estimatedBalance,
@@ -145,7 +147,7 @@ export default function ManagerCockpitHero({
                   <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-100/72">HealthScore</p>
                   <p className="mt-1 text-[17px] font-semibold leading-snug text-white">{state.diagnostic}</p>
                   <p className="mt-1 text-[12px] leading-relaxed text-cream-100/54">
-                    Índice operacional auxiliar. Não indica conformidade legal.
+                    Principal fator: {state.bottleneck}. Índice auxiliar; não indica conformidade legal ou contábil.
                   </p>
                 </div>
               </div>

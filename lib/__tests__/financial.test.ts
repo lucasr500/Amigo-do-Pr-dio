@@ -4,6 +4,8 @@ import {
   parseFinancialQuickText,
   isFinancialEntryOverdue,
   buildMonthlyFinancialExecutiveSummary,
+  buildFinancialCouncilMessage,
+  buildFinancialHealthSignal,
   currentMonthKey,
   type FinancialEntry,
 } from "@/lib/financial";
@@ -228,6 +230,30 @@ describe("buildMonthlyFinancialExecutiveSummary", () => {
     const text = buildMonthlyFinancialExecutiveSummary("2026-06");
     expect(text).toContain("2026-06");
   });
+});
+
+describe("buildFinancialCouncilMessage", () => {
+  test("gera resumo auxiliar sem chamar de prestação oficial", () => {
+    const text = buildFinancialCouncilMessage("2026-06");
+    expect(text).toContain("Resumo financeiro auxiliar");
+    expect(text).toContain("Não substitui prestação de contas oficial");
+    expect(text.toLowerCase()).not.toContain("balancete oficial gerado");
+  });
+
+  test("usa 'não informada' quando inadimplência não existe", () => {
+    const text = buildFinancialCouncilMessage("2026-06");
+    expect(text).toContain("Inadimplência registrada: não informada");
+  });
+});
+
+describe("buildFinancialHealthSignal", () => {
+  test("sem dados financeiros gera sinal parcial, não crítico", () => {
+    const signal = buildFinancialHealthSignal("2026-06");
+    expect(signal.hasData).toBe(false);
+    expect(signal.status).toBe("partial");
+    expect(signal.suggestions).toContain("Registrar resumo financeiro mensal");
+  });
+
 });
 
 // ─── currentMonthKey ─────────────────────────────────────────────────────────

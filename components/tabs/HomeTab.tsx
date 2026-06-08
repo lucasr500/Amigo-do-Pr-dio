@@ -25,6 +25,7 @@ const HomeFeatureShortcuts = dynamic(() => import("@/components/HomeFeatureShort
 const HealthScoreProgressCard = dynamic(() => import("@/components/HealthScoreProgressCard"), { ssr: false });
 const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
 const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
+const MonthlyPlanCard = dynamic(() => import("@/components/MonthlyPlanCard"), { ssr: false });
 
 function HomeSectionLabel({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
@@ -132,6 +133,13 @@ export default function HomeTab({
               else if (target === "agenda") onNavigateTab("agenda");
             }}
             onOpenNotifications={onOpenNotifications}
+          />
+          <MonthlyPlanCard
+            refreshKey={refreshKey}
+            onNavigateTab={onNavigateTab}
+            onNavigateToSubView={onNavigateToSubView}
+            onNavigateToSection={onNavigateToSection}
+            onOpenMonthlyReview={onOpenMonthlyReview}
           />
 
           <MilestoneCelebration refreshKey={refreshKey} onDismiss={onRefresh} />

@@ -21,17 +21,17 @@ const PROFILE_COPY: Record<ActiveProfile, {
 }> = {
   manager: {
     title: "Olá, síndico.",
-    subtitle: "Faça login para acessar o cockpit de gestão do seu condomínio.",
+    subtitle: "Explore o cockpit localmente ou entre com sua conta se o acesso já estiver configurado.",
     surface: "bg-navy-950 text-cream-50",
-    cta: "Entrar",
-    secondary: "Continuar no modo local",
+    cta: "Enviar link de acesso",
+    secondary: "Continuar como síndico/gestor",
     benefits: ["Gestão completa", "Visão estratégica", "Segurança e confiança"],
   },
   resident: {
-    title: "Olá, morador.",
-    subtitle: "Faça login para acompanhar tudo o que acontece no seu condomínio.",
+    title: "Prévia do morador.",
+    subtitle: "Veja como a Central do Morador ficará organizada quando o acesso real for ativado.",
     surface: "bg-cream-50 text-navy-900",
-    cta: "Entrar",
+    cta: "Enviar link, se disponível",
     secondary: "Ver central preparada",
     benefits: ["Fique informado", "Participe com organização", "Consulte tudo em um só lugar"],
   },
@@ -192,8 +192,8 @@ export default function RoleGateway({ onSelectProfile }: Props) {
             <div className={`mt-4 rounded-2xl px-4 py-3 ${isManager ? "bg-white/[0.06]" : "bg-navy-50/70"}`}>
               <p className={`text-[12px] leading-relaxed ${isManager ? "text-cream-100/66" : "text-navy-500"}`}>
                 {isManager
-                  ? "O app continua funcionando em modo local-first. Login real só é usado quando a autenticação estiver configurada."
-                  : "Ainda não tem acesso? Solicite ao síndico ou à gestão do seu condomínio a liberação do cadastro."}
+                  ? "O app continua funcionando em modo local-first. Login real é opcional e só funciona quando a autenticação estiver configurada."
+                  : "Visualização preparada para moradores. O acesso real por conta será ativado em etapa futura pela gestão do condomínio."}
               </p>
             </div>
           </section>
@@ -227,7 +227,7 @@ export default function RoleGateway({ onSelectProfile }: Props) {
           />
           <RoleSelectCard
             title="Sou morador"
-            subtitle="Acompanhe comunicados, documentos e solicitações do seu condomínio."
+            subtitle="Veja a central preparada para comunicados, documentos e solicitações."
             tone="dark"
             onClick={() => setStep("resident")}
           />
