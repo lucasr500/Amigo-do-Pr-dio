@@ -40,19 +40,19 @@ const quickActions = [
 function EmptyPublicCard({ onNavigate }: { onNavigate: () => void }) {
   return (
     <div className="rounded-[24px] border border-navy-100 bg-white/92 px-5 py-5 shadow-card-md">
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-700">Mural oficial</p>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-700">Central preparada</p>
       <h2 className="mt-2 font-display text-[24px] font-semibold leading-tight text-navy-900">
-        Comunicados do condomínio aparecerão aqui
+        A central do morador está preparada
       </h2>
       <p className="mt-2 text-[13px] leading-relaxed text-navy-500">
-        Esta área está preparada para publicar avisos, lembretes e documentos quando a camada de moradores estiver ativa.
+        Quando o acesso de moradores for ativado, esta área reunirá comunicados, solicitações, documentos e participação organizada.
       </p>
       <button
         type="button"
         onClick={onNavigate}
         className="mt-4 rounded-full bg-navy-800 px-4 py-2 text-[12px] font-semibold text-white hover:bg-navy-900"
       >
-        Ver Central Digital
+        Ver como funcionará
       </button>
     </div>
   );
@@ -161,11 +161,41 @@ export default function ResidentHomeTab({
       </section>
 
       <section className="px-5 pb-4 sm:px-6">
+        <div className="rounded-[24px] border border-sage-100 bg-sage-50/70 px-4 py-4 shadow-card">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-sage-800">Como funcionará</p>
+              <h2 className="mt-1 text-[15px] font-semibold text-navy-900">Canal institucional, sem rede social</h2>
+            </div>
+            <button
+              type="button"
+              onClick={onSwitchProfile}
+              className="flex-shrink-0 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-navy-600 hover:bg-white"
+            >
+              Voltar para gestão
+            </button>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {[
+              ["Mural oficial", "Avisos e comunicados da gestão em um só lugar."],
+              ["Solicitações", "Pedidos e ocorrências com acompanhamento estruturado."],
+              ["Documentos públicos", "Atas, regras e documentos liberados para consulta."],
+            ].map(([title, body]) => (
+              <div key={title} className="rounded-2xl bg-white/78 px-3 py-3">
+                <p className="text-[12px] font-semibold text-navy-800">{title}</p>
+                <p className="mt-1 text-[11.5px] leading-relaxed text-navy-500">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-4 sm:px-6">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-[14px] font-semibold text-navy-900">Acesso rápido</h2>
           <span className="text-[11px] text-navy-400">Canal estruturado</span>
         </div>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {quickActions.map((action) => (
             <button
               key={action.label}

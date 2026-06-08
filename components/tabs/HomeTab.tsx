@@ -26,6 +26,15 @@ const HealthScoreProgressCard = dynamic(() => import("@/components/HealthScorePr
 const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
 const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
 
+function HomeSectionLabel({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="px-5 pb-2 pt-1 sm:px-6">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-300">{eyebrow}</p>
+      <h2 className="mt-0.5 font-display text-[20px] font-semibold text-navy-900">{title}</h2>
+    </div>
+  );
+}
+
 function completionBucket(pct: number): string {
   if (pct <= 25) return "0-25";
   if (pct <= 50) return "26-50";
@@ -111,6 +120,7 @@ export default function HomeTab({
             onNavigateToSection={onNavigateToSection}
           />
           <DynamicGreeting condoName={condoName} />
+          <HomeSectionLabel eyebrow="Primeiros minutos" title="Hoje" />
           <DailyBriefingCard refreshKey={refreshKey} />
           <RecentActivityCard refreshKey={refreshKey} />
           <HomePriorityStrip
@@ -159,6 +169,7 @@ export default function HomeTab({
             onOpen={onOpenMonthlyReview}
           />
           <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
+          <HomeSectionLabel eyebrow="Rotina operacional" title="Prazos e saúde" />
           <HomeAgendaCard
             refreshKey={refreshKey}
             onNavigate={() => onNavigateTab("agenda")}
@@ -192,6 +203,7 @@ export default function HomeTab({
             </div>
           )}
 
+          <HomeSectionLabel eyebrow="Guidance" title="Ações recomendadas" />
           <GuidancePanel
             onAsk={onSuggestionSelect}
             onResolved={onRefresh}
@@ -199,6 +211,7 @@ export default function HomeTab({
             refreshKey={refreshKey}
           />
 
+          <HomeSectionLabel eyebrow="Continuidade" title="Memória e evolução" />
           <InstitutionalMemoryCard
             refreshKey={refreshKey}
             onNavigateTab={onNavigateTab}
@@ -229,26 +242,11 @@ export default function HomeTab({
         <>
           <Hero
             onSetup={() => onNavigateTab("condominio")}
+            onDemo={onActivateDemo}
             onAssistente={() => onSuggestionSelect("O que o síndico precisa monitorar no condomínio?")}
             onSuggestionSelect={onSuggestionSelect}
           />
           <RiskPreviewStrip onAssistente={onSuggestionSelect} />
-          <div className="px-5 pb-3 sm:px-6">
-            <button
-              type="button"
-              onClick={onActivateDemo}
-              className="flex w-full items-center gap-3 rounded-lg border border-navy-100/80 bg-white/[0.78] px-4 py-3.5 text-left shadow-card transition-all hover:bg-white active:scale-[0.99]"
-            >
-              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50 text-[10px] font-bold tracking-[0.08em] text-navy-700" aria-hidden="true">DEMO</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-semibold text-navy-800">Ver uma rotina preenchida</p>
-                <p className="mt-0.5 text-[11.5px] text-navy-500">Exemplo com vencimentos, documentos e pendências já organizados.</p>
-              </div>
-              <svg className="h-4 w-4 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
           <GuidancePreview onSetup={() => onNavigateTab("condominio")} onAssistente={() => onNavigateTab("assistente")} />
         </>
       )}

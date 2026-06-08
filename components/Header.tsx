@@ -33,6 +33,7 @@ export default function Header({
 }: Props) {
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+  const profileLabel = profile === "resident" ? "Morador" : "Síndico/Gestor";
 
   useEffect(() => {
     setNomeCondominio(getProfile()?.nomeCondominio ?? null);
@@ -59,7 +60,7 @@ export default function Header({
         <div className="flex items-start justify-between animate-fade-in">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-400">
-              Hoje no condomínio
+              Visualização: {profileLabel}
             </p>
             <h1 className="mt-1 font-display text-[27px] font-semibold leading-tight text-navy-800">
               {profile === "resident" ? `${getGreeting()}, morador` : `${getGreeting()}, síndico`}
@@ -79,9 +80,9 @@ export default function Header({
             {onProfileSwitch && (
               <button
                 type="button"
-                aria-label="Trocar perfil"
+                aria-label={`Trocar visualização atual: ${profileLabel}`}
                 onClick={onProfileSwitch}
-                className="hidden h-9 items-center rounded-full border border-navy-100/70 bg-white/[0.68] px-3 text-[11px] font-semibold text-navy-500 shadow-card transition-colors hover:bg-white hover:text-navy-800 active:scale-[0.97] sm:flex"
+                className="flex h-9 items-center rounded-full border border-navy-100/70 bg-white/[0.68] px-3 text-[11px] font-semibold text-navy-500 shadow-card transition-colors hover:bg-white hover:text-navy-800 active:scale-[0.97]"
               >
                 Trocar
               </button>
@@ -171,6 +172,21 @@ export default function Header({
               </p>
             )}
           </div>
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-2">
+          <span className="hidden rounded-full border border-navy-100 bg-white/80 px-2.5 py-1 text-[10.5px] font-semibold text-navy-500 shadow-card sm:inline-flex">
+            Visualização: {profileLabel}
+          </span>
+          {onProfileSwitch && (
+            <button
+              type="button"
+              aria-label={`Trocar visualização atual: ${profileLabel}`}
+              onClick={onProfileSwitch}
+              className="rounded-full border border-navy-100 bg-white/80 px-2.5 py-1 text-[10.5px] font-semibold text-navy-500 shadow-card transition-colors hover:bg-white hover:text-navy-800 active:scale-[0.97]"
+            >
+              Trocar
+            </button>
+          )}
         </div>
       </div>
     </header>

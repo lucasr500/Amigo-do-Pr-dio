@@ -76,7 +76,7 @@ const RESIDENT_LEFT_TABS: TabItem[] = [
 ];
 
 const RESIDENT_RIGHT_TABS: TabItem[] = [
-  { id: "ferramentas", label: "Solicit.",    Icon: IconChat },
+  { id: "agenda",      label: "Agenda",      Icon: IconCalendar },
   { id: "assistente",  label: "Mais",        Icon: IconAccount },
 ];
 
@@ -91,8 +91,8 @@ export default function BottomNav({ active, onChange, urgentCount, profile = "ma
   const plusActive = active === "ferramentas";
   const leftTabs = profile === "resident" ? RESIDENT_LEFT_TABS : LEFT_TABS;
   const rightTabs = profile === "resident" ? RESIDENT_RIGHT_TABS : RIGHT_TABS;
-  const plusLabel = profile === "resident" ? "Novo" : "Ações";
-  const plusAria = profile === "resident" ? "Ações do morador" : "Ações do síndico";
+  const plusLabel = profile === "resident" ? "Canal" : "Ações";
+  const plusAria = profile === "resident" ? "Abrir canal estruturado da visualização de morador" : "Ações do síndico";
 
   return (
     <nav

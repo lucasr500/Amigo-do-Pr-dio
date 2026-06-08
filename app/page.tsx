@@ -22,7 +22,6 @@ import {
   hasProfile,
   addPendencia,
   getPendenciasAbertas,
-  isFirstRun,
   getMemoriaOperacional,
   getMemoriaAssistida,
   getProfile,
@@ -120,7 +119,6 @@ export default function HomePage() {
     const lastBackup = getLastBackupAt();
     const backupStale = !lastBackup || (Date.now() - new Date(lastBackup).getTime()) > 30 * 86400000;
     if (hasData && backupStale) setShowBackupNudge(true);
-    if (isFirstRun()) setShowOnboarding(true);
     const stopScheduler = startScheduler();
     setUnreadNotifications(getUnreadCount());
     const stopSession = startSessionTimer();
