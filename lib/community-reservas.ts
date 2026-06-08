@@ -62,3 +62,31 @@ export function getReservationsByDate(date: string): SpaceReservation[] {
 export function getReservationsBySpace(space: string): SpaceReservation[] {
   return load().filter((r) => r.space === space);
 }
+
+export function getPendingReservations(): SpaceReservation[] {
+  return load()
+    .filter((r) => r.status === "solicitada")
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getApprovedReservations(): SpaceReservation[] {
+  return load()
+    .filter((r) => r.status === "aprovada")
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function getReservationSummary(): {
+  total: number;
+  pending: number;
+  approved: number;
+  upcoming: number;
+} {
+  const all = load();
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    total:    all.length,
+    pending:  all.filter((r) => r.status === "solicitada").length,
+    approved: all.filter((r) => r.status === "aprovada").length,
+    upcoming: all.filter((r) => r.status === "aprovada" && r.date >= today).length,
+  };
+}

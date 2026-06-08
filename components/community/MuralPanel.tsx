@@ -53,6 +53,7 @@ export default function MuralPanel({ role, onSeed }: Props) {
   const [postComments, setPostComments] = useState<Record<string, Comment[]>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const [filterCat, setFilterCat] = useState<PostCategory | "all">("all");
+  const [viewOrigin, setViewOrigin] = useState<"all" | "oficial" | "morador">("all");
 
   const isManager = role === "manager";
 
@@ -108,7 +109,14 @@ export default function MuralPanel({ role, onSeed }: Props) {
     loadComments(postId);
   };
 
-  const filtered = filterCat === "all" ? posts : posts.filter((p) => p.category === filterCat);
+  const originFiltered = viewOrigin === "oficial"
+    ? posts.filter((p) => p.origin !== "morador")
+    : viewOrigin === "morador"
+      ? posts.filter((p) => p.origin === "morador")
+      : posts;
+  const filtered = filterCat === "all" ? originFiltered : originFiltered.filter((p) => p.category === filterCat);
+
+  const residentPostCount = posts.filter((p) => p.origin === "morador").length;
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up space-y-3">
@@ -130,15 +138,33 @@ export default function MuralPanel({ role, onSeed }: Props) {
           )}
         </div>
 
-        {/* Filtros */}
-        {posts.length > 3 && (
+        {/* Tabs de origem */}
+        {(posts.length > 0 || residentPostCount > 0) && (
+          <div className="border-t border-navy-50 px-5 py-2.5">
+            <div className="flex gap-1.5">
+              {(["all", "oficial", "morador"] as const).map((o) => {
+                const labels = { all: "Todos", oficial: "Mural Oficial", morador: "Participação" };
+                const count = o === "all" ? posts.length : o === "oficial" ? posts.filter((p) => p.origin !== "morador").length : residentPostCount;
+                return (
+                  <button key={o} type="button" onClick={() => { setViewOrigin(o); setFilterCat("all"); }}
+                    className={`rounded-full px-2.5 py-1 text-[10.5px] font-medium transition-colors flex-shrink-0 ${viewOrigin === o ? "bg-navy-800 text-white" : "bg-navy-50 text-navy-500 hover:bg-navy-100"}`}>
+                    {labels[o]}{count > 0 ? ` (${count})` : ""}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Filtros por categoria */}
+        {originFiltered.length > 3 && (
           <div className="border-t border-navy-50 px-5 py-2.5">
             <div className="flex flex-wrap gap-1.5 overflow-x-auto">
               <button type="button" onClick={() => setFilterCat("all")}
                 className={`rounded-full px-2.5 py-1 text-[10.5px] font-medium transition-colors flex-shrink-0 ${filterCat === "all" ? "bg-navy-800 text-white" : "bg-navy-50 text-navy-500 hover:bg-navy-100"}`}>
-                Todos ({posts.length})
+                Todos ({originFiltered.length})
               </button>
-              {CATEGORIES.filter(([cat]) => posts.some((p) => p.category === cat)).map(([cat, label]) => (
+              {CATEGORIES.filter(([cat]) => originFiltered.some((p) => p.category === cat)).map(([cat, label]) => (
                 <button key={cat} type="button" onClick={() => setFilterCat(cat)}
                   className={`rounded-full px-2.5 py-1 text-[10.5px] font-medium transition-colors flex-shrink-0 ${filterCat === cat ? "bg-navy-800 text-white" : "bg-navy-50 text-navy-500 hover:bg-navy-100"}`}>
                   {label}
@@ -181,6 +207,14 @@ export default function MuralPanel({ role, onSeed }: Props) {
                   {VISIBILITIES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-navy-500">Origem</label>
+              <select value={form.origin ?? "oficial"} onChange={(e) => setForm({ ...form, origin: e.target.value as PostOrigin })}
+                className="w-full rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none">
+                <option value="oficial">Mural Oficial (gestão)</option>
+                <option value="morador">Participação (morador)</option>
+              </select>
             </div>
             <div>
               <label className="mb-1 block text-[11px] font-medium text-navy-500">Link externo (opcional)</label>

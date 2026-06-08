@@ -144,6 +144,30 @@ export function emitPollClosed(pollId: string, title: string): void {
   });
 }
 
+export function emitReservationApproved(reservationId: string, space: string, unit: string): void {
+  addTimelineEvent({
+    type: "outro",
+    title: `Reserva aprovada: ${space}`,
+    description: `Unidade ${unit}`,
+    visibility: "moradores",
+    sourceModule: "reservas",
+    sourceId: reservationId,
+    occurredAt: new Date().toISOString(),
+  });
+}
+
+export function emitReservationCancelled(reservationId: string, space: string, unit: string): void {
+  addTimelineEvent({
+    type: "outro",
+    title: `Reserva cancelada: ${space}`,
+    description: `Unidade ${unit}`,
+    visibility: "gestao",
+    sourceModule: "reservas",
+    sourceId: reservationId,
+    occurredAt: new Date().toISOString(),
+  });
+}
+
 // visibility defaults to "moradores" — pass doc.visibility to reflect actual access level.
 export function emitDocumentPublished(
   docId: string,

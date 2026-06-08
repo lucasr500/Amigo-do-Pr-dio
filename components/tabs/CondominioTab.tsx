@@ -38,6 +38,8 @@ const UnitHistoryPanel               = dynamic(() => import("@/components/UnitHi
 const ViewModeSelector               = dynamic(() => import("@/components/community/ViewModeSelector"), { ssr: false });
 const FinancialMonthlyChart          = dynamic(() => import("@/components/financial/FinancialMonthlyChart"), { ssr: false });
 const MuralPanel                     = dynamic(() => import("@/components/community/MuralPanel"), { ssr: false });
+const ReservasPanel                  = dynamic(() => import("@/components/community/ReservasPanel"), { ssr: false });
+const CentralDigitalHub              = dynamic(() => import("@/components/community/CentralDigitalHub"), { ssr: false });
 const RequestsPanel                  = dynamic(() => import("@/components/community/RequestsPanel"), { ssr: false });
 const PollsPanel                     = dynamic(() => import("@/components/community/PollsPanel"), { ssr: false });
 const PublicDocumentsPanel           = dynamic(() => import("@/components/community/PublicDocumentsPanel"), { ssr: false });
@@ -275,7 +277,11 @@ export default function CondominioTab({
           <section className="px-5 pb-3 sm:px-6">
             <ViewModeSelector onChange={handleRoleChange} />
           </section>
+          {(communityRole === "manager" || communityRole === "council") && (
+            <CentralDigitalHub />
+          )}
           <MuralPanel role={communityRole} />
+          <ReservasPanel role={communityRole} />
           <RequestsPanel role={communityRole} />
           <PollsPanel role={communityRole} />
           <PublicDocumentsPanel role={communityRole} />

@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
-import { getTimeline, emitBackupExported, emitSupplierRegistered } from "@/lib/community-timeline";
+import { getTimeline, emitBackupExported, emitSupplierRegistered, emitReservationApproved, emitReservationCancelled } from "@/lib/community-timeline";
 import { addPendencia, completePendencia } from "@/lib/session-pendencias";
 import { upsertDocumento, type DocumentoEssencial } from "@/lib/session-documentos";
 
@@ -75,5 +75,48 @@ describe("community timeline — emits operacionais", () => {
     upsertDocumento(makeDoc("2026-10-01"));
     const events = getTimeline().filter((e) => e.type === "documento_renovado" && e.sourceId === "avcb_clcb");
     expect(events).toHaveLength(1);
+  });
+});
+
+// ── emitReservationApproved ───────────────────────────────────────────────────
+
+describe("emitReservationApproved", () => {
+  test("emite evento na timeline com type outro", () => {
+    emitReservationApproved("res-001", "Salão de Festas", "302");
+    const [event] = getTimeline();
+    expect(event.type).toBe("outro");
+    expect(event.title).toContain("Salão de Festas");
+    expect(event.description).toContain("302");
+  });
+
+  test("registra sourceModule reservas e sourceId correto", () => {
+    emitReservationApproved("res-xyz", "Churrasqueira", "101");
+    const [event] = getTimeline();
+    expect(event.sourceModule).toBe("reservas");
+    expect(event.sourceId).toBe("res-xyz");
+  });
+
+  test("visibility é moradores", () => {
+    emitReservationApproved("res-002", "Academia", "201");
+    const [event] = getTimeline();
+    expect(event.visibility).toBe("moradores");
+  });
+});
+
+// ── emitReservationCancelled ──────────────────────────────────────────────────
+
+describe("emitReservationCancelled", () => {
+  test("emite evento na timeline com type outro", () => {
+    emitReservationCancelled("res-003", "Quadra", "501");
+    const [event] = getTimeline();
+    expect(event.type).toBe("outro");
+    expect(event.title).toContain("cancelada");
+    expect(event.description).toContain("501");
+  });
+
+  test("visibility é gestao", () => {
+    emitReservationCancelled("res-004", "Sauna", "302");
+    const [event] = getTimeline();
+    expect(event.visibility).toBe("gestao");
   });
 });

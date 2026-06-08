@@ -8,6 +8,9 @@ import {
   deleteReservation,
   getReservationsByDate,
   getReservationsBySpace,
+  getPendingReservations,
+  getApprovedReservations,
+  getReservationSummary,
 } from "@/lib/community-reservas";
 
 // ── localStorage stub ─────────────────────────────────────────────────────────
@@ -190,5 +193,79 @@ describe("getReservationsBySpace", () => {
 
   test("retorna vazio para espaço inexistente", () => {
     expect(getReservationsBySpace("Academia")).toHaveLength(0);
+  });
+});
+
+// ── getPendingReservations ────────────────────────────────────────────────────
+
+describe("getPendingReservations", () => {
+  beforeEach(() => {
+    addReservation({ unit: "101", requesterName: "A", space: "Salão", date: "2026-06-25", status: "solicitada" });
+    addReservation({ unit: "201", requesterName: "B", space: "Churrasqueira", date: "2026-06-20", status: "aprovada" });
+    addReservation({ unit: "301", requesterName: "C", space: "Academia", date: "2026-06-22", status: "solicitada" });
+    addReservation({ unit: "401", requesterName: "D", space: "Salão", date: "2026-06-18", status: "cancelada" });
+  });
+
+  test("retorna apenas reservas solicitadas", () => {
+    const pending = getPendingReservations();
+    expect(pending).toHaveLength(2);
+    expect(pending.every((r) => r.status === "solicitada")).toBe(true);
+  });
+
+  test("ordena por data crescente", () => {
+    const pending = getPendingReservations();
+    expect(pending[0].date).toBe("2026-06-22");
+    expect(pending[1].date).toBe("2026-06-25");
+  });
+});
+
+// ── getApprovedReservations ───────────────────────────────────────────────────
+
+describe("getApprovedReservations", () => {
+  beforeEach(() => {
+    addReservation({ unit: "101", requesterName: "A", space: "Salão", date: "2026-07-01", status: "aprovada" });
+    addReservation({ unit: "201", requesterName: "B", space: "Churrasqueira", date: "2026-06-20", status: "aprovada" });
+    addReservation({ unit: "301", requesterName: "C", space: "Academia", date: "2026-06-22", status: "solicitada" });
+  });
+
+  test("retorna apenas reservas aprovadas", () => {
+    const approved = getApprovedReservations();
+    expect(approved).toHaveLength(2);
+    expect(approved.every((r) => r.status === "aprovada")).toBe(true);
+  });
+
+  test("ordena por data crescente", () => {
+    const approved = getApprovedReservations();
+    expect(approved[0].date).toBe("2026-06-20");
+    expect(approved[1].date).toBe("2026-07-01");
+  });
+});
+
+// ── getReservationSummary ─────────────────────────────────────────────────────
+
+describe("getReservationSummary", () => {
+  test("retorna zeros quando não há reservas", () => {
+    const s = getReservationSummary();
+    expect(s.total).toBe(0);
+    expect(s.pending).toBe(0);
+    expect(s.approved).toBe(0);
+    expect(s.upcoming).toBe(0);
+  });
+
+  test("conta corretamente total, pendentes e aprovadas", () => {
+    addReservation({ unit: "101", requesterName: "A", space: "Salão", date: "2026-06-20", status: "solicitada" });
+    addReservation({ unit: "201", requesterName: "B", space: "Churrasqueira", date: "2099-06-30", status: "aprovada" });
+    addReservation({ unit: "301", requesterName: "C", space: "Academia", date: "2024-01-01", status: "cancelada" });
+    const s = getReservationSummary();
+    expect(s.total).toBe(3);
+    expect(s.pending).toBe(1);
+    expect(s.approved).toBe(1);
+  });
+
+  test("upcoming conta apenas aprovadas com data futura", () => {
+    addReservation({ unit: "101", requesterName: "A", space: "Salão", date: "2099-06-30", status: "aprovada" });
+    addReservation({ unit: "201", requesterName: "B", space: "Churrasqueira", date: "2020-01-01", status: "aprovada" });
+    const s = getReservationSummary();
+    expect(s.upcoming).toBe(1);
   });
 });
