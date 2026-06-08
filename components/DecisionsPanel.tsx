@@ -5,6 +5,8 @@ import {
   getDecisions, addDecision, updateDecision, deleteDecision, buildDecisionsReport,
   DECISION_CATEGORY_LABELS, type Decision, type DecisionCategory, type DecisionRiskLevel,
 } from "@/lib/decisions";
+import { addPendencia } from "@/lib/session";
+import { emitDecisionRegistered } from "@/lib/community-timeline";
 
 const CATEGORIES = Object.entries(DECISION_CATEGORY_LABELS) as [DecisionCategory, string][];
 const RISK_LEVELS: [DecisionRiskLevel, string][] = [["baixo", "Baixo"], ["medio", "Médio"], ["alto", "Alto"]];
@@ -26,6 +28,8 @@ export default function DecisionsPanel() {
   const [filterCat, setFilterCat] = useState<DecisionCategory | "all">("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [timelineEmitted, setTimelineEmitted] = useState<string | null>(null);
+  const [pendenciaCreatedFor, setPendenciaCreatedFor] = useState<string | null>(null);
 
   useEffect(() => { setDecisions(getDecisions()); }, []);
   const refresh = () => setDecisions(getDecisions());
@@ -245,11 +249,36 @@ export default function DecisionsPanel() {
               <div><p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-navy-400 mb-0.5">Decisão</p><p className="text-[12px] font-medium text-navy-800 leading-relaxed">{d.outcome}</p></div>
               {d.nextStep && <div><p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-navy-400 mb-0.5">Próximo passo</p><p className="text-[12px] text-navy-600">{d.nextStep}</p></div>}
               {d.riskNotes && <div><p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-navy-400 mb-0.5">Obs. de risco</p><p className="text-[11.5px] text-amber-700">{d.riskNotes}</p></div>}
-              <div className="flex gap-3 pt-1">
+              <div className="flex flex-wrap gap-3 pt-1">
                 <button type="button" onClick={() => handleEdit(d)}
                   className="text-[11px] text-navy-400 underline underline-offset-2 hover:text-navy-600">Editar</button>
                 <button type="button" onClick={() => handleDelete(d.id)}
                   className="text-[11px] text-terracotta-500 underline underline-offset-2 hover:text-terracotta-700">Remover</button>
+                {timelineEmitted !== d.id ? (
+                  <button type="button"
+                    onClick={() => {
+                      emitDecisionRegistered(d.id, d.title, DECISION_CATEGORY_LABELS[d.category]);
+                      setTimelineEmitted(d.id);
+                    }}
+                    className="text-[11px] text-navy-500 underline underline-offset-2 hover:text-navy-700">
+                    + Timeline
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-sage-600">✓ Na timeline</span>
+                )}
+                {d.nextStep && pendenciaCreatedFor !== d.id && (
+                  <button type="button"
+                    onClick={() => {
+                      addPendencia({ titulo: d.nextStep!, categoria: "operacional", origem: "manual" });
+                      setPendenciaCreatedFor(d.id);
+                    }}
+                    className="text-[11px] text-navy-500 underline underline-offset-2 hover:text-navy-700">
+                    Criar pendência
+                  </button>
+                )}
+                {pendenciaCreatedFor === d.id && (
+                  <span className="text-[11px] text-sage-600">✓ Pendência criada</span>
+                )}
               </div>
             </div>
           )}

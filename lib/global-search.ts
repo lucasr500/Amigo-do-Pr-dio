@@ -312,6 +312,26 @@ export const SEARCH_INDEX: SearchResult[] = [
     keywords: ["convencao", "regras", "normas", "estatuto", "regulamento"],
   },
 
+  // ── MEMÓRIA INSTITUCIONAL — itens adicionais ─────────────────────────────────
+  {
+    id: "timeline-institucional",
+    title: "Timeline Institucional",
+    description: "Histórico cronológico de eventos do condomínio.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    keywords: ["timeline", "historico", "cronologico", "eventos", "institucional", "registro", "auditoria"],
+  },
+  {
+    id: "historico-unidade",
+    title: "Histórico por Unidade",
+    description: "Ocorrências, multas e registros por apartamento.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "memoria-institucional",
+    keywords: ["unidade", "apartamento", "historico", "ocorrencia", "multa", "advertencia", "morador"],
+  },
+
   // ── KB CATEGORIAS ────────────────────────────────────────────────────────────
   {
     id: "kb-multas",

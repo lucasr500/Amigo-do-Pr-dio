@@ -216,26 +216,31 @@ export type TimelineEventType =
   | "solicitacao_aberta" | "solicitacao_resolvida"
   | "enquete_criada" | "enquete_encerrada"
   | "assembleia_realizada" | "decisao_registrada" | "relatorio_emitido"
-  | "mandato_atualizado" | "fornecedor_cadastrado" | "ocorrencia_registrada" | "outro";
+  | "mandato_atualizado" | "fornecedor_cadastrado" | "ocorrencia_registrada"
+  | "comunicado_registrado" | "revisao_mensal_concluida" | "backup_exportado"
+  | "outro";
 
 export const TIMELINE_TYPE_LABELS: Record<TimelineEventType, string> = {
-  documento_publicado:  "Documento publicado",
-  documento_renovado:   "Documento renovado",
-  aviso_publicado:      "Aviso publicado",
-  obra_iniciada:        "Obra iniciada",
-  obra_concluida:       "Obra concluída",
-  manutencao_realizada: "Manutenção realizada",
-  solicitacao_aberta:   "Solicitação aberta",
-  solicitacao_resolvida:"Solicitação resolvida",
-  enquete_criada:       "Enquete criada",
-  enquete_encerrada:    "Enquete encerrada",
-  assembleia_realizada: "Assembleia realizada",
-  decisao_registrada:   "Decisão registrada",
-  relatorio_emitido:    "Relatório emitido",
-  mandato_atualizado:   "Mandato atualizado",
-  fornecedor_cadastrado:"Fornecedor cadastrado",
-  ocorrencia_registrada:"Ocorrência registrada",
-  outro:                "Evento",
+  documento_publicado:       "Documento publicado",
+  documento_renovado:        "Documento renovado",
+  aviso_publicado:           "Aviso publicado",
+  obra_iniciada:             "Obra iniciada",
+  obra_concluida:            "Obra concluída",
+  manutencao_realizada:      "Manutenção realizada",
+  solicitacao_aberta:        "Solicitação aberta",
+  solicitacao_resolvida:     "Solicitação resolvida",
+  enquete_criada:            "Enquete criada",
+  enquete_encerrada:         "Enquete encerrada",
+  assembleia_realizada:      "Assembleia realizada",
+  decisao_registrada:        "Decisão registrada",
+  relatorio_emitido:         "Relatório emitido",
+  mandato_atualizado:        "Mandato atualizado",
+  fornecedor_cadastrado:     "Fornecedor cadastrado",
+  ocorrencia_registrada:     "Ocorrência registrada",
+  comunicado_registrado:     "Comunicado registrado",
+  revisao_mensal_concluida:  "Revisão mensal concluída",
+  backup_exportado:          "Backup exportado",
+  outro:                     "Evento",
 };
 
 export type TimelineEvent = {

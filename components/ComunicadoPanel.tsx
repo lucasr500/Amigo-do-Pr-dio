@@ -7,6 +7,7 @@ import {
 } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { COMUNICADO_TEMPLATES, ComunicadoId } from "@/lib/comunicados";
+import { emitComunicadoRegistered } from "@/lib/community-timeline";
 
 type ComunicadoAnchor =
   | "comunicado"
@@ -82,6 +83,7 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
   const [condoName, setCondoName] = useState("");
   const [wasCopied, setWasCopied] = useState(false);
   const [followupCreated, setFollowupCreated] = useState(false);
+  const [timelineRegistered, setTimelineRegistered] = useState(false);
 
   const AGO_PAUTA_DEFAULT =
     "Prestação de contas do exercício\nPrevisão orçamentária\nEleição de síndico, subsíndico e conselho\nAssuntos gerais";
@@ -123,6 +125,7 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
     setCopyError(false);
     setWasCopied(false);
     setFollowupCreated(false);
+    setTimelineRegistered(false);
     void trackEvent("comunicado_gerado", {
       tipo_comunicado: id,
       source: "ferramentas",
@@ -137,6 +140,7 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
     setCopyError(false);
     setWasCopied(false);
     setFollowupCreated(false);
+    setTimelineRegistered(false);
   };
 
   const handleCopy = async () => {
@@ -380,9 +384,9 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
           )}
         </div>
 
-        {/* CTA: criar próximo passo — aparece após o primeiro copiar */}
+        {/* CTAs pós-cópia — aparecem após o primeiro copiar */}
         {wasCopied && (
-          <div className="border-t border-navy-50 px-4 py-3">
+          <div className="border-t border-navy-50 px-4 py-3 space-y-2">
             {!followupCreated ? (
               <button
                 type="button"
@@ -405,6 +409,30 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
                   <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <p className="text-[12px] text-navy-500">Próximo passo criado com sucesso.</p>
+              </div>
+            )}
+
+            {!timelineRegistered ? (
+              <button
+                type="button"
+                onClick={() => {
+                  emitComunicadoRegistered(selectedId!, template!.title);
+                  setTimelineRegistered(true);
+                }}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-navy-100 py-2.5 text-[12.5px] font-medium text-navy-500 transition-colors hover:bg-navy-50 active:scale-[0.98]"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="5.5" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M8 5.5V8.5l2 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+                Registrar na timeline institucional
+              </button>
+            ) : (
+              <div className="flex items-center justify-center gap-1.5 py-1">
+                <svg className="h-3.5 w-3.5 text-sage-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="text-[12px] text-navy-500">Comunicado registrado na timeline.</p>
               </div>
             )}
           </div>

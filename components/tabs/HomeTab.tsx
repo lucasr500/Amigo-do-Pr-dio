@@ -23,6 +23,7 @@ const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard")
 const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
 const HomeFeatureShortcuts = dynamic(() => import("@/components/HomeFeatureShortcuts"), { ssr: false });
 const HealthScoreProgressCard = dynamic(() => import("@/components/HealthScoreProgressCard"), { ssr: false });
+const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
 
 function completionBucket(pct: number): string {
   if (pct <= 25) return "0-25";
@@ -187,6 +188,12 @@ export default function HomeTab({
             onResolved={onRefresh}
             onPendenciaSaved={onRefresh}
             refreshKey={refreshKey}
+          />
+
+          <InstitutionalMemoryCard
+            refreshKey={refreshKey}
+            onNavigateTab={onNavigateTab}
+            onNavigateToSection={onNavigateToSection}
           />
 
           <HomeFeatureShortcuts

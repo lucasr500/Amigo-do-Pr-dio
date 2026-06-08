@@ -9,6 +9,7 @@ import {
   type MonthlyReviewSnapshot,
   type MonthlyReviewTrend,
 } from "@/lib/session-monthly-review";
+import { emitMonthlyReviewCompleted } from "@/lib/community-timeline";
 import Panel from "@/components/ui/Panel";
 
 // ─── Helpers visuais ──────────────────────────────────────────────────────────
@@ -46,6 +47,7 @@ function shortDate(iso: string): string {
 
 function SnapshotRow({ snap }: { snap: MonthlyReviewSnapshot }) {
   const [copied, setCopied] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -55,6 +57,11 @@ function SnapshotRow({ snap }: { snap: MonthlyReviewSnapshot }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch { /* noop */ }
+  };
+
+  const handleRegisterTimeline = () => {
+    emitMonthlyReviewCompleted(snap.month, snap.score);
+    setRegistered(true);
   };
 
   return (
@@ -86,14 +93,28 @@ function SnapshotRow({ snap }: { snap: MonthlyReviewSnapshot }) {
           </div>
         </div>
 
-        {/* Copy button */}
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex-shrink-0 rounded-lg border border-navy-100 bg-navy-50/80 px-2.5 py-1.5 text-[10.5px] font-medium text-navy-600 transition-colors hover:bg-navy-100 active:scale-[0.97]"
-        >
-          {copied ? "Copiado" : "Copiar"}
-        </button>
+        {/* Ações */}
+        <div className="flex flex-shrink-0 flex-col gap-1">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="rounded-lg border border-navy-100 bg-navy-50/80 px-2.5 py-1.5 text-[10.5px] font-medium text-navy-600 transition-colors hover:bg-navy-100 active:scale-[0.97]"
+          >
+            {copied ? "Copiado" : "Copiar"}
+          </button>
+          <button
+            type="button"
+            onClick={handleRegisterTimeline}
+            disabled={registered}
+            className={`rounded-lg border px-2.5 py-1.5 text-[10.5px] font-medium transition-colors active:scale-[0.97]
+              ${registered
+                ? "border-sage-200 bg-sage-50 text-sage-700"
+                : "border-navy-100 bg-navy-50/80 text-navy-500 hover:bg-navy-100"
+              }`}
+          >
+            {registered ? "✓ Timeline" : "Timeline"}
+          </button>
+        </div>
       </div>
 
       {/* Top items */}

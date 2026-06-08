@@ -126,6 +126,70 @@ export function emitDocumentPublished(
   });
 }
 
+// ─── Emit operacionais — módulos internos do produto ─────────────────────────
+
+export function emitDecisionRegistered(decisionId: string, title: string, categoryLabel: string): void {
+  addTimelineEvent({
+    type: "decisao_registrada",
+    title: `Decisão registrada: ${title}`,
+    description: `Categoria: ${categoryLabel}`,
+    visibility: "gestao",
+    sourceModule: "decisions",
+    sourceId: decisionId,
+    occurredAt: new Date().toISOString(),
+  });
+}
+
+export function emitSupplierRegistered(supplierId: string, name: string, categoryLabel: string): void {
+  addTimelineEvent({
+    type: "fornecedor_cadastrado",
+    title: `Fornecedor cadastrado: ${name}`,
+    description: `Categoria: ${categoryLabel}`,
+    visibility: "gestao",
+    sourceModule: "suppliers",
+    sourceId: supplierId,
+    occurredAt: new Date().toISOString(),
+  });
+}
+
+export function emitComunicadoRegistered(templateId: string, title: string): void {
+  addTimelineEvent({
+    type: "comunicado_registrado",
+    title: `Comunicado registrado: ${title}`,
+    visibility: "moradores",
+    sourceModule: "comunicados",
+    sourceId: templateId,
+    occurredAt: new Date().toISOString(),
+  });
+}
+
+export function emitMonthlyReviewCompleted(month: string, score: number): void {
+  const monthFormatted = new Date(`${month}-01T12:00:00`).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+  addTimelineEvent({
+    type: "revisao_mensal_concluida",
+    title: `Revisão mensal concluída — ${monthFormatted}`,
+    description: `Score: ${score}/100`,
+    visibility: "gestao",
+    sourceModule: "monthly-review",
+    sourceId: month,
+    occurredAt: new Date().toISOString(),
+  });
+}
+
+export function emitBackupExported(): void {
+  addTimelineEvent({
+    type: "backup_exportado",
+    title: "Backup exportado",
+    description: "Dados do condomínio exportados com sucesso.",
+    visibility: "gestao",
+    sourceModule: "backup",
+    occurredAt: new Date().toISOString(),
+  });
+}
+
 // ─── Filtros ──────────────────────────────────────────────────────────────────
 
 export function filterTimeline(
