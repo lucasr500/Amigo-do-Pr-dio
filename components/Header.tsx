@@ -79,32 +79,32 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
                 </svg>
               </button>
             )}
-          <button
-            type="button"
-            aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificações não lidas` : "Notificações"}
-            onClick={onNotificationsClick}
-            className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-navy-100/70 bg-white/[0.68] text-navy-400 shadow-card transition-colors hover:bg-white hover:text-navy-700 active:scale-[0.97]"
-          >
-            <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" aria-hidden="true">
-              <path
-                d="M10 2.5A5.5 5.5 0 004.5 8v2.5L3 12.5h14L15.5 10.5V8A5.5 5.5 0 0010 2.5z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M8 15.5a2 2 0 004 0"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              />
-            </svg>
-            {unreadNotifications > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-terracotta-500 text-[9px] font-bold text-white">
-                {unreadNotifications > 9 ? "9+" : unreadNotifications}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              aria-label={unreadNotifications > 0 ? `${unreadNotifications} notificações não lidas` : "Notificações"}
+              onClick={onNotificationsClick}
+              className="relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-navy-100/70 bg-white/[0.68] text-navy-400 shadow-card transition-colors hover:bg-white hover:text-navy-700 active:scale-[0.97]"
+            >
+              <svg viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" aria-hidden="true">
+                <path
+                  d="M10 2.5A5.5 5.5 0 004.5 8v2.5L3 12.5h14L15.5 10.5V8A5.5 5.5 0 0010 2.5z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 15.5a2 2 0 004 0"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {unreadNotifications > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-terracotta-500 text-[9px] font-bold text-white">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                </span>
+              )}
+            </button>
           </div>
         </div>
       </header>
