@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { searchGlobal, type SearchResult, type SearchResultType } from "@/lib/global-search";
+import { searchGlobal, buildDynamicSearchResults, type SearchResult, type SearchResultType } from "@/lib/global-search";
 import type { AppTab } from "@/components/BottomNav";
 
 const TYPE_LABEL: Record<SearchResultType, string> = {
@@ -11,6 +11,11 @@ const TYPE_LABEL: Record<SearchResultType, string> = {
   checklist:   "Checklist",
   kb_categoria: "Tema",
   acao:        "Ação",
+  pendencia:   "Pendência",
+  decisao:     "Decisão",
+  fornecedor:  "Fornecedor",
+  evento:      "Evento",
+  unidade:     "Unidade",
 };
 
 const TYPE_DOT: Record<SearchResultType, string> = {
@@ -20,6 +25,11 @@ const TYPE_DOT: Record<SearchResultType, string> = {
   checklist:   "bg-blue-400",
   kb_categoria: "bg-purple-400",
   acao:        "bg-terracotta-400",
+  pendencia:   "bg-terracotta-500",
+  decisao:     "bg-navy-600",
+  fornecedor:  "bg-sage-600",
+  evento:      "bg-blue-500",
+  unidade:     "bg-amber-500",
 };
 
 type Props = {
@@ -51,7 +61,12 @@ export default function GlobalSearch({
 
   const handleChange = (q: string) => {
     setQuery(q);
-    setResults(q.trim() ? searchGlobal(q, 8) : []);
+    if (!q.trim()) { setResults([]); return; }
+    const staticR  = searchGlobal(q, 5);
+    const dynamicR = buildDynamicSearchResults(q, 4);
+    const seen = new Set(staticR.map(r => r.id));
+    const merged = [...staticR, ...dynamicR.filter(r => !seen.has(r.id))].slice(0, 8);
+    setResults(merged);
   };
 
   const handleSelect = useCallback((result: SearchResult) => {
@@ -117,7 +132,7 @@ export default function GlobalSearch({
             value={query}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Buscar módulo, documento ou tema..."
+            placeholder="Buscar pendência, decisão, fornecedor, documento..."
             className="flex-1 bg-transparent text-[14px] text-navy-800 placeholder-navy-300 outline-none"
           />
           {query && (
@@ -168,7 +183,7 @@ export default function GlobalSearch({
           <div className="px-4 py-4">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.10em] text-navy-300">Sugestões</p>
             <div className="flex flex-wrap gap-1.5">
-              {["Saúde", "Documentos", "Financeiro", "Passagem de mandato", "Backup", "Revisão mensal"].map((s) => (
+              {["AVCB", "Financeiro", "Fornecedor", "Decisões", "Passagem de mandato", "Revisão mensal"].map((s) => (
                 <button
                   key={s}
                   type="button"

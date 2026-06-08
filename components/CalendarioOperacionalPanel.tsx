@@ -291,7 +291,7 @@ export default function CalendarioOperacionalPanel({ refreshKey }: Props) {
                       <p className="text-[11px] text-navy-400">
                         {grupo.eventos.length} evento{grupo.eventos.length !== 1 ? "s" : ""}
                         {grupo.eventos[0]?.diasRestantes !== undefined && grupo.eventos[0].diasRestantes <= 30 && (
-                          <span className="ml-1 text-amber-600">— em breve</span>
+                          <span className="ml-1 text-amber-600">— próximo</span>
                         )}
                       </p>
                     </div>

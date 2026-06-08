@@ -398,7 +398,7 @@ describe("buildMonthlyOperationalSummary", () => {
   test("contém referência ao mês", () => {
     const month = currentMonth();
     const summary = buildMonthlyOperationalSummary(month);
-    expect(summary).toContain("Resumo operacional mensal");
+    expect(summary).toContain("Relatório mensal auxiliar");
   });
 
   test("contém seção de pontos de atenção", () => {
@@ -413,7 +413,7 @@ describe("buildMonthlyOperationalSummary", () => {
 
   test("contém seção de rotina", () => {
     const summary = buildMonthlyOperationalSummary();
-    expect(summary).toContain("Rotina:");
+    expect(summary).toContain("Rotina operacional");
     expect(summary).toContain("Pendências abertas");
     expect(summary).toContain("Documentos");
   });

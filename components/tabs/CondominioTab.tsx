@@ -361,7 +361,7 @@ export default function CondominioTab({
                 Política de privacidade
               </a>
               <p className="w-full text-[10px] leading-relaxed text-navy-300">
-                Versão preliminar — pendente revisão jurídica.
+                Ferramenta de apoio à gestão. Não substitui orientação jurídica, contábil ou profissional especializada.
               </p>
             </div>
           </div>

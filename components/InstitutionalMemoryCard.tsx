@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { buildInstitutionalMemorySummary } from "@/lib/institutional-memory";
+import { buildInstitutionalReport } from "@/lib/institutional-report";
 import type { AppTab } from "@/components/BottomNav";
 
 type Props = {
@@ -13,10 +14,22 @@ type Props = {
 export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onNavigateToSection }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const summary = useMemo(() => buildInstitutionalMemorySummary(), [refreshKey]);
+  const [copied, setCopied] = useState(false);
 
   const handleAction = () => {
     onNavigateTab?.("condominio");
     setTimeout(() => onNavigateToSection?.("memoria-institucional"), 80);
+  };
+
+  const handleCopyReport = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(buildInstitutionalReport());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2400);
+    } catch {
+      setCopied(false);
+    }
   };
 
   return (
@@ -24,7 +37,7 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
       <button
         type="button"
         onClick={handleAction}
-        className="flex w-full items-start gap-3 rounded-xl border border-navy-100/80 bg-white/[0.82] px-4 py-3.5 text-left shadow-card transition-all hover:border-navy-200 hover:bg-white active:scale-[0.98]"
+        className="flex w-full items-start gap-3 rounded-xl border border-navy-100/80 bg-white/[0.82] px-4 py-3.5 text-left shadow-card transition-all hover:border-navy-200 hover:bg-white active:scale-[0.98] rounded-b-none border-b-0"
       >
         {/* Ícone */}
         <span
@@ -42,7 +55,7 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
             Memória institucional
           </p>
           <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-navy-800">
-            {summary.hasData ? summary.highlight : "Nenhum registro institucional ainda"}
+            {summary.hasData ? summary.highlight : "Construa a memória do prédio"}
           </p>
 
           {summary.lastActivityDate && (
@@ -55,6 +68,11 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
             </p>
           )}
 
+          {!summary.hasData && (
+            <p className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
+              Decisões · Fornecedores · Handoff de mandato
+            </p>
+          )}
           {summary.hasData ? (
             <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
               {summary.decisionCount > 0 && (
@@ -80,7 +98,7 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
             </div>
           ) : (
             <p className="mt-0.5 text-[11px] leading-snug text-navy-400">
-              Comece registrando uma decisão, fornecedor ou pendência concluída para construir a memória do prédio.
+              Registre decisões, fornecedores e revisões mensais para construir o histórico do prédio — e facilitar a passagem de mandato.
             </p>
           )}
         </div>
@@ -93,6 +111,30 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
         >
           <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
+      </button>
+
+      {/* CTA relatório institucional */}
+      <button
+        type="button"
+        onClick={handleCopyReport}
+        className="flex w-full items-center justify-center gap-2 rounded-xl rounded-t-none border border-navy-100/80 border-t-0 bg-navy-50/60 px-4 py-2.5 text-[11.5px] font-semibold text-navy-600 transition-all hover:bg-navy-50 active:scale-[0.99]"
+      >
+        {copied ? (
+          <>
+            <svg className="h-3.5 w-3.5 text-sage-600" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8l4 4 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-sage-700">Relatório copiado</span>
+          </>
+        ) : (
+          <>
+            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="2" y="4" width="9" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+              <path d="M5 4V3a1 1 0 011-1h7a1 1 0 011 1v9a1 1 0 01-1 1h-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            Copiar relatório institucional
+          </>
+        )}
       </button>
     </div>
   );

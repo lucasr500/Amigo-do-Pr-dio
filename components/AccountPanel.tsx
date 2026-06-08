@@ -268,8 +268,8 @@ export default function AccountPanel({ onRefresh }: Props) {
       {!isAuthenticated && !authEnabled && (
         <div className="rounded-2xl bg-navy-50 p-4 ring-1 ring-navy-100">
           <p className="text-[12px] text-navy-500 leading-relaxed">
-            <span className="font-medium text-navy-700">Login em nuvem em breve.</span>{" "}
-            Por enquanto seus dados são armazenados localmente neste dispositivo. Faça backup regularmente pela aba Condomínio.
+            <span className="font-medium text-navy-700">Dados salvos localmente.</span>{" "}
+            Seus dados ficam armazenados neste dispositivo. Faça backup regularmente pela aba Condomínio.
           </p>
         </div>
       )}

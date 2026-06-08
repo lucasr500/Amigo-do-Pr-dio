@@ -43,37 +43,44 @@ export default function Hero({ onSetup, onAssistente, onDemo }: Props) {
           ))}
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+        <div className="mt-5 flex flex-col gap-2.5">
           {onDemo && (
-            <button
-              type="button"
-              onClick={onDemo}
-              className="inline-flex min-h-10 items-center gap-2 rounded-full bg-cream-100 px-4 py-2 text-[13px] font-semibold text-navy-900 shadow-card transition-all duration-200 hover:bg-cream-50 active:scale-[0.98]"
-            >
-              Ver rotina preenchida
-              <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <div>
+              <button
+                type="button"
+                onClick={onDemo}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-cream-100 px-5 py-2.5 text-[13px] font-semibold text-navy-900 shadow-card transition-all duration-200 hover:bg-cream-50 active:scale-[0.98]"
+              >
+                Ver rotina preenchida
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8h10m0 0L8.5 3.5M13 8l-4.5 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <p className="mt-1.5 text-[11px] text-cream-100/50">
+                Condomínio exemplo — seus dados não são afetados
+              </p>
+            </div>
           )}
-          {onSetup && (
-            <button
-              type="button"
-              onClick={onSetup}
-              className="min-h-10 rounded-full border border-white/10 px-4 py-2 text-[12.5px] font-semibold text-cream-100/82 transition-colors hover:bg-white/[0.08] hover:text-cream-50"
-            >
-              Configurar meu condomínio
-            </button>
-          )}
-          {onAssistente && (
-            <button
-              type="button"
-              onClick={onAssistente}
-              className="min-h-10 rounded-full px-2 text-[12.5px] font-medium text-cream-100/78 transition-colors hover:text-cream-50"
-            >
-              Fazer uma pergunta
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-3">
+            {onSetup && (
+              <button
+                type="button"
+                onClick={onSetup}
+                className="min-h-10 rounded-full border border-white/10 px-4 py-2 text-[12.5px] font-semibold text-cream-100/82 transition-colors hover:bg-white/[0.08] hover:text-cream-50"
+              >
+                Configurar meu condomínio
+              </button>
+            )}
+            {onAssistente && (
+              <button
+                type="button"
+                onClick={onAssistente}
+                className="min-h-10 rounded-full px-2 text-[12.5px] font-medium text-cream-100/78 transition-colors hover:text-cream-50"
+              >
+                Fazer uma pergunta
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -1,6 +1,13 @@
 // Índice estático para busca global no produto.
 // Determinístico, 100% client-side. Sem IA.
 // Resolve "onde está X no produto?" com navegação direta.
+// buildDynamicSearchResults complementa com conteúdo real da sessão.
+
+import { getPendencias } from "./session-pendencias";
+import { getDecisions, DECISION_STATUS_LABELS } from "./decisions";
+import { getSuppliers, SUPPLIER_CATEGORY_LABELS } from "./suppliers";
+import { getTimeline } from "./community-timeline";
+import { getUnitEvents, UNIT_EVENT_TYPE_LABELS } from "./unit-history";
 
 export type SearchResultType =
   | "modulo"
@@ -8,7 +15,12 @@ export type SearchResultType =
   | "comunicado"
   | "checklist"
   | "kb_categoria"
-  | "acao";
+  | "acao"
+  | "pendencia"
+  | "decisao"
+  | "fornecedor"
+  | "evento"
+  | "unidade";
 
 export type SearchResult = {
   id: string;
@@ -416,4 +428,150 @@ export function searchGlobal(query: string, maxResults = 8): SearchResult[] {
     .sort((a, b) => b.score - a.score)
     .slice(0, maxResults)
     .map(s => s.item);
+}
+
+// ── Busca dinâmica — conteúdo real da sessão ─────────────────────────────────
+
+function scoreFields(tokens: string[], titleField: string, otherFields: string[]): number {
+  const titleNorm = normalize(titleField);
+  const rest      = normalize(otherFields.join(" "));
+  let score = 0;
+  for (const token of tokens) {
+    if (titleNorm.includes(token))      score += 10;
+    else if (rest.includes(token))      score += 4;
+    else if ([...titleNorm.split(" "), ...rest.split(" ")].some(w => w.startsWith(token))) score += 2;
+  }
+  return score;
+}
+
+function fmtShort(iso: string): string {
+  try {
+    return new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
+  } catch {
+    return iso;
+  }
+}
+
+export function buildDynamicSearchResults(query: string, maxResults = 5): SearchResult[] {
+  if (!query.trim()) return [];
+  const tokens = normalize(query).split(/\s+/).filter(t => t.length > 1);
+  if (tokens.length === 0) return [];
+
+  const scored: Array<{ item: SearchResult; score: number }> = [];
+
+  // Pendências
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    for (const p of getPendencias()) {
+      const score = scoreFields(tokens, p.titulo, [p.categoria ?? "", p.status, p.descricao ?? ""]);
+      if (score > 0) {
+        const statusLabel = p.status === "concluida" ? "Concluída" : "Aberta";
+        const duePart = p.dueDate ? ` · prazo ${fmtShort(p.dueDate)}` : "";
+        const vencida = p.status === "aberta" && p.dueDate && p.dueDate < today ? " · vencida" : "";
+        scored.push({
+          score,
+          item: {
+            id: `dyn-p-${p.id}`,
+            title: p.titulo,
+            description: `${statusLabel} · ${p.categoria ?? "geral"}${duePart}${vencida}`,
+            type: "pendencia",
+            tab: "inicio",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Decisões
+  try {
+    for (const d of getDecisions()) {
+      const score = scoreFields(tokens, d.title, [d.category, d.status, d.outcome, d.nextStep ?? "", d.context]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-d-${d.id}`,
+            title: d.title,
+            description: `${DECISION_STATUS_LABELS[d.status]} · ${fmtShort(d.date)}`,
+            type: "decisao",
+            tab: "condominio",
+            sectionTarget: "memoria-institucional",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Fornecedores
+  try {
+    for (const s of getSuppliers()) {
+      if (!s.active) continue;
+      const catLabel = SUPPLIER_CATEGORY_LABELS[s.category] ?? "";
+      const score    = scoreFields(tokens, s.name, [catLabel, s.notes ?? "", s.responsible ?? ""]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-s-${s.id}`,
+            title: s.name,
+            description: `${catLabel} · ativo`,
+            type: "fornecedor",
+            tab: "condominio",
+            sectionTarget: "memoria-institucional",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Timeline
+  try {
+    for (const ev of getTimeline().slice(0, 150)) {
+      const score = scoreFields(tokens, ev.title, [ev.type, ev.description ?? ""]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-tl-${ev.id}`,
+            title: ev.title,
+            description: fmtShort(ev.occurredAt.slice(0, 10)),
+            type: "evento",
+            tab: "condominio",
+            sectionTarget: "central-digital",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Histórico por unidade
+  try {
+    for (const ue of getUnitEvents().slice(0, 200)) {
+      const typeLabel = UNIT_EVENT_TYPE_LABELS[ue.type] ?? ue.type;
+      const score     = scoreFields(tokens, `${ue.unit} ${ue.title}`, [typeLabel, ue.description, ue.unit]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-ue-${ue.id}`,
+            title: `Unidade ${ue.unit}: ${ue.title}`,
+            description: `${typeLabel} · ${fmtShort(ue.date)}`,
+            type: "unidade",
+            tab: "condominio",
+            sectionTarget: "memoria-institucional",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, maxResults)
+    .map(r => r.item);
 }

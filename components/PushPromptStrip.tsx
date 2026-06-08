@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getSessionMeta } from "@/lib/session";
-import { isPushSupported } from "@/lib/push/pushManager";
+import { isPushReady } from "@/lib/push/pushManager";
 
 const DISMISSED_KEY = "amigo_push_prompt_dismissed";
 
@@ -19,7 +19,7 @@ export default function PushPromptStrip() {
   const [status, setStatus] = useState<"idle" | "granted" | "denied">("idle");
 
   useEffect(() => {
-    if (!isPushSupported()) return;
+    if (!isPushReady()) return;
     if (isDismissed()) return;
     if (typeof Notification !== "undefined" && Notification.permission !== "default") return;
     const { sessionCount } = getSessionMeta();

@@ -23,6 +23,12 @@ export function isPushSupported(): boolean {
   );
 }
 
+// Retorna true apenas quando browser suporta push E VAPID key está configurada.
+// Usar este guard no UI para não pedir permissão sem servidor configurado.
+export function isPushReady(): boolean {
+  return isPushSupported() && getVapidKey() !== null;
+}
+
 export function getStoredSubscription(): PushRegistration | null {
   if (typeof window === "undefined") return null;
   try {

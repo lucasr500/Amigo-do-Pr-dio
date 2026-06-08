@@ -141,13 +141,13 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
       {!submitted && !isLoading && (
         <div className="px-5 pb-2 pt-1 sm:px-6">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.11em] text-navy-400">
-            Inteligência
+            Assistente condominial
           </p>
           <p className="mt-0.5 font-display text-[18px] font-semibold leading-snug text-navy-800">
             Orientação do síndico
           </p>
           <p className="mt-0.5 text-[12.5px] leading-relaxed text-navy-500">
-            Faça uma pergunta e receba um próximo passo claro, com contexto do prédio.
+            Faça uma pergunta e receba orientação prática, com contexto do seu prédio.
           </p>
         </div>
       )}

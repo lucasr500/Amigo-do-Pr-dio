@@ -219,7 +219,7 @@ export default function HomeTab({
             refreshKey={refreshKey}
           />
 
-          <HomeSectionLabel eyebrow="Continuidade" title="Memória e evolução" />
+          <HomeSectionLabel eyebrow="Diferencial" title="Memória institucional" />
           <InstitutionalMemoryCard
             refreshKey={refreshKey}
             onNavigateTab={onNavigateTab}
