@@ -36,7 +36,7 @@ export const VISIBILITY_LABELS: Record<Visibility, string> = {
 export type PostCategory =
   | "aviso" | "obra" | "manutencao" | "prestacao_de_contas"
   | "seguranca" | "assembleia" | "documento" | "urgencia"
-  | "novidade" | "regra" | "outro";
+  | "novidade" | "regra" | "sugestao" | "outro";
 
 export const POST_CATEGORY_LABELS: Record<PostCategory, string> = {
   aviso:               "Aviso",
@@ -49,18 +49,40 @@ export const POST_CATEGORY_LABELS: Record<PostCategory, string> = {
   urgencia:            "Urgência",
   novidade:            "Novidade",
   regra:               "Regra",
+  sugestao:            "Sugestão",
   outro:               "Outro",
 };
+
+// ─── Origem do post ───────────────────────────────────────────────────────────
+
+export type PostOrigin = "oficial" | "morador" | "sistema";
+
+// ─── Anexo leve (metadado ou link — sem upload pesado) ────────────────────────
+
+export type AttachmentType = "image" | "video" | "document" | "link";
+
+export type AttachmentLite = {
+  id: string;
+  name: string;
+  type: AttachmentType;
+  url?: string;         // link externo
+  sizeBytes?: number;   // metadado apenas
+};
+
+export const MAX_ATTACHMENT_SIZE_BYTES = 102_400; // 100 kB para data URL de imagem leve
 
 export type InstitutionalPost = {
   id: string;
   title: string;
   body: string;
   category: PostCategory;
+  origin?: PostOrigin;          // "oficial" = gestão, "morador" = participação
   visibility: Visibility;
   allowComments: boolean;
   pinned: boolean;
   archived: boolean;
+  linkUrl?: string;             // link externo opcional anexado ao post
+  attachments?: AttachmentLite[];
   relatedDocumentIds?: string[];
   createdAt: string;
   updatedAt: string;

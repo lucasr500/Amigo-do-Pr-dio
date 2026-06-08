@@ -16,6 +16,10 @@ const TYPE_LABEL: Record<SearchResultType, string> = {
   fornecedor:  "Fornecedor",
   evento:      "Evento",
   unidade:     "Unidade",
+  post:        "Post",
+  enquete:     "Enquete",
+  solicitacao: "Solicitação",
+  reserva:     "Reserva",
 };
 
 const TYPE_DOT: Record<SearchResultType, string> = {
@@ -30,6 +34,10 @@ const TYPE_DOT: Record<SearchResultType, string> = {
   fornecedor:  "bg-sage-600",
   evento:      "bg-blue-500",
   unidade:     "bg-amber-500",
+  post:        "bg-navy-500",
+  enquete:     "bg-purple-500",
+  solicitacao: "bg-amber-600",
+  reserva:     "bg-green-500",
 };
 
 type Props = {

@@ -9,7 +9,7 @@ import {
 import { emitPostPublished } from "@/lib/community-timeline";
 import {
   POST_CATEGORY_LABELS, VISIBILITY_LABELS, type PostCategory, type Visibility,
-  type CommunityRole, type Comment,
+  type CommunityRole, type Comment, type PostOrigin,
 } from "@/lib/community-types";
 import { can, filterByVisibility, isAllDemoData } from "@/lib/community-permissions";
 
@@ -18,8 +18,15 @@ const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][]
 
 type FormState = Omit<InstitutionalPost, "id" | "createdAt" | "updatedAt">;
 const EMPTY_FORM: FormState = {
-  title: "", body: "", category: "aviso",
+  title: "", body: "", category: "aviso", origin: "oficial",
   visibility: "moradores", allowComments: false, pinned: false, archived: false,
+  linkUrl: "",
+};
+
+const ORIGIN_BADGE: Record<PostOrigin, { label: string; style: string }> = {
+  oficial:  { label: "Mural Oficial", style: "bg-navy-100 text-navy-600" },
+  morador:  { label: "Participação",  style: "bg-sage-100 text-sage-700" },
+  sistema:  { label: "Sistema",       style: "bg-navy-50 text-navy-400" },
 };
 
 const CAT_COLORS: Partial<Record<PostCategory, string>> = {
@@ -80,7 +87,7 @@ export default function MuralPanel({ role, onSeed }: Props) {
   };
 
   const handleEdit = (p: InstitutionalPost) => {
-    setForm({ title: p.title, body: p.body, category: p.category, visibility: p.visibility, allowComments: p.allowComments, pinned: p.pinned, archived: false });
+    setForm({ title: p.title, body: p.body, category: p.category, origin: p.origin ?? "oficial", visibility: p.visibility, allowComments: p.allowComments, pinned: p.pinned, archived: false, linkUrl: p.linkUrl ?? "" });
     setEditId(p.id);
     setShowForm(true);
   };
@@ -175,6 +182,12 @@ export default function MuralPanel({ role, onSeed }: Props) {
                 </select>
               </div>
             </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-navy-500">Link externo (opcional)</label>
+              <input type="url" value={form.linkUrl ?? ""} onChange={(e) => setForm({ ...form, linkUrl: e.target.value })}
+                placeholder="https://..."
+                className="w-full rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12.5px] text-navy-800 focus:border-navy-300 focus:outline-none" />
+            </div>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 text-[11.5px] text-navy-600">
                 <input type="checkbox" checked={form.allowComments} onChange={(e) => setForm({ ...form, allowComments: e.target.checked })}
@@ -238,6 +251,11 @@ export default function MuralPanel({ role, onSeed }: Props) {
                     <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-medium flex-shrink-0 ${catColor(p.category)}`}>
                       {POST_CATEGORY_LABELS[p.category]}
                     </span>
+                    {p.origin && (
+                      <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-medium flex-shrink-0 ${ORIGIN_BADGE[p.origin].style}`}>
+                        {ORIGIN_BADGE[p.origin].label}
+                      </span>
+                    )}
                   </div>
                   <p className="mt-0.5 text-[11px] text-navy-400">
                     {new Date(p.createdAt).toLocaleDateString("pt-BR")}
@@ -254,6 +272,16 @@ export default function MuralPanel({ role, onSeed }: Props) {
             {expandedId === p.id && (
               <div className="border-t border-navy-50 px-5 pb-3.5 pt-2.5">
                 <p className="text-[12.5px] text-navy-700 leading-relaxed whitespace-pre-wrap">{p.body}</p>
+                {p.linkUrl && (
+                  <a href={p.linkUrl} target="_blank" rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-[11.5px] text-navy-500 underline underline-offset-2 hover:text-navy-700 break-all">
+                    <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="none">
+                      <path d="M6.5 9.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5L7.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M9.5 6.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5L8.5 12.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    {p.linkUrl}
+                  </a>
+                )}
 
                 {/* Ações — só manager */}
                 {isManager && (

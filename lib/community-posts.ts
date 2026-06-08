@@ -2,10 +2,10 @@
 import { safeRead, safeWrite } from "./session-core";
 import type {
   InstitutionalPost, Comment, CommentStatus,
-  CommunityAuditEntry, AuditAction,
+  CommunityAuditEntry, AuditAction, PostCategory, PostOrigin,
 } from "./community-types";
 
-export type { InstitutionalPost, Comment, CommunityAuditEntry };
+export type { InstitutionalPost, Comment, CommunityAuditEntry, PostOrigin };
 
 const KEY_POSTS    = "amigo_community_posts";
 const KEY_COMMENTS = "amigo_community_comments";
@@ -68,6 +68,36 @@ export function getActivePosts(): InstitutionalPost[] {
       if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
       return b.createdAt.localeCompare(a.createdAt);
     });
+}
+
+export function getOfficialPosts(): InstitutionalPost[] {
+  return getPosts()
+    .filter((p) => !p.archived && (p.origin === "oficial" || p.origin === "sistema" || p.origin === undefined))
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+}
+
+export function getResidentPosts(): InstitutionalPost[] {
+  return getPosts()
+    .filter((p) => !p.archived && p.origin === "morador")
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getPublishedPosts(): InstitutionalPost[] {
+  return getPosts()
+    .filter((p) => !p.archived)
+    .sort((a, b) => {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+}
+
+export function getPostsByType(category: PostCategory): InstitutionalPost[] {
+  return getPosts()
+    .filter((p) => !p.archived && p.category === category)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 // ─── Comentários ──────────────────────────────────────────────────────────────

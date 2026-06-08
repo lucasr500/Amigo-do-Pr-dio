@@ -8,6 +8,10 @@ import { getDecisions, DECISION_STATUS_LABELS } from "./decisions";
 import { getSuppliers, SUPPLIER_CATEGORY_LABELS } from "./suppliers";
 import { getTimeline } from "./community-timeline";
 import { getUnitEvents, UNIT_EVENT_TYPE_LABELS } from "./unit-history";
+import { getPosts } from "./community-posts";
+import { getPolls } from "./community-polls";
+import { getRequests } from "./community-requests";
+import { getReservations } from "./community-reservas";
 
 export type SearchResultType =
   | "modulo"
@@ -20,7 +24,11 @@ export type SearchResultType =
   | "decisao"
   | "fornecedor"
   | "evento"
-  | "unidade";
+  | "unidade"
+  | "post"
+  | "enquete"
+  | "solicitacao"
+  | "reserva";
 
 export type SearchResult = {
   id: string;
@@ -563,6 +571,92 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             type: "unidade",
             tab: "condominio",
             sectionTarget: "memoria-institucional",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Posts do Mural
+  try {
+    for (const p of getPosts().filter((post) => !post.archived).slice(0, 100)) {
+      const score = scoreFields(tokens, p.title, [p.body, p.category]);
+      if (score > 0) {
+        const originLabel = p.origin === "morador" ? "Participação" : "Mural Oficial";
+        scored.push({
+          score,
+          item: {
+            id: `dyn-post-${p.id}`,
+            title: p.title,
+            description: `${originLabel} · ${fmtShort(p.createdAt.slice(0, 10))}`,
+            type: "post",
+            tab: "condominio",
+            sectionTarget: "central-digital",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Enquetes
+  try {
+    for (const poll of getPolls().slice(0, 50)) {
+      const score = scoreFields(tokens, poll.title, [poll.description, poll.status]);
+      if (score > 0) {
+        const statusLabel = poll.status === "ativa" ? "Ativa" : poll.status === "encerrada" ? "Encerrada" : "Rascunho";
+        scored.push({
+          score,
+          item: {
+            id: `dyn-poll-${poll.id}`,
+            title: poll.title,
+            description: `Enquete · ${statusLabel}`,
+            type: "enquete",
+            tab: "condominio",
+            sectionTarget: "central-digital",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Solicitações de moradores
+  try {
+    for (const req of getRequests().slice(0, 100)) {
+      const score = scoreFields(tokens, req.title, [req.type, req.status, req.description, req.unitNumber ?? ""]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-req-${req.id}`,
+            title: req.title,
+            description: `Solicitação · Un. ${req.unitNumber ?? "—"} · ${req.status}`,
+            type: "solicitacao",
+            tab: "condominio",
+            sectionTarget: "central-digital",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Reservas de espaços
+  try {
+    for (const res of getReservations().slice(0, 50)) {
+      const score = scoreFields(tokens, `${res.space} ${res.unit}`, [res.requesterName, res.status, res.description ?? ""]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-res-${res.id}`,
+            title: `Reserva: ${res.space}`,
+            description: `Un. ${res.unit} · ${fmtShort(res.date)} · ${res.status}`,
+            type: "reserva",
+            tab: "condominio",
+            sectionTarget: "central-digital",
             keywords: [],
           },
         });

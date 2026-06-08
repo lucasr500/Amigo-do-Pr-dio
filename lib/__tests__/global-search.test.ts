@@ -205,6 +205,114 @@ describe("buildDynamicSearchResults — histórico por unidade", () => {
   });
 });
 
+describe("buildDynamicSearchResults — posts do mural", () => {
+  beforeEach(() => {
+    const posts = [
+      { id: "post-1", title: "Manutenção da bomba d'água", body: "Haverá manutenção preventiva", category: "manutencao", origin: "oficial", visibility: "moradores", allowComments: false, pinned: true, archived: false, createdAt: "2026-06-05T10:00:00Z", updatedAt: "2026-06-05T10:00:00Z" },
+      { id: "post-2", title: "Sugestão de iluminação", body: "Melhorar iluminação do estacionamento", category: "sugestao", origin: "morador", visibility: "gestao", allowComments: false, pinned: false, archived: false, createdAt: "2026-06-06T10:00:00Z", updatedAt: "2026-06-06T10:00:00Z" },
+      { id: "post-3", title: "Aviso arquivado", body: "Não deve aparecer", category: "aviso", origin: "oficial", visibility: "moradores", allowComments: false, pinned: false, archived: true, createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-01T10:00:00Z" },
+    ];
+    localStorageMock.setItem("amigo_community_posts", JSON.stringify(posts));
+  });
+
+  test("encontra post oficial por título", () => {
+    const r = buildDynamicSearchResults("bomba");
+    expect(r.some(item => item.type === "post" && item.title.includes("bomba"))).toBe(true);
+  });
+
+  test("encontra post de morador por título", () => {
+    const r = buildDynamicSearchResults("iluminação");
+    expect(r.some(item => item.type === "post" && item.title.includes("iluminação"))).toBe(true);
+  });
+
+  test("post navega para central-digital", () => {
+    const r = buildDynamicSearchResults("bomba");
+    const post = r.find(item => item.type === "post");
+    expect(post?.sectionTarget).toBe("central-digital");
+    expect(post?.tab).toBe("condominio");
+  });
+
+  test("não retorna posts arquivados", () => {
+    const r = buildDynamicSearchResults("arquivado");
+    expect(r.some(item => item.type === "post" && item.title.includes("arquivado"))).toBe(false);
+  });
+});
+
+describe("buildDynamicSearchResults — enquetes", () => {
+  beforeEach(() => {
+    const polls = [
+      { id: "poll-1", title: "Horário das áreas comuns", description: "Consulta sobre horário ideal", options: [], visibility: "moradores", status: "ativa", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-06-01T10:00:00Z" },
+      { id: "poll-2", title: "Reforma da piscina", description: "Votação sobre reforma", options: [], visibility: "moradores", status: "encerrada", createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-20T10:00:00Z" },
+    ];
+    localStorageMock.setItem("amigo_community_polls", JSON.stringify(polls));
+  });
+
+  test("encontra enquete por título", () => {
+    const r = buildDynamicSearchResults("áreas comuns");
+    expect(r.some(item => item.type === "enquete")).toBe(true);
+  });
+
+  test("enquete navega para central-digital", () => {
+    const r = buildDynamicSearchResults("horário");
+    const poll = r.find(item => item.type === "enquete");
+    expect(poll?.sectionTarget).toBe("central-digital");
+  });
+});
+
+describe("buildDynamicSearchResults — solicitações", () => {
+  beforeEach(() => {
+    const requests = [
+      { id: "req-1", unitNumber: "302", authorName: "Morador 302", type: "barulho", title: "Barulho noturno", description: "Ruído após 22h", status: "em_analise", priority: "alta", createdAt: "2026-06-03T20:00:00Z", updatedAt: "2026-06-04T09:00:00Z" },
+      { id: "req-2", unitNumber: "301", authorName: "Morador 301", type: "aviso_obra", title: "Reforma no banheiro", description: "Obra interna", status: "recebido", priority: "normal", createdAt: "2026-06-07T10:00:00Z", updatedAt: "2026-06-07T10:00:00Z" },
+    ];
+    localStorageMock.setItem("amigo_community_requests", JSON.stringify(requests));
+  });
+
+  test("encontra solicitação por título", () => {
+    const r = buildDynamicSearchResults("barulho");
+    expect(r.some(item => item.type === "solicitacao" && item.title.toLowerCase().includes("barulho"))).toBe(true);
+  });
+
+  test("encontra aviso de obra por tipo", () => {
+    const r = buildDynamicSearchResults("reforma");
+    expect(r.some(item => item.type === "solicitacao")).toBe(true);
+  });
+
+  test("solicitação navega para central-digital", () => {
+    const r = buildDynamicSearchResults("barulho");
+    const req = r.find(item => item.type === "solicitacao");
+    expect(req?.sectionTarget).toBe("central-digital");
+    expect(req?.tab).toBe("condominio");
+  });
+});
+
+describe("buildDynamicSearchResults — reservas", () => {
+  beforeEach(() => {
+    const reservations = [
+      { id: "res-1", unit: "201", requesterName: "João", space: "Salão de Festas", date: "2026-06-20", status: "aprovada", createdAt: "2026-06-08T10:00:00Z", updatedAt: "2026-06-08T10:00:00Z" },
+      { id: "res-2", unit: "401", requesterName: "Ana", space: "Churrasqueira", date: "2026-06-25", status: "solicitada", createdAt: "2026-06-08T11:00:00Z", updatedAt: "2026-06-08T11:00:00Z" },
+    ];
+    localStorageMock.setItem("amigo_community_reservations", JSON.stringify(reservations));
+  });
+
+  test("encontra reserva por espaço", () => {
+    const r = buildDynamicSearchResults("Salão de Festas");
+    expect(r.some(item => item.type === "reserva" && item.title.includes("Salão"))).toBe(true);
+  });
+
+  test("reserva navega para central-digital", () => {
+    const r = buildDynamicSearchResults("Churrasqueira");
+    const res = r.find(item => item.type === "reserva");
+    expect(res?.sectionTarget).toBe("central-digital");
+    expect(res?.tab).toBe("condominio");
+  });
+
+  test("encontra reserva por unidade", () => {
+    const r = buildDynamicSearchResults("201");
+    expect(r.some(item => item.type === "reserva")).toBe(true);
+  });
+});
+
 describe("buildDynamicSearchResults — comportamento geral", () => {
   test("retorna vazio para query em branco", () => {
     expect(buildDynamicSearchResults("")).toHaveLength(0);

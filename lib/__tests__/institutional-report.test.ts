@@ -88,6 +88,31 @@ vi.mock("@/lib/session-monthly-review", () => ({
   getMonthlyReviewHistory: () => [{ month: "2026-05" }, { month: "2026-04" }],
 }));
 
+vi.mock("@/lib/community-posts", () => ({
+  getPublishedPosts: () => [
+    { id: "p1", title: "Aviso oficial", body: "x", category: "aviso", origin: "oficial", visibility: "moradores", allowComments: false, pinned: true, archived: false, createdAt: "2026-06-05T10:00:00Z", updatedAt: "2026-06-05T10:00:00Z" },
+    { id: "p2", title: "Sugestão morador", body: "y", category: "sugestao", origin: "morador", visibility: "gestao", allowComments: false, pinned: false, archived: false, createdAt: "2026-06-06T10:00:00Z", updatedAt: "2026-06-06T10:00:00Z" },
+  ],
+}));
+
+vi.mock("@/lib/community-polls", () => ({
+  getPolls: () => [
+    { id: "poll-1", title: "Horário de manutenção", description: "", options: [], visibility: "moradores", status: "ativa", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-06-01T10:00:00Z" },
+  ],
+}));
+
+vi.mock("@/lib/community-requests", () => ({
+  getRequests: () => [],
+  getRequestSummary: () => ({ total: 3, open: 2, resolved: 1, urgent: 0 }),
+}));
+
+vi.mock("@/lib/community-reservas", () => ({
+  getReservations: () => [
+    { id: "res-1", unit: "201", requesterName: "João", space: "Salão de Festas", date: "2026-06-20", status: "aprovada", createdAt: "2026-06-08T10:00:00Z", updatedAt: "2026-06-08T10:00:00Z" },
+    { id: "res-2", unit: "401", requesterName: "Ana", space: "Churrasqueira", date: "2026-06-25", status: "solicitada", createdAt: "2026-06-08T11:00:00Z", updatedAt: "2026-06-08T11:00:00Z" },
+  ],
+}));
+
 describe("buildInstitutionalReport — dados completos", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -162,6 +187,24 @@ describe("buildInstitutionalReport — dados completos", () => {
     expect(r).toContain("🏛️");
     expect(r).toContain("🕘");
     expect(r).toContain("🔁");
+  });
+
+  test("inclui seção Central Digital com emoji", () => {
+    const r = buildInstitutionalReport("2026-06");
+    expect(r).toContain("🏘️");
+    expect(r).toContain("Central Digital");
+  });
+
+  test("Central Digital inclui contagem de posts oficiais e participações", () => {
+    const r = buildInstitutionalReport("2026-06");
+    expect(r).toContain("Posts oficiais publicados: 1");
+    expect(r).toContain("Participações de moradores: 1");
+  });
+
+  test("Central Digital inclui solicitações e reservas", () => {
+    const r = buildInstitutionalReport("2026-06");
+    expect(r).toContain("Solicitações:");
+    expect(r).toContain("Reservas: 2");
   });
 
   test("inclui disclaimer correto", () => {
