@@ -1,6 +1,7 @@
 "use client";
 
 export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio";
+export type NavProfile = "manager" | "resident";
 
 function IconHome({ active }: { active: boolean }) {
   return (
@@ -61,22 +62,37 @@ type TabItem = {
 
 const LEFT_TABS: TabItem[] = [
   { id: "inicio",     label: "Hoje",       Icon: IconHome },
-  { id: "agenda",     label: "Gestão",     Icon: IconCalendar },
+  { id: "agenda",     label: "Agenda",     Icon: IconCalendar },
 ];
 
 const RIGHT_TABS: TabItem[] = [
-  { id: "assistente", label: "Intelig.",   Icon: IconChat },
+  { id: "assistente", label: "Assist.",    Icon: IconChat },
   { id: "condominio", label: "Prédio",     Icon: IconAccount },
+];
+
+const RESIDENT_LEFT_TABS: TabItem[] = [
+  { id: "inicio",     label: "Início",       Icon: IconHome },
+  { id: "condominio", label: "Mural",        Icon: IconCalendar },
+];
+
+const RESIDENT_RIGHT_TABS: TabItem[] = [
+  { id: "ferramentas", label: "Solicit.",    Icon: IconChat },
+  { id: "assistente",  label: "Mais",        Icon: IconAccount },
 ];
 
 type Props = {
   active: AppTab;
   onChange: (tab: AppTab) => void;
   urgentCount?: number;
+  profile?: NavProfile;
 };
 
-export default function BottomNav({ active, onChange, urgentCount }: Props) {
+export default function BottomNav({ active, onChange, urgentCount, profile = "manager" }: Props) {
   const plusActive = active === "ferramentas";
+  const leftTabs = profile === "resident" ? RESIDENT_LEFT_TABS : LEFT_TABS;
+  const rightTabs = profile === "resident" ? RESIDENT_RIGHT_TABS : RIGHT_TABS;
+  const plusLabel = profile === "resident" ? "Novo" : "Ações";
+  const plusAria = profile === "resident" ? "Ações do morador" : "Ações do síndico";
 
   return (
     <nav
@@ -92,7 +108,7 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
           <div className="flex items-stretch px-1 pt-1">
 
             {/* Left tabs */}
-            {LEFT_TABS.map((tab) => {
+            {leftTabs.map((tab) => {
               const isActive = active === tab.id;
               const badgeCount = tab.id === "inicio" && (urgentCount ?? 0) > 0 ? urgentCount : 0;
               return (
@@ -125,7 +141,7 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
             <div className="flex flex-1 flex-col items-center justify-start pt-0" style={{ marginTop: "-10px" }}>
               <button
                 type="button"
-                aria-label="Ações do síndico"
+                aria-label={plusAria}
                 aria-pressed={plusActive}
                 onClick={() => onChange("ferramentas")}
                 className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-all duration-150 active:scale-[0.93] ${
@@ -139,12 +155,12 @@ export default function BottomNav({ active, onChange, urgentCount }: Props) {
                 </svg>
               </button>
               <span className={`mt-1.5 whitespace-nowrap text-[10px] font-semibold leading-none ${plusActive ? "text-navy-800" : "text-navy-300"}`}>
-                Ações
+                {plusLabel}
               </span>
             </div>
 
             {/* Right tabs */}
-            {RIGHT_TABS.map((tab) => {
+            {rightTabs.map((tab) => {
               const isActive = active === tab.id;
               return (
                 <button

@@ -4,14 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Header from "@/components/Header";
 import BottomNav, { AppTab } from "@/components/BottomNav";
+import RoleGateway from "@/components/RoleGateway";
 import HomeTab from "@/components/tabs/HomeTab";
 import AgendaTab from "@/components/tabs/AgendaTab";
 import AssistantTab, { type AssistantTabHandle } from "@/components/tabs/AssistantTab";
 import ToolsTab from "@/components/tabs/ToolsTab";
 import CondominioTab from "@/components/tabs/CondominioTab";
+import ResidentHomeTab from "@/components/ResidentHomeTab";
 import TabErrorBoundary from "@/components/TabErrorBoundary";
 import type { ToolAnchor, ToolGroup } from "@/lib/app-navigation";
 import { ANCHOR_TO_GROUP } from "@/lib/app-navigation";
+import { clearActiveProfile, readActiveProfile, saveActiveProfile, type ActiveProfile } from "@/lib/profile-mode";
 import {
   exportTelemetry,
   recordSessionOpen,
@@ -66,6 +69,8 @@ export default function HomePage() {
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [isDemo, setIsDemo]                 = useState(false);
   const [showBackupNudge, setShowBackupNudge] = useState(false);
+  const [profileReady, setProfileReady] = useState(false);
+  const [activeProfile, setActiveProfile] = useState<ActiveProfile | null>(null);
 
   // ── Condomínio state ────────────────────────────────────────────
   const [shouldExpandMemoria, setShouldExpandMemoria] = useState(false);
@@ -97,6 +102,9 @@ export default function HomePage() {
 
   // ── Efeitos de inicialização ────────────────────────────────────
   useEffect(() => {
+    const storedProfile = readActiveProfile();
+    setActiveProfile(storedProfile);
+    setProfileReady(true);
     (window as unknown as Record<string, unknown>).__amigoDoPredioExport = exportTelemetry;
     const daysSince = recordSessionOpen();
     void trackEvent("session_open", { days_since_last: daysSince });
@@ -202,6 +210,20 @@ export default function HomePage() {
     setActiveTab(tab);
   };
 
+  const handleSelectProfile = (profile: ActiveProfile) => {
+    saveActiveProfile(profile);
+    setActiveProfile(profile);
+    setActiveTab("inicio");
+    setSubView(null);
+  };
+
+  const handleSwitchProfile = () => {
+    clearActiveProfile();
+    setActiveProfile(null);
+    setActiveTab("inicio");
+    setSubView(null);
+  };
+
   const navigateToSubView = (view: "saude" | "pendencias") => {
     setSubView(view);
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
@@ -268,23 +290,41 @@ export default function HomePage() {
   };
 
   // ── Render ──────────────────────────────────────────────────────
+  if (!profileReady) return null;
+
+  if (!activeProfile) {
+    return <RoleGateway onSelectProfile={handleSelectProfile} />;
+  }
+
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
       <div className="relative z-10 mx-auto flex w-full max-w-[760px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
         {isDemo && <DemoModeBanner onExit={handleExitDemo} />}
 
-        {!(activeTab === "inicio" && subView) && (
+        {!(activeTab === "inicio" && subView) && !(activeProfile === "resident" && activeTab === "inicio") && (
           <Header
             refreshKey={refreshKey}
             activeTab={activeTab}
             unreadNotifications={unreadNotifications}
+            profile={activeProfile}
             onNotificationsClick={() => setShowNotificationCenter(true)}
             onSearchOpen={() => setShowGlobalSearch(true)}
+            onProfileSwitch={handleSwitchProfile}
           />
         )}
 
-        {activeTab === "inicio" && (
+        {activeTab === "inicio" && activeProfile === "resident" && (
+          <ResidentHomeTab
+            refreshKey={refreshKey}
+            condoName={condoName}
+            onNavigateTab={navigateTab}
+            onNavigateToSection={handleNavigateToSection}
+            onSwitchProfile={handleSwitchProfile}
+          />
+        )}
+
+        {activeTab === "inicio" && activeProfile === "manager" && (
           <HomeTab
             refreshKey={refreshKey}
             hasCondominioData={hasCondominioData}
@@ -371,9 +411,9 @@ export default function HomePage() {
 
       </div>
 
-      <BottomNav active={activeTab} onChange={navigateTab} urgentCount={urgentCount} />
+      <BottomNav active={activeTab} onChange={navigateTab} urgentCount={urgentCount} profile={activeProfile} />
 
-      {showOnboarding && (
+      {showOnboarding && activeProfile === "manager" && (
         <OnboardingFlow
           onComplete={() => {
             setShowOnboarding(false);

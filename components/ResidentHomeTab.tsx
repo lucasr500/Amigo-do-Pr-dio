@@ -1,0 +1,218 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import BrandMark from "@/components/BrandMark";
+import type { AppTab } from "@/components/BottomNav";
+import { getProfile } from "@/lib/session";
+import { getActivePosts, type InstitutionalPost } from "@/lib/community-posts";
+import { getOpenRequests } from "@/lib/community-requests";
+import { getActivePolls, type Poll } from "@/lib/community-polls";
+import { getTimeline, type TimelineEvent } from "@/lib/community-timeline";
+
+type Props = {
+  refreshKey: number;
+  condoName: string;
+  onNavigateTab: (tab: AppTab) => void;
+  onNavigateToSection?: (sectionId: string) => void;
+  onSwitchProfile: () => void;
+};
+
+type ResidentState = {
+  condoName: string;
+  featuredPost: InstitutionalPost | null;
+  postsCount: number;
+  openRequests: number;
+  activePolls: Poll[];
+  timeline: TimelineEvent[];
+};
+
+const quickActions = [
+  { label: "Comunicados", section: "central-digital", icon: "M4 6h12M4 10h12M4 14h7" },
+  { label: "Solicitações", section: "central-digital", icon: "M5 5h10v8H8l-3 3V5z" },
+  { label: "Enquetes", section: "central-digital", icon: "M5 14V8M10 14V5M15 14v-3" },
+  { label: "Documentos", section: "documentos", icon: "M6 3h6l4 4v10H6V3zM12 3v5h4" },
+  { label: "Atas", section: "central-digital", icon: "M6 4h8M6 8h8M6 12h5" },
+  { label: "Financeiro", section: "financeiro", icon: "M4 12c2 2 10 2 12 0M4 8c2 2 10 2 12 0M4 4c2 2 10 2 12 0" },
+  { label: "Agenda", tab: "agenda" as AppTab, icon: "M5 4v3M15 4v3M4 8h12M5 5h10v11H5z" },
+  { label: "Canal oficial", tab: "ferramentas" as AppTab, icon: "M4 5h12v8H9l-4 3v-3H4z" },
+];
+
+function EmptyPublicCard({ onNavigate }: { onNavigate: () => void }) {
+  return (
+    <div className="rounded-[24px] border border-navy-100 bg-white/92 px-5 py-5 shadow-card-md">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-700">Mural oficial</p>
+      <h2 className="mt-2 font-display text-[24px] font-semibold leading-tight text-navy-900">
+        Comunicados do condomínio aparecerão aqui
+      </h2>
+      <p className="mt-2 text-[13px] leading-relaxed text-navy-500">
+        Esta área está preparada para publicar avisos, lembretes e documentos quando a camada de moradores estiver ativa.
+      </p>
+      <button
+        type="button"
+        onClick={onNavigate}
+        className="mt-4 rounded-full bg-navy-800 px-4 py-2 text-[12px] font-semibold text-white hover:bg-navy-900"
+      >
+        Ver Central Digital
+      </button>
+    </div>
+  );
+}
+
+export default function ResidentHomeTab({
+  refreshKey,
+  condoName,
+  onNavigateTab,
+  onNavigateToSection,
+  onSwitchProfile,
+}: Props) {
+  const [state, setState] = useState<ResidentState | null>(null);
+
+  useEffect(() => {
+    const profile = getProfile();
+    const posts = getActivePosts().filter((post) => post.visibility === "moradores" || post.visibility === "publico");
+    const featured = posts.find((post) => post.pinned) ?? posts[0] ?? null;
+    const timeline = getTimeline().filter((event) => event.visibility === "moradores" || event.visibility === "publico").slice(0, 4);
+    setState({
+      condoName: condoName || profile?.nomeCondominio || "Condomínio",
+      featuredPost: featured,
+      postsCount: posts.length,
+      openRequests: getOpenRequests().length,
+      activePolls: getActivePolls(),
+      timeline,
+    });
+  }, [condoName, refreshKey]);
+
+  if (!state) return null;
+
+  const goCentral = () => {
+    if (onNavigateToSection) onNavigateToSection("central-digital");
+    else onNavigateTab("condominio");
+  };
+
+  return (
+    <main className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
+      <section className="px-5 pb-4 pt-[calc(env(safe-area-inset-top,0px)+1rem)] sm:px-6">
+        <div className="rounded-[28px] border border-navy-100 bg-white/90 px-4 py-4 shadow-card-md">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <BrandMark className="h-11 w-11" rounded="rounded-2xl" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-400">Central do morador</p>
+                <h1 className="mt-0.5 truncate font-display text-[24px] font-semibold text-navy-900">{state.condoName}</h1>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onSwitchProfile}
+              className="rounded-full border border-navy-100 bg-white px-3 py-1.5 text-[11px] font-semibold text-navy-500 hover:bg-navy-50"
+            >
+              Trocar
+            </button>
+          </div>
+          <div className="mt-4 rounded-2xl bg-navy-50 px-4 py-3">
+            <p className="text-[12px] leading-relaxed text-navy-500">
+              Visualização preparada para moradores. O acesso real por conta será ativado em etapa posterior.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-4 sm:px-6">
+        {state.featuredPost ? (
+          <button
+            type="button"
+            onClick={goCentral}
+            className="w-full rounded-[24px] border border-navy-100 bg-white/95 px-5 py-5 text-left shadow-card-md transition-all hover:border-navy-200 hover:bg-white active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-sage-50 px-2.5 py-1 text-[10.5px] font-semibold text-sage-800">
+                {state.featuredPost.pinned ? "Importante" : "Aviso"}
+              </span>
+              <span className="text-[11px] text-navy-300">{state.postsCount} comunicado{state.postsCount !== 1 ? "s" : ""}</span>
+            </div>
+            <h2 className="mt-3 font-display text-[25px] font-semibold leading-tight text-navy-900">
+              {state.featuredPost.title}
+            </h2>
+            <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-navy-500">
+              {state.featuredPost.body}
+            </p>
+            <span className="mt-4 inline-flex rounded-full bg-navy-800 px-4 py-2 text-[12px] font-semibold text-white">
+              Ver todos
+            </span>
+          </button>
+        ) : (
+          <EmptyPublicCard onNavigate={goCentral} />
+        )}
+      </section>
+
+      <section className="px-5 pb-4 sm:px-6">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-2xl border border-navy-100 bg-white/90 px-4 py-3 shadow-card">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">Solicitações</p>
+            <p className="mt-1 text-[20px] font-semibold text-navy-900">{state.openRequests}</p>
+            <p className="text-[11px] text-navy-400">em acompanhamento</p>
+          </div>
+          <div className="rounded-2xl border border-navy-100 bg-white/90 px-4 py-3 shadow-card">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">Enquetes</p>
+            <p className="mt-1 text-[20px] font-semibold text-navy-900">{state.activePolls.length}</p>
+            <p className="text-[11px] text-navy-400">consultivas abertas</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 pb-4 sm:px-6">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-[14px] font-semibold text-navy-900">Acesso rápido</h2>
+          <span className="text-[11px] text-navy-400">Canal estruturado</span>
+        </div>
+        <div className="grid grid-cols-4 gap-2">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={() => {
+                if (action.tab) onNavigateTab(action.tab);
+                else if (action.section && onNavigateToSection) onNavigateToSection(action.section);
+                else onNavigateTab("condominio");
+              }}
+              className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-2xl border border-navy-100 bg-white/90 px-2 text-center shadow-card transition-colors hover:bg-white"
+            >
+              <svg className="h-5 w-5 text-navy-700" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d={action.icon} stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="text-[10.5px] font-semibold leading-tight text-navy-700">{action.label}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-5 pb-5 sm:px-6">
+        <div className="rounded-[24px] border border-navy-100 bg-white/90 px-4 py-4 shadow-card-md">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[14px] font-semibold text-navy-900">Atividades recentes</h2>
+            <button type="button" onClick={goCentral} className="text-[11px] font-semibold text-navy-500 hover:text-navy-800">
+              Ver timeline
+            </button>
+          </div>
+          {state.timeline.length > 0 ? (
+            <div className="space-y-3">
+              {state.timeline.map((event) => (
+                <div key={event.id} className="flex gap-3">
+                  <span className="mt-0.5 h-2 w-2 rounded-full bg-sage-500" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-semibold leading-snug text-navy-800">{event.title}</p>
+                    <p className="mt-0.5 text-[11px] text-navy-400">{new Date(event.occurredAt).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[12px] leading-relaxed text-navy-400">
+              Comunicados publicados, documentos atualizados e enquetes abertas aparecerão aqui.
+            </p>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}

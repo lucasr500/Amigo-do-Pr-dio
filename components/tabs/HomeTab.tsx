@@ -24,6 +24,7 @@ const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard
 const HomeFeatureShortcuts = dynamic(() => import("@/components/HomeFeatureShortcuts"), { ssr: false });
 const HealthScoreProgressCard = dynamic(() => import("@/components/HealthScoreProgressCard"), { ssr: false });
 const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
+const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
 
 function completionBucket(pct: number): string {
   if (pct <= 25) return "0-25";
@@ -101,6 +102,14 @@ export default function HomeTab({
 
       {!subView && hasCondominioData && (
         <>
+          <ManagerCockpitHero
+            refreshKey={refreshKey}
+            condoName={condoName}
+            urgentCount={urgentCount}
+            onNavigateTab={onNavigateTab}
+            onNavigateToSubView={onNavigateToSubView}
+            onNavigateToSection={onNavigateToSection}
+          />
           <DynamicGreeting condoName={condoName} />
           <DailyBriefingCard refreshKey={refreshKey} />
           <RecentActivityCard refreshKey={refreshKey} />

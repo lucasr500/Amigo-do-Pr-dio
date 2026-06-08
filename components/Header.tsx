@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import { getProfile } from "@/lib/session";
 import BrandMark from "@/components/BrandMark";
-import type { AppTab } from "@/components/BottomNav";
+import type { AppTab, NavProfile } from "@/components/BottomNav";
 
 type Props = {
   refreshKey?: number;
   activeTab?: AppTab;
   unreadNotifications?: number;
+  profile?: NavProfile;
   onNotificationsClick?: () => void;
   onSearchOpen?: () => void;
+  onProfileSwitch?: () => void;
 };
 
 function getGreeting(): string {
@@ -20,7 +22,15 @@ function getGreeting(): string {
   return "Boa noite";
 }
 
-export default function Header({ refreshKey, activeTab, unreadNotifications = 0, onNotificationsClick, onSearchOpen }: Props) {
+export default function Header({
+  refreshKey,
+  activeTab,
+  unreadNotifications = 0,
+  profile = "manager",
+  onNotificationsClick,
+  onSearchOpen,
+  onProfileSwitch,
+}: Props) {
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
 
@@ -52,7 +62,7 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
               Hoje no condomínio
             </p>
             <h1 className="mt-1 font-display text-[27px] font-semibold leading-tight text-navy-800">
-              {getGreeting()}, síndico
+              {profile === "resident" ? `${getGreeting()}, morador` : `${getGreeting()}, síndico`}
             </h1>
             <p className="mt-1.5 max-w-[310px] truncate text-[13px] leading-relaxed text-navy-500">
               {nomeCondominio ?? "Acompanhe o que merece atenção agora."}
@@ -66,6 +76,16 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
           </div>
 
           <div className="flex items-center gap-2 ml-3 mt-0.5">
+            {onProfileSwitch && (
+              <button
+                type="button"
+                aria-label="Trocar perfil"
+                onClick={onProfileSwitch}
+                className="hidden h-9 items-center rounded-full border border-navy-100/70 bg-white/[0.68] px-3 text-[11px] font-semibold text-navy-500 shadow-card transition-colors hover:bg-white hover:text-navy-800 active:scale-[0.97] sm:flex"
+              >
+                Trocar
+              </button>
+            )}
             {onSearchOpen && (
               <button
                 type="button"
@@ -112,10 +132,18 @@ export default function Header({ refreshKey, activeTab, unreadNotifications = 0,
   }
 
   const TAB_CONTEXT: Partial<Record<NonNullable<typeof activeTab>, { title: string; sub: string }>> = {
-    agenda: { title: "Gestão", sub: "Agenda, prazos e rotina do prédio" },
-    assistente: { title: "Inteligência", sub: "Orientação prática para decidir melhor" },
-    ferramentas: { title: "Ações", sub: "Comunicados, registros, checklists e simulações" },
-    condominio: { title: "Meu prédio", sub: nomeCondominio ?? "Financeiro, documentos, memória e backup" },
+    agenda: profile === "resident"
+      ? { title: "Agenda", sub: "Próximos eventos e avisos do condomínio" }
+      : { title: "Agenda", sub: "Prazos e rotina do prédio" },
+    assistente: profile === "resident"
+      ? { title: "Mais", sub: "Ajuda e informações do condomínio" }
+      : { title: "Assistente", sub: "Orientação prática para decidir melhor" },
+    ferramentas: profile === "resident"
+      ? { title: "Solicitações", sub: "Canal estruturado com a gestão" }
+      : { title: "Ações", sub: "Comunicados, registros, checklists e simulações" },
+    condominio: profile === "resident"
+      ? { title: "Mural", sub: "Central Digital preparada para moradores" }
+      : { title: "Meu prédio", sub: nomeCondominio ?? "Financeiro, documentos, memória e backup" },
   };
 
   const tabCtx = activeTab ? TAB_CONTEXT[activeTab] : undefined;
