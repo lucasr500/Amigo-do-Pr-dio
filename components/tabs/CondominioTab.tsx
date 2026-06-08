@@ -21,7 +21,6 @@ const MonthlyReviewPanel             = dynamic(() => import("@/components/Monthl
 const MonthlyReviewHistoryPanel      = dynamic(() => import("@/components/MonthlyReviewHistoryPanel"), { ssr: false });
 const FinancialPanel                 = dynamic(() => import("@/components/FinancialPanel"), { ssr: false });
 const DocumentosEssenciaisPanel      = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), { ssr: false });
-const CalendarioOperacionalPanel     = dynamic(() => import("@/components/CalendarioOperacionalPanel"), { ssr: false });
 const FuncionariosPanel              = dynamic(() => import("@/components/FuncionariosPanel"), { ssr: false });
 const TimelineOperacional            = dynamic(() => import("@/components/TimelineOperacional"), { ssr: false });
 const AccountPanel                   = dynamic(() => import("@/components/AccountPanel"), { ssr: false });
@@ -215,7 +214,6 @@ export default function CondominioTab({
           priority="high"
         >
           <DocumentosEssenciaisPanel onSaved={onRefresh} />
-          <CalendarioOperacionalPanel refreshKey={refreshKey} />
         </CondominioSection>
       )}
 

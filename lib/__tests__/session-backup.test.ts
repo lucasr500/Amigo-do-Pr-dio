@@ -236,8 +236,8 @@ describe("parseAndValidateUserData — v9 específico", () => {
     expect(result.summary.monthlyReviewHistoryCount).toBeUndefined();
   });
 
-  test("versão '12' (futura) → failure", () => {
-    const result = parseAndValidateUserData(makeV8Backup({ version: "12" }));
+  test("versão '13' (futura) → failure", () => {
+    const result = parseAndValidateUserData(makeV8Backup({ version: "13" }));
     expect(result.success).toBe(false);
   });
 });

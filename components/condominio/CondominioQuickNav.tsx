@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { id: "documentos", label: "Documentos" },
   { id: "operacao", label: "Gestão" },
   { id: "memoria-institucional", label: "Memória" },
+  { id: "central-digital", label: "Central" },
   { id: "dados", label: "Backup" },
 ] as const;
 

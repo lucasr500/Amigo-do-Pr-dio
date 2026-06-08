@@ -21,8 +21,6 @@ const MilestoneCelebration = dynamic(() => import("@/components/MilestoneCelebra
 const WeeklyReviewPrompt = dynamic(() => import("@/components/WeeklyReviewPrompt"), { ssr: false });
 const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard"), { ssr: false });
 const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
-const HomeFeatureShortcuts = dynamic(() => import("@/components/HomeFeatureShortcuts"), { ssr: false });
-const HealthScoreProgressCard = dynamic(() => import("@/components/HealthScoreProgressCard"), { ssr: false });
 const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
 const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
 const MonthlyPlanCard = dynamic(() => import("@/components/MonthlyPlanCard"), { ssr: false });
@@ -86,7 +84,6 @@ export default function HomeTab({
   onRefresh,
   onOpenBackup,
   onNavigateToSection,
-  onSetToolGroup,
 }: Props) {
   return (
     <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
@@ -144,34 +141,6 @@ export default function HomeTab({
 
           <MilestoneCelebration refreshKey={refreshKey} onDismiss={onRefresh} />
 
-          {urgentCount > 0 && (
-            <div className="px-5 pb-3 sm:px-6">
-              <button
-                type="button"
-                onClick={() => onNavigateToSubView("pendencias")}
-                className="flex w-full items-center gap-3 rounded-lg border border-terracotta-200/80 bg-terracotta-50/70 px-4 py-3 shadow-card transition-all hover:bg-terracotta-50 active:scale-[0.99]"
-              >
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.72]" aria-hidden="true">
-                  <svg className="h-4 w-4 text-terracotta-700" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 3v5M8 10v1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                    <path d="M7.15 1.5L1.5 11.5a1 1 0 00.85 1.5h11.3a1 1 0 00.85-1.5L8.85 1.5a1 1 0 00-1.7 0z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-                  </svg>
-                </span>
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-[13px] font-semibold text-terracotta-800">
-                    Precisa de atenção
-                  </p>
-                  <p className="text-[11.5px] text-terracotta-700">
-                    {urgentCount === 1 ? "1 pendência já passou do prazo." : `${urgentCount} pendências já passaram do prazo.`}
-                  </p>
-                </div>
-                <svg className="h-4 w-4 flex-shrink-0 text-terracotta-400" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-          )}
-
           <MonthlyReviewCard
             refreshKey={refreshKey}
             onOpen={onOpenMonthlyReview}
@@ -186,7 +155,6 @@ export default function HomeTab({
             refreshKey={refreshKey}
             onClick={() => onNavigateToSubView("saude")}
           />
-          <HealthScoreProgressCard refreshKey={refreshKey} />
 
           {showBackupNudge && !isDemo && (
             <div className="px-5 pb-3 sm:px-6">
@@ -224,13 +192,6 @@ export default function HomeTab({
             refreshKey={refreshKey}
             onNavigateTab={onNavigateTab}
             onNavigateToSection={onNavigateToSection}
-          />
-
-          <HomeFeatureShortcuts
-            onNavigateTab={onNavigateTab}
-            onNavigateToSection={onNavigateToSection}
-            onOpenMonthlyReview={onOpenMonthlyReview}
-            onSetToolGroup={onSetToolGroup}
           />
 
           <ProgressiveSetupCard

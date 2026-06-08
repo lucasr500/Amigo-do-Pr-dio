@@ -6,6 +6,7 @@ import AgendaQuickStats from "@/components/AgendaQuickStats";
 const AgendaMensal = dynamic(() => import("@/components/AgendaMensal"), { ssr: false });
 const AgendaPredio = dynamic(() => import("@/components/AgendaPredio"), { ssr: false });
 const AgendaMonthGrid = dynamic(() => import("@/components/AgendaMonthGrid"), { ssr: false });
+const CalendarioOperacionalPanel = dynamic(() => import("@/components/CalendarioOperacionalPanel"), { ssr: false });
 
 type Props = {
   refreshKey: number;
@@ -30,6 +31,10 @@ export default function AgendaTab({ refreshKey, onSaved }: Props) {
       <AgendaMonthGrid />
       <AgendaMensal refreshKey={refreshKey} onNavigateToAgenda={() => {}} />
       <AgendaPredio onSaved={onSaved} />
+      <div className="px-5 pb-2 pt-3 sm:px-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-navy-300">Vencimentos operacionais</p>
+      </div>
+      <CalendarioOperacionalPanel refreshKey={refreshKey} />
     </div>
   );
 }

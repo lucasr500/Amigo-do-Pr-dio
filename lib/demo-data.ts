@@ -32,7 +32,7 @@ function dmy(days: number): string {
 
 export function getDemoUserBackup(): UserBackup {
   return {
-    version: "11",
+    version: "12",
     app: "amigo-do-predio",
     exportedAt: isoTs(-3),
     profile: {
@@ -582,6 +582,48 @@ export function getDemoUserBackup(): UserBackup {
         status: "resolvido",
         resolvedAt: isoDate(-3),
         createdAt: isoTs(-7),
+      },
+    ],
+    communityReservations: [
+      {
+        id: "demo-res-1",
+        unit: "201",
+        requesterName: "Morador da 201",
+        space: "Salão de Festas",
+        date: isoDate(14),
+        timeStart: "14:00",
+        timeEnd: "22:00",
+        description: "Aniversário — mesa para 30 pessoas.",
+        status: "aprovada",
+        approvedBy: "Síndico",
+        createdAt: isoTs(-3),
+        updatedAt: isoTs(-1),
+      },
+      {
+        id: "demo-res-2",
+        unit: "504",
+        requesterName: "Morador da 504",
+        space: "Churrasqueira",
+        date: isoDate(7),
+        timeStart: "12:00",
+        timeEnd: "18:00",
+        description: "Confraternização familiar.",
+        status: "solicitada",
+        createdAt: isoTs(-1),
+        updatedAt: isoTs(-1),
+      },
+      {
+        id: "demo-res-3",
+        unit: "101",
+        requesterName: "Morador da 101",
+        space: "Salão de Festas",
+        date: isoDate(-7),
+        timeStart: "18:00",
+        timeEnd: "23:00",
+        description: "Jantar de confraternização.",
+        status: "cancelada",
+        createdAt: isoTs(-14),
+        updatedAt: isoTs(-8),
       },
     ],
     communityTimeline: [

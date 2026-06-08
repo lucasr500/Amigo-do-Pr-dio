@@ -116,7 +116,8 @@ export type PollVote = {
 
 export type RequestType =
   | "reclamacao" | "solicitacao" | "sugestao" | "manutencao"
-  | "barulho" | "seguranca" | "limpeza" | "garagem" | "obra" | "documento" | "outro";
+  | "barulho" | "seguranca" | "limpeza" | "garagem" | "obra" | "documento"
+  | "reserva" | "aviso_obra" | "outro";
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
   reclamacao:  "Reclamação",
@@ -129,6 +130,8 @@ export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
   garagem:     "Garagem",
   obra:        "Obra",
   documento:   "Documento",
+  reserva:     "Reserva de espaço",
+  aviso_obra:  "Aviso de obra",
   outro:       "Outro",
 };
 
@@ -281,6 +284,33 @@ export type CommunityAuditEntry = {
   actorRole: CommunityRole;
   description: string;
   createdAt: string;
+};
+
+// ─── Reserva de espaço comum ──────────────────────────────────────────────────
+
+export type ReservationStatus = "solicitada" | "aprovada" | "recusada" | "cancelada";
+
+export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
+  solicitada: "Solicitada",
+  aprovada:   "Aprovada",
+  recusada:   "Recusada",
+  cancelada:  "Cancelada",
+};
+
+export type SpaceReservation = {
+  id: string;
+  unit: string;
+  requesterName: string;
+  space: string;        // "Salão de Festas", "Churrasqueira", etc.
+  date: string;         // YYYY-MM-DD
+  timeStart?: string;   // "08:00"
+  timeEnd?: string;     // "17:00"
+  description?: string;
+  status: ReservationStatus;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // ─── View mode (simulação de papéis) ─────────────────────────────────────────

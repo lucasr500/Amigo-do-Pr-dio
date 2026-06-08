@@ -5,7 +5,7 @@
 //
 // Versão do schema de dados: SESSION_SCHEMA_VERSION
 // Incrementar aqui ao adicionar campos incompatíveis.
-export const SESSION_SCHEMA_VERSION = 11;
+export const SESSION_SCHEMA_VERSION = 12;
 
 // Caps de ocorrências (domínio ainda centralizado aqui)
 export const MAX_OCORRENCIAS    = 300;
@@ -41,8 +41,9 @@ import { getRequests, saveRequests } from "./community-requests";
 import { getPolls, savePolls, getVotes, saveVotes } from "./community-polls";
 import { getPublicDocuments, savePublicDocuments } from "./community-documents";
 import { getTimeline, saveTimeline } from "./community-timeline";
+import { getReservations, saveReservations } from "./community-reservas";
 import type {
-  InstitutionalPost, Comment, ResidentRequest, Poll, PollVote, PublicDocument, TimelineEvent,
+  InstitutionalPost, Comment, ResidentRequest, Poll, PollVote, PublicDocument, TimelineEvent, SpaceReservation,
 } from "./community-types";
 
 // ─── Re-exports — preservam a API pública de @/lib/session ───────────────────
@@ -1167,7 +1168,7 @@ export function computeCondominioHealth(): CondominioHealth {
 //   v11 — idem + Central Digital: posts, comments, requests, polls, votes, documents, timeline
 
 export type UserBackup = {
-  version: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11";
+  version: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
   app: "amigo-do-predio";
   exportedAt: string;
   profile: CondominioProfile | null;
@@ -1195,6 +1196,7 @@ export type UserBackup = {
   communityVotes?: PollVote[]; // v11+
   communityDocuments?: PublicDocument[]; // v11+
   communityTimeline?: TimelineEvent[]; // v11+
+  communityReservations?: SpaceReservation[]; // v12+
 };
 
 export type ImportResult =
@@ -1205,7 +1207,7 @@ export function exportUserData(): boolean {
   if (typeof window === "undefined") return false;
 
   const payload: UserBackup = {
-    version: "11",
+    version: "12",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1233,6 +1235,7 @@ export function exportUserData(): boolean {
     communityVotes: getVotes(),
     communityDocuments: getPublicDocuments(),
     communityTimeline: getTimeline(),
+    communityReservations: getReservations(),
   };
 
   try {
@@ -1254,7 +1257,7 @@ export function exportUserData(): boolean {
 
 export function getUserBackupJson(): string {
   const payload: UserBackup = {
-    version: "11",
+    version: "12",
     app: "amigo-do-predio",
     exportedAt: new Date().toISOString(),
     profile: getProfile(),
@@ -1282,6 +1285,7 @@ export function getUserBackupJson(): string {
     communityVotes: getVotes(),
     communityDocuments: getPublicDocuments(),
     communityTimeline: getTimeline(),
+    communityReservations: getReservations(),
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -1302,7 +1306,7 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8" && d.version !== "9" && d.version !== "10" && d.version !== "11") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8" && d.version !== "9" && d.version !== "10" && d.version !== "11" && d.version !== "12") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1318,16 +1322,16 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
-    if ((d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
       return { success: false, error: "Dados financeiros corrompidos no arquivo." };
     }
-    if ((d.version === "9" || d.version === "10" || d.version === "11") && d.monthlyReviewHistory !== undefined && !Array.isArray(d.monthlyReviewHistory)) {
+    if ((d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && d.monthlyReviewHistory !== undefined && !Array.isArray(d.monthlyReviewHistory)) {
       return { success: false, error: "Dados do histórico de revisões corrompidos no arquivo." };
     }
 
@@ -1336,19 +1340,19 @@ export function parseAndValidateUserData(jsonString: string): ImportResult {
     const memoriaCount = Object.values(memoria).filter((v) => v !== undefined && v !== "").length;
     const favoritesCount = (d.favorites as FavoriteEntry[]).length;
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
-    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
 
     const pendenciasCount = isV2plus && Array.isArray(d.pendencias) ? (d.pendencias as Pendencia[]).length : undefined;
     const ocorrenciasCount = isV3plus && Array.isArray(d.ocorrencias) ? (d.ocorrencias as Ocorrencia[]).length : undefined;
     const agendaCount = isV4plus && Array.isArray(d.agenda) ? (d.agenda as AgendaEvent[]).length : undefined;
     const documentosCount = isV5plus && Array.isArray(d.documentos) ? (d.documentos as DocumentoEssencial[]).length : undefined;
     const funcionariosCount = isV5plus && Array.isArray(d.funcionarios) ? (d.funcionarios as FuncionarioFerias[]).length : undefined;
-    const manutencoesCount = (d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
-    const financialSnapshotsCount = (d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
-    const monthlyReviewHistoryCount = (d.version === "9" || d.version === "10" || d.version === "11") && Array.isArray(d.monthlyReviewHistory) ? (d.monthlyReviewHistory as MonthlyReviewSnapshot[]).length : undefined;
+    const manutencoesCount = (d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && Array.isArray(d.manutencoes) ? (d.manutencoes as ManutencaoRecorrente[]).length : undefined;
+    const financialSnapshotsCount = (d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && Array.isArray(d.financialSnapshots) ? (d.financialSnapshots as MonthlyFinancialSnapshot[]).length : undefined;
+    const monthlyReviewHistoryCount = (d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && Array.isArray(d.monthlyReviewHistory) ? (d.monthlyReviewHistory as MonthlyReviewSnapshot[]).length : undefined;
 
     return {
       success: true,
@@ -1386,7 +1390,7 @@ export function importUserData(jsonString: string): ImportResult {
       return { success: false, error: "Este arquivo não é um backup do Amigo do Prédio." };
     }
 
-    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8" && d.version !== "9" && d.version !== "10" && d.version !== "11") {
+    if (d.version !== "1" && d.version !== "2" && d.version !== "3" && d.version !== "4" && d.version !== "5" && d.version !== "6" && d.version !== "7" && d.version !== "8" && d.version !== "9" && d.version !== "10" && d.version !== "11" && d.version !== "12") {
       return { success: false, error: "Versão do backup incompatível." };
     }
 
@@ -1402,16 +1406,16 @@ export function importUserData(jsonString: string): ImportResult {
     if (!d.checklists || typeof d.checklists !== "object" || Array.isArray(d.checklists)) {
       return { success: false, error: "Dados de checklists corrompidos no arquivo." };
     }
-    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && !Array.isArray(d.ocorrencias)) {
+    if ((d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && !Array.isArray(d.ocorrencias)) {
       return { success: false, error: "Dados de ocorrências corrompidos no arquivo." };
     }
-    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && !Array.isArray(d.agenda)) {
+    if ((d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && !Array.isArray(d.agenda)) {
       return { success: false, error: "Dados de agenda corrompidos no arquivo." };
     }
-    if ((d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && d.financialSnapshots !== undefined && !Array.isArray(d.financialSnapshots)) {
       return { success: false, error: "Dados financeiros corrompidos no arquivo." };
     }
-    if ((d.version === "9" || d.version === "10" || d.version === "11") && d.monthlyReviewHistory !== undefined && !Array.isArray(d.monthlyReviewHistory)) {
+    if ((d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && d.monthlyReviewHistory !== undefined && !Array.isArray(d.monthlyReviewHistory)) {
       return { success: false, error: "Dados do histórico de revisões corrompidos no arquivo." };
     }
 
@@ -1424,10 +1428,10 @@ export function importUserData(jsonString: string): ImportResult {
     safeWrite(KEYS.FAVORITES, d.favorites);
     safeWrite(KEYS.CHECKLISTS, d.checklists);
 
-    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
-    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
-    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
-    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11";
+    const isV2plus = d.version === "2" || d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
+    const isV3plus = d.version === "3" || d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
+    const isV4plus = d.version === "4" || d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
+    const isV5plus = d.version === "5" || d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12";
 
     let pendenciasCount: number | undefined;
     if (isV2plus && Array.isArray(d.pendencias)) {
@@ -1478,7 +1482,7 @@ export function importUserData(jsonString: string): ImportResult {
       try { localStorage.removeItem(KEYS.FUNCIONARIOS); } catch { /* noop */ }
     }
 
-    if ((d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && Array.isArray(d.manutencoes)) {
+    if ((d.version === "6" || d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && Array.isArray(d.manutencoes)) {
       safeWrite(KEYS.MANUTENCOES, d.manutencoes);
       manutencoesCount = (d.manutencoes as ManutencaoRecorrente[]).length;
     } else {
@@ -1486,7 +1490,7 @@ export function importUserData(jsonString: string): ImportResult {
     }
 
     let financialSnapshotsCount: number | undefined;
-    if ((d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11") && Array.isArray(d.financialSnapshots)) {
+    if ((d.version === "7" || d.version === "8" || d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && Array.isArray(d.financialSnapshots)) {
       saveFinancialSnapshots(d.financialSnapshots as MonthlyFinancialSnapshot[]);
       financialSnapshotsCount = (d.financialSnapshots as MonthlyFinancialSnapshot[]).length;
     } else {
@@ -1494,12 +1498,12 @@ export function importUserData(jsonString: string): ImportResult {
     }
 
     let monthlyReviewHistoryCount: number | undefined;
-    if ((d.version === "9" || d.version === "10" || d.version === "11") && Array.isArray(d.monthlyReviewHistory)) {
+    if ((d.version === "9" || d.version === "10" || d.version === "11" || d.version === "12") && Array.isArray(d.monthlyReviewHistory)) {
       restoreMonthlyReviewHistory(d.monthlyReviewHistory as MonthlyReviewSnapshot[]);
       monthlyReviewHistoryCount = (d.monthlyReviewHistory as MonthlyReviewSnapshot[]).length;
     }
 
-    if (d.version === "10" || d.version === "11") {
+    if (d.version === "10" || d.version === "11" || d.version === "12") {
       if (d.handoffState && typeof d.handoffState === "object" && !Array.isArray(d.handoffState)) {
         saveHandoffState(d.handoffState as HandoffState);
       }
@@ -1514,7 +1518,7 @@ export function importUserData(jsonString: string): ImportResult {
       }
     }
 
-    if (d.version === "11") {
+    if (d.version === "11" || d.version === "12") {
       if (Array.isArray(d.communityPosts)) savePosts(d.communityPosts as InstitutionalPost[]);
       if (Array.isArray(d.communityComments)) saveComments(d.communityComments as Comment[]);
       if (Array.isArray(d.communityRequests)) saveRequests(d.communityRequests as ResidentRequest[]);
@@ -1522,6 +1526,10 @@ export function importUserData(jsonString: string): ImportResult {
       if (Array.isArray(d.communityVotes)) saveVotes(d.communityVotes as PollVote[]);
       if (Array.isArray(d.communityDocuments)) savePublicDocuments(d.communityDocuments as PublicDocument[]);
       if (Array.isArray(d.communityTimeline)) saveTimeline(d.communityTimeline as TimelineEvent[]);
+    }
+
+    if (d.version === "12") {
+      if (Array.isArray(d.communityReservations)) saveReservations(d.communityReservations as SpaceReservation[]);
     }
 
     const profile = d.profile as CondominioProfile | null;

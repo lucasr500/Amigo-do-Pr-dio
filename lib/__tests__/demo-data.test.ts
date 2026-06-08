@@ -16,7 +16,7 @@ describe("demo-data — primeiros 10 minutos", () => {
   test("usa o schema atual do backup", () => {
     const demo = getDemoUserBackup();
     expect(demo.app).toBe("amigo-do-predio");
-    expect(demo.version).toBe("11");
+    expect(demo.version).toBe("12");
   });
 
   test("alimenta a Home preparada do morador", () => {
