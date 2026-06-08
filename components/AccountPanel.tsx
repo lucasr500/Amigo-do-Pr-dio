@@ -159,7 +159,7 @@ export default function AccountPanel({ onRefresh }: Props) {
               </svg>
             </div>
             <div>
-              <p className="text-[14px] font-semibold text-navy-700">Modo local</p>
+              <p className="text-[14px] font-semibold text-navy-700">Acesso local</p>
               <p className="text-[11px] text-navy-400">Dados salvos neste dispositivo</p>
             </div>
           </div>

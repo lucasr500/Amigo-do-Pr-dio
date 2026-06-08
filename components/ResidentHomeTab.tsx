@@ -40,19 +40,19 @@ const quickActions = [
 function EmptyPublicCard({ onNavigate }: { onNavigate: () => void }) {
   return (
     <div className="rounded-[24px] border border-navy-100 bg-white/92 px-5 py-5 shadow-card-md">
-      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-700">Central preparada</p>
+      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-sage-700">Central do morador</p>
       <h2 className="mt-2 font-display text-[24px] font-semibold leading-tight text-navy-900">
-        A central do morador está preparada
+        Canal do condomínio
       </h2>
       <p className="mt-2 text-[13px] leading-relaxed text-navy-500">
-        Quando o acesso de moradores for ativado, esta área reunirá comunicados, solicitações, documentos e participação organizada.
+        Comunicados, solicitações, documentos e enquetes do condomínio organizados em um só lugar.
       </p>
       <button
         type="button"
         onClick={onNavigate}
         className="mt-4 rounded-full bg-navy-800 px-4 py-2 text-[12px] font-semibold text-white hover:bg-navy-900"
       >
-        Ver como funcionará
+        Explorar
       </button>
     </div>
   );
@@ -111,7 +111,7 @@ export default function ResidentHomeTab({
           </div>
           <div className="mt-4 rounded-2xl bg-navy-50 px-4 py-3">
             <p className="text-[12px] leading-relaxed text-navy-500">
-              Visualização preparada para moradores. O acesso real por conta será ativado em etapa posterior.
+              Comunicados, solicitações e documentos do seu condomínio disponíveis aqui.
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function ResidentHomeTab({
         <div className="rounded-[24px] border border-sage-100 bg-sage-50/70 px-4 py-4 shadow-card">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-sage-800">Como funcionará</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-sage-800">Organizado por área</p>
               <h2 className="mt-1 text-[15px] font-semibold text-navy-900">Canal institucional, sem rede social</h2>
             </div>
             <button

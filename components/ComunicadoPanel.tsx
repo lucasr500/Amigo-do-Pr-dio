@@ -293,7 +293,7 @@ export default function ComunicadoPanel({ targetAnchor, highlightAnchor }: Props
         {/* Prévia */}
         <div className="p-4">
           <p className="mb-2 text-[10.5px] font-medium uppercase tracking-[0.10em] text-navy-400">
-            Prévia do comunicado
+            Comunicado formatado
           </p>
           <div className="max-h-64 overflow-y-auto rounded-lg bg-navy-50/50 p-3.5">
             {filledCount > 0 ? (

@@ -19,7 +19,7 @@ export default function Hero({ onSetup, onAssistente, onDemo }: Props) {
               Central Digital do Condomínio
             </p>
             <p className="mt-1 max-w-[260px] text-[12.5px] leading-relaxed text-cream-100/72">
-              Cockpit local-first para organizar rotina, prazos, documentos e decisões.
+              Cockpit completo para organizar rotina, prazos, documentos e decisões.
             </p>
           </div>
           <BrandMark className="h-14 w-14 shrink-0 ring-1 ring-cream-100/10" rounded="rounded-lg" />

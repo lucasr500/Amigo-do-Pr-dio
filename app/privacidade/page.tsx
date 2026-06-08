@@ -25,11 +25,11 @@ export default function PrivacidadePage() {
 
       <main className="mx-auto max-w-[640px] px-5 py-6">
 
-        {/* Banner pré-beta */}
-        <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
-          <p className="text-[12.5px] font-semibold text-amber-800">Versão preliminar — pré-beta, uso experimental</p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-amber-700">
-            Este documento está em vigor para a fase pré-beta do Amigo do Prédio, elaborado em conformidade com os princípios da LGPD (Lei 13.709/2018). Será revisado por profissional jurídico especializado antes do lançamento público como produto comercial.
+        {/* Banner versão */}
+        <div className="mb-6 rounded-xl border border-navy-200 bg-navy-50 px-4 py-3">
+          <p className="text-[12.5px] font-semibold text-navy-700">Política de Privacidade — Versão 1.0</p>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-navy-500">
+            Este documento está em vigor para a versão 1.0 do Amigo do Prédio, elaborado em conformidade com a LGPD (Lei 13.709/2018). Recomenda-se consulta a profissional jurídico especializado para dúvidas específicas ao seu caso.
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">1. Identificação do Responsável</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Projeto <strong>Amigo do Prédio</strong>, em fase pré-beta, ainda sem pessoa jurídica específica constituída.
+              <strong>Amigo do Prédio</strong>, produto digital independente, ainda sem pessoa jurídica específica constituída.
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-navy-500">
               E-mail de contato:{" "}
@@ -89,7 +89,7 @@ export default function PrivacidadePage() {
 
             <div className="mt-3 rounded-lg border border-navy-100 bg-navy-50/50 px-3 py-2.5">
               <p className="text-[12px] leading-relaxed text-navy-600">
-                <strong>Importante:</strong> não há conta, login ou sincronização em nuvem nesta fase. Os dados estão vinculados ao navegador e aparelho utilizados. Limpar o navegador, trocar de dispositivo ou usar modo privado pode apagar os dados permanentemente se não houver backup. O backup é de responsabilidade do usuário, via "Exportar dados" no app.
+                <strong>Importante:</strong> não há conta, login ou sincronização em nuvem na versão atual. Os dados estão vinculados ao navegador e aparelho utilizados. Limpar o navegador, trocar de dispositivo ou usar modo privado pode apagar os dados permanentemente se não houver backup. O backup é de responsabilidade do usuário, via "Exportar dados" no app.
               </p>
             </div>
 
@@ -222,7 +222,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">10. Alterações nesta Política</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Esta política pode ser atualizada durante a fase pré-beta. Alterações serão comunicadas pelo e-mail de contato do projeto ou por aviso dentro do aplicativo.
+              Esta política pode ser atualizada a qualquer momento. Alterações serão comunicadas pelo e-mail de contato do projeto ou por aviso dentro do aplicativo.
             </p>
           </section>
 
@@ -230,7 +230,7 @@ export default function PrivacidadePage() {
           <section>
             <h2 className="mb-2 text-[14px] font-semibold text-navy-800">11. Encarregado de Dados (DPO)</h2>
             <p className="text-[13.5px] leading-relaxed text-navy-600">
-              Nesta fase pré-beta, o canal de contato para dúvidas sobre privacidade é o e-mail{" "}
+              O canal de contato para dúvidas sobre privacidade é o e-mail{" "}
               <a href="mailto:oamigodopredio@gmail.com" className="font-medium text-navy-700 underline underline-offset-2">
                 oamigodopredio@gmail.com
               </a>. A eventual necessidade de encarregado formal de dados será reavaliada conforme a evolução do projeto e orientação jurídica especializada.

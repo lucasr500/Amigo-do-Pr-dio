@@ -261,8 +261,8 @@ export default function CondominioTab({
       {hasCondominioData && (
         <CondominioSection
           id="central-digital"
-          title="Preparando a Central Digital"
-          subtitle="Estrutura local para organizar mural, solicitações, enquetes e documentos públicos quando houver acesso de moradores."
+          title="Central Digital do Condomínio"
+          subtitle="Organize o mural de comunicados, solicitações, enquetes e documentos públicos do condomínio."
           eyebrow="Comunidade"
           priority="normal"
           defaultOpen={false}
@@ -270,7 +270,7 @@ export default function CondominioTab({
           <section className="px-5 pb-3 sm:px-6">
             <div className="rounded-2xl border border-navy-100 bg-white/85 px-4 py-3 shadow-[0_1px_3px_rgba(31,49,71,0.03)]">
               <p className="text-[12px] leading-relaxed text-navy-500">
-                Nesta versão, estes módulos funcionam como ambiente local de configuração e demonstração da camada institucional. O acesso real de moradores e conselheiros ainda não está ativo.
+                Configure o mural, solicitações, enquetes e documentos do condomínio. Moradores acessam esta área pelo perfil de morador.
               </p>
             </div>
           </section>
