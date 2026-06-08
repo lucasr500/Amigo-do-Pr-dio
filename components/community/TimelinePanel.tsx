@@ -28,6 +28,10 @@ const TYPE_ICONS: Partial<Record<TimelineEventType, string>> = {
   mandato_atualizado:    "👤",
   fornecedor_cadastrado: "🏢",
   ocorrencia_registrada: "⚠",
+  comunicado_registrado: "✉",
+  revisao_mensal_concluida: "✓",
+  backup_exportado:      "↧",
+  pendencia_concluida:   "✓",
 };
 
 type FormState = {
@@ -198,9 +202,9 @@ export default function TimelinePanel({ role, onSeed }: Props) {
       {/* Estado vazio */}
       {events.length === 0 && (
         <div className="rounded-2xl border border-navy-100 bg-white/90 px-5 py-8 text-center">
-          <p className="text-[13px] font-medium text-navy-600 mb-1">Nenhum evento na timeline</p>
+          <p className="text-[13px] font-medium text-navy-600 mb-1">A memória institucional começa aqui</p>
           <p className="text-[11.5px] text-navy-400 leading-relaxed">
-            Eventos são gerados automaticamente quando você publica no mural, registra solicitações, cria enquetes e documenta ações. Você também pode adicionar manualmente.
+            Conforme você concluir pendências, renovar documentos, registrar decisões, cadastrar fornecedores e exportar backups, esta timeline será preenchida automaticamente.
           </p>
         </div>
       )}

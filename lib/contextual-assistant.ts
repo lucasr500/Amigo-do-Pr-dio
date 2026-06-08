@@ -22,11 +22,15 @@ export type AssistantContext = {
   hasPiscina: boolean;
   hasFuncionarios: boolean;
   tipoSindico?: string;
+  mandatoData?: string;
   mandatoVenceEm?: number;     // dias até fim do mandato (negativo = vencido)
+  avcbData?: string;
   avcbVenceEm?: number;
+  seguroData?: string;
   seguroVenceEm?: number;
   pendenciasAbertas: number;
   pendenciasCriticas: number;
+  pendenciasVencidasOuProximas: number;
   documentosFaltantes: number;
   documentosVencidos: number;
 };
@@ -45,11 +49,15 @@ export function buildAssistantContext(
 ): AssistantContext {
   const today = new Date().toISOString().slice(0, 10);
   const abertas = pendencias.filter((p) => p.status !== "concluida");
+  const inSeven = new Date();
+  inSeven.setDate(inSeven.getDate() + 7);
+  const nextSeven = inSeven.toISOString().slice(0, 10);
   const criticas = abertas.filter((p) => p.dueDate && p.dueDate < today);
+  const vencidasOuProximas = abertas.filter((p) => p.dueDate && p.dueDate <= nextSeven);
   const docsFaltantes = documentos.filter((d) => d.status === "nao_tenho" || d.status === "precisa_localizar");
   const docsVencidos = documentos.filter((d) => {
     if (d.status !== "tenho") return false;
-    const v = d.vencimento?.value;
+    const v = d.dataVencimento || d.vencimento?.value;
     return v && v < today;
   });
 
@@ -60,11 +68,15 @@ export function buildAssistantContext(
     hasPiscina: profile?.hasPiscina ?? false,
     hasFuncionarios: profile?.hasFuncionarios ?? false,
     tipoSindico: profile?.tipoSindico,
+    mandatoData: memoria.fimMandatoSindico,
     mandatoVenceEm: daysUntil(memoria.fimMandatoSindico),
+    avcbData: memoria.vencimentoAVCB,
     avcbVenceEm: daysUntil(memoria.vencimentoAVCB),
+    seguroData: memoria.vencimentoSeguro,
     seguroVenceEm: daysUntil(memoria.vencimentoSeguro),
     pendenciasAbertas: abertas.length,
     pendenciasCriticas: criticas.length,
+    pendenciasVencidasOuProximas: vencidasOuProximas.length,
     documentosFaltantes: docsFaltantes.length,
     documentosVencidos: docsVencidos.length,
   };
@@ -79,11 +91,11 @@ export function buildContextualCards(ctx: AssistantContext): ContextualCard[] {
       type: "alert",
       priority: 1,
       title: ctx.avcbVenceEm <= 0
-        ? "AVCB vencido — risco legal imediato"
+        ? "AVCB vencido — merece atenção"
         : `AVCB vence em ${ctx.avcbVenceEm} dia${ctx.avcbVenceEm !== 1 ? "s" : ""}`,
       body: ctx.avcbVenceEm <= 0
-        ? "O AVCB está vencido. O condomínio está irregular perante o Corpo de Bombeiros. O síndico pode responder pessoalmente em caso de sinistro."
-        : `O AVCB vence em ${ctx.avcbVenceEm} dias. Contrate a vistoria com antecedência — o prazo de emissão costuma levar de 5 a 15 dias úteis.`,
+        ? "O vencimento cadastrado do AVCB já passou. Isso pode indicar risco operacional e convém verificar o documento com profissional responsável."
+        : `O AVCB vence em ${ctx.avcbVenceEm} dias. Convém organizar a vistoria com antecedência e acompanhar o prazo de emissão.`,
       actionLabel: "Ver pendências",
       actionKey: "open_pendencias",
     });
@@ -95,11 +107,11 @@ export function buildContextualCards(ctx: AssistantContext): ContextualCard[] {
       type: "alert",
       priority: 2,
       title: ctx.seguroVenceEm <= 0
-        ? "Seguro vencido — responsabilidade do síndico"
+        ? "Seguro vencido — verificar apólice"
         : `Seguro vence em ${ctx.seguroVenceEm} dia${ctx.seguroVenceEm !== 1 ? "s" : ""}`,
       body: ctx.seguroVenceEm <= 0
-        ? "Seguro vencido. O síndico pode ser pessoalmente responsabilizado em caso de sinistro sem cobertura. Renove imediatamente."
-        : `Inicie a cotação agora. Seguros para condomínios têm prazo de análise e aprovação que pode levar até 30 dias.`,
+        ? "O vencimento cadastrado do seguro já passou. Vale confirmar a situação da apólice com a corretora ou administradora."
+        : `Vale iniciar a cotação e conferir coberturas antes do vencimento cadastrado.`,
       actionLabel: "Ver documentos",
       actionKey: "open_documentos",
     });
@@ -111,11 +123,11 @@ export function buildContextualCards(ctx: AssistantContext): ContextualCard[] {
       type: "alert",
       priority: 3,
       title: ctx.mandatoVenceEm <= 0
-        ? "Mandato vencido — regularize a eleição"
+        ? "Mandato vencido — organizar conferência"
         : `Mandato vence em ${ctx.mandatoVenceEm} dia${ctx.mandatoVenceEm !== 1 ? "s" : ""}`,
       body: ctx.mandatoVenceEm <= 0
-        ? "O mandato está vencido. O síndico perde poderes de representação. Convoque AGE imediatamente para regularização."
-        : `Convoque a assembleia com pelo menos 10 dias de antecedência. Prepare a pauta com eleição do síndico e votação de contas.`,
+        ? "O vencimento cadastrado do mandato já passou. Use isso como apoio operacional para verificar ata, convenção e próximos passos formais."
+        : `Prepare a transição e confira os prazos de convocação aplicáveis ao condomínio.`,
       actionLabel: "Iniciar handoff",
       actionKey: "open_handoff",
     });
@@ -176,30 +188,39 @@ export function enrichResponseWithContext(
   const enrichments: string[] = [];
 
   const queryLower = query.toLowerCase();
+  const formatDate = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR");
+  const operationalDisclaimer = "Esta resposta serve como apoio operacional e não substitui avaliação jurídica, técnica ou administrativa específica.";
 
-  if (/avcb|bombeiro|vistoria/.test(queryLower) && ctx.avcbVenceEm !== undefined) {
+  if (/avcb|bombeiro|vistoria/.test(queryLower) && ctx.avcbVenceEm !== undefined && ctx.avcbData) {
     enrichments.push(
       ctx.avcbVenceEm <= 0
-        ? `⚠ No seu condomínio: AVCB vencido há ${Math.abs(ctx.avcbVenceEm)} dia${Math.abs(ctx.avcbVenceEm) !== 1 ? "s" : ""}.`
-        : ctx.avcbVenceEm <= 30
-        ? `⚠ No seu condomínio: AVCB vence em ${ctx.avcbVenceEm} dia${ctx.avcbVenceEm !== 1 ? "s" : ""} — ação urgente.`
-        : `ℹ No seu condomínio: AVCB vence em ${ctx.avcbVenceEm} dias.`
+        ? `No seu prédio, o AVCB está registrado com vencimento em ${formatDate(ctx.avcbData)} (${Math.abs(ctx.avcbVenceEm)} dia${Math.abs(ctx.avcbVenceEm) !== 1 ? "s" : ""} atrás). Isso merece atenção e verificação documental.`
+        : `No seu prédio, o AVCB está registrado com vencimento em ${formatDate(ctx.avcbData)} (${ctx.avcbVenceEm} dia${ctx.avcbVenceEm !== 1 ? "s" : ""}). Isso torna o tema relevante para a rotina de acompanhamento.`
     );
+    enrichments.push(operationalDisclaimer);
   }
 
-  if (/seguro/.test(queryLower) && ctx.seguroVenceEm !== undefined) {
+  if (/seguro|apólice|apolice/.test(queryLower) && ctx.seguroVenceEm !== undefined && ctx.seguroData) {
     enrichments.push(
       ctx.seguroVenceEm <= 0
-        ? `⚠ No seu condomínio: Seguro vencido.`
-        : `ℹ No seu condomínio: Seguro vence em ${ctx.seguroVenceEm} dias.`
+        ? `No cadastro atual do condomínio, o seguro está marcado com vencimento em ${formatDate(ctx.seguroData)}. Convém confirmar a situação da apólice.`
+        : `No cadastro atual do condomínio, o seguro está marcado com vencimento em ${formatDate(ctx.seguroData)}. Vale manter esse prazo acompanhado junto aos demais documentos essenciais.`
     );
+    enrichments.push(operationalDisclaimer);
   }
 
-  if (/mandato|eleição|sindico|síndico/.test(queryLower) && ctx.mandatoVenceEm !== undefined) {
+  if (/mandato|eleição|eleicao|sindico|síndico|transição|transicao/.test(queryLower) && ctx.mandatoVenceEm !== undefined && ctx.mandatoData) {
     enrichments.push(
       ctx.mandatoVenceEm <= 0
-        ? `⚠ No seu condomínio: Mandato vencido.`
-        : `ℹ No seu condomínio: Mandato vence em ${ctx.mandatoVenceEm} dias.`
+        ? `O mandato cadastrado venceu em ${formatDate(ctx.mandatoData)}. A resposta abaixo deve ser lida como apoio operacional para organização da transição.`
+        : `O mandato cadastrado vence em ${formatDate(ctx.mandatoData)}. A resposta abaixo deve ser lida como apoio operacional para organização da transição.`
+    );
+    enrichments.push(operationalDisclaimer);
+  }
+
+  if (/pend[eê]ncia|pendente|prazo|atrasad|priorizar/.test(queryLower) && ctx.pendenciasAbertas > 0) {
+    enrichments.push(
+      `Hoje existem ${ctx.pendenciasAbertas} pendência${ctx.pendenciasAbertas !== 1 ? "s" : ""} aberta${ctx.pendenciasAbertas !== 1 ? "s" : ""} no condomínio, sendo ${ctx.pendenciasVencidasOuProximas} vencida${ctx.pendenciasVencidasOuProximas !== 1 ? "s" : ""} ou próxima${ctx.pendenciasVencidasOuProximas !== 1 ? "s" : ""} do prazo.`
     );
   }
 
@@ -213,7 +234,7 @@ export function enrichResponseWithContext(
 
   if (enrichments.length === 0) return responseText;
 
-  return responseText + "\n\n---\n**Contexto do seu condomínio:**\n" + enrichments.join("\n");
+  return `**Contexto do seu condomínio:**\n${Array.from(new Set(enrichments)).join("\n")}\n\n${responseText}`;
 }
 
 export function getSuggestedQueriesForContext(ctx: AssistantContext): string[] {

@@ -20,6 +20,9 @@ import {
   DOCUMENTOS_ESSENCIAIS_IDS,
   type DocumentoEssencialId,
 } from "./session";
+import { getDecisions } from "./decisions";
+import { getHandoffProgress } from "./handoff";
+import { getActiveSuppliers } from "./suppliers";
 import { desde, past } from "./urgency";
 import { temManutencaoCriticaAtrasada } from "./recorrencias";
 import { PLAYBOOKS, MICRO_GUIDANCE_BY_CATEGORY } from "./action-library";
@@ -75,6 +78,9 @@ export function buildGuidanceEngine(): GuidanceEngineResult {
   const funcs      = getFuncionarios();
   const manutencoes = getManutencoes();
   const profile    = getProfile();
+  const decisions  = getDecisions();
+  const suppliers  = getActiveSuppliers();
+  const handoff    = getHandoffProgress();
   const items: GuidanceEngineItem[] = [];
   const ids = new Set<string>();
 
@@ -420,6 +426,75 @@ export function buildGuidanceEngine(): GuidanceEngineResult {
         playbookId: "elevador_sem_manutencao",
       });
     }
+
+    const hasElevatorSupplier = suppliers.some((s) => s.category === "elevador" && s.active);
+    if (!hasElevatorSupplier) {
+      add({
+        id: "eng_elevador_fornecedor_ausente",
+        icon: "🛗",
+        titulo: "Fornecedor de elevador não cadastrado",
+        categoria: "operacional",
+        prioridade: "importante",
+        contexto: "O prédio informa possuir elevador, mas não há fornecedor ativo de elevador cadastrado.",
+        consequencia: "Sem esse contato estruturado, emergências e manutenções podem depender de buscas improvisadas.",
+        proximoPasso: "Cadastrar o fornecedor responsável pela manutenção do elevador.",
+        checklist: [
+          "Confirmar a empresa responsável pela manutenção",
+          "Cadastrar contato, responsável e contrato do fornecedor",
+          "Registrar a próxima manutenção prevista",
+        ],
+      });
+    }
+  }
+
+  // ── Handoff crítico ───────────────────────────────────────────────────────
+  const mandatoDate = m.fimMandatoSindico || assistida.mandato?.value;
+  const mandatoDays = daysUntil(mandatoDate);
+  if (mandatoDays !== null && mandatoDays >= 0 && mandatoDays < 90 && handoff.pct < 30) {
+    add({
+      id: "eng_handoff_critico",
+      icon: "🔁",
+      titulo: "Passagem de mandato está incompleta",
+      categoria: "gestao",
+      prioridade: "critico",
+      contexto: "O mandato se aproxima do fim e o checklist de transição ainda está abaixo de 30%.",
+      consequencia: "Isso pode dificultar a continuidade da gestão e a entrega organizada do histórico do condomínio.",
+      proximoPasso: "Revisar o checklist de passagem de mandato e concluir os itens essenciais.",
+      checklist: [
+        "Conferir documentos essenciais",
+        "Atualizar fornecedores ativos",
+        "Revisar pendências abertas",
+        "Registrar decisões recentes",
+        "Exportar backup atualizado",
+      ],
+    });
+  }
+
+  // ── Decisões sem acompanhamento ───────────────────────────────────────────
+  const staleDecision = decisions.find((decision) => {
+    if (decision.linkedPendenciaId) return false;
+    if (!decision.nextStep && decision.status !== "registrada" && decision.status !== "em_execucao") return false;
+    const reference = decision.updatedAt || decision.createdAt;
+    const ageDays = desde(reference);
+    return Number.isFinite(ageDays) && ageDays > 30;
+  });
+  if (staleDecision) {
+    add({
+      id: "eng_decisao_sem_acompanhamento",
+      icon: "🧭",
+      titulo: "Decisão sem acompanhamento",
+      categoria: "gestao",
+      prioridade: "importante",
+      contexto: "Há decisão registrada sem pendência vinculada ou acompanhamento recente.",
+      consequencia: "Decisões sem próximo passo tendem a se perder na rotina do condomínio.",
+      proximoPasso: "Criar ou vincular uma pendência para acompanhar a execução da decisão.",
+      checklist: [
+        "Revisar a decisão registrada",
+        "Confirmar o próximo passo operacional",
+        "Criar ou vincular uma pendência",
+        "Atualizar o status da decisão",
+      ],
+    });
   }
 
   // ── Melhorias (melhoria) ──────────────────────────────────────────────────

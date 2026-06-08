@@ -1,19 +1,29 @@
 // ─── Timeline institucional — eventos do condomínio ──────────────────────────
-import { safeRead, safeWrite } from "./session-core";
+import { KEYS, safeRead, safeWrite } from "./session-core";
 import type {
   TimelineEvent, TimelineEventType, Visibility,
 } from "./community-types";
 
 export type { TimelineEvent };
 
-const KEY = "amigo_community_timeline";
+const KEY = KEYS.COMMUNITY_TIMELINE;
+const LEGACY_KEY = "amigo_community_timeline";
+const RECENT_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 
 function uid(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export function getTimeline(): TimelineEvent[] {
-  return safeRead<TimelineEvent[]>(KEY, []);
+  const current = safeRead<TimelineEvent[]>(KEY, []);
+  if (current.length > 0 || KEY === LEGACY_KEY) return current;
+
+  const legacy = safeRead<TimelineEvent[]>(LEGACY_KEY, []);
+  if (legacy.length > 0) {
+    saveTimeline(legacy);
+    return legacy;
+  }
+  return current;
 }
 
 export function saveTimeline(events: TimelineEvent[]): void {
@@ -31,6 +41,31 @@ export function addTimelineEvent(
   const existing = getTimeline();
   safeWrite(KEY, [ev, ...existing].slice(0, 1000));
   return ev;
+}
+
+function hasRecentSimilarEvent(
+  type: TimelineEventType,
+  sourceModule: string,
+  match: (event: TimelineEvent) => boolean,
+  windowMs = RECENT_DEDUPE_WINDOW_MS
+): boolean {
+  const now = Date.now();
+  return getTimeline().some((event) => {
+    if (event.type !== type || event.sourceModule !== sourceModule) return false;
+    if (!match(event)) return false;
+    const created = new Date(event.createdAt || event.occurredAt).getTime();
+    if (!Number.isFinite(created)) return true;
+    return now - created <= windowMs;
+  });
+}
+
+function addTimelineEventOnce(
+  data: Omit<TimelineEvent, "id" | "createdAt">,
+  match: (event: TimelineEvent) => boolean,
+  windowMs?: number
+): TimelineEvent | null {
+  if (hasRecentSimilarEvent(data.type, data.sourceModule ?? "", match, windowMs)) return null;
+  return addTimelineEvent(data);
 }
 
 export function deleteTimelineEvent(id: string): void {
@@ -129,7 +164,7 @@ export function emitDocumentPublished(
 // ─── Emit operacionais — módulos internos do produto ─────────────────────────
 
 export function emitDecisionRegistered(decisionId: string, title: string, categoryLabel: string): void {
-  addTimelineEvent({
+  addTimelineEventOnce({
     type: "decisao_registrada",
     title: `Decisão registrada: ${title}`,
     description: `Categoria: ${categoryLabel}`,
@@ -137,11 +172,59 @@ export function emitDecisionRegistered(decisionId: string, title: string, catego
     sourceModule: "decisions",
     sourceId: decisionId,
     occurredAt: new Date().toISOString(),
-  });
+  }, (event) => event.sourceId === decisionId);
+}
+
+export function emitDecisionStatusChanged(
+  decisionId: string,
+  title: string,
+  statusLabel: string
+): void {
+  addTimelineEventOnce({
+    type: "decisao_registrada",
+    title: `Decisão atualizada: ${title}`,
+    description: `Status: ${statusLabel}`,
+    visibility: "gestao",
+    sourceModule: "decisions",
+    sourceId: decisionId,
+    occurredAt: new Date().toISOString(),
+    metadata: { status: statusLabel },
+  }, (event) => event.sourceId === decisionId && event.description === `Status: ${statusLabel}`, 24 * 60 * 60 * 1000);
+}
+
+export function emitPendenciaCompleted(pendenciaId: string, title: string): void {
+  addTimelineEventOnce({
+    type: "pendencia_concluida",
+    title: `Pendência concluída: ${title}`,
+    description: "A pendência foi marcada como concluída e registrada na memória institucional do condomínio.",
+    visibility: "gestao",
+    sourceModule: "pendencias",
+    sourceId: pendenciaId,
+    occurredAt: new Date().toISOString(),
+  }, (event) => event.sourceId === pendenciaId, Number.POSITIVE_INFINITY);
+}
+
+export function emitDocumentRenewed(docId: string, label: string, dataVencimento?: string): void {
+  addTimelineEventOnce({
+    type: "documento_renovado",
+    title: `Documento renovado: ${label}`,
+    description: dataVencimento
+      ? `Vencimento atualizado para ${dataVencimento}.`
+      : "O vencimento do documento foi atualizado e registrado na memória institucional.",
+    visibility: "gestao",
+    sourceModule: "documentos",
+    sourceId: docId,
+    relatedDocumentId: docId,
+    occurredAt: new Date().toISOString(),
+    metadata: dataVencimento ? { dataVencimento } : undefined,
+  }, (event) =>
+    event.sourceId === docId &&
+    (dataVencimento ? event.metadata?.dataVencimento === dataVencimento : event.title === `Documento renovado: ${label}`),
+  Number.POSITIVE_INFINITY);
 }
 
 export function emitSupplierRegistered(supplierId: string, name: string, categoryLabel: string): void {
-  addTimelineEvent({
+  addTimelineEventOnce({
     type: "fornecedor_cadastrado",
     title: `Fornecedor cadastrado: ${name}`,
     description: `Categoria: ${categoryLabel}`,
@@ -149,18 +232,18 @@ export function emitSupplierRegistered(supplierId: string, name: string, categor
     sourceModule: "suppliers",
     sourceId: supplierId,
     occurredAt: new Date().toISOString(),
-  });
+  }, (event) => event.sourceId === supplierId);
 }
 
 export function emitComunicadoRegistered(templateId: string, title: string): void {
-  addTimelineEvent({
+  addTimelineEventOnce({
     type: "comunicado_registrado",
     title: `Comunicado registrado: ${title}`,
     visibility: "moradores",
     sourceModule: "comunicados",
     sourceId: templateId,
     occurredAt: new Date().toISOString(),
-  });
+  }, (event) => event.sourceId === templateId);
 }
 
 export function emitMonthlyReviewCompleted(month: string, score: number): void {
@@ -168,7 +251,7 @@ export function emitMonthlyReviewCompleted(month: string, score: number): void {
     month: "long",
     year: "numeric",
   });
-  addTimelineEvent({
+  addTimelineEventOnce({
     type: "revisao_mensal_concluida",
     title: `Revisão mensal concluída — ${monthFormatted}`,
     description: `Score: ${score}/100`,
@@ -176,18 +259,18 @@ export function emitMonthlyReviewCompleted(month: string, score: number): void {
     sourceModule: "monthly-review",
     sourceId: month,
     occurredAt: new Date().toISOString(),
-  });
+  }, (event) => event.sourceId === month);
 }
 
 export function emitBackupExported(): void {
-  addTimelineEvent({
+  addTimelineEventOnce({
     type: "backup_exportado",
     title: "Backup exportado",
     description: "Dados do condomínio exportados com sucesso.",
     visibility: "gestao",
     sourceModule: "backup",
     occurredAt: new Date().toISOString(),
-  });
+  }, (event) => event.type === "backup_exportado");
 }
 
 // ─── Filtros ──────────────────────────────────────────────────────────────────

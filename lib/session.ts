@@ -1201,8 +1201,8 @@ export type ImportResult =
   | { success: true; summary: { nomeCondominio?: string; memoriaCount: number; favoritesCount: number; pendenciasCount?: number; ocorrenciasCount?: number; agendaCount?: number; documentosCount?: number; funcionariosCount?: number; manutencoesCount?: number; financialSnapshotsCount?: number; monthlyReviewHistoryCount?: number } }
   | { success: false; error: string };
 
-export function exportUserData(): void {
-  if (typeof window === "undefined") return;
+export function exportUserData(): boolean {
+  if (typeof window === "undefined") return false;
 
   const payload: UserBackup = {
     version: "11",
@@ -1245,8 +1245,10 @@ export function exportUserData(): void {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    return true;
   } catch {
     // Download indisponível no ambiente
+    return false;
   }
 }
 

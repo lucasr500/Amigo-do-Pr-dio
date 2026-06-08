@@ -6,6 +6,7 @@ import {
   buildSuppliersReport, SUPPLIER_CATEGORY_LABELS,
   type Supplier, type SupplierCategory, type SupplierRating,
 } from "@/lib/suppliers";
+import { emitSupplierRegistered } from "@/lib/community-timeline";
 
 const CATEGORIES = Object.entries(SUPPLIER_CATEGORY_LABELS) as [SupplierCategory, string][];
 
@@ -44,7 +45,8 @@ export default function SuppliersPanel() {
     if (editId) {
       updateSupplier(editId, form);
     } else {
-      addSupplier(form);
+      const supplier = addSupplier(form);
+      emitSupplierRegistered(supplier.id, supplier.name, SUPPLIER_CATEGORY_LABELS[supplier.category]);
     }
     setShowForm(false);
     setEditId(null);

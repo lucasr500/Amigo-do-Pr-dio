@@ -3,6 +3,7 @@
 // Persiste em localStorage via session-core. Sem lógica de UI.
 
 import { safeRead, safeWrite, KEYS } from "./session-core";
+import { emitPendenciaCompleted } from "./community-timeline";
 
 // ─── Caps de armazenamento ────────────────────────────────────────────────────
 export const MAX_PENDENCIAS  = 200;
@@ -117,10 +118,13 @@ export function addPendencia(
 
 export function completePendencia(id: string, observacao?: string): void {
   const now = new Date().toISOString();
+  const all = getPendencias();
+  const completed = all.find((p) => p.id === id && p.status !== "concluida");
   safeWrite(
     KEYS.PENDENCIAS,
-    getPendencias().map((p) => {
+    all.map((p) => {
       if (p.id !== id) return p;
+      if (p.status === "concluida") return p;
       const updated: Pendencia = {
         ...p,
         status: "concluida",
@@ -130,6 +134,7 @@ export function completePendencia(id: string, observacao?: string): void {
       return appendEvent(updated, { ts: now, type: "concluido", note: observacao?.trim() || undefined });
     })
   );
+  if (completed) emitPendenciaCompleted(completed.id, completed.titulo);
 }
 
 export function updatePendencia(
@@ -137,14 +142,24 @@ export function updatePendencia(
   patch: Partial<Omit<Pendencia, "id" | "createdAt">>
 ): void {
   const now = new Date().toISOString();
+  const all = getPendencias();
+  const previous = all.find((p) => p.id === id);
+  const shouldEmitCompleted = previous?.status !== "concluida" && patch.status === "concluida";
+  const completedTitle = patch.titulo?.trim() || previous?.titulo;
   safeWrite(
     KEYS.PENDENCIAS,
-    getPendencias().map((p) => {
+    all.map((p) => {
       if (p.id !== id) return p;
-      const updated: Pendencia = { ...p, ...patch };
+      const wasOpen = p.status !== "concluida";
+      const updated: Pendencia = {
+        ...p,
+        ...patch,
+        ...(wasOpen && patch.status === "concluida" ? { completedAt: patch.completedAt || now } : {}),
+      };
       return appendEvent(updated, { ts: now, type: "editado" });
     })
   );
+  if (shouldEmitCompleted && completedTitle) emitPendenciaCompleted(id, completedTitle);
 }
 
 export function reopenPendencia(id: string): void {

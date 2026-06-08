@@ -9,6 +9,7 @@
 // O estado em andamento (MONTHLY_REVIEW_STATE) continua fora do backup.
 
 import { safeRead, safeWrite, KEYS } from "@/lib/session-core";
+import { getPendenciasAbertas } from "@/lib/session-pendencias";
 
 // ─── Tipos de estado de progresso ────────────────────────────────────────────
 
@@ -187,7 +188,10 @@ export function restoreMonthlyReviewHistory(snapshots: MonthlyReviewSnapshot[]):
 
 // ─── Resumo copiável de revisão histórica ────────────────────────────────────
 
-export function buildMonthlyReviewSnapshotSummary(month: string): string {
+export function buildMonthlyReviewSnapshotSummary(
+  month: string,
+  opts: { variant?: "historico" | "conselho" } = {}
+): string {
   const snapshot = getMonthlyReviewSnapshot(month);
   if (!snapshot) return "";
 
@@ -209,6 +213,29 @@ export function buildMonthlyReviewSnapshotSummary(month: string): string {
     if (trend === "estavel")    return "Tendência: estável.";
     return "";
   })();
+
+  if (opts.variant === "conselho") {
+    const attentionCount = snapshot.criticalCount + snapshot.warningCount;
+    const nextFocus = snapshot.topItems[0]?.title ?? snapshot.headline;
+    const pendenciasAbertas = getPendenciasAbertas().length;
+    const financeiroLine = snapshot.topItems.some((item) => item.section === "financeiro")
+      ? "Ponto financeiro incluído nos acompanhamentos do mês."
+      : "Sem ponto financeiro crítico destacado na revisão.";
+
+    return [
+      `🏢 Revisão mensal do condomínio — ${mesFormatado}`,
+      "",
+      `✅ Organização geral: ${snapshot.score}/100`,
+      `📌 Pendências abertas: ${pendenciasAbertas}`,
+      `⚠️ Pontos de atenção: ${attentionCount}`,
+      `📄 Documentos acompanhados: ${snapshot.checkedCount}/${snapshot.totalItems} itens verificados`,
+      `💰 Situação financeira operacional: ${financeiroLine}`,
+      "",
+      `Próximo foco recomendado: ${nextFocus}`,
+      "",
+      "Resumo auxiliar de gestão. Não substitui prestação de contas, ata oficial ou análise profissional.",
+    ].join("\n");
+  }
 
   return [
     `Histórico da revisão mensal — ${mesFormatado}`,

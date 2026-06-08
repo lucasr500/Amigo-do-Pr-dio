@@ -3,19 +3,22 @@
 import { useState, useEffect } from "react";
 import {
   getDecisions, addDecision, updateDecision, deleteDecision, buildDecisionsReport,
-  DECISION_CATEGORY_LABELS, type Decision, type DecisionCategory, type DecisionRiskLevel,
+  DECISION_CATEGORY_LABELS, DECISION_STATUS_LABELS,
+  type Decision, type DecisionCategory, type DecisionRiskLevel, type DecisionStatus,
 } from "@/lib/decisions";
 import { addPendencia } from "@/lib/session";
 import { emitDecisionRegistered } from "@/lib/community-timeline";
 
 const CATEGORIES = Object.entries(DECISION_CATEGORY_LABELS) as [DecisionCategory, string][];
 const RISK_LEVELS: [DecisionRiskLevel, string][] = [["baixo", "Baixo"], ["medio", "Médio"], ["alto", "Alto"]];
+const STATUS_OPTIONS = Object.entries(DECISION_STATUS_LABELS) as [DecisionStatus, string][];
 
 type FormState = Omit<Decision, "id" | "createdAt" | "updatedAt">;
 
 const EMPTY: FormState = {
   title: "", date: new Date().toISOString().slice(0, 10),
   category: "outro", context: "", rationale: "", outcome: "",
+  status: "registrada",
   riskLevel: undefined, riskNotes: "", nextStep: "", linkedUnit: "",
   linkedDocumentId: undefined, linkedSupplierId: undefined, linkedPendenciaId: undefined,
 };
@@ -51,9 +54,10 @@ export default function DecisionsPanel() {
     setForm({
       title: d.title, date: d.date, category: d.category,
       context: d.context, rationale: d.rationale, outcome: d.outcome,
+      status: d.status,
       riskLevel: d.riskLevel, riskNotes: d.riskNotes ?? "", nextStep: d.nextStep ?? "",
       linkedUnit: d.linkedUnit ?? "",
-      linkedDocumentId: undefined, linkedSupplierId: undefined, linkedPendenciaId: undefined,
+      linkedDocumentId: d.linkedDocumentId, linkedSupplierId: d.linkedSupplierId, linkedPendenciaId: d.linkedPendenciaId,
     });
     setEditId(d.id);
     setShowForm(true);
@@ -82,6 +86,12 @@ export default function DecisionsPanel() {
     medio: "text-amber-600 bg-amber-50",
     alto:  "text-red-600 bg-red-50",
   };
+  const statusColor: Record<DecisionStatus, string> = {
+    registrada:  "bg-navy-50 text-navy-500 ring-navy-100",
+    em_execucao: "bg-amber-50 text-amber-700 ring-amber-100",
+    concluida:   "bg-sage-50 text-sage-700 ring-sage-100",
+    suspensa:    "bg-terracotta-50 text-terracotta-700 ring-terracotta-100",
+  };
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up space-y-3">
@@ -94,6 +104,9 @@ export default function DecisionsPanel() {
             <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Registro de Decisões</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
               Documente decisões relevantes com contexto e fundamento. Proteção jurídica e continuidade entre gestões.
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-navy-400">
+              Registro de controle interno — não substitui ata oficial, deliberação formal ou orientação profissional.
             </p>
           </div>
           <div className="flex gap-2 flex-shrink-0 ml-3 mt-0.5">
@@ -182,6 +195,15 @@ export default function DecisionsPanel() {
                   </select>
                 </div>
                 <div>
+                  <label className="mb-1 block text-[11px] font-medium text-navy-500">Status da decisão</label>
+                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as DecisionStatus })}
+                    className="w-full rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none">
+                    {STATUS_OPTIONS.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
                   <label className="mb-1 block text-[11px] font-medium text-navy-500">Unidade relacionada</label>
                   <input type="text" value={form.linkedUnit ?? ""} onChange={(e) => setForm({ ...form, linkedUnit: e.target.value })}
                     placeholder="Ex: 101, B-03"
@@ -230,6 +252,9 @@ export default function DecisionsPanel() {
                       Risco {d.riskLevel}
                     </span>
                   )}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ${statusColor[d.status]}`}>
+                    {DECISION_STATUS_LABELS[d.status]}
+                  </span>
                 </div>
                 <p className="mt-0.5 text-[11px] text-navy-400">
                   {d.date} · {DECISION_CATEGORY_LABELS[d.category]}
@@ -249,35 +274,53 @@ export default function DecisionsPanel() {
               <div><p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-navy-400 mb-0.5">Decisão</p><p className="text-[12px] font-medium text-navy-800 leading-relaxed">{d.outcome}</p></div>
               {d.nextStep && <div><p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-navy-400 mb-0.5">Próximo passo</p><p className="text-[12px] text-navy-600">{d.nextStep}</p></div>}
               {d.riskNotes && <div><p className="text-[10.5px] font-medium uppercase tracking-[0.1em] text-navy-400 mb-0.5">Obs. de risco</p><p className="text-[11.5px] text-amber-700">{d.riskNotes}</p></div>}
-              <div className="flex flex-wrap gap-3 pt-1">
+              <div className="rounded-xl border border-navy-100 bg-navy-50/40 px-3 py-2">
+                <label className="mb-1 block text-[10.5px] font-semibold text-navy-500">Status da decisão</label>
+                <select
+                  value={d.status}
+                  onChange={(e) => {
+                    updateDecision(d.id, { status: e.target.value as DecisionStatus });
+                    refresh();
+                  }}
+                  className="w-full rounded-lg border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none"
+                >
+                  {STATUS_OPTIONS.map(([val, label]) => <option key={val} value={val}>{label}</option>)}
+                </select>
+                <p className="mt-1 text-[10.5px] leading-snug text-navy-400">
+                  Registro de controle interno — não substitui ata oficial.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
                 <button type="button" onClick={() => handleEdit(d)}
-                  className="text-[11px] text-navy-400 underline underline-offset-2 hover:text-navy-600">Editar</button>
+                  className="rounded-full border border-navy-100 bg-white px-3 py-1.5 text-[11px] font-medium text-navy-500 hover:bg-navy-50">Editar</button>
                 <button type="button" onClick={() => handleDelete(d.id)}
-                  className="text-[11px] text-terracotta-500 underline underline-offset-2 hover:text-terracotta-700">Remover</button>
+                  className="rounded-full px-3 py-1.5 text-[11px] font-medium text-terracotta-600 hover:bg-terracotta-50">Remover</button>
                 {timelineEmitted !== d.id ? (
                   <button type="button"
                     onClick={() => {
                       emitDecisionRegistered(d.id, d.title, DECISION_CATEGORY_LABELS[d.category]);
                       setTimelineEmitted(d.id);
                     }}
-                    className="text-[11px] text-navy-500 underline underline-offset-2 hover:text-navy-700">
-                    + Timeline
+                    className="rounded-full border border-navy-100 bg-white px-3 py-1.5 text-[11px] font-medium text-navy-500 hover:bg-navy-50">
+                    Registrar na timeline
                   </button>
                 ) : (
-                  <span className="text-[11px] text-sage-600">✓ Na timeline</span>
+                  <span className="rounded-full bg-sage-50 px-3 py-1.5 text-[11px] font-medium text-sage-700">Na timeline</span>
                 )}
                 {d.nextStep && pendenciaCreatedFor !== d.id && (
                   <button type="button"
                     onClick={() => {
-                      addPendencia({ titulo: d.nextStep!, categoria: "operacional", origem: "manual" });
+                      const pendencia = addPendencia({ titulo: d.nextStep!, categoria: "operacional", origem: "manual" });
+                      updateDecision(d.id, { linkedPendenciaId: pendencia.id });
                       setPendenciaCreatedFor(d.id);
+                      refresh();
                     }}
-                    className="text-[11px] text-navy-500 underline underline-offset-2 hover:text-navy-700">
+                    className="rounded-full border border-navy-100 bg-white px-3 py-1.5 text-[11px] font-medium text-navy-500 hover:bg-navy-50">
                     Criar pendência
                   </button>
                 )}
-                {pendenciaCreatedFor === d.id && (
-                  <span className="text-[11px] text-sage-600">✓ Pendência criada</span>
+                {(pendenciaCreatedFor === d.id || d.linkedPendenciaId) && (
+                  <span className="rounded-full bg-sage-50 px-3 py-1.5 text-[11px] font-medium text-sage-700">Pendência vinculada</span>
                 )}
               </div>
             </div>

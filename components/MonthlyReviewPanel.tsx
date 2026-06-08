@@ -154,7 +154,7 @@ export default function MonthlyReviewPanel({ refreshKey, onRefresh }: Props) {
   const handleCopy = async () => {
     try {
       const text = status === "concluida"
-        ? buildMonthlyReviewSnapshotSummary(month) || buildMonthlyOperationalSummary(month)
+        ? buildMonthlyReviewSnapshotSummary(month, { variant: "conselho" }) || buildMonthlyOperationalSummary(month)
         : buildMonthlyOperationalSummary(month);
       await navigator.clipboard.writeText(text);
       setCopied(true);

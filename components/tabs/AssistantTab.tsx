@@ -15,7 +15,7 @@ import type { ToolAnchor } from "@/lib/app-navigation";
 import { incrementUsage, getProfile, getMemoriaOperacional, getPendencias } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import {
-  buildAssistantContext, buildContextualCards, getSuggestedQueriesForContext,
+  buildAssistantContext, buildContextualCards, enrichResponseWithContext, getSuggestedQueriesForContext,
   type ContextualCard,
 } from "@/lib/contextual-assistant";
 import { getDocumentos } from "@/lib/session-documentos";
@@ -82,6 +82,18 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
     if (abortRef.current) return;
 
     const result = findAnswer(q.trim());
+    const profile = getProfile();
+    const memoria = getMemoriaOperacional();
+    const pendencias = getPendencias();
+    const documentos = getDocumentos();
+    const ctx = buildAssistantContext(profile, memoria, pendencias, documentos);
+    const contextualizedResult = {
+      ...result,
+      text: enrichResponseWithContext(result.text, q.trim(), ctx),
+      contextualFallback: result.contextualFallback
+        ? enrichResponseWithContext(result.contextualFallback, q.trim(), ctx)
+        : result.contextualFallback,
+    };
     logQuery(q.trim(), result);
     incrementUsage();
 
@@ -101,7 +113,7 @@ const AssistantTab = forwardRef<AssistantTabHandle, Props>(function AssistantTab
       });
     }
 
-    setAnswerResult(result);
+    setAnswerResult(contextualizedResult);
     setIsLoading(false);
     onQueryExecuted();
   }, [isLoading, onQueryExecuted]);

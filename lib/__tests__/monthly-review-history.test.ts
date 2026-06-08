@@ -181,6 +181,14 @@ describe("buildMonthlyReviewSnapshotSummary", () => {
     const summary = buildMonthlyReviewSnapshotSummary("2026-05");
     expect(summary).toContain("82");
   });
+
+  test("variante conselho é copiável e não chama o resumo de ata", () => {
+    saveMonthlyReviewSnapshot(makeSnapshot("2026-05", 82));
+    const summary = buildMonthlyReviewSnapshotSummary("2026-05", { variant: "conselho" });
+    expect(summary).toContain("Revisão mensal do condomínio");
+    expect(summary).toContain("82/100");
+    expect(summary).toContain("Não substitui prestação de contas, ata oficial ou análise profissional.");
+  });
 });
 
 describe("buildSnapshotFromReport — campos corretos", () => {

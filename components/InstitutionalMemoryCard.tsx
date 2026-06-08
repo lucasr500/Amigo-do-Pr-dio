@@ -42,7 +42,7 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
             Memória institucional
           </p>
           <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-navy-800">
-            {summary.highlight}
+            {summary.hasData ? summary.highlight : "Nenhum registro institucional ainda"}
           </p>
 
           {summary.lastActivityDate && (
@@ -79,9 +79,9 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
               )}
             </div>
           ) : (
-            summary.nextStep && (
-              <p className="mt-0.5 text-[11px] text-navy-400">{summary.nextStep}</p>
-            )
+            <p className="mt-0.5 text-[11px] leading-snug text-navy-400">
+              Comece registrando uma decisão, fornecedor ou pendência concluída para construir a memória do prédio.
+            </p>
           )}
         </div>
 

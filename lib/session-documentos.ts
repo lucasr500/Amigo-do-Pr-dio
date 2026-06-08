@@ -5,6 +5,7 @@
 
 import { safeRead, safeWrite, KEYS, todayISO } from "./session-core";
 import type { AssistedDateField, ManutencaoFrequencia } from "./session-types";
+import { emitDocumentRenewed } from "./community-timeline";
 
 // Re-export shared types consumed by existing session.ts code
 export type { AssistedDateField, ManutencaoFrequencia } from "./session-types";
@@ -149,9 +150,17 @@ export function saveDocumentos(docs: DocumentoEssencial[]): void {
 }
 
 export function upsertDocumento(doc: DocumentoEssencial): void {
-  const all = getDocumentos().filter((d) => d.id !== doc.id);
+  const current = getDocumentos();
+  const previous = current.find((d) => d.id === doc.id);
+  const all = current.filter((d) => d.id !== doc.id);
   all.push(doc);
   saveDocumentos(all);
+
+  const previousDue = previous?.dataVencimento?.trim();
+  const nextDue = doc.dataVencimento?.trim();
+  if (nextDue && nextDue !== previousDue) {
+    emitDocumentRenewed(doc.id, DOCUMENTO_LABEL[doc.id as DocumentoEssencialId] ?? doc.id, nextDue);
+  }
 }
 
 export function getDocumentoById(id: string): DocumentoEssencial | null {

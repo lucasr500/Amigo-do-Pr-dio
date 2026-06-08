@@ -218,6 +218,7 @@ export type TimelineEventType =
   | "assembleia_realizada" | "decisao_registrada" | "relatorio_emitido"
   | "mandato_atualizado" | "fornecedor_cadastrado" | "ocorrencia_registrada"
   | "comunicado_registrado" | "revisao_mensal_concluida" | "backup_exportado"
+  | "pendencia_concluida"
   | "outro";
 
 export const TIMELINE_TYPE_LABELS: Record<TimelineEventType, string> = {
@@ -240,6 +241,7 @@ export const TIMELINE_TYPE_LABELS: Record<TimelineEventType, string> = {
   comunicado_registrado:     "Comunicado registrado",
   revisao_mensal_concluida:  "Revisão mensal concluída",
   backup_exportado:          "Backup exportado",
+  pendencia_concluida:       "Pendência concluída",
   outro:                     "Evento",
 };
 

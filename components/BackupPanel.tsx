@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { exportUserData, getUserBackupJson, importUserData, parseAndValidateUserData, getStorageSizeKB, clearAllData, recordBackupAt, getLastBackupAt, ImportResult } from "@/lib/session";
 import { trackEvent } from "@/lib/telemetry";
 import { getStorageQuotaStatus } from "@/lib/storage-quota";
+import { emitBackupExported } from "@/lib/community-timeline";
 import AlertBox from "@/components/ui/AlertBox";
 import LocalFirstTrustNote from "@/components/LocalFirstTrustNote";
 
@@ -28,6 +29,7 @@ export default function BackupPanel({ onImported }: Props) {
   const [resetPhase, setResetPhase] = useState<ResetPhase>("idle");
   const [resetInput, setResetInput] = useState("");
   const [sharing, setSharing] = useState(false);
+  const backupTimelineEmittedRef = useRef(false);
 
   useEffect(() => {
     setStorageSizeKB(getStorageSizeKB());
@@ -37,8 +39,17 @@ export default function BackupPanel({ onImported }: Props) {
   const handleExport = () => {
     const now = new Date();
     const dateStr = now.toISOString().slice(0, 10);
-    exportUserData();
+    const exported = exportUserData();
+    if (!exported) {
+      setExportFeedback("Não foi possível exportar o backup neste dispositivo.");
+      setTimeout(() => setExportFeedback(null), 4000);
+      return;
+    }
     recordBackupAt();
+    if (!backupTimelineEmittedRef.current) {
+      emitBackupExported();
+      backupTimelineEmittedRef.current = true;
+    }
     void trackEvent("backup_exported");
     setLastBackupAt(now.toISOString());
     setExportFeedback(`Backup exportado: amigo-do-predio-backup-${dateStr}.json`);
