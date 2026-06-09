@@ -12,6 +12,7 @@ import {
   type CommunityRole, type Comment, type PostOrigin,
 } from "@/lib/community-types";
 import { can, filterByVisibility, isAllDemoData } from "@/lib/community-permissions";
+import EmptyState from "@/components/ui/EmptyState";
 
 const CATEGORIES = Object.entries(POST_CATEGORY_LABELS) as [PostCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -133,7 +134,7 @@ export default function MuralPanel({ role, onSeed }: Props) {
           {can(role, "canCreatePost") && (
             <button type="button" onClick={() => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); }}
               className="ml-3 flex-shrink-0 mt-0.5 rounded-full bg-navy-800 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-navy-700">
-              + Publicar
+              Publicar comunicado
             </button>
           )}
         </div>
@@ -247,15 +248,15 @@ export default function MuralPanel({ role, onSeed }: Props) {
       )}
 
       {/* Estado vazio */}
-      {filtered.length === 0 && (
-        <div className="rounded-2xl border border-navy-100 bg-white/90 px-5 py-8 text-center">
-          <p className="text-[13px] font-medium text-navy-600 mb-1">
-            {isManager ? "Nenhum comunicado publicado ainda" : "Nenhum comunicado disponível"}
-          </p>
-          <p className="text-[11.5px] text-navy-400 leading-relaxed">
-            {isManager ? "Publique o primeiro aviso oficial para substituir mensagens perdidas no WhatsApp." : "A gestão ainda não publicou comunicados para seu perfil."}
-          </p>
-        </div>
+      {filtered.length === 0 && !showForm && (
+        <EmptyState
+          title={isManager ? "Nenhum comunicado publicado ainda" : "Nenhum comunicado disponível"}
+          description={isManager
+            ? "Use o Mural Oficial para manter moradores informados sem depender de grupos de mensagem."
+            : "Quando a gestão publicar avisos, obras ou comunicados oficiais, eles aparecerão aqui."}
+          actionLabel={can(role, "canCreatePost") ? "Publicar comunicado" : undefined}
+          onAction={can(role, "canCreatePost") ? () => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); } : undefined}
+        />
       )}
 
       {/* Aviso de dados demo */}

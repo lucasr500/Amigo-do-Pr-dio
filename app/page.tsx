@@ -14,6 +14,7 @@ import ResidentHomeTab from "@/components/ResidentHomeTab";
 import TabErrorBoundary from "@/components/TabErrorBoundary";
 import type { ToolAnchor, ToolGroup } from "@/lib/app-navigation";
 import { ANCHOR_TO_GROUP } from "@/lib/app-navigation";
+import type { CentralSectionId } from "@/lib/visibility-guards";
 import { clearActiveProfile, readActiveProfile, saveActiveProfile, type ActiveProfile } from "@/lib/profile-mode";
 import {
   exportTelemetry,
@@ -77,6 +78,7 @@ export default function HomePage() {
   const [focusRevisaoMensal, setFocusRevisaoMensal]   = useState(false);
   const [shouldOpenBackup, setShouldOpenBackup]       = useState(false);
   const [pendingCondominioSection, setPendingCondominioSection] = useState<string | null>(null);
+  const [pendingCentralSection, setPendingCentralSection] = useState<CentralSectionId | null>(null);
 
   // ── Search state ─────────────────────────────────────────────────
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
@@ -197,7 +199,11 @@ export default function HomePage() {
       return true;
     };
     const first = window.setTimeout(scrollToSection, 140);
-    const second = window.setTimeout(() => { scrollToSection(); setPendingCondominioSection(null); }, 340);
+    const second = window.setTimeout(() => {
+      scrollToSection();
+      setPendingCondominioSection(null);
+      setPendingCentralSection(null);
+    }, 340);
     return () => { window.clearTimeout(first); window.clearTimeout(second); };
   }, [activeTab, pendingCondominioSection]);
 
@@ -264,8 +270,9 @@ export default function HomePage() {
   const handleOpenRevisaoMensal = () => { setFocusRevisaoMensal(true); navigateTab("condominio"); };
   const handleOpenMonthlyReview = () => { setFocusRevisaoMensal(true); navigateTab("condominio"); };
 
-  const handleNavigateToSection = (sectionId: string) => {
+  const handleNavigateToSection = (sectionId: string, centralSection?: CentralSectionId) => {
     setPendingCondominioSection(sectionId);
+    setPendingCentralSection(centralSection ?? null);
     navigateTab("condominio");
   };
 
@@ -396,6 +403,8 @@ export default function HomePage() {
               shouldExpandMemoria={shouldExpandMemoria}
               showNotifSettings={showNotifSettings}
               shouldOpenBackup={shouldOpenBackup}
+              focusedSection={pendingCondominioSection}
+              focusedCentralSection={pendingCentralSection}
               onRefresh={() => setRefreshKey((k) => k + 1)}
               onMemoriaSaved={() => { setRefreshKey((k) => k + 1); setShouldExpandMemoria(false); }}
               onSetupMemoria={handleSetupMemoria}

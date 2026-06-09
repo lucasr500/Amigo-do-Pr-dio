@@ -59,6 +59,43 @@ describe("searchGlobal — índice estático", () => {
     const finIdx = r.findIndex(item => item.id === "financeiro");
     expect(finIdx).toBe(0); // title match deve ser o primeiro
   });
+
+  test.each([
+    ["central", "central-digital"],
+    ["mural", "central-mural"],
+    ["comunicado", "central-mural"],
+    ["canal", "central-canal-morador"],
+    ["solicitacao", "central-canal-morador"],
+    ["reserva", "central-reservas"],
+    ["churrasqueira", "central-reservas"],
+    ["obra", "central-canal-morador"],
+    ["enquete", "central-enquetes"],
+    ["votacao", "central-enquetes"],
+    ["documento", "central-documentos-publicos"],
+    ["ata", "central-documentos-publicos"],
+    ["regimento", "central-documentos-publicos"],
+    ["memoria", "memoria-institucional"],
+    ["handoff", "handoff"],
+    ["passagem", "handoff"],
+    ["decisao", "decisoes"],
+    ["fornecedor", "fornecedores"],
+    ["financeiro", "financeiro"],
+    ["inadimplencia", "financeiro"],
+    ["backup", "backup"],
+    ["nuvem", "backup"],
+    ["AVCB", "doc-avcb"],
+    ["seguro", "doc-seguro"],
+  ])("encontra termo essencial '%s'", (query, expectedId) => {
+    const r = searchGlobal(query, 20);
+    expect(r.some(item => item.id === expectedId)).toBe(true);
+  });
+
+  test("entradas estáticas da Central Digital apontam para subtabs locais", () => {
+    expect(searchGlobal("mural")[0]?.centralSectionTarget).toBe("mural");
+    expect(searchGlobal("reserva")[0]?.centralSectionTarget).toBe("reservas");
+    expect(searchGlobal("enquete")[0]?.centralSectionTarget).toBe("enquetes");
+    expect(searchGlobal("canal morador")[0]?.centralSectionTarget).toBe("canal");
+  });
 });
 
 // ── buildDynamicSearchResults ─────────────────────────────────────────────────
@@ -229,6 +266,7 @@ describe("buildDynamicSearchResults — posts do mural", () => {
     const r = buildDynamicSearchResults("bomba");
     const post = r.find(item => item.type === "post");
     expect(post?.sectionTarget).toBe("central-digital");
+    expect(post?.centralSectionTarget).toBe("mural");
     expect(post?.tab).toBe("condominio");
   });
 
@@ -256,6 +294,7 @@ describe("buildDynamicSearchResults — enquetes", () => {
     const r = buildDynamicSearchResults("horário");
     const poll = r.find(item => item.type === "enquete");
     expect(poll?.sectionTarget).toBe("central-digital");
+    expect(poll?.centralSectionTarget).toBe("enquetes");
   });
 });
 
@@ -284,6 +323,7 @@ describe("buildDynamicSearchResults — solicitações", () => {
     const r = buildDynamicSearchResults("reforma");
     const obra = r.find(item => item.type === "obra");
     expect(obra?.sectionTarget).toBe("central-digital");
+    expect(obra?.centralSectionTarget).toBe("canal");
     expect(obra?.tab).toBe("condominio");
   });
 
@@ -296,6 +336,7 @@ describe("buildDynamicSearchResults — solicitações", () => {
     const r = buildDynamicSearchResults("jardim");
     const sug = r.find(item => item.type === "sugestao");
     expect(sug?.sectionTarget).toBe("central-digital");
+    expect(sug?.centralSectionTarget).toBe("canal");
   });
 
   test("dúvida retorna type sugestao", () => {
@@ -307,6 +348,7 @@ describe("buildDynamicSearchResults — solicitações", () => {
     const r = buildDynamicSearchResults("barulho");
     const req = r.find(item => item.type === "solicitacao");
     expect(req?.sectionTarget).toBe("central-digital");
+    expect(req?.centralSectionTarget).toBe("canal");
     expect(req?.tab).toBe("condominio");
   });
 });
@@ -329,6 +371,7 @@ describe("buildDynamicSearchResults — reservas", () => {
     const r = buildDynamicSearchResults("Churrasqueira");
     const res = r.find(item => item.type === "reserva");
     expect(res?.sectionTarget).toBe("central-digital");
+    expect(res?.centralSectionTarget).toBe("reservas");
     expect(res?.tab).toBe("condominio");
   });
 

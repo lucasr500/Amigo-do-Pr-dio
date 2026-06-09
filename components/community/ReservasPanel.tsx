@@ -10,6 +10,7 @@ import {
   RESERVATION_STATUS_LABELS, type ReservationStatus, type CommunityRole, type SpaceReservation,
 } from "@/lib/community-types";
 import { can } from "@/lib/community-permissions";
+import EmptyState from "@/components/ui/EmptyState";
 
 const COMMON_SPACES = [
   "Salão de Festas",
@@ -282,15 +283,15 @@ export default function ReservasPanel({ role }: Props) {
       )}
 
       {/* Estado vazio */}
-      {filtered.length === 0 && (
-        <div className="rounded-2xl border border-navy-100 bg-white/90 px-5 py-8 text-center">
-          <p className="text-[13px] font-medium text-navy-600 mb-1">
-            {filterTab === "todas" ? "Nenhuma reserva registrada" : "Nenhuma reserva nesta categoria"}
-          </p>
-          <p className="text-[11.5px] text-navy-400 leading-relaxed">
-            {can(role, "canCreateRequest") ? "Solicite uma reserva de espaço comum." : "Aguarde comunicados da gestão."}
-          </p>
-        </div>
+      {filtered.length === 0 && !showForm && (
+        <EmptyState
+          title={filterTab === "todas" ? "Nenhuma reserva registrada" : "Nenhuma reserva nesta categoria"}
+          description={isManager
+            ? "Organize churrasqueira, salão e áreas comuns com status, unidade e data em um só lugar."
+            : "Solicite espaços comuns pelo canal oficial e acompanhe a aprovação pela gestão."}
+          actionLabel={can(role, "canCreateRequest") && filterTab !== "historico" ? "Criar reserva" : undefined}
+          onAction={can(role, "canCreateRequest") && filterTab !== "historico" ? () => { setShowForm(true); setForm(EMPTY_FORM); } : undefined}
+        />
       )}
 
       {/* Lista */}

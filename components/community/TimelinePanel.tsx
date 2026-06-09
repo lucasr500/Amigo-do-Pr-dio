@@ -106,7 +106,7 @@ export default function TimelinePanel({ role, onSeed }: Props) {
         <div className="px-5 pt-4 pb-3 flex items-start justify-between">
           <div>
             <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Central Digital</p>
-            <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Timeline Institucional</h2>
+            <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Linha do tempo institucional</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
               A história viva do condomínio. Tudo que importa, registrado com data e origem.
             </p>

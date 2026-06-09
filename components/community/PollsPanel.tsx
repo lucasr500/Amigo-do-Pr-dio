@@ -9,6 +9,7 @@ import {
 import { emitPollCreated, emitPollClosed } from "@/lib/community-timeline";
 import { VISIBILITY_LABELS, type Visibility, type CommunityRole } from "@/lib/community-types";
 import { can, filterByVisibility } from "@/lib/community-permissions";
+import EmptyState from "@/components/ui/EmptyState";
 
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
 
@@ -106,7 +107,7 @@ export default function PollsPanel({ role, onSeed }: Props) {
           {can(role, "canCreatePoll") && (
             <button type="button" onClick={() => setShowForm(true)}
               className="ml-3 flex-shrink-0 mt-0.5 rounded-full bg-navy-800 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-navy-700">
-              + Nova
+              Criar enquete
             </button>
           )}
         </div>
@@ -185,12 +186,14 @@ export default function PollsPanel({ role, onSeed }: Props) {
 
       {/* Enquetes ativas */}
       {active.length === 0 && !showForm && (
-        <div className="rounded-2xl border border-navy-100 bg-white/90 px-5 py-8 text-center">
-          <p className="text-[13px] font-medium text-navy-600 mb-1">Nenhuma enquete ativa</p>
-          <p className="text-[11.5px] text-navy-400">
-            {isManager ? "Crie uma enquete consultiva para ouvir os moradores." : "Aguarde a criação de enquetes pela gestão."}
-          </p>
-        </div>
+        <EmptyState
+          title="Nenhuma enquete ativa"
+          description={isManager
+            ? "Use enquetes para ouvir moradores sem transformar decisão em conversa solta."
+            : "Quando houver consulta aberta pela gestão, você poderá votar por aqui."}
+          actionLabel={can(role, "canCreatePoll") ? "Criar enquete" : undefined}
+          onAction={can(role, "canCreatePoll") ? () => setShowForm(true) : undefined}
+        />
       )}
 
       <div className="space-y-2">

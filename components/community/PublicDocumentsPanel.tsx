@@ -11,6 +11,7 @@ import {
   type PublicDocumentCategory, type Visibility, type CommunityRole,
 } from "@/lib/community-types";
 import { can, filterByVisibility } from "@/lib/community-permissions";
+import EmptyState from "@/components/ui/EmptyState";
 
 const CATEGORIES = Object.entries(PUBLIC_DOC_CATEGORY_LABELS) as [PublicDocumentCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -92,7 +93,7 @@ export default function PublicDocumentsPanel({ role, onSeed }: Props) {
           {can(role, "canPublishDocument") && (
             <button type="button" onClick={() => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); }}
               className="ml-3 flex-shrink-0 mt-0.5 rounded-full bg-navy-800 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-navy-700">
-              + Publicar
+              Adicionar documento
             </button>
           )}
         </div>
@@ -182,13 +183,15 @@ export default function PublicDocumentsPanel({ role, onSeed }: Props) {
       )}
 
       {/* Estado vazio */}
-      {filtered.length === 0 && (
-        <div className="rounded-2xl border border-navy-100 bg-white/90 px-5 py-8 text-center">
-          <p className="text-[13px] font-medium text-navy-600 mb-1">Nenhum documento publicado</p>
-          <p className="text-[11.5px] text-navy-400 leading-relaxed">
-            {isManager ? "Publique a convenção, regimento e outros documentos para os moradores." : "A gestão ainda não publicou documentos para o seu perfil."}
-          </p>
-        </div>
+      {filtered.length === 0 && !showForm && (
+        <EmptyState
+          title="Nenhum documento público"
+          description={isManager
+            ? "Publique regimento, atas, comunicados e arquivos importantes para consulta dos moradores."
+            : "Quando a gestão publicar atas, regras ou documentos do prédio, eles aparecerão aqui."}
+          actionLabel={can(role, "canPublishDocument") ? "Adicionar documento" : undefined}
+          onAction={can(role, "canPublishDocument") ? () => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); } : undefined}
+        />
       )}
 
       {/* Lista */}

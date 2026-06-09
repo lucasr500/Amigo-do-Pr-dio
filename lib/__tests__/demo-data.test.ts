@@ -38,6 +38,33 @@ describe("demo-data — primeiros 10 minutos", () => {
     expect(demo.financialSnapshots?.some((snapshot) => snapshot.delinquencyRate !== undefined)).toBe(true);
     expect(demo.financialSnapshots?.some((snapshot) => snapshot.liquidityReserve !== undefined)).toBe(true);
   });
+
+  test("conta uma narrativa mínima de condomínio em 3 minutos", () => {
+    const demo = getDemoUserBackup();
+
+    expect(demo.profile?.nomeCondominio).toBeTruthy();
+    expect(demo.profile?.numUnidades).toBeGreaterThanOrEqual(20);
+    expect(demo.memoria?.vencimentoAVCB).toBeTruthy();
+    expect(demo.pendencias?.length).toBeGreaterThanOrEqual(3);
+    expect(demo.pendencias?.some((p) => p.prioridade === "alta")).toBe(true);
+    expect(demo.documentos?.length).toBeGreaterThanOrEqual(3);
+    expect(demo.communityDocuments?.length).toBeGreaterThanOrEqual(3);
+    expect(demo.suppliers?.length).toBeGreaterThanOrEqual(3);
+    expect(demo.decisions?.length).toBeGreaterThanOrEqual(3);
+    expect(demo.unitEvents?.length).toBeGreaterThanOrEqual(1);
+    expect(demo.communityPosts?.filter((post) => post.visibility === "moradores").length).toBeGreaterThanOrEqual(2);
+    expect(demo.communityPosts?.some((post) => post.pinned && post.visibility === "moradores")).toBe(true);
+    expect(demo.communityRequests?.some((req) => req.type === "aviso_obra")).toBe(true);
+    expect(demo.communityRequests?.some((req) => req.type === "sugestao")).toBe(true);
+    expect(demo.communityRequests?.some((req) => req.managementResponse)).toBe(true);
+    expect(demo.communityReservations?.some((res) => res.status === "aprovada")).toBe(true);
+    expect(demo.communityReservations?.some((res) => res.status === "solicitada")).toBe(true);
+    expect(demo.communityPolls?.some((poll) => poll.status === "ativa")).toBe(true);
+    expect(demo.communityTimeline?.length).toBeGreaterThanOrEqual(4);
+    expect(demo.monthlyReviewHistory?.length).toBeGreaterThanOrEqual(2);
+    expect(demo.handoffState?.successorName).toBeTruthy();
+    expect(demo.financialSnapshots?.some((snapshot) => (snapshot.delinquencyRate ?? 0) > 0)).toBe(true);
+  });
 });
 
 describe("demo-data — datas dinâmicas (relativas a hoje)", () => {
@@ -178,7 +205,7 @@ describe("demo-data — memória institucional e handoff", () => {
     const { handoffState } = getDemoUserBackup();
     const cats = handoffState!.items.map((i) => i.categoria);
     expect(cats).toContain("documentos");
-    expect(cats.some((c) => c === "financeiro" || c === "operacional" || c === "fornecedores")).toBe(true);
+    expect(cats.some((c) => c === "financeiro" || c === "operacao")).toBe(true);
   });
 
   test("monthlyReviewHistory meses estão no passado", () => {
@@ -202,7 +229,8 @@ describe("demo-data — memória institucional e handoff", () => {
 
   test("handoffState.initiatedAt está no passado recente", () => {
     const { handoffState } = getDemoUserBackup();
-    const diff = daysBetween(handoffState!.iniciatedAt.slice(0, 10), todayIso());
+    expect(handoffState?.iniciatedAt).toBeTruthy();
+    const diff = daysBetween(handoffState!.iniciatedAt!.slice(0, 10), todayIso());
     expect(diff).toBeGreaterThan(0);
     expect(diff).toBeLessThan(60);
   });

@@ -32,14 +32,14 @@ export default function CentralDigitalHub() {
 
       setCards([
         {
-          label: "Posts Oficiais",
+          label: "Comunicados oficiais",
           value: officialPosts,
           sub: residentPosts > 0 ? `+${residentPosts} participação${residentPosts !== 1 ? "ões" : ""}` : undefined,
           color: "text-navy-700",
           icon: "📢",
         },
         {
-          label: "Solicitações Abertas",
+          label: "Solicitações abertas",
           value: req.open,
           sub: req.urgent > 0 ? `${req.urgent} urgente${req.urgent !== 1 ? "s" : ""}` : (req.total > 0 ? `${req.total} total` : undefined),
           color: req.urgent > 0 ? "text-red-600" : req.open > 0 ? "text-amber-600" : "text-navy-700",
@@ -47,7 +47,7 @@ export default function CentralDigitalHub() {
           alert: req.urgent > 0,
         },
         {
-          label: "Avisos de Obra",
+          label: "Avisos de obra",
           value: obras,
           sub: obras > 0 ? "Aguardam triagem" : undefined,
           color: obras > 0 ? "text-orange-600" : "text-navy-700",
@@ -62,7 +62,7 @@ export default function CentralDigitalHub() {
           icon: "💬",
         },
         {
-          label: "Reservas Pendentes",
+          label: "Reservas pendentes",
           value: res.pending,
           sub: res.upcoming > 0 ? `${res.upcoming} próxima${res.upcoming !== 1 ? "s" : ""}` : (res.total > 0 ? `${res.total} total` : undefined),
           color: res.pending > 0 ? "text-amber-600" : "text-navy-700",
@@ -70,7 +70,7 @@ export default function CentralDigitalHub() {
           alert: res.pending > 0,
         },
         {
-          label: "Enquetes Ativas",
+          label: "Enquetes ativas",
           value: activePolls,
           sub: undefined,
           color: activePolls > 0 ? "text-blue-600" : "text-navy-700",

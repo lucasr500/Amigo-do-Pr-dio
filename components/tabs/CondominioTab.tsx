@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { getViewMode, setViewMode } from "@/lib/community-permissions";
 import type { CommunityRole } from "@/lib/community-types";
 import type { AppTab } from "@/components/BottomNav";
+import type { CentralSectionId } from "@/lib/visibility-guards";
 import CondominioSection from "@/components/condominio/CondominioSection";
 import CondominioQuickNav from "@/components/condominio/CondominioQuickNav";
 
@@ -55,6 +56,8 @@ type Props = {
   shouldExpandMemoria: boolean;
   showNotifSettings: boolean;
   shouldOpenBackup?: boolean;
+  focusedSection?: string | null;
+  focusedCentralSection?: CentralSectionId | null;
   onRefresh: () => void;
   onMemoriaSaved: () => void;
   onSetupMemoria: () => void;
@@ -71,6 +74,8 @@ export default function CondominioTab({
   shouldExpandMemoria,
   showNotifSettings,
   shouldOpenBackup,
+  focusedSection,
+  focusedCentralSection,
   onRefresh,
   onMemoriaSaved,
   onSetupMemoria,
@@ -93,6 +98,15 @@ export default function CondominioTab({
   };
 
   const isResidentView = communityRole === "resident";
+
+  useEffect(() => {
+    if (!focusedCentralSection) return;
+    if (isResidentView && (focusedCentralSection === "hub" || focusedCentralSection === "timeline" || focusedCentralSection === "relatorio")) {
+      setCentralSection("mural");
+      return;
+    }
+    setCentralSection(focusedCentralSection);
+  }, [focusedCentralSection, isResidentView]);
 
   function scrollToSection(id: string) {
     const el = document.getElementById(id);
@@ -160,6 +174,7 @@ export default function CondominioTab({
           eyebrow="Comunidade"
           priority="normal"
           defaultOpen={false}
+          forceOpen={focusedSection === "central-digital" || !!focusedCentralSection}
         >
           {/* Seletor de perfil */}
           <section className="px-5 pb-2 sm:px-6">
@@ -205,7 +220,7 @@ export default function CondominioTab({
                         centralSection === "timeline" ? "bg-navy-800 text-white shadow-card" : "text-navy-500 hover:bg-white hover:text-navy-800"
                       }`}
                     >
-                      Timeline
+                      Linha do tempo
                     </button>
                     <button
                       type="button"
@@ -268,6 +283,7 @@ export default function CondominioTab({
           eyebrow="Inteligência"
           priority="normal"
           defaultOpen={false}
+          forceOpen={focusedSection === "memoria-institucional"}
         >
           <UnitHistoryPanel />
           <SuppliersPanel />
@@ -320,6 +336,7 @@ export default function CondominioTab({
           eyebrow="Gestão"
           priority="normal"
           defaultOpen={false}
+          forceOpen={focusedSection === "operacao"}
         >
           <FuncionariosPanel onSaved={onRefresh} />
           <TimelineOperacional refreshKey={refreshKey} />
@@ -337,6 +354,7 @@ export default function CondominioTab({
           eyebrow="Setup"
           priority="low"
           defaultOpen={false}
+          forceOpen={focusedSection === "implantacao"}
         >
           <ImplantacaoChecklist
             onNavigate={(target) => {
@@ -362,6 +380,7 @@ export default function CondominioTab({
           eyebrow="Dados"
           priority="normal"
           defaultOpen={false}
+          forceOpen={focusedSection === "dados" || !!shouldOpenBackup}
         >
           <section className="px-5 pb-2 pt-2 sm:px-6">
             <LocalFirstTrustNote />

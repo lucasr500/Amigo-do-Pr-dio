@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import BrandMark from "@/components/BrandMark";
 import type { AppTab } from "@/components/BottomNav";
+import type { CentralSectionId } from "@/lib/visibility-guards";
 import { getProfile } from "@/lib/session";
 import { getActivePosts, type InstitutionalPost } from "@/lib/community-posts";
 import { getOpenRequests } from "@/lib/community-requests";
@@ -14,7 +15,7 @@ type Props = {
   refreshKey: number;
   condoName: string;
   onNavigateTab: (tab: AppTab) => void;
-  onNavigateToSection?: (sectionId: string) => void;
+  onNavigateToSection?: (sectionId: string, centralSection?: CentralSectionId) => void;
   onSwitchProfile: () => void;
 };
 
@@ -29,13 +30,13 @@ type ResidentState = {
 };
 
 const quickActions = [
-  { label: "Comunicados", section: "central-digital", icon: "M4 6h12M4 10h12M4 14h7" },
-  { label: "Solicitação", section: "central-digital", icon: "M5 5h10v8H8l-3 3V5z" },
-  { label: "Avisar obra", section: "central-digital", icon: "M3 14h2l2-6 3 9 2-5 2 2h3" },
-  { label: "Sugestão", section: "central-digital", icon: "M8 3C5.2 3 3 5.2 3 8c0 1.9 1.1 3.6 2.7 4.5V14h4.6v-1.5C11.9 11.6 13 9.9 13 8c0-2.8-2.2-5-5-5z" },
-  { label: "Reservas", section: "central-digital", icon: "M5 4v3M15 4v3M4 8h12M5 5h10v11H5z" },
-  { label: "Enquetes", section: "central-digital", icon: "M5 14V8M10 14V5M15 14v-3" },
-  { label: "Documentos", section: "documentos", icon: "M6 3h6l4 4v10H6V3zM12 3v5h4" },
+  { label: "Comunicados", section: "central-digital", centralSection: "mural" as CentralSectionId, icon: "M4 6h12M4 10h12M4 14h7" },
+  { label: "Solicitação", section: "central-digital", centralSection: "canal" as CentralSectionId, icon: "M5 5h10v8H8l-3 3V5z" },
+  { label: "Avisar obra", section: "central-digital", centralSection: "canal" as CentralSectionId, icon: "M3 14h2l2-6 3 9 2-5 2 2h3" },
+  { label: "Sugestão", section: "central-digital", centralSection: "canal" as CentralSectionId, icon: "M8 3C5.2 3 3 5.2 3 8c0 1.9 1.1 3.6 2.7 4.5V14h4.6v-1.5C11.9 11.6 13 9.9 13 8c0-2.8-2.2-5-5-5z" },
+  { label: "Reservas", section: "central-digital", centralSection: "reservas" as CentralSectionId, icon: "M5 4v3M15 4v3M4 8h12M5 5h10v11H5z" },
+  { label: "Enquetes", section: "central-digital", centralSection: "enquetes" as CentralSectionId, icon: "M5 14V8M10 14V5M15 14v-3" },
+  { label: "Documentos", section: "central-digital", centralSection: "documentos" as CentralSectionId, icon: "M6 3h6l4 4v10H6V3zM12 3v5h4" },
   { label: "Agenda", tab: "agenda" as AppTab, icon: "M5 4v3M15 4v3M4 8h12M5 5h10v11H5z" },
 ];
 
@@ -89,7 +90,7 @@ export default function ResidentHomeTab({
   if (!state) return null;
 
   const goCentral = () => {
-    if (onNavigateToSection) onNavigateToSection("central-digital");
+    if (onNavigateToSection) onNavigateToSection("central-digital", "mural");
     else onNavigateTab("condominio");
   };
 
@@ -203,7 +204,7 @@ export default function ResidentHomeTab({
               type="button"
               onClick={() => {
                 if (action.tab) onNavigateTab(action.tab);
-                else if (action.section && onNavigateToSection) onNavigateToSection(action.section);
+                else if (action.section && onNavigateToSection) onNavigateToSection(action.section, action.centralSection);
                 else onNavigateTab("condominio");
               }}
               className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-2xl border border-navy-100 bg-white/90 px-2 text-center shadow-card transition-colors hover:bg-white"

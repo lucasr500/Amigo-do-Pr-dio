@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { searchGlobal, buildDynamicSearchResults, type SearchResult, type SearchResultType } from "@/lib/global-search";
 import type { AppTab } from "@/components/BottomNav";
+import type { CentralSectionId } from "@/lib/visibility-guards";
 
 const TYPE_LABEL: Record<SearchResultType, string> = {
   modulo:      "Módulo",
@@ -46,7 +47,7 @@ const TYPE_DOT: Record<SearchResultType, string> = {
 
 type Props = {
   onNavigateTab: (tab: AppTab) => void;
-  onNavigateToSection?: (sectionId: string) => void;
+  onNavigateToSection?: (sectionId: string, centralSection?: CentralSectionId) => void;
   onOpenMonthlyReview?: () => void;
   onOpenBackup?: () => void;
   onExpandMemoria?: () => void;
@@ -105,7 +106,7 @@ export default function GlobalSearch({
 
     // Seção no Condomínio
     if (result.sectionTarget && onNavigateToSection) {
-      setTimeout(() => onNavigateToSection!(result.sectionTarget!), 100);
+      setTimeout(() => onNavigateToSection!(result.sectionTarget!, result.centralSectionTarget), 100);
     }
 
     // Tool group em Ferramentas
@@ -189,13 +190,13 @@ export default function GlobalSearch({
         ) : query.trim() ? (
           <div className="px-4 py-5 text-center">
             <p className="text-[13px] text-navy-400">Nenhum resultado para "{query}".</p>
-            <p className="mt-1 text-[11px] text-navy-300">Tente "financeiro", "backup" ou "assembleia".</p>
+            <p className="mt-1 text-[11px] text-navy-300">Tente "mural", "reserva", "memória", "backup" ou "AVCB".</p>
           </div>
         ) : (
           <div className="px-4 py-4">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.10em] text-navy-300">Sugestões</p>
             <div className="flex flex-wrap gap-1.5">
-              {["AVCB", "Financeiro", "Fornecedor", "Decisões", "Passagem de mandato", "Revisão mensal"].map((s) => (
+              {["Central Digital", "Mural", "Reservas", "AVCB", "Financeiro", "Memória", "Backup"].map((s) => (
                 <button
                   key={s}
                   type="button"

@@ -70,7 +70,7 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
 
           {!summary.hasData && (
             <p className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.10em] text-navy-400">
-              Decisões · Fornecedores · Handoff de mandato
+              Decisões · Fornecedores · Passagem de gestão
             </p>
           )}
           {summary.hasData ? (

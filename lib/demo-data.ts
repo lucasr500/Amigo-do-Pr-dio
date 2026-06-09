@@ -521,6 +521,17 @@ export function getDemoUserBackup(): UserBackup {
         createdAt: isoTs(-7),
         updatedAt: isoTs(-7),
       },
+      {
+        id: "demo-doc-public-3",
+        title: "Regimento Interno — uso das áreas comuns",
+        category: "regimento_interno",
+        description: "Regras de convivência, reservas e horários para consulta dos moradores.",
+        visibility: "moradores",
+        version: "rev. 2024",
+        publishedAt: isoTs(-6),
+        createdAt: isoTs(-6),
+        updatedAt: isoTs(-6),
+      },
     ],
     decisions: [
       {

@@ -12,6 +12,7 @@ import {
   type RequestType, type RequestStatus, type RequestPriority, type CommunityRole,
 } from "@/lib/community-types";
 import { can, isAllDemoData } from "@/lib/community-permissions";
+import EmptyState from "@/components/ui/EmptyState";
 
 const TYPES = Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][];
 const PRIORITIES = Object.entries(REQUEST_PRIORITY_LABELS) as [RequestPriority, string][];
@@ -180,6 +181,39 @@ export default function RequestsPanel({ role, onSeed }: Props) {
     if (viewTab === "fechadas")  return requests.filter((r) => CLOSED.includes(r.status));
     return requests;
   })();
+
+  const emptyCopy: Record<ViewTab, { title: string; description: string; actionLabel: string; actionMode: "request" | "obra" | "sugestao" }> = {
+    abertas: {
+      title: "Nenhuma solicitação aberta",
+      description: isManager
+        ? "Quando moradores enviarem pedidos, dúvidas ou ocorrências, a gestão acompanha tudo por aqui."
+        : "Use este canal para enviar pedidos, dúvidas ou ocorrências sem expor o assunto em conversa pública.",
+      actionLabel: "Enviar solicitação",
+      actionMode: "request",
+    },
+    obra: {
+      title: "Nenhum aviso de obra registrado",
+      description: isManager
+        ? "Avisos de obra ajudam a gestão a acompanhar impacto, unidade, período e responsável."
+        : "Avise a gestão antes de iniciar reforma interna e deixe período, unidade e responsável registrados.",
+      actionLabel: "Registrar aviso de obra",
+      actionMode: "obra",
+    },
+    sugestoes: {
+      title: "Nenhuma sugestão recebida",
+      description: isManager
+        ? "Sugestões, dúvidas e ocorrências leves ficam registradas sem virar conversa solta entre moradores."
+        : "Envie uma sugestão ou dúvida para a gestão responder pelo canal estruturado.",
+      actionLabel: "Enviar sugestão",
+      actionMode: "sugestao",
+    },
+    fechadas: {
+      title: "Nenhum item fechado",
+      description: "Solicitações respondidas, recusadas, resolvidas ou arquivadas aparecerão aqui como histórico do canal.",
+      actionLabel: "Enviar solicitação",
+      actionMode: "request",
+    },
+  };
 
   const openForm = (mode: "request" | "obra" | "sugestao") => {
     setFormMode(mode);
@@ -415,20 +449,13 @@ export default function RequestsPanel({ role, onSeed }: Props) {
       )}
 
       {/* Estado vazio */}
-      {filtered.length === 0 && (
-        <div className="rounded-2xl border border-navy-100 bg-white/90 px-5 py-8 text-center">
-          <p className="text-[13px] font-medium text-navy-600 mb-1">
-            {viewTab === "abertas" && "Nenhuma solicitação aberta"}
-            {viewTab === "obra" && "Nenhum aviso de obra registrado"}
-            {viewTab === "sugestoes" && "Nenhuma sugestão recebida"}
-            {viewTab === "fechadas" && "Nenhum item fechado"}
-          </p>
-          <p className="text-[11.5px] text-navy-400 leading-relaxed">
-            {can(role, "canCreateRequest")
-              ? viewTab === "obra" ? "Registre um aviso de obra pelo botão acima." : "Envie uma solicitação pelo botão acima."
-              : "Itens serão exibidos aqui quando registrados."}
-          </p>
-        </div>
+      {filtered.length === 0 && !showForm && (
+        <EmptyState
+          title={emptyCopy[viewTab].title}
+          description={emptyCopy[viewTab].description}
+          actionLabel={can(role, "canCreateRequest") && viewTab !== "fechadas" ? emptyCopy[viewTab].actionLabel : undefined}
+          onAction={can(role, "canCreateRequest") && viewTab !== "fechadas" ? () => openForm(emptyCopy[viewTab].actionMode) : undefined}
+        />
       )}
 
       {/* Aviso demo */}

@@ -12,6 +12,7 @@ import { getPosts } from "./community-posts";
 import { getPolls } from "./community-polls";
 import { getRequests } from "./community-requests";
 import { getReservations } from "./community-reservas";
+import type { CentralSectionId } from "./visibility-guards";
 
 export type SearchResultType =
   | "modulo"
@@ -39,6 +40,7 @@ export type SearchResult = {
   type: SearchResultType;
   tab: "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio";
   sectionTarget?: string;       // id da seção no CondominioTab
+  centralSectionTarget?: CentralSectionId;
   toolGroup?: "rotina" | "comunicados" | "simuladores" | "checklists" | "temas";
   anchor?: string;              // âncora específica dentro da aba
   action?: "openMonthlyReview" | "openBackup" | "expandMemoria";
@@ -163,13 +165,13 @@ export const SEARCH_INDEX: SearchResult[] = [
   },
   {
     id: "backup",
-    title: "Backup e Dados",
-    description: "Exportar, importar e verificar integridade dos dados.",
+    title: "Backup e confiança",
+    description: "Exportar, importar e verificar integridade dos dados do prédio.",
     type: "modulo",
     tab: "condominio",
     sectionTarget: "dados",
     action: "openBackup",
-    keywords: ["backup", "dados", "exportar", "importar", "seguranca", "restaurar", "json"],
+    keywords: ["backup", "dados", "nuvem", "exportar", "importar", "seguranca", "confiança", "confianca", "restaurar", "json"],
   },
   {
     id: "command-center",
@@ -183,11 +185,72 @@ export const SEARCH_INDEX: SearchResult[] = [
   {
     id: "central-digital",
     title: "Central Digital",
-    description: "Mural oficial, solicitações e documentos públicos.",
+    description: "Canal oficial com mural, solicitações, reservas, enquetes e documentos públicos.",
     type: "modulo",
     tab: "condominio",
     sectionTarget: "central-digital",
-    keywords: ["central", "digital", "mural", "comunicacao", "moradores", "solicitacao", "enquete"],
+    centralSectionTarget: "hub",
+    keywords: ["central", "digital", "canal", "oficial", "comunicacao", "moradores", "solicitacao", "solicitacoes", "reserva", "enquete"],
+  },
+  {
+    id: "central-mural",
+    title: "Mural Oficial",
+    description: "Comunicados oficiais e avisos fixados para moradores.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    centralSectionTarget: "mural",
+    keywords: ["mural", "comunicado", "comunicados", "aviso", "avisos", "oficial", "publicar", "obra", "manutencao"],
+  },
+  {
+    id: "central-canal-morador",
+    title: "Canal do Morador",
+    description: "Solicitações, avisos de obra, sugestões e respostas da gestão.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    centralSectionTarget: "canal",
+    keywords: ["canal", "morador", "solicitacao", "solicitacoes", "solicitação", "solicitações", "pedido", "protocolo", "obra", "reforma", "sugestao", "sugestão", "resposta"],
+  },
+  {
+    id: "central-reservas",
+    title: "Reservas de Espaços",
+    description: "Reservas de churrasqueira, salão e áreas comuns com aprovação.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    centralSectionTarget: "reservas",
+    keywords: ["reserva", "reservas", "churrasqueira", "salao", "salão", "area comum", "área comum", "espaco", "espaço", "aprovacao", "aprovação"],
+  },
+  {
+    id: "central-enquetes",
+    title: "Enquetes Consultivas",
+    description: "Votações consultivas para ouvir moradores sem conversa solta.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    centralSectionTarget: "enquetes",
+    keywords: ["enquete", "enquetes", "votacao", "votação", "votar", "consulta", "consultiva", "participacao", "participação"],
+  },
+  {
+    id: "central-documentos-publicos",
+    title: "Documentos Públicos",
+    description: "Atas, regimento, convenção e documentos publicados para moradores.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    centralSectionTarget: "documentos",
+    keywords: ["documento", "documentos", "publico", "público", "ata", "atas", "regimento", "convencao", "convenção", "biblioteca"],
+  },
+  {
+    id: "central-relatorio",
+    title: "Relatório da Central Digital",
+    description: "Resumo copiável da comunicação, solicitações e participação.",
+    type: "modulo",
+    tab: "condominio",
+    sectionTarget: "central-digital",
+    centralSectionTarget: "relatorio",
+    keywords: ["relatorio", "relatório", "central", "digital", "resumo", "copiar", "comunidade"],
   },
   {
     id: "perfil",
@@ -551,6 +614,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             type: "evento",
             tab: "condominio",
             sectionTarget: "central-digital",
+            centralSectionTarget: "timeline",
             keywords: [],
           },
         });
@@ -595,6 +659,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             type: "post",
             tab: "condominio",
             sectionTarget: "central-digital",
+            centralSectionTarget: "mural",
             keywords: [],
           },
         });
@@ -617,6 +682,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             type: "enquete",
             tab: "condominio",
             sectionTarget: "central-digital",
+            centralSectionTarget: "enquetes",
             keywords: [],
           },
         });
@@ -643,6 +709,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             type: resultType,
             tab: "condominio",
             sectionTarget: "central-digital",
+            centralSectionTarget: "canal",
             keywords: [],
           },
         });
@@ -664,6 +731,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             type: "reserva",
             tab: "condominio",
             sectionTarget: "central-digital",
+            centralSectionTarget: "reservas",
             keywords: [],
           },
         });

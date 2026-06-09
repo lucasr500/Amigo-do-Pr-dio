@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Props = {
   id: string;
@@ -8,6 +8,7 @@ type Props = {
   subtitle?: string;
   eyebrow?: string;
   defaultOpen?: boolean;
+  forceOpen?: boolean;
   priority?: "high" | "normal" | "low";
   children: React.ReactNode;
 };
@@ -18,6 +19,7 @@ export default function CondominioSection({
   subtitle,
   eyebrow,
   defaultOpen,
+  forceOpen,
   priority = "normal",
   children,
 }: Props) {
@@ -26,6 +28,10 @@ export default function CondominioSection({
   const [open, setOpen] = useState(initialOpen);
 
   const isHigh = priority === "high";
+
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
 
   return (
     <section id={id} className="scroll-mt-4" aria-labelledby={`${id}-heading`}>
