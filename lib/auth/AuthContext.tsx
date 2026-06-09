@@ -76,10 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Ouve mudanças futuras
-      cleanup = await onAuthStateChange((session) => {
+      cleanup = await onAuthStateChange(async (session) => {
         if (session) {
+          const localId = getOrCreateLocalId();
           setUser({ type: "authenticated", id: session.user.id, email: session.user.email });
           setMode("authenticated");
+          // Vincula local_id ao auth.uid() em background (idempotente)
+          const { claimLocalId } = await import("@/lib/auth/profileLinking");
+          claimLocalId(session.user.id, localId).catch(() => {});
         } else {
           applyGuest();
         }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getProfile } from "@/lib/session";
 import BrandMark from "@/components/BrandMark";
+import SyncStatusBadge from "@/components/SyncStatusBadge";
 import type { AppTab, NavProfile } from "@/components/BottomNav";
 
 type Props = {
@@ -68,11 +69,15 @@ export default function Header({
             <p className="mt-1.5 max-w-[310px] truncate text-[13px] leading-relaxed text-navy-500">
               {nomeCondominio ?? "Acompanhe o que merece atenção agora."}
             </p>
-            {!isOnline && (
+            {!isOnline ? (
               <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10.5px] font-semibold text-amber-800">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
                 Dados locais
               </span>
+            ) : (
+              <div className="mt-2">
+                <SyncStatusBadge refreshKey={refreshKey} />
+              </div>
             )}
           </div>
 

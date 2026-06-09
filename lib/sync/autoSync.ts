@@ -5,6 +5,7 @@ import { isEnabled } from "@/lib/feature-flags";
 import { setSyncSyncing, setSyncSynced, setSyncError, setSyncOffline } from "@/lib/sync/syncStatus";
 import { getUserBackupJson, type UserBackup } from "@/lib/session";
 import { syncDebug } from "@/lib/sync/syncLogger";
+import { isDemoActive } from "@/lib/demo";
 
 const QUEUE_KEY = "amigo_sync_queue";
 const DEBOUNCE_MS = 4_000;   // 4 s após última chamada
@@ -83,6 +84,7 @@ async function retryLoop(userId: string): Promise<void> {
 export function scheduleSync(userId: string): void {
   if (!isEnabled("sync_enabled")) return;
   if (!userId || userId === "guest") return;
+  if (isDemoActive()) return; // dados demo nunca sobem para nuvem
 
   // Salva na fila para sobreviver a recargas de página
   writeQueue({ userId, enqueuedAt: new Date().toISOString() });
@@ -98,6 +100,7 @@ export function scheduleSync(userId: string): void {
 // Deve ser chamado no startup para reprocessar jobs pendentes (ex: offline → online).
 export async function flushPendingSync(): Promise<void> {
   if (!isEnabled("sync_enabled")) return;
+  if (isDemoActive()) return; // dados demo nunca sobem para nuvem
   const job = readQueue();
   if (!job) return;
   syncDebug("autoSync", "flushing pending job", { enqueuedAt: job.enqueuedAt });
