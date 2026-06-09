@@ -9,7 +9,6 @@ import { trackEvent } from "@/lib/telemetry";
 const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), { ssr: false });
 const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), { ssr: false });
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
-const DynamicGreeting = dynamic(() => import("@/components/DynamicGreeting"), { ssr: false });
 const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard"), { ssr: false });
 const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
 const MonthlyReviewCard = dynamic(() => import("@/components/MonthlyReviewCard"), { ssr: false });
@@ -20,7 +19,6 @@ const InstitutionalMemoryCard = dynamic(() => import("@/components/Institutional
 const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
 const MonthlyPlanCard = dynamic(() => import("@/components/MonthlyPlanCard"), { ssr: false });
 const RiskPreviewStrip = dynamic(() => import("@/components/RiskPreviewStrip"), { ssr: false });
-const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
 
 function HomeSectionLabel({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
@@ -113,11 +111,18 @@ export default function HomeTab({
             onNavigateToSubView={onNavigateToSubView}
             onNavigateToSection={onNavigateToSection}
           />
-          <DynamicGreeting condoName={condoName} />
 
           <HomeSectionLabel eyebrow="Primeiros minutos" title="Hoje" />
           <DailyBriefingCard refreshKey={refreshKey} />
           <RecentActivityCard refreshKey={refreshKey} />
+
+          <HomeSectionLabel eyebrow="Guidance" title="Ações recomendadas" />
+          <GuidancePanel
+            onAsk={onSuggestionSelect}
+            onResolved={onRefresh}
+            onPendenciaSaved={onRefresh}
+            refreshKey={refreshKey}
+          />
 
           <MonthlyPlanCard
             refreshKey={refreshKey}
@@ -133,7 +138,6 @@ export default function HomeTab({
             refreshKey={refreshKey}
             onOpen={onOpenMonthlyReview}
           />
-          <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
 
           {showBackupNudge && !isDemo && (
             <div className="px-5 pb-3 sm:px-6">
@@ -158,20 +162,14 @@ export default function HomeTab({
             </div>
           )}
 
-          <HomeSectionLabel eyebrow="Guidance" title="Ações recomendadas" />
-          <GuidancePanel
-            onAsk={onSuggestionSelect}
-            onResolved={onRefresh}
-            onPendenciaSaved={onRefresh}
-            refreshKey={refreshKey}
-          />
-
           <HomeSectionLabel eyebrow="Diferencial" title="Memória institucional" />
           <InstitutionalMemoryCard
             refreshKey={refreshKey}
             onNavigateTab={onNavigateTab}
             onNavigateToSection={onNavigateToSection}
           />
+
+          <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
 
           <ProgressiveSetupCard
             refreshKey={refreshKey}
@@ -182,7 +180,6 @@ export default function HomeTab({
               onNavigateTab(target);
             }}
           />
-          <PushPromptStrip />
         </>
       )}
 

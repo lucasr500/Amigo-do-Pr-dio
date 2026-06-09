@@ -77,7 +77,7 @@ const RESIDENT_LEFT_TABS: TabItem[] = [
 
 const RESIDENT_RIGHT_TABS: TabItem[] = [
   { id: "agenda",      label: "Agenda",      Icon: IconCalendar },
-  { id: "assistente",  label: "Mais",        Icon: IconAccount },
+  { id: "assistente",  label: "Info",        Icon: IconAccount },
 ];
 
 type Props = {

@@ -112,3 +112,98 @@ describe("demo-data — datas dinâmicas (relativas a hoje)", () => {
     expect(diff).toBeLessThanOrEqual(43);
   });
 });
+
+describe("demo-data — memória institucional e handoff", () => {
+  test("demo inclui handoffState com itens", () => {
+    const { handoffState } = getDemoUserBackup();
+    expect(handoffState).toBeDefined();
+    expect(handoffState!.items.length).toBeGreaterThan(0);
+  });
+
+  test("handoff demo tem sucessor e data futura", () => {
+    const { handoffState } = getDemoUserBackup();
+    expect(handoffState!.successorName).toBeTruthy();
+    expect(handoffState!.handoffDate).toBeDefined();
+    const diff = daysBetween(todayIso(), handoffState!.handoffDate!);
+    expect(diff).toBeGreaterThan(0);
+  });
+
+  test("handoff demo tem mix de itens ok e pendentes", () => {
+    const { handoffState } = getDemoUserBackup();
+    const okItems = handoffState!.items.filter((i) => i.status === "ok");
+    const pendingItems = handoffState!.items.filter((i) => i.status === "pendente");
+    expect(okItems.length).toBeGreaterThan(0);
+    expect(pendingItems.length).toBeGreaterThan(0);
+  });
+
+  test("demo inclui monthlyReviewHistory com 2 meses", () => {
+    const { monthlyReviewHistory } = getDemoUserBackup();
+    expect(monthlyReviewHistory).toBeDefined();
+    expect(monthlyReviewHistory!.length).toBeGreaterThanOrEqual(2);
+  });
+
+  test("monthlyReviewHistory demo tem scores entre 0-100", () => {
+    const { monthlyReviewHistory } = getDemoUserBackup();
+    monthlyReviewHistory!.forEach((r) => {
+      expect(r.score).toBeGreaterThanOrEqual(0);
+      expect(r.score).toBeLessThanOrEqual(100);
+      expect(r.status).toBe("concluida");
+    });
+  });
+
+  test("demo inclui decisions, suppliers e unitEvents", () => {
+    const { decisions, suppliers, unitEvents } = getDemoUserBackup();
+    expect(decisions?.length).toBeGreaterThan(0);
+    expect(suppliers?.length).toBeGreaterThan(0);
+    expect(unitEvents?.length).toBeGreaterThan(0);
+  });
+
+  test("handoff demo não está completed (passagem em andamento)", () => {
+    const { handoffState } = getDemoUserBackup();
+    expect(handoffState!.completed).toBe(false);
+  });
+
+  test("handoff items têm id, categoria, titulo, descricao, status preenchidos", () => {
+    const { handoffState } = getDemoUserBackup();
+    handoffState!.items.forEach((item) => {
+      expect(item.id).toBeTruthy();
+      expect(item.categoria).toBeTruthy();
+      expect(item.titulo).toBeTruthy();
+      expect(item.descricao).toBeTruthy();
+      expect(["ok", "pendente", "em_andamento", "nao_aplicavel"]).toContain(item.status);
+    });
+  });
+
+  test("handoff demo inclui pelo menos uma categoria documentos e uma financeiro", () => {
+    const { handoffState } = getDemoUserBackup();
+    const cats = handoffState!.items.map((i) => i.categoria);
+    expect(cats).toContain("documentos");
+    expect(cats.some((c) => c === "financeiro" || c === "operacional" || c === "fornecedores")).toBe(true);
+  });
+
+  test("monthlyReviewHistory meses estão no passado", () => {
+    const { monthlyReviewHistory } = getDemoUserBackup();
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    monthlyReviewHistory!.forEach((r) => {
+      expect(r.month < thisMonth).toBe(true);
+    });
+  });
+
+  test("monthlyReviewHistory topItems têm id, title e severity", () => {
+    const { monthlyReviewHistory } = getDemoUserBackup();
+    const allTopItems = monthlyReviewHistory!.flatMap((r) => r.topItems ?? []);
+    expect(allTopItems.length).toBeGreaterThan(0);
+    allTopItems.forEach((item) => {
+      expect(item.id).toBeTruthy();
+      expect(item.title).toBeTruthy();
+      expect(["critical", "warning", "info"]).toContain(item.severity);
+    });
+  });
+
+  test("handoffState.initiatedAt está no passado recente", () => {
+    const { handoffState } = getDemoUserBackup();
+    const diff = daysBetween(handoffState!.iniciatedAt.slice(0, 10), todayIso());
+    expect(diff).toBeGreaterThan(0);
+    expect(diff).toBeLessThan(60);
+  });
+});

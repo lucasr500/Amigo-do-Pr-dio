@@ -1,4 +1,6 @@
 import type { UserBackup } from "./session";
+import type { HandoffState } from "./handoff";
+import type { MonthlyReviewSnapshot } from "./session-monthly-review";
 
 // ── Helpers de data (sem dependência externa) ─────────────────────────────────
 const BASE = new Date();
@@ -683,6 +685,61 @@ export function getDemoUserBackup(): UserBackup {
         updatedAt: isoTs(-8),
       },
     ],
+    monthlyReviewHistory: [
+      {
+        month: monthKey(-35),
+        score: 62,
+        status: "concluida" as const,
+        completedAt: isoTs(-30),
+        headline: "Mês estável com atenção ao AVCB",
+        criticalCount: 1,
+        warningCount: 2,
+        infoCount: 3,
+        checkedCount: 7,
+        totalItems: 9,
+        topItems: [
+          { id: "avcb", title: "AVCB próximo do vencimento", section: "documentos" as const, severity: "critical" as const },
+          { id: "caixa", title: "Limpeza da caixa d'água pendente", section: "agenda" as const, severity: "warning" as const },
+          { id: "fin", title: "Inadimplência acima de 10%", section: "financeiro" as const, severity: "warning" as const },
+        ],
+      } satisfies MonthlyReviewSnapshot,
+      {
+        month: monthKey(-65),
+        score: 58,
+        status: "concluida" as const,
+        completedAt: isoTs(-60),
+        headline: "Mês com pendências operacionais acumuladas",
+        criticalCount: 2,
+        warningCount: 1,
+        infoCount: 2,
+        checkedCount: 6,
+        totalItems: 9,
+        topItems: [
+          { id: "seg", title: "Seguro com renovação próxima", section: "documentos" as const, severity: "critical" as const },
+          { id: "ext", title: "Extintores sem vistoria no prazo", section: "documentos" as const, severity: "critical" as const },
+        ],
+      } satisfies MonthlyReviewSnapshot,
+    ],
+    handoffState: {
+      iniciatedAt: isoTs(-10),
+      successorName: "Dr. Roberto Alves",
+      successorContact: "(11) 98800-4567",
+      handoffDate: isoDate(38),
+      notes: "Passagem de gestão planejada para antes da AGO. Prioridade: renovar AVCB antes da transição.",
+      completed: false,
+      items: [
+        { id: "doc_convencao",     categoria: "documentos", titulo: "Convenção e Regimento",          descricao: "Localizar e entregar cópias físicas ou digitais da Convenção e do Regimento Interno.",    status: "ok",       completedAt: isoTs(-8) },
+        { id: "doc_avcb",          categoria: "documentos", titulo: "AVCB/CLCB",                      descricao: "Informar vencimento do AVCB e empresa responsável pela renovação.",                       status: "pendente" },
+        { id: "doc_seguro",        categoria: "documentos", titulo: "Apólice de seguro",               descricao: "Fornecer apólice vigente com vencimento, corretora e contato.",                          status: "ok",       completedAt: isoTs(-7) },
+        { id: "doc_contratos",     categoria: "documentos", titulo: "Contratos de prestadores",        descricao: "Reunir e entregar contratos de elevador, limpeza, portaria, administradora e outros.",   status: "ok",       completedAt: isoTs(-6) },
+        { id: "fin_balancetes",    categoria: "financeiro",  titulo: "Balancetes dos últimos 12 meses", descricao: "Entregar ao novo síndico todos os balancetes do período de gestão.",                     status: "pendente" },
+        { id: "fin_saldo",         categoria: "financeiro",  titulo: "Saldo e conta bancária",           descricao: "Confirmar saldo atual e transferir signatários da conta do condomínio.",               status: "pendente" },
+        { id: "op_fornecedores",   categoria: "operacao",    titulo: "Lista de fornecedores",            descricao: "Reunir contatos de todos os fornecedores habituais com avaliação.",                     status: "ok",       completedAt: isoTs(-5) },
+        { id: "op_pendencias",     categoria: "operacao",    titulo: "Pendências operacionais abertas",  descricao: "Listar todas as pendências abertas para o novo síndico dar continuidade.",              status: "pendente" },
+        { id: "pess_funcionarios", categoria: "pessoas",     titulo: "Contratos de funcionários",        descricao: "Entregar cópias de contratos, registros eSocial, CCT vigente e situação de férias.",    status: "ok",       completedAt: isoTs(-6) },
+        { id: "dad_backup",        categoria: "dados",       titulo: "Backup do sistema Amigo do Prédio", descricao: "Exportar backup completo e entregar ao novo síndico para importação no novo dispositivo.", status: "pendente" },
+      ],
+    } satisfies HandoffState,
     communityTimeline: [
       {
         id: "demo-timeline-1",

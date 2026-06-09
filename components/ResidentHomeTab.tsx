@@ -171,24 +171,16 @@ export default function ResidentHomeTab({
 
       <section className="px-5 pb-4 sm:px-6">
         <div className="rounded-[24px] border border-sage-100 bg-sage-50/70 px-4 py-4 shadow-card">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-sage-800">Organizado por área</p>
-              <h2 className="mt-1 text-[15px] font-semibold text-navy-900">Canal institucional, sem rede social</h2>
-            </div>
-            <button
-              type="button"
-              onClick={onSwitchProfile}
-              className="flex-shrink-0 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-navy-600 hover:bg-white"
-            >
-              Voltar para gestão
-            </button>
-          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-sage-800">Canal estruturado</p>
+          <p className="mt-1 text-[14px] font-semibold text-navy-900">Fale com a gestão pelo caminho certo</p>
+          <p className="mt-1.5 mb-3 text-[12px] leading-relaxed text-navy-500">
+            Solicitações, reservas, avisos e sugestões ficam organizados e acompanháveis.
+          </p>
           <div className="grid gap-2 sm:grid-cols-3">
             {[
               ["Mural oficial", "Avisos e comunicados da gestão em um só lugar."],
               ["Solicitações", "Pedidos e ocorrências com acompanhamento estruturado."],
-              ["Documentos públicos", "Atas, regras e documentos liberados para consulta."],
+              ["Documentos do prédio", "Atas, regras e documentos disponíveis para consulta."],
             ].map(([title, body]) => (
               <div key={title} className="rounded-2xl bg-white/78 px-3 py-3">
                 <p className="text-[12px] font-semibold text-navy-800">{title}</p>

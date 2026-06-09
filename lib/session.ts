@@ -1197,6 +1197,7 @@ export type UserBackup = {
   communityDocuments?: PublicDocument[]; // v11+
   communityTimeline?: TimelineEvent[]; // v11+
   communityReservations?: SpaceReservation[]; // v12+
+  healthHistory?: HealthSnapshot[]; // v12+ (additive, optional)
 };
 
 export type ImportResult =
@@ -1236,6 +1237,7 @@ export function exportUserData(): boolean {
     communityDocuments: getPublicDocuments(),
     communityTimeline: getTimeline(),
     communityReservations: getReservations(),
+    healthHistory: getHealthHistory(),
   };
 
   try {
@@ -1530,6 +1532,7 @@ export function importUserData(jsonString: string): ImportResult {
 
     if (d.version === "12") {
       if (Array.isArray(d.communityReservations)) saveReservations(d.communityReservations as SpaceReservation[]);
+      if (Array.isArray(d.healthHistory)) saveHealthHistory(d.healthHistory as HealthSnapshot[]);
     }
 
     const profile = d.profile as CondominioProfile | null;

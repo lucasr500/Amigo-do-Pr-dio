@@ -149,123 +149,8 @@ export default function CondominioTab({
         )}
       </CondominioSection>
 
-      {/* SEÇÃO 2 — Implantação (recolhível, começa fechada) — gestão only */}
-      {hasCondominioData && !isResidentView && (
-        <CondominioSection
-          id="implantacao"
-          title="Implantação"
-          subtitle="Progresso de organização e itens pendentes."
-          eyebrow="Setup"
-          priority="low"
-          defaultOpen={false}
-        >
-          <ImplantacaoChecklist
-            onNavigate={(target) => {
-              if (target === "condominio") {
-                const el = document.getElementById("revisao-mensal");
-                el?.scrollIntoView({ behavior: "smooth", block: "start" });
-              } else if (target === "ferramentas") {
-                onNavigateTab("ferramentas");
-              }
-            }}
-          />
-        </CondominioSection>
-      )}
-
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 3 — Revisão mensal (alta prioridade) — gestão only  */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && !isResidentView && (
-        <CondominioSection
-          id="revisao-mensal"
-          title="Hoje e revisão"
-          subtitle="Revisão mensal guiada, resumo operacional copiável e histórico."
-          eyebrow="Hoje"
-          priority="high"
-        >
-          <MonthlyReviewPanel
-            refreshKey={refreshKey}
-            onRefresh={onRefresh}
-          />
-          <MonthlyOperationalSummaryPanel />
-          <MonthlyReviewHistoryPanel
-            refreshKey={refreshKey}
-            onStartReview={onOpenMonthlyReview}
-          />
-        </CondominioSection>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 4 — Financeiro auxiliar — gestão only               */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && !isResidentView && (
-        <CondominioSection
-          id="financeiro"
-          title="Financeiro"
-          subtitle="Caixa, contas, inadimplência e riscos para acompanhamento local."
-          eyebrow="Financeiro"
-          priority="high"
-        >
-          <FinancialMonthlyChart refreshKey={refreshKey} />
-          <FinancialPanel onSaved={onRefresh} />
-          <FinancialIntelligencePanel />
-          <AgoReportPanel />
-        </CondominioSection>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 5 — Documentos essenciais — gestão only              */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && !isResidentView && (
-        <CondominioSection
-          id="documentos"
-          title="Documentos"
-          subtitle="Convenção, AVCB, seguro, laudos e contratos em uma base segura."
-          eyebrow="Documentos"
-          priority="high"
-        >
-          <DocumentosEssenciaisPanel onSaved={onRefresh} />
-        </CondominioSection>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 6 — Operação e pessoas — gestão only                 */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && !isResidentView && (
-        <CondominioSection
-          id="operacao"
-          title="Gestão"
-          subtitle="Funcionários, férias, contratos e histórico operacional."
-          eyebrow="Gestão"
-          priority="normal"
-          defaultOpen={false}
-        >
-          <FuncionariosPanel onSaved={onRefresh} />
-          <TimelineOperacional refreshKey={refreshKey} />
-        </CondominioSection>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 7 — Memória institucional — gestão only              */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && !isResidentView && (
-        <CondominioSection
-          id="memoria-institucional"
-          title="Memória institucional"
-          subtitle="Histórico por unidade, fornecedores, decisões e handoff de mandato."
-          eyebrow="Inteligência"
-          priority="normal"
-          defaultOpen={false}
-        >
-          <UnitHistoryPanel />
-          <SuppliersPanel />
-          <DecisionsPanel />
-          <HandoffPanel />
-        </CondominioSection>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 8 — Central Digital do Condomínio                    */}
+      {/* SEÇÃO 2 — Central Digital do Condomínio                    */}
       {/* ═══════════════════════════════════════════════════════════ */}
       {hasCondominioData && (
         <CondominioSection
@@ -346,6 +231,123 @@ export default function CondominioTab({
           {centralSection === "documentos" && <PublicDocumentsPanel role={communityRole} />}
           {centralSection === "timeline" && !isResidentView && <TimelinePanel role={communityRole} />}
           {centralSection === "relatorio" && !isResidentView && <CommunityReportPanel role={communityRole} condoName={condoName || "Condomínio"} />}
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 3 — Revisão mensal (alta prioridade) — gestão only  */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && !isResidentView && (
+        <CondominioSection
+          id="revisao-mensal"
+          title="Hoje e revisão"
+          subtitle="Revisão mensal guiada, resumo operacional copiável e histórico."
+          eyebrow="Hoje"
+          priority="high"
+        >
+          <MonthlyReviewPanel
+            refreshKey={refreshKey}
+            onRefresh={onRefresh}
+          />
+          <MonthlyOperationalSummaryPanel />
+          <MonthlyReviewHistoryPanel
+            refreshKey={refreshKey}
+            onStartReview={onOpenMonthlyReview}
+          />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 4 — Memória institucional — gestão only              */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && !isResidentView && (
+        <CondominioSection
+          id="memoria-institucional"
+          title="Memória institucional"
+          subtitle="O histórico que impede a gestão de recomeçar do zero — decisões, fornecedores, histórico por unidade e handoff de mandato."
+          eyebrow="Inteligência"
+          priority="normal"
+          defaultOpen={false}
+        >
+          <UnitHistoryPanel />
+          <SuppliersPanel />
+          <DecisionsPanel />
+          <HandoffPanel />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 5 — Financeiro auxiliar — gestão only               */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && !isResidentView && (
+        <CondominioSection
+          id="financeiro"
+          title="Financeiro"
+          subtitle="Caixa, contas, inadimplência e riscos para acompanhamento local."
+          eyebrow="Financeiro"
+          priority="high"
+        >
+          <FinancialMonthlyChart refreshKey={refreshKey} />
+          <FinancialPanel onSaved={onRefresh} />
+          <FinancialIntelligencePanel />
+          <AgoReportPanel />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 6 — Documentos essenciais — gestão only              */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && !isResidentView && (
+        <CondominioSection
+          id="documentos"
+          title="Documentos"
+          subtitle="Convenção, AVCB, seguro, laudos e contratos em uma base segura."
+          eyebrow="Documentos"
+          priority="high"
+        >
+          <DocumentosEssenciaisPanel onSaved={onRefresh} />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 7 — Operação e pessoas — gestão only                 */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && !isResidentView && (
+        <CondominioSection
+          id="operacao"
+          title="Gestão"
+          subtitle="Funcionários, férias, contratos e histórico operacional."
+          eyebrow="Gestão"
+          priority="normal"
+          defaultOpen={false}
+        >
+          <FuncionariosPanel onSaved={onRefresh} />
+          <TimelineOperacional refreshKey={refreshKey} />
+        </CondominioSection>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* SEÇÃO 8 — Implantação (recolhível) — gestão only           */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {hasCondominioData && !isResidentView && (
+        <CondominioSection
+          id="implantacao"
+          title="Implantação"
+          subtitle="Progresso de organização e itens pendentes."
+          eyebrow="Setup"
+          priority="low"
+          defaultOpen={false}
+        >
+          <ImplantacaoChecklist
+            onNavigate={(target) => {
+              if (target === "condominio") {
+                const el = document.getElementById("revisao-mensal");
+                el?.scrollIntoView({ behavior: "smooth", block: "start" });
+              } else if (target === "ferramentas") {
+                onNavigateTab("ferramentas");
+              }
+            }}
+          />
         </CondominioSection>
       )}
 

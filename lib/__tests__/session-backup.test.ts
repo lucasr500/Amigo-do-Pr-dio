@@ -241,3 +241,56 @@ describe("parseAndValidateUserData — v9 específico", () => {
     expect(result.success).toBe(false);
   });
 });
+
+// ─── healthHistory em v12 (campo opcional) ───────────────────────────────────
+
+describe("parseAndValidateUserData — healthHistory em v12", () => {
+  function makeV12Backup(overrides: Record<string, unknown> = {}): string {
+    return JSON.stringify({
+      version: "12",
+      app: "amigo-do-predio",
+      exportedAt: "2026-06-09T00:00:00Z",
+      profile: null,
+      memoria: {},
+      favorites: [],
+      checklists: {},
+      pendencias: [],
+      ocorrencias: [],
+      agenda: [],
+      communityReservations: [],
+      ...overrides,
+    });
+  }
+
+  test("v12 sem healthHistory → success (campo opcional)", () => {
+    expect(parseAndValidateUserData(makeV12Backup()).success).toBe(true);
+  });
+
+  test("v12 com healthHistory como array → success", () => {
+    const snap = { date: "2026-06-01", percentage: 72, statusKey: "atencao", factorCount: 8, missingCount: 2, partialCount: 1 };
+    expect(parseAndValidateUserData(makeV12Backup({ healthHistory: [snap] })).success).toBe(true);
+  });
+
+  test("v12 com healthHistory como array vazio → success", () => {
+    expect(parseAndValidateUserData(makeV12Backup({ healthHistory: [] })).success).toBe(true);
+  });
+
+  test("v12 com healthHistory como número → success (campo não validado estruturalmente)", () => {
+    // healthHistory é opcional e não tem validação de tipo profunda — forward compat
+    expect(parseAndValidateUserData(makeV12Backup({ healthHistory: null })).success).toBe(true);
+  });
+
+  test("v12 com communityReservations ausente → success (opcional em v12)", () => {
+    const backup = JSON.stringify({
+      version: "12", app: "amigo-do-predio", exportedAt: "2026-06-09T00:00:00Z",
+      profile: null, memoria: {}, favorites: [], checklists: {},
+      pendencias: [], ocorrencias: [], agenda: [],
+      // communityReservations: ausente
+    });
+    expect(parseAndValidateUserData(backup).success).toBe(true);
+  });
+
+  test("v12 com campos extras → success (forward compat)", () => {
+    expect(parseAndValidateUserData(makeV12Backup({ campoNovo: "valor", outro: 123 })).success).toBe(true);
+  });
+});

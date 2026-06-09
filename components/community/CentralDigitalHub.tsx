@@ -117,7 +117,7 @@ export default function CentralDigitalHub() {
 
         <div className="border-t border-navy-50 px-5 py-2">
           <p className="text-[10px] text-navy-400 leading-relaxed">
-            Dados locais. Acesse as abas abaixo para gerenciar cada módulo.
+            Canal oficial do condomínio. Use as abas abaixo para publicar, responder e acompanhar.
           </p>
         </div>
       </div>
