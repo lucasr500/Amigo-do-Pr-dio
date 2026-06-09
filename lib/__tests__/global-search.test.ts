@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, test } from "vitest";
-import { searchGlobal, buildDynamicSearchResults, filterSearchResultsForRole } from "@/lib/global-search";
+import { searchGlobal, buildDynamicSearchResults, filterSearchResultsForRole, getSearchSuggestionsForRole } from "@/lib/global-search";
 
 // ── localStorage stub ─────────────────────────────────────────────────────────
 
@@ -103,6 +103,20 @@ describe("searchGlobal — índice estático", () => {
     expect(residentResults.some((item) => item.sectionTarget === "financeiro")).toBe(false);
     expect(residentResults.some((item) => item.sectionTarget === "dados")).toBe(false);
     expect(residentResults.some((item) => item.sectionTarget === "memoria-institucional")).toBe(false);
+  });
+
+  test("morador continua encontrando Central Digital sem abrir hub de gestão", () => {
+    const results = searchGlobal("central digital", 10);
+    const residentResults = filterSearchResultsForRole(results, "resident");
+    expect(residentResults.some((item) => item.id === "central-digital")).toBe(true);
+  });
+
+  test("sugestões da busca respeitam perfil", () => {
+    const residentSuggestions = getSearchSuggestionsForRole("resident");
+    expect(residentSuggestions).toContain("Central Digital");
+    expect(residentSuggestions).not.toContain("Financeiro");
+    expect(residentSuggestions).not.toContain("Memória Institucional");
+    expect(residentSuggestions).not.toContain("Backup e confiança");
   });
 });
 
@@ -222,6 +236,12 @@ describe("buildDynamicSearchResults — timeline", () => {
     const ev = r.find(item => item.type === "evento");
     expect(ev?.sectionTarget).toBe("central-digital");
   });
+
+  test("evento com visibilidade desconhecida não aparece para morador", () => {
+    const r = buildDynamicSearchResults("AVCB");
+    const residentResults = filterSearchResultsForRole(r, "resident");
+    expect(residentResults.some((item) => item.title.includes("AVCB"))).toBe(false);
+  });
 });
 
 describe("buildDynamicSearchResults — histórico por unidade", () => {
@@ -282,6 +302,14 @@ describe("buildDynamicSearchResults — posts do mural", () => {
     const r = buildDynamicSearchResults("arquivado");
     expect(r.some(item => item.type === "post" && item.title.includes("arquivado"))).toBe(false);
   });
+
+  test("filtro de perfil respeita visibilidade de posts do mural", () => {
+    const r = buildDynamicSearchResults("iluminação");
+    const managerResults = filterSearchResultsForRole(r, "manager");
+    const residentResults = filterSearchResultsForRole(r, "resident");
+    expect(managerResults.some((item) => item.title.includes("iluminação"))).toBe(true);
+    expect(residentResults.some((item) => item.title.includes("iluminação"))).toBe(false);
+  });
 });
 
 describe("buildDynamicSearchResults — enquetes", () => {
@@ -289,6 +317,7 @@ describe("buildDynamicSearchResults — enquetes", () => {
     const polls = [
       { id: "poll-1", title: "Horário das áreas comuns", description: "Consulta sobre horário ideal", options: [], visibility: "moradores", status: "ativa", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-06-01T10:00:00Z" },
       { id: "poll-2", title: "Reforma da piscina", description: "Votação sobre reforma", options: [], visibility: "moradores", status: "encerrada", createdAt: "2026-05-01T10:00:00Z", updatedAt: "2026-05-20T10:00:00Z" },
+      { id: "poll-3", title: "Contrato do conselho", description: "Consulta restrita", options: [], visibility: "conselho", status: "ativa", createdAt: "2026-05-02T10:00:00Z", updatedAt: "2026-05-20T10:00:00Z" },
     ];
     localStorageMock.setItem("amigo_community_polls", JSON.stringify(polls));
   });
@@ -303,6 +332,14 @@ describe("buildDynamicSearchResults — enquetes", () => {
     const poll = r.find(item => item.type === "enquete");
     expect(poll?.sectionTarget).toBe("central-digital");
     expect(poll?.centralSectionTarget).toBe("enquetes");
+  });
+
+  test("filtro de perfil respeita visibilidade de enquetes", () => {
+    const r = buildDynamicSearchResults("Contrato conselho");
+    const councilResults = filterSearchResultsForRole(r, "council");
+    const residentResults = filterSearchResultsForRole(r, "resident");
+    expect(councilResults.some((item) => item.title === "Contrato do conselho")).toBe(true);
+    expect(residentResults.some((item) => item.title === "Contrato do conselho")).toBe(false);
   });
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { searchGlobal, buildDynamicSearchResults, filterSearchResultsForRole, type SearchResult, type SearchResultType } from "@/lib/global-search";
+import { searchGlobal, buildDynamicSearchResults, filterSearchResultsForRole, getSearchSuggestionsForRole, type SearchResult, type SearchResultType } from "@/lib/global-search";
 import type { AppTab } from "@/components/BottomNav";
 import type { CentralSectionId } from "@/lib/visibility-guards";
 import type { ProfileRole } from "@/lib/visibility-guards";
@@ -70,6 +70,7 @@ export default function GlobalSearch({
   const [query, setQuery]     = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const inputRef              = useRef<HTMLInputElement>(null);
+  const suggestions           = getSearchSuggestionsForRole(profileRole);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -202,7 +203,7 @@ export default function GlobalSearch({
           <div className="px-4 py-4">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.10em] text-navy-300">Sugestões</p>
             <div className="flex flex-wrap gap-1.5">
-              {["Central Digital", "Mural", "Reservas", "AVCB", "Financeiro", "Memória", "Backup"].map((s) => (
+              {suggestions.map((s) => (
                 <button
                   key={s}
                   type="button"

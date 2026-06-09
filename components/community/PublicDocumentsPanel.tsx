@@ -11,6 +11,7 @@ import {
   type PublicDocumentCategory, type Visibility, type CommunityRole,
 } from "@/lib/community-types";
 import { can, filterByVisibility } from "@/lib/community-permissions";
+import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
 
 const CATEGORIES = Object.entries(PUBLIC_DOC_CATEGORY_LABELS) as [PublicDocumentCategory, string][];
@@ -211,9 +212,9 @@ export default function PublicDocumentsPanel({ role }: Props) {
                     </div>
                     {d.description && <p className="mt-0.5 text-[11.5px] text-navy-500 leading-relaxed">{d.description}</p>}
                     <p className="mt-0.5 text-[10.5px] text-navy-400">
-                      Publicado em {new Date(d.publishedAt).toLocaleDateString("pt-BR")}
+                      Publicado em {formatDateSafe(d.publishedAt, undefined, "Data não informada")}
                       {d.version && ` · ${d.version}`}
-                      {d.validUntil && ` · Válido até ${new Date(d.validUntil).toLocaleDateString("pt-BR")}`}
+                      {d.validUntil && ` · Válido até ${formatDateSafe(d.validUntil, undefined, "data não informada")}`}
                       {isManager && ` · ${VISIBILITY_LABELS[d.visibility]}`}
                     </p>
                   </div>

@@ -12,6 +12,7 @@ import {
   type CommunityRole, type Comment, type PostOrigin,
 } from "@/lib/community-types";
 import { can, filterByVisibility, isAllDemoData } from "@/lib/community-permissions";
+import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
 
 const CATEGORIES = Object.entries(POST_CATEGORY_LABELS) as [PostCategory, string][];
@@ -94,7 +95,7 @@ export default function MuralPanel({ role }: Props) {
   };
 
   const handleCopy = (p: InstitutionalPost) => {
-    const text = `*${p.title}*\n\n${p.body}\n\n_(Comunicado oficial — ${new Date(p.createdAt).toLocaleDateString("pt-BR")})_`;
+    const text = `*${p.title}*\n\n${p.body}\n\n_(Comunicado oficial — ${formatDateSafe(p.createdAt, undefined, "data não informada")})_`;
     navigator.clipboard.writeText(text).then(() => {
       setCopied(p.id);
       setTimeout(() => setCopied(null), 2500);
@@ -292,7 +293,7 @@ export default function MuralPanel({ role }: Props) {
                     )}
                   </div>
                   <p className="mt-0.5 text-[11px] text-navy-400">
-                    {new Date(p.createdAt).toLocaleDateString("pt-BR")}
+                    {formatDateSafe(p.createdAt, undefined, "Data não informada")}
                     {isManager && ` · ${VISIBILITY_LABELS[p.visibility]}`}
                     {p.allowComments && " · comentários abertos"}
                   </p>

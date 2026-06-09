@@ -19,6 +19,7 @@ type Permissions = {
   canUpdateRequestStatus: boolean;
   canViewAllRequests: boolean;
   canPublishDocument: boolean;
+  canManageReservations: boolean;
   canCreateTimelineEvent: boolean;
   canViewPrivateTimeline: boolean;
   canViewFinancialData: boolean;
@@ -41,6 +42,7 @@ const PERMISSIONS_MAP: Record<CommunityRole, Permissions> = {
     canUpdateRequestStatus: true,
     canViewAllRequests: true,
     canPublishDocument: true,
+    canManageReservations: true,
     canCreateTimelineEvent: true,
     canViewPrivateTimeline: true,
     canViewFinancialData: true,
@@ -61,6 +63,7 @@ const PERMISSIONS_MAP: Record<CommunityRole, Permissions> = {
     canUpdateRequestStatus: false,
     canViewAllRequests: true,
     canPublishDocument: false,
+    canManageReservations: false,
     canCreateTimelineEvent: false,
     canViewPrivateTimeline: false,
     canViewFinancialData: false,
@@ -81,6 +84,7 @@ const PERMISSIONS_MAP: Record<CommunityRole, Permissions> = {
     canUpdateRequestStatus: false,
     canViewAllRequests: false,
     canPublishDocument: false,
+    canManageReservations: false,
     canCreateTimelineEvent: false,
     canViewPrivateTimeline: false,
     canViewFinancialData: false,
@@ -101,6 +105,7 @@ const PERMISSIONS_MAP: Record<CommunityRole, Permissions> = {
     canUpdateRequestStatus: false,
     canViewAllRequests: false,
     canPublishDocument: false,
+    canManageReservations: false,
     canCreateTimelineEvent: false,
     canViewPrivateTimeline: false,
     canViewFinancialData: false,

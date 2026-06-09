@@ -10,6 +10,7 @@ import {
   RESERVATION_STATUS_LABELS, type ReservationStatus, type CommunityRole, type SpaceReservation,
 } from "@/lib/community-types";
 import { can } from "@/lib/community-permissions";
+import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
 
 const COMMON_SPACES = [
@@ -57,8 +58,10 @@ export default function ReservasPanel({ role }: Props) {
   const [filterTab, setFilterTab] = useState<FilterTab>("todas");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [managerNotes, setManagerNotes] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState<string | null>(null);
 
   const isManager = role === "manager" || role === "council";
+  const canManageReservations = can(role, "canManageReservations");
 
   const load = () => {
     const all = getReservations().sort((a, b) => {
@@ -72,8 +75,19 @@ export default function ReservasPanel({ role }: Props) {
   useEffect(() => { load(); }, [role]);
 
   const handleSubmit = () => {
-    if (!form.unit.trim() || !form.requesterName.trim() || !form.date) return;
-    const space = form.space === "Outro" ? (form.customSpace.trim() || "Outro") : form.space;
+    if (!form.unit.trim() || !form.requesterName.trim() || !form.date) {
+      setFormError("Informe unidade, nome e data da reserva.");
+      return;
+    }
+    if (form.space === "Outro" && !form.customSpace.trim()) {
+      setFormError("Informe o nome do espaço.");
+      return;
+    }
+    if (form.timeStart && form.timeEnd && form.timeEnd <= form.timeStart) {
+      setFormError("O horário de término deve ser posterior ao início.");
+      return;
+    }
+    const space = form.space === "Outro" ? form.customSpace.trim() : form.space;
     addReservation({
       unit: form.unit.trim(),
       requesterName: form.requesterName.trim(),
@@ -86,6 +100,7 @@ export default function ReservasPanel({ role }: Props) {
     });
     setShowForm(false);
     setForm(EMPTY_FORM);
+    setFormError(null);
     load();
   };
 
@@ -105,6 +120,7 @@ export default function ReservasPanel({ role }: Props) {
   };
 
   const handleCancel = (res: SpaceReservation) => {
+    if (!confirm(`Cancelar a reserva de ${res.space} da unidade ${res.unit}?`)) return;
     cancelReservation(res.id);
     emitReservationCancelled(res.id, res.space, res.unit);
     load();
@@ -119,11 +135,7 @@ export default function ReservasPanel({ role }: Props) {
     return true;
   });
 
-  const fmtDate = (iso: string) => {
-    try {
-      return new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "numeric", month: "short" });
-    } catch { return iso; }
-  };
+  const fmtDate = (iso: string) => formatDateSafe(iso, { weekday: "short", day: "numeric", month: "short" }, "Data inválida");
 
   return (
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up space-y-3">
@@ -142,7 +154,7 @@ export default function ReservasPanel({ role }: Props) {
           {can(role, "canCreateRequest") && (
             <button
               type="button"
-              onClick={() => { setShowForm(true); setForm(EMPTY_FORM); }}
+              onClick={() => { setShowForm(true); setForm(EMPTY_FORM); setFormError(null); }}
               className="ml-3 flex-shrink-0 mt-0.5 rounded-full bg-navy-800 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-navy-700"
             >
               + Solicitar
@@ -268,6 +280,10 @@ export default function ReservasPanel({ role }: Props) {
                 className="w-full resize-none rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12.5px] text-navy-800 focus:border-navy-300 focus:outline-none" />
             </div>
 
+            {formError && (
+              <p className="text-[11px] font-medium text-terracotta-600">{formError}</p>
+            )}
+
             <div className="flex gap-2 pt-1">
               <button type="button" onClick={handleSubmit}
                 className="rounded-full bg-navy-800 px-4 py-1.5 text-[12px] font-medium text-white hover:bg-navy-700 active:scale-[0.97]">
@@ -290,7 +306,7 @@ export default function ReservasPanel({ role }: Props) {
             ? "Organize churrasqueira, salão e áreas comuns com status, unidade e data em um só lugar."
             : "Solicite espaços comuns pelo canal oficial e acompanhe a aprovação pela gestão."}
           actionLabel={can(role, "canCreateRequest") && filterTab !== "historico" ? "Criar reserva" : undefined}
-          onAction={can(role, "canCreateRequest") && filterTab !== "historico" ? () => { setShowForm(true); setForm(EMPTY_FORM); } : undefined}
+          onAction={can(role, "canCreateRequest") && filterTab !== "historico" ? () => { setShowForm(true); setForm(EMPTY_FORM); setFormError(null); } : undefined}
         />
       )}
 
@@ -330,11 +346,11 @@ export default function ReservasPanel({ role }: Props) {
                   {res.description && <p><span className="text-navy-400">Observação: </span>{res.description}</p>}
                   {res.approvedBy && <p><span className="text-navy-400">Aprovado por: </span>{res.approvedBy}</p>}
                   {res.notes && <p><span className="text-navy-400">Nota: </span>{res.notes}</p>}
-                  <p><span className="text-navy-400">Registrado em: </span>{new Date(res.createdAt).toLocaleDateString("pt-BR")}</p>
+                  <p><span className="text-navy-400">Registrado em: </span>{formatDateSafe(res.createdAt, undefined, "Data não informada")}</p>
                 </div>
 
                 {/* Ações do manager para reservas solicitadas */}
-                {isManager && res.status === "solicitada" && (
+                {canManageReservations && res.status === "solicitada" && (
                   <div className="space-y-2 pt-1">
                     <div>
                       <label className="mb-1 block text-[11px] font-medium text-navy-500">Observação da gestão (opcional)</label>
@@ -358,7 +374,7 @@ export default function ReservasPanel({ role }: Props) {
                 )}
 
                 {/* Cancelar reserva aprovada */}
-                {(isManager || role === "resident") && res.status === "aprovada" && (
+                {canManageReservations && res.status === "aprovada" && (
                   <button type="button" onClick={() => handleCancel(res)}
                     className="text-[11px] text-navy-400 underline underline-offset-2 hover:text-navy-600">
                     Cancelar reserva

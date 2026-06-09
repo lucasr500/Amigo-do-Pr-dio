@@ -10,6 +10,7 @@ import { getOpenRequests } from "@/lib/community-requests";
 import { getActivePolls, type Poll } from "@/lib/community-polls";
 import { getTimeline, type TimelineEvent } from "@/lib/community-timeline";
 import { getReservationSummary } from "@/lib/community-reservas";
+import { formatDateSafe } from "@/lib/date-format";
 
 type Props = {
   refreshKey: number;
@@ -233,7 +234,7 @@ export default function ResidentHomeTab({
                   <span className="mt-0.5 h-2 w-2 rounded-full bg-sage-500" aria-hidden="true" />
                   <div className="min-w-0">
                     <p className="text-[12.5px] font-semibold leading-snug text-navy-800">{event.title}</p>
-                    <p className="mt-0.5 text-[11px] text-navy-400">{new Date(event.occurredAt).toLocaleDateString("pt-BR")}</p>
+                    <p className="mt-0.5 text-[11px] text-navy-400">{formatDateSafe(event.occurredAt, undefined, "Data não informada")}</p>
                   </div>
                 </div>
               ))}

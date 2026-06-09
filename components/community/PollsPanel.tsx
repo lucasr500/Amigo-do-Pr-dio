@@ -9,6 +9,7 @@ import {
 import { emitPollCreated, emitPollClosed } from "@/lib/community-timeline";
 import { VISIBILITY_LABELS, type Visibility, type CommunityRole } from "@/lib/community-types";
 import { can, filterByVisibility } from "@/lib/community-permissions";
+import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
 
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -211,7 +212,7 @@ export default function PollsPanel({ role }: Props) {
                     {poll.description && <p className="mt-0.5 text-[11.5px] text-navy-500">{poll.description}</p>}
                     <p className="mt-0.5 text-[10.5px] text-navy-400">
                       {totalVotes} resposta{totalVotes !== 1 ? "s" : ""}
-                      {poll.endsAt && ` · Encerra ${new Date(poll.endsAt).toLocaleDateString("pt-BR")}`}
+                      {poll.endsAt && ` · Encerra ${formatDateSafe(poll.endsAt, undefined, "data não informada")}`}
                     </p>
                   </div>
                   {isManager && (

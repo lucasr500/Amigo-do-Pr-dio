@@ -12,6 +12,7 @@ import {
   type RequestType, type RequestStatus, type RequestPriority, type CommunityRole,
 } from "@/lib/community-types";
 import { can, isAllDemoData } from "@/lib/community-permissions";
+import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
 
 const TYPES = Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][];
@@ -84,6 +85,7 @@ export default function RequestsPanel({ role }: Props) {
   const [resolutionNote, setResolutionNote] = useState<Record<string, string>>({});
   const [responseText, setResponseText] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const isManager = role === "manager" || role === "council";
   const canManage = can(role, "canUpdateRequestStatus");
@@ -103,7 +105,10 @@ export default function RequestsPanel({ role }: Props) {
   }, [role]);
 
   const handleSubmitBase = () => {
-    if (!baseForm.title.trim() || !baseForm.authorName.trim()) return;
+    if (!baseForm.title.trim() || !baseForm.authorName.trim()) {
+      setFormError("Informe seu nome e o título da solicitação.");
+      return;
+    }
     const req = addRequest({
       ...baseForm,
       authorContact: baseForm.authorContact || undefined,
@@ -112,13 +117,21 @@ export default function RequestsPanel({ role }: Props) {
     emitRequestOpened(req.id, req.title, req.unitNumber);
     setShowForm(false);
     setBaseForm(EMPTY_BASE);
+    setFormError(null);
     load();
   };
 
   const handleSubmitObra = () => {
-    if (!obraForm.title.trim() || !obraForm.authorName.trim()) return;
+    if (!obraForm.title.trim() || !obraForm.authorName.trim() || !obraForm.unitNumber.trim()) {
+      setFormError("Informe nome, unidade e título da obra.");
+      return;
+    }
+    if (obraForm.workStartDate && obraForm.workEndDate && obraForm.workEndDate < obraForm.workStartDate) {
+      setFormError("A data de término não pode ser anterior ao início.");
+      return;
+    }
     const req = addRequest({
-      unitNumber: obraForm.unitNumber || undefined,
+      unitNumber: obraForm.unitNumber.trim(),
       authorName: obraForm.authorName,
       authorContact: obraForm.authorContact || undefined,
       type: "aviso_obra",
@@ -133,6 +146,7 @@ export default function RequestsPanel({ role }: Props) {
     emitWorkNoticeRegistered(req.id, req.unitNumber ?? "—", req.title);
     setShowForm(false);
     setObraForm(EMPTY_OBRA);
+    setFormError(null);
     load();
   };
 
@@ -216,6 +230,7 @@ export default function RequestsPanel({ role }: Props) {
 
   const openForm = (mode: "request" | "obra" | "sugestao") => {
     setFormMode(mode);
+    setFormError(null);
     if (mode === "obra") setObraForm(EMPTY_OBRA);
     else {
       const type: RequestType = mode === "sugestao" ? "sugestao" : "solicitacao";
@@ -364,6 +379,9 @@ export default function RequestsPanel({ role }: Props) {
               <textarea rows={3} value={baseForm.description} onChange={(e) => setBaseForm({ ...baseForm, description: e.target.value })}
                 className="w-full resize-none rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12.5px] text-navy-800 focus:border-navy-300 focus:outline-none" />
             </div>
+            {formError && (
+              <p className="text-[11px] font-medium text-terracotta-600">{formError}</p>
+            )}
             <div className="flex gap-2 pt-1">
               <button type="button" onClick={handleSubmitBase}
                 className="rounded-full bg-navy-800 px-4 py-1.5 text-[12px] font-medium text-white hover:bg-navy-700 active:scale-[0.97]">
@@ -435,6 +453,9 @@ export default function RequestsPanel({ role }: Props) {
                 placeholder="Tipo de serviço, materiais, impacto esperado..."
                 className="w-full resize-none rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12.5px] text-navy-800 focus:border-navy-300 focus:outline-none" />
             </div>
+            {formError && (
+              <p className="text-[11px] font-medium text-terracotta-600">{formError}</p>
+            )}
             <div className="flex gap-2 pt-1">
               <button type="button" onClick={handleSubmitObra}
                 className="rounded-full bg-orange-600 px-4 py-1.5 text-[12px] font-medium text-white hover:bg-orange-700 active:scale-[0.97]">
@@ -493,7 +514,7 @@ export default function RequestsPanel({ role }: Props) {
                   <p className="mt-0.5 text-[11px] text-navy-400">
                     {req.unitNumber && `Un. ${req.unitNumber} · `}
                     {REQUEST_TYPE_LABELS[req.type]}
-                    {` · ${new Date(req.createdAt).toLocaleDateString("pt-BR")}`}
+                    {` · ${formatDateSafe(req.createdAt, undefined, "Data não informada")}`}
                   </p>
                 </div>
                 <svg className={`h-4 w-4 flex-shrink-0 text-navy-300 transition-transform ${expandedId === req.id ? "rotate-180" : ""}`} viewBox="0 0 16 16" fill="none">

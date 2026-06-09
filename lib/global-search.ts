@@ -15,6 +15,7 @@ import { getReservations } from "./community-reservas";
 import { getPublicDocuments } from "./community-documents";
 import { PUBLIC_DOC_CATEGORY_LABELS, type Visibility } from "./community-types";
 import { isCentralSectionVisible, isSectionVisible, type CentralSectionId, type ProfileRole } from "./visibility-guards";
+import { formatDateSafe } from "./date-format";
 
 export type SearchResultType =
   | "modulo"
@@ -512,19 +513,37 @@ export function canOpenSearchResultForRole(result: SearchResult, role: ProfileRo
     if (result.tab === "ferramentas") return false;
   }
   if (result.sectionTarget && !isSectionVisible(result.sectionTarget, role)) return false;
+  if (result.id === "central-digital" && result.centralSectionTarget === "hub" && (role === "resident" || role === "viewer")) {
+    return true;
+  }
   if (result.centralSectionTarget && !isCentralSectionVisible(result.centralSectionTarget, role)) return false;
   return true;
 }
 
-function rolesForVisibility(visibility: Visibility): ProfileRole[] {
+function rolesForVisibility(visibility: Visibility | string | undefined): ProfileRole[] {
   if (visibility === "gestao") return ["manager"];
   if (visibility === "conselho") return ["manager", "council"];
   if (visibility === "moradores") return ["manager", "council", "resident"];
-  return ["manager", "council", "resident", "viewer"];
+  if (visibility === "publico") return ["manager", "council", "resident", "viewer"];
+  return ["manager"];
 }
 
 export function filterSearchResultsForRole(results: SearchResult[], role: ProfileRole): SearchResult[] {
   return results.filter((result) => canOpenSearchResultForRole(result, role));
+}
+
+const SEARCH_SUGGESTIONS: SearchResult[] = [
+  SEARCH_INDEX.find((item) => item.id === "central-digital"),
+  SEARCH_INDEX.find((item) => item.id === "central-mural"),
+  SEARCH_INDEX.find((item) => item.id === "central-reservas"),
+  SEARCH_INDEX.find((item) => item.id === "doc-avcb"),
+  SEARCH_INDEX.find((item) => item.id === "financeiro"),
+  SEARCH_INDEX.find((item) => item.id === "memoria-institucional"),
+  SEARCH_INDEX.find((item) => item.id === "backup"),
+].filter((item): item is SearchResult => Boolean(item));
+
+export function getSearchSuggestionsForRole(role: ProfileRole): string[] {
+  return filterSearchResultsForRole(SEARCH_SUGGESTIONS, role).map((item) => item.title);
 }
 
 // ── Busca dinâmica — conteúdo real da sessão ─────────────────────────────────
@@ -542,11 +561,7 @@ function scoreFields(tokens: string[], titleField: string, otherFields: string[]
 }
 
 function fmtShort(iso: string): string {
-  try {
-    return new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", { day: "numeric", month: "short" });
-  } catch {
-    return iso;
-  }
+  return formatDateSafe(iso, { day: "numeric", month: "short" }, "Data sem registro");
 }
 
 export function buildDynamicSearchResults(query: string, maxResults = 5): SearchResult[] {
@@ -639,6 +654,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             tab: "condominio",
             sectionTarget: "central-digital",
             centralSectionTarget: "timeline",
+            visibleTo: rolesForVisibility(ev.visibility),
             keywords: [],
           },
         });
@@ -684,6 +700,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             tab: "condominio",
             sectionTarget: "central-digital",
             centralSectionTarget: "mural",
+            visibleTo: rolesForVisibility(p.visibility),
             keywords: [],
           },
         });
@@ -707,6 +724,7 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             tab: "condominio",
             sectionTarget: "central-digital",
             centralSectionTarget: "enquetes",
+            visibleTo: rolesForVisibility(poll.visibility),
             keywords: [],
           },
         });
