@@ -264,6 +264,8 @@ describe("buildDynamicSearchResults — solicitações", () => {
     const requests = [
       { id: "req-1", unitNumber: "302", authorName: "Morador 302", type: "barulho", title: "Barulho noturno", description: "Ruído após 22h", status: "em_analise", priority: "alta", createdAt: "2026-06-03T20:00:00Z", updatedAt: "2026-06-04T09:00:00Z" },
       { id: "req-2", unitNumber: "301", authorName: "Morador 301", type: "aviso_obra", title: "Reforma no banheiro", description: "Obra interna", status: "recebido", priority: "normal", createdAt: "2026-06-07T10:00:00Z", updatedAt: "2026-06-07T10:00:00Z" },
+      { id: "req-3", unitNumber: "401", authorName: "Morador 401", type: "sugestao", title: "Sugestão de jardim", description: "Plantar flores na entrada", status: "recebido", priority: "normal", createdAt: "2026-06-07T11:00:00Z", updatedAt: "2026-06-07T11:00:00Z" },
+      { id: "req-4", unitNumber: "501", authorName: "Morador 501", type: "duvida", title: "Dúvida sobre garagem", description: "Como funciona o controle?", status: "recebido", priority: "normal", createdAt: "2026-06-07T12:00:00Z", updatedAt: "2026-06-07T12:00:00Z" },
     ];
     localStorageMock.setItem("amigo_community_requests", JSON.stringify(requests));
   });
@@ -275,7 +277,30 @@ describe("buildDynamicSearchResults — solicitações", () => {
 
   test("encontra aviso de obra por tipo", () => {
     const r = buildDynamicSearchResults("reforma");
-    expect(r.some(item => item.type === "solicitacao")).toBe(true);
+    expect(r.some(item => item.type === "obra")).toBe(true);
+  });
+
+  test("obra navega para central-digital", () => {
+    const r = buildDynamicSearchResults("reforma");
+    const obra = r.find(item => item.type === "obra");
+    expect(obra?.sectionTarget).toBe("central-digital");
+    expect(obra?.tab).toBe("condominio");
+  });
+
+  test("encontra sugestão com type sugestao", () => {
+    const r = buildDynamicSearchResults("jardim");
+    expect(r.some(item => item.type === "sugestao")).toBe(true);
+  });
+
+  test("sugestão navega para central-digital", () => {
+    const r = buildDynamicSearchResults("jardim");
+    const sug = r.find(item => item.type === "sugestao");
+    expect(sug?.sectionTarget).toBe("central-digital");
+  });
+
+  test("dúvida retorna type sugestao", () => {
+    const r = buildDynamicSearchResults("garagem");
+    expect(r.some(item => item.type === "sugestao")).toBe(true);
   });
 
   test("solicitação navega para central-digital", () => {

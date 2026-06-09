@@ -137,14 +137,16 @@ export type PollVote = {
 // ─── Solicitação estruturada ──────────────────────────────────────────────────
 
 export type RequestType =
-  | "reclamacao" | "solicitacao" | "sugestao" | "manutencao"
-  | "barulho" | "seguranca" | "limpeza" | "garagem" | "obra" | "documento"
+  | "reclamacao" | "solicitacao" | "sugestao" | "duvida" | "ocorrencia"
+  | "manutencao" | "barulho" | "seguranca" | "limpeza" | "garagem" | "obra" | "documento"
   | "reserva" | "aviso_obra" | "outro";
 
 export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
   reclamacao:  "Reclamação",
   solicitacao: "Solicitação",
   sugestao:    "Sugestão",
+  duvida:      "Dúvida",
+  ocorrencia:  "Ocorrência leve",
   manutencao:  "Manutenção",
   barulho:     "Barulho",
   seguranca:   "Segurança",
@@ -158,17 +160,18 @@ export const REQUEST_TYPE_LABELS: Record<RequestType, string> = {
 };
 
 export type RequestStatus =
-  | "recebido" | "em_analise" | "encaminhado"
+  | "recebido" | "em_analise" | "encaminhado" | "respondida"
   | "aguardando_terceiro" | "resolvido" | "recusado" | "arquivado";
 
 export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
-  recebido:           "Recebido",
-  em_analise:         "Em análise",
-  encaminhado:        "Encaminhado",
+  recebido:            "Recebido",
+  em_analise:          "Em análise",
+  encaminhado:         "Encaminhado",
+  respondida:          "Respondida",
   aguardando_terceiro: "Aguardando terceiro",
-  resolvido:          "Resolvido",
-  recusado:           "Recusado",
-  arquivado:          "Arquivado",
+  resolvido:           "Resolvido",
+  recusado:            "Recusado",
+  arquivado:           "Arquivado",
 };
 
 export type RequestPriority = "baixa" | "normal" | "alta" | "urgente";
@@ -193,6 +196,12 @@ export type ResidentRequest = {
   assignedTo?: string;
   dueDate?: string;
   resolutionNote?: string;
+  managementResponse?: string;   // resposta da gestão sem encerrar o item
+  // campos específicos de aviso_obra
+  workStartDate?: string;        // YYYY-MM-DD
+  workEndDate?: string;          // YYYY-MM-DD
+  workTimeWindow?: string;       // ex: "08h–17h"
+  workResponsible?: string;      // nome/contato do responsável
   createdAt: string;
   updatedAt: string;
   closedAt?: string;

@@ -1,9 +1,9 @@
 // ─── Solicitações estruturadas — CRUD ────────────────────────────────────────
 import { safeRead, safeWrite } from "./session-core";
-import type { ResidentRequest, RequestStatus } from "./community-types";
+import type { ResidentRequest, RequestStatus, RequestType } from "./community-types";
 import { addAuditEntry } from "./community-posts";
 
-export type { ResidentRequest, RequestStatus };
+export type { ResidentRequest, RequestStatus, RequestType };
 
 const KEY = "amigo_community_requests";
 
@@ -92,6 +92,30 @@ export function getRequestSummary(): {
   };
 }
 
+export function respondToRequest(id: string, response: string): void {
+  updateRequest(id, { managementResponse: response, status: "respondida" });
+  addAuditEntry("request_updated", "request", id, "manager", "Gestão respondeu à solicitação");
+}
+
+export function getRequestsByType(type: RequestType): ResidentRequest[] {
+  return getRequests().filter((r) => r.type === type);
+}
+
+export function getWorkNotices(): ResidentRequest[] {
+  const closed: RequestStatus[] = ["resolvido", "recusado", "arquivado"];
+  return getRequests()
+    .filter((r) => r.type === "aviso_obra" && !closed.includes(r.status))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getSuggestions(): ResidentRequest[] {
+  const closed: RequestStatus[] = ["resolvido", "recusado", "arquivado"];
+  const suggestionTypes: RequestType[] = ["sugestao", "duvida", "ocorrencia"];
+  return getRequests()
+    .filter((r) => suggestionTypes.includes(r.type) && !closed.includes(r.status))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 export function buildRequestsWhatsAppText(req: ResidentRequest): string {
   const lines = [
     `*Protocolo #${req.id.slice(-6).toUpperCase()}*`,
@@ -100,7 +124,13 @@ export function buildRequestsWhatsAppText(req: ResidentRequest): string {
     `Unidade: ${req.unitNumber ?? "Não informada"}`,
     `Status: ${req.status}`,
   ];
-  if (req.resolutionNote) lines.push(`Resposta: ${req.resolutionNote}`);
+  if (req.managementResponse) lines.push(`Resposta: ${req.managementResponse}`);
+  else if (req.resolutionNote) lines.push(`Resolução: ${req.resolutionNote}`);
+  if (req.type === "aviso_obra" && req.workStartDate) {
+    lines.push(`Período da obra: ${req.workStartDate}${req.workEndDate ? ` a ${req.workEndDate}` : ""}`);
+    if (req.workTimeWindow) lines.push(`Horário: ${req.workTimeWindow}`);
+    if (req.workResponsible) lines.push(`Responsável: ${req.workResponsible}`);
+  }
   return lines.join("\n");
 }
 

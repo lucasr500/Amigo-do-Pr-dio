@@ -28,6 +28,8 @@ export type SearchResultType =
   | "post"
   | "enquete"
   | "solicitacao"
+  | "sugestao"
+  | "obra"
   | "reserva";
 
 export type SearchResult = {
@@ -622,18 +624,23 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
     }
   } catch { /* localStorage indisponível */ }
 
-  // Solicitações de moradores
+  // Solicitações, sugestões e avisos de obra
   try {
+    const SUGGESTION_TYPES = ["sugestao", "duvida", "ocorrencia"];
     for (const req of getRequests().slice(0, 100)) {
-      const score = scoreFields(tokens, req.title, [req.type, req.status, req.description, req.unitNumber ?? ""]);
+      const score = scoreFields(tokens, req.title, [req.type, req.status, req.description, req.unitNumber ?? "", req.managementResponse ?? "", req.workResponsible ?? ""]);
       if (score > 0) {
+        const isObra = req.type === "aviso_obra";
+        const isSugg = SUGGESTION_TYPES.includes(req.type);
+        const resultType = isObra ? "obra" : isSugg ? "sugestao" : "solicitacao";
+        const typeLabel = isObra ? "Aviso de Obra" : isSugg ? "Sugestão" : "Solicitação";
         scored.push({
           score,
           item: {
             id: `dyn-req-${req.id}`,
             title: req.title,
-            description: `Solicitação · Un. ${req.unitNumber ?? "—"} · ${req.status}`,
-            type: "solicitacao",
+            description: `${typeLabel} · Un. ${req.unitNumber ?? "—"} · ${req.status}`,
+            type: resultType,
             tab: "condominio",
             sectionTarget: "central-digital",
             keywords: [],

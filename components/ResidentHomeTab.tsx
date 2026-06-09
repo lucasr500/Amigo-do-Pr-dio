@@ -8,6 +8,7 @@ import { getActivePosts, type InstitutionalPost } from "@/lib/community-posts";
 import { getOpenRequests } from "@/lib/community-requests";
 import { getActivePolls, type Poll } from "@/lib/community-polls";
 import { getTimeline, type TimelineEvent } from "@/lib/community-timeline";
+import { getReservationSummary } from "@/lib/community-reservas";
 
 type Props = {
   refreshKey: number;
@@ -24,17 +25,18 @@ type ResidentState = {
   openRequests: number;
   activePolls: Poll[];
   timeline: TimelineEvent[];
+  pendingReservations: number;
 };
 
 const quickActions = [
   { label: "Comunicados", section: "central-digital", icon: "M4 6h12M4 10h12M4 14h7" },
-  { label: "Solicitações", section: "central-digital", icon: "M5 5h10v8H8l-3 3V5z" },
+  { label: "Solicitação", section: "central-digital", icon: "M5 5h10v8H8l-3 3V5z" },
+  { label: "Avisar obra", section: "central-digital", icon: "M3 14h2l2-6 3 9 2-5 2 2h3" },
+  { label: "Sugestão", section: "central-digital", icon: "M8 3C5.2 3 3 5.2 3 8c0 1.9 1.1 3.6 2.7 4.5V14h4.6v-1.5C11.9 11.6 13 9.9 13 8c0-2.8-2.2-5-5-5z" },
+  { label: "Reservas", section: "central-digital", icon: "M5 4v3M15 4v3M4 8h12M5 5h10v11H5z" },
   { label: "Enquetes", section: "central-digital", icon: "M5 14V8M10 14V5M15 14v-3" },
   { label: "Documentos", section: "documentos", icon: "M6 3h6l4 4v10H6V3zM12 3v5h4" },
-  { label: "Atas", section: "central-digital", icon: "M6 4h8M6 8h8M6 12h5" },
-  { label: "Financeiro", section: "financeiro", icon: "M4 12c2 2 10 2 12 0M4 8c2 2 10 2 12 0M4 4c2 2 10 2 12 0" },
   { label: "Agenda", tab: "agenda" as AppTab, icon: "M5 4v3M15 4v3M4 8h12M5 5h10v11H5z" },
-  { label: "Canal oficial", tab: "ferramentas" as AppTab, icon: "M4 5h12v8H9l-4 3v-3H4z" },
 ];
 
 function EmptyPublicCard({ onNavigate }: { onNavigate: () => void }) {
@@ -72,6 +74,7 @@ export default function ResidentHomeTab({
     const posts = getActivePosts().filter((post) => post.visibility === "moradores" || post.visibility === "publico");
     const featured = posts.find((post) => post.pinned) ?? posts[0] ?? null;
     const timeline = getTimeline().filter((event) => event.visibility === "moradores" || event.visibility === "publico").slice(0, 4);
+    const resSummary = getReservationSummary();
     setState({
       condoName: condoName || profile?.nomeCondominio || "Condomínio",
       featuredPost: featured,
@@ -79,6 +82,7 @@ export default function ResidentHomeTab({
       openRequests: getOpenRequests().length,
       activePolls: getActivePolls(),
       timeline,
+      pendingReservations: resSummary.pending,
     });
   }, [condoName, refreshKey]);
 
@@ -146,16 +150,21 @@ export default function ResidentHomeTab({
       </section>
 
       <section className="px-5 pb-4 sm:px-6">
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-2xl border border-navy-100 bg-white/90 px-4 py-3 shadow-card">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">Solicitações</p>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-2xl border border-navy-100 bg-white/90 px-3 py-3 shadow-card">
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-navy-400">Solicitações</p>
             <p className="mt-1 text-[20px] font-semibold text-navy-900">{state.openRequests}</p>
-            <p className="text-[11px] text-navy-400">em acompanhamento</p>
+            <p className="text-[10.5px] text-navy-400">em aberto</p>
           </div>
-          <div className="rounded-2xl border border-navy-100 bg-white/90 px-4 py-3 shadow-card">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-400">Enquetes</p>
+          <div className="rounded-2xl border border-navy-100 bg-white/90 px-3 py-3 shadow-card">
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-navy-400">Enquetes</p>
             <p className="mt-1 text-[20px] font-semibold text-navy-900">{state.activePolls.length}</p>
-            <p className="text-[11px] text-navy-400">consultivas abertas</p>
+            <p className="text-[10.5px] text-navy-400">ativas</p>
+          </div>
+          <div className={`rounded-2xl border bg-white/90 px-3 py-3 shadow-card ${state.pendingReservations > 0 ? "border-amber-200" : "border-navy-100"}`}>
+            <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-navy-400">Reservas</p>
+            <p className={`mt-1 text-[20px] font-semibold ${state.pendingReservations > 0 ? "text-amber-600" : "text-navy-900"}`}>{state.pendingReservations}</p>
+            <p className="text-[10.5px] text-navy-400">pendentes</p>
           </div>
         </div>
       </section>

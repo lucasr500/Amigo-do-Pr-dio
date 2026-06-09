@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
-import { getTimeline, emitBackupExported, emitSupplierRegistered, emitReservationApproved, emitReservationCancelled } from "@/lib/community-timeline";
+import { getTimeline, emitBackupExported, emitSupplierRegistered, emitReservationApproved, emitReservationCancelled, emitWorkNoticeRegistered } from "@/lib/community-timeline";
 import { addPendencia, completePendencia } from "@/lib/session-pendencias";
 import { upsertDocumento, type DocumentoEssencial } from "@/lib/session-documentos";
 
@@ -118,5 +118,43 @@ describe("emitReservationCancelled", () => {
     emitReservationCancelled("res-004", "Sauna", "302");
     const [event] = getTimeline();
     expect(event.visibility).toBe("gestao");
+  });
+});
+
+// ── emitWorkNoticeRegistered ──────────────────────────────────────────────────
+
+describe("emitWorkNoticeRegistered", () => {
+  test("emite evento na timeline com type outro", () => {
+    emitWorkNoticeRegistered("obra-001", "401", "Reforma banheiro");
+    const [event] = getTimeline();
+    expect(event.type).toBe("outro");
+    expect(event.title).toContain("obra");
+    expect(event.title).toContain("401");
+  });
+
+  test("description contém o título da obra", () => {
+    emitWorkNoticeRegistered("obra-002", "205", "Troca de piso");
+    const [event] = getTimeline();
+    expect(event.description).toContain("Troca de piso");
+  });
+
+  test("visibility é moradores", () => {
+    emitWorkNoticeRegistered("obra-003", "301", "Pintura de paredes");
+    const [event] = getTimeline();
+    expect(event.visibility).toBe("moradores");
+  });
+
+  test("sourceModule é requests", () => {
+    emitWorkNoticeRegistered("obra-004", "102", "Instalação elétrica");
+    const [event] = getTimeline();
+    expect(event.sourceModule).toBe("requests");
+    expect(event.sourceId).toBe("obra-004");
+  });
+
+  test("não duplica evento para mesmo requestId", () => {
+    emitWorkNoticeRegistered("obra-dup", "501", "Obra duplicada");
+    emitWorkNoticeRegistered("obra-dup", "501", "Obra duplicada");
+    const events = getTimeline().filter((e) => e.sourceId === "obra-dup");
+    expect(events.length).toBe(1);
   });
 });

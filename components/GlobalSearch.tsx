@@ -19,6 +19,8 @@ const TYPE_LABEL: Record<SearchResultType, string> = {
   post:        "Post",
   enquete:     "Enquete",
   solicitacao: "Solicitação",
+  sugestao:    "Sugestão",
+  obra:        "Obra",
   reserva:     "Reserva",
 };
 
@@ -37,6 +39,8 @@ const TYPE_DOT: Record<SearchResultType, string> = {
   post:        "bg-navy-500",
   enquete:     "bg-purple-500",
   solicitacao: "bg-amber-600",
+  sugestao:    "bg-sage-600",
+  obra:        "bg-orange-500",
   reserva:     "bg-green-500",
 };
 

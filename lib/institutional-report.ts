@@ -14,7 +14,7 @@ import { getDocumentosSummary } from "./session-documentos";
 import { getMonthlyReviewHistory } from "./session-monthly-review";
 import { getPublishedPosts } from "./community-posts";
 import { getPolls } from "./community-polls";
-import { getRequestSummary } from "./community-requests";
+import { getRequestSummary, getWorkNotices, getSuggestions } from "./community-requests";
 import { getReservations } from "./community-reservas";
 
 function fmtDateShort(iso: string): string {
@@ -124,6 +124,7 @@ export function buildInstitutionalReport(month = currentMonthKey()): string {
   let reqSummary = { total: 0, open: 0, resolved: 0, urgent: 0 };
   let activePolls = 0;
   let reservasCount = 0, reservasAprovadas = 0;
+  let obrasCount = 0, suggestoesCount = 0;
   try {
     const allPosts = getPublishedPosts();
     officialPostCount  = allPosts.filter((p) => p.origin !== "morador").length;
@@ -131,6 +132,12 @@ export function buildInstitutionalReport(month = currentMonthKey()): string {
   } catch { /* silencioso */ }
   try {
     reqSummary = getRequestSummary();
+  } catch { /* silencioso */ }
+  try {
+    obrasCount = getWorkNotices().length;
+  } catch { /* silencioso */ }
+  try {
+    suggestoesCount = getSuggestions().length;
   } catch { /* silencioso */ }
   try {
     activePolls = getPolls().filter((p) => p.status === "ativa").length;
@@ -215,12 +222,14 @@ export function buildInstitutionalReport(month = currentMonthKey()): string {
   lines.push("");
 
   // Central Digital
-  const centralTotal = officialPostCount + residentPostCount + reqSummary.total + activePolls + reservasCount;
+  const centralTotal = officialPostCount + residentPostCount + reqSummary.total + activePolls + reservasCount + obrasCount + suggestoesCount;
   if (centralTotal > 0) {
     lines.push("🏘️ Central Digital");
     if (officialPostCount > 0) lines.push(`Posts oficiais publicados: ${officialPostCount}`);
     if (residentPostCount > 0) lines.push(`Participações de moradores: ${residentPostCount}`);
     if (reqSummary.total > 0) lines.push(`Solicitações: ${reqSummary.open} aberta${reqSummary.open !== 1 ? "s" : ""} · ${reqSummary.resolved} resolvida${reqSummary.resolved !== 1 ? "s" : ""}`);
+    if (obrasCount > 0) lines.push(`Avisos de obra ativos: ${obrasCount}`);
+    if (suggestoesCount > 0) lines.push(`Sugestões recebidas: ${suggestoesCount}`);
     if (activePolls > 0) lines.push(`Enquetes ativas: ${activePolls}`);
     if (reservasCount > 0) lines.push(`Reservas: ${reservasCount} solicitada${reservasCount !== 1 ? "s" : ""} (${reservasAprovadas} aprovada${reservasAprovadas !== 1 ? "s" : ""})`);
     lines.push("");

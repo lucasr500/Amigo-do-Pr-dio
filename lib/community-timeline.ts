@@ -144,6 +144,18 @@ export function emitPollClosed(pollId: string, title: string): void {
   });
 }
 
+export function emitWorkNoticeRegistered(requestId: string, unit: string, title: string): void {
+  addTimelineEventOnce({
+    type: "outro",
+    title: `Aviso de obra registrado — Unidade ${unit}`,
+    description: title,
+    visibility: "moradores",
+    sourceModule: "requests",
+    sourceId: requestId,
+    occurredAt: new Date().toISOString(),
+  }, (event) => event.sourceId === requestId);
+}
+
 export function emitReservationApproved(reservationId: string, space: string, unit: string): void {
   addTimelineEvent({
     type: "outro",

@@ -11,6 +11,10 @@ import {
   getRequestsByStatus,
   getRequestSummary,
   buildRequestsWhatsAppText,
+  respondToRequest,
+  getWorkNotices,
+  getSuggestions,
+  getRequestsByType,
 } from "@/lib/community-requests";
 import type { ResidentRequest } from "@/lib/community-types";
 
@@ -249,5 +253,168 @@ describe("buildRequestsWhatsAppText", () => {
     const resolved = getRequests().find((r) => r.id === req.id)!;
     const text = buildRequestsWhatsAppText(resolved);
     expect(text).toContain("Trocada com sucesso");
+  });
+
+  test("inclui resposta da gestão quando presente", () => {
+    const req = addRequest({ unitNumber: "303", authorName: "Pedro", type: "sugestao", title: "Sugestão jardim", description: "Plantar flores", priority: "normal" });
+    respondToRequest(req.id, "Avaliaremos na reunião do conselho.");
+    const updated = getRequests().find((r) => r.id === req.id)!;
+    const text = buildRequestsWhatsAppText(updated);
+    expect(text).toContain("Avaliaremos na reunião");
+  });
+
+  test("inclui campos de obra quando presentes", () => {
+    const req = addRequest({
+      unitNumber: "401", authorName: "Marcos", type: "aviso_obra", title: "Reforma banheiro",
+      description: "Troca de piso", priority: "normal",
+      workStartDate: "2026-06-10", workEndDate: "2026-06-12",
+      workTimeWindow: "08h–17h", workResponsible: "Carlos empreiteiro",
+    });
+    const text = buildRequestsWhatsAppText(req);
+    expect(text).toContain("2026-06-10");
+    expect(text).toContain("Carlos empreiteiro");
+  });
+});
+
+// ── respondToRequest ──────────────────────────────────────────────────────────
+
+describe("respondToRequest", () => {
+  test("define managementResponse e muda status para respondida", () => {
+    const req = addRequest({ unitNumber: "101", authorName: "A", type: "sugestao", title: "T", description: "D", priority: "normal" });
+    respondToRequest(req.id, "Resposta da gestão");
+    const updated = getRequests().find((r) => r.id === req.id)!;
+    expect(updated.managementResponse).toBe("Resposta da gestão");
+    expect(updated.status).toBe("respondida");
+  });
+
+  test("não altera outros campos", () => {
+    const req = addRequest({ unitNumber: "202", authorName: "B", type: "duvida", title: "Dúvida garagem", description: "Como funciona?", priority: "normal" });
+    respondToRequest(req.id, "Veja o regulamento.");
+    const updated = getRequests().find((r) => r.id === req.id)!;
+    expect(updated.title).toBe("Dúvida garagem");
+    expect(updated.unitNumber).toBe("202");
+  });
+});
+
+// ── getWorkNotices ────────────────────────────────────────────────────────────
+
+describe("getWorkNotices", () => {
+  test("retorna apenas avisos de obra com status aberto", () => {
+    addRequest({ unitNumber: "101", authorName: "A", type: "aviso_obra", title: "Obra 1", description: "D", priority: "normal" });
+    addRequest({ unitNumber: "201", authorName: "B", type: "manutencao", title: "Manutenção", description: "D", priority: "normal" });
+    const obras = getWorkNotices();
+    expect(obras.every((r) => r.type === "aviso_obra")).toBe(true);
+    expect(obras.length).toBe(1);
+  });
+
+  test("não inclui obras resolvidas", () => {
+    const req = addRequest({ unitNumber: "301", authorName: "C", type: "aviso_obra", title: "Obra fechada", description: "D", priority: "normal" });
+    resolveRequest(req.id, "Concluída");
+    expect(getWorkNotices().length).toBe(0);
+  });
+
+  test("retorna lista vazia quando não há obras", () => {
+    addRequest({ unitNumber: "401", authorName: "D", type: "barulho", title: "Barulho", description: "D", priority: "normal" });
+    expect(getWorkNotices()).toEqual([]);
+  });
+});
+
+// ── getSuggestions ────────────────────────────────────────────────────────────
+
+describe("getSuggestions", () => {
+  test("retorna sugestão, dúvida e ocorrência abertas", () => {
+    addRequest({ unitNumber: "101", authorName: "A", type: "sugestao", title: "S1", description: "D", priority: "normal" });
+    addRequest({ unitNumber: "201", authorName: "B", type: "duvida", title: "D1", description: "D", priority: "normal" });
+    addRequest({ unitNumber: "301", authorName: "C", type: "ocorrencia", title: "O1", description: "D", priority: "normal" });
+    addRequest({ unitNumber: "401", authorName: "D", type: "barulho", title: "B1", description: "D", priority: "normal" });
+    const sugs = getSuggestions();
+    expect(sugs.length).toBe(3);
+    expect(sugs.every((r) => ["sugestao", "duvida", "ocorrencia"].includes(r.type))).toBe(true);
+  });
+
+  test("não inclui sugestões resolvidas", () => {
+    const req = addRequest({ unitNumber: "101", authorName: "A", type: "sugestao", title: "Resolvida", description: "D", priority: "normal" });
+    resolveRequest(req.id, "OK");
+    expect(getSuggestions().length).toBe(0);
+  });
+});
+
+// ── getRequestsByType ─────────────────────────────────────────────────────────
+
+describe("getRequestsByType", () => {
+  test("filtra por tipo duvida", () => {
+    addRequest({ unitNumber: "101", authorName: "A", type: "duvida", title: "Dúvida 1", description: "D", priority: "normal" });
+    addRequest({ unitNumber: "201", authorName: "B", type: "sugestao", title: "Sugestão 1", description: "D", priority: "normal" });
+    const duvidas = getRequestsByType("duvida");
+    expect(duvidas.length).toBe(1);
+    expect(duvidas[0].type).toBe("duvida");
+  });
+
+  test("filtra por tipo ocorrencia", () => {
+    addRequest({ unitNumber: "101", authorName: "A", type: "ocorrencia", title: "Ocorrência leve", description: "D", priority: "normal" });
+    const ocorrencias = getRequestsByType("ocorrencia");
+    expect(ocorrencias.length).toBe(1);
+    expect(ocorrencias[0].type).toBe("ocorrencia");
+  });
+
+  test("retorna vazio quando tipo não existe", () => {
+    addRequest({ unitNumber: "101", authorName: "A", type: "barulho", title: "T", description: "D", priority: "normal" });
+    expect(getRequestsByType("duvida")).toEqual([]);
+  });
+});
+
+// ── aviso_obra com campos de obra ─────────────────────────────────────────────
+
+describe("aviso_obra campos extras", () => {
+  test("persiste campos workStartDate, workEndDate, workTimeWindow, workResponsible", () => {
+    const req = addRequest({
+      unitNumber: "501", authorName: "Fábio", type: "aviso_obra", title: "Reforma cozinha",
+      description: "Troca de azulejos", priority: "normal",
+      workStartDate: "2026-06-15", workEndDate: "2026-06-20",
+      workTimeWindow: "09h–18h", workResponsible: "João pedreiro",
+    });
+    const saved = getRequests().find((r) => r.id === req.id)!;
+    expect(saved.workStartDate).toBe("2026-06-15");
+    expect(saved.workEndDate).toBe("2026-06-20");
+    expect(saved.workTimeWindow).toBe("09h–18h");
+    expect(saved.workResponsible).toBe("João pedreiro");
+  });
+
+  test("campos opcionais são undefined quando não fornecidos", () => {
+    const req = addRequest({ unitNumber: "601", authorName: "G", type: "aviso_obra", title: "Pintura", description: "Parede", priority: "normal" });
+    const saved = getRequests().find((r) => r.id === req.id)!;
+    expect(saved.workStartDate).toBeUndefined();
+    expect(saved.workResponsible).toBeUndefined();
+  });
+});
+
+// ── respondida e status intermediário ────────────────────────────────────────
+
+describe("status respondida", () => {
+  test("getSuggestions inclui itens com status respondida", () => {
+    const req = addRequest({ unitNumber: "101", authorName: "A", type: "sugestao", title: "Sugestão", description: "D", priority: "normal" });
+    respondToRequest(req.id, "Vai ser avaliada");
+    expect(getSuggestions().length).toBe(1);
+  });
+
+  test("getWorkNotices exclui obra arquivada", () => {
+    const req = addRequest({ unitNumber: "201", authorName: "B", type: "aviso_obra", title: "Obra", description: "D", priority: "normal" });
+    closeRequest(req.id, "arquivado");
+    expect(getWorkNotices().length).toBe(0);
+  });
+
+  test("getRequestsByType inclui todos os status inclusive respondida", () => {
+    const req = addRequest({ unitNumber: "301", authorName: "C", type: "duvida", title: "Dúvida", description: "D", priority: "normal" });
+    respondToRequest(req.id, "Resposta");
+    expect(getRequestsByType("duvida").length).toBe(1);
+    expect(getRequestsByType("duvida")[0].status).toBe("respondida");
+  });
+
+  test("respondToRequest em ocorrencia muda status corretamente", () => {
+    const req = addRequest({ unitNumber: "401", authorName: "D", type: "ocorrencia", title: "Ocorrência", description: "D", priority: "normal" });
+    respondToRequest(req.id, "Ciente, vamos verificar.");
+    const updated = getRequests().find((r) => r.id === req.id)!;
+    expect(updated.status).toBe("respondida");
+    expect(updated.managementResponse).toBe("Ciente, vamos verificar.");
   });
 });
