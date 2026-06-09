@@ -101,14 +101,14 @@ export function buildInstitutionalReport(month = currentMonthKey()): string {
     suppNames = ativos.slice(0, 4).map((s) => s.name);
   } catch { /* silencioso */ }
 
-  // ── Timeline ──────────────────────────────────────────────────────────────
+  // ── Linha do tempo ────────────────────────────────────────────────────────
   let timelineEvents: string[] = [];
   try {
     const tl = getTimeline();
     timelineEvents = tl.slice(0, 4).map((ev) => `${ev.title} (${fmtDateShort(ev.occurredAt.slice(0, 10))})`);
   } catch { /* silencioso */ }
 
-  // ── Handoff / Continuidade ────────────────────────────────────────────────
+  // ── Passagem de gestão / Continuidade ─────────────────────────────────────
   let handoffPct = 0;
   try {
     handoffPct = getHandoffProgress().pct;
@@ -225,7 +225,7 @@ export function buildInstitutionalReport(month = currentMonthKey()): string {
   const centralTotal = officialPostCount + residentPostCount + reqSummary.total + activePolls + reservasCount + obrasCount + suggestoesCount;
   if (centralTotal > 0) {
     lines.push("🏘️ Central Digital");
-    if (officialPostCount > 0) lines.push(`Posts oficiais publicados: ${officialPostCount}`);
+    if (officialPostCount > 0) lines.push(`Comunicados oficiais publicados: ${officialPostCount}`);
     if (residentPostCount > 0) lines.push(`Participações de moradores: ${residentPostCount}`);
     if (reqSummary.total > 0) lines.push(`Solicitações: ${reqSummary.open} aberta${reqSummary.open !== 1 ? "s" : ""} · ${reqSummary.resolved} resolvida${reqSummary.resolved !== 1 ? "s" : ""}`);
     if (obrasCount > 0) lines.push(`Avisos de obra ativos: ${obrasCount}`);

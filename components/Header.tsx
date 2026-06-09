@@ -72,7 +72,7 @@ export default function Header({
             {!isOnline ? (
               <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10.5px] font-semibold text-amber-800">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                Dados locais
+                Sob seu controle
               </span>
             ) : (
               <div className="mt-2">
@@ -142,7 +142,7 @@ export default function Header({
       ? { title: "Agenda", sub: "Próximos eventos e avisos do condomínio" }
       : { title: "Agenda", sub: "Prazos e rotina do prédio" },
     assistente: profile === "resident"
-      ? { title: "Mais", sub: "Ajuda e informações do condomínio" }
+      ? { title: "Info", sub: "Ajuda e informações do condomínio" }
       : { title: "Assistente", sub: "Orientação prática para decidir melhor" },
     ferramentas: profile === "resident"
       ? { title: "Solicitações", sub: "Canal estruturado com a gestão" }
@@ -169,7 +169,7 @@ export default function Header({
             {!isOnline ? (
               <span className="mt-0.5 inline-flex w-fit items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-                Dados locais
+                Sob seu controle
               </span>
             ) : (
               <p className="max-w-[250px] truncate text-[11.5px] text-navy-400">

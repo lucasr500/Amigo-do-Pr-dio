@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, expect, test } from "vitest";
-import { searchGlobal, buildDynamicSearchResults } from "@/lib/global-search";
+import { searchGlobal, buildDynamicSearchResults, filterSearchResultsForRole } from "@/lib/global-search";
 
 // ── localStorage stub ─────────────────────────────────────────────────────────
 
@@ -95,6 +95,14 @@ describe("searchGlobal — índice estático", () => {
     expect(searchGlobal("reserva")[0]?.centralSectionTarget).toBe("reservas");
     expect(searchGlobal("enquete")[0]?.centralSectionTarget).toBe("enquetes");
     expect(searchGlobal("canal morador")[0]?.centralSectionTarget).toBe("canal");
+  });
+
+  test("filtro de perfil remove áreas internas da gestão para morador", () => {
+    const results = searchGlobal("financeiro backup memoria", 20);
+    const residentResults = filterSearchResultsForRole(results, "resident");
+    expect(residentResults.some((item) => item.sectionTarget === "financeiro")).toBe(false);
+    expect(residentResults.some((item) => item.sectionTarget === "dados")).toBe(false);
+    expect(residentResults.some((item) => item.sectionTarget === "memoria-institucional")).toBe(false);
   });
 });
 
@@ -295,6 +303,31 @@ describe("buildDynamicSearchResults — enquetes", () => {
     const poll = r.find(item => item.type === "enquete");
     expect(poll?.sectionTarget).toBe("central-digital");
     expect(poll?.centralSectionTarget).toBe("enquetes");
+  });
+});
+
+describe("buildDynamicSearchResults — documentos públicos", () => {
+  beforeEach(() => {
+    const docs = [
+      { id: "doc-public-1", title: "Regimento Interno", category: "regimento_interno", description: "Uso das áreas comuns", visibility: "moradores", version: "v2", publishedAt: "2026-06-01", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-06-01T10:00:00Z" },
+      { id: "doc-council-1", title: "Ata do Conselho", category: "ata", description: "Documento restrito", visibility: "conselho", publishedAt: "2026-06-01", createdAt: "2026-06-01T10:00:00Z", updatedAt: "2026-06-01T10:00:00Z" },
+    ];
+    localStorageMock.setItem("amigo_community_documents", JSON.stringify(docs));
+  });
+
+  test("encontra documento público real e aponta para documentos da Central Digital", () => {
+    const r = buildDynamicSearchResults("Regimento");
+    const doc = r.find(item => item.type === "documento" && item.title === "Regimento Interno");
+    expect(doc?.sectionTarget).toBe("central-digital");
+    expect(doc?.centralSectionTarget).toBe("documentos");
+  });
+
+  test("filtro de perfil respeita visibilidade de documento público", () => {
+    const r = buildDynamicSearchResults("Ata Conselho", 10);
+    const managerResults = filterSearchResultsForRole(r, "manager");
+    const residentResults = filterSearchResultsForRole(r, "resident");
+    expect(managerResults.some((item) => item.title === "Ata do Conselho")).toBe(true);
+    expect(residentResults.some((item) => item.title === "Ata do Conselho")).toBe(false);
   });
 });
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { searchGlobal, buildDynamicSearchResults, type SearchResult, type SearchResultType } from "@/lib/global-search";
+import { searchGlobal, buildDynamicSearchResults, filterSearchResultsForRole, type SearchResult, type SearchResultType } from "@/lib/global-search";
 import type { AppTab } from "@/components/BottomNav";
 import type { CentralSectionId } from "@/lib/visibility-guards";
+import type { ProfileRole } from "@/lib/visibility-guards";
 
 const TYPE_LABEL: Record<SearchResultType, string> = {
   modulo:      "Módulo",
@@ -48,6 +49,7 @@ const TYPE_DOT: Record<SearchResultType, string> = {
 type Props = {
   onNavigateTab: (tab: AppTab) => void;
   onNavigateToSection?: (sectionId: string, centralSection?: CentralSectionId) => void;
+  profileRole?: ProfileRole;
   onOpenMonthlyReview?: () => void;
   onOpenBackup?: () => void;
   onExpandMemoria?: () => void;
@@ -58,6 +60,7 @@ type Props = {
 export default function GlobalSearch({
   onNavigateTab,
   onNavigateToSection,
+  profileRole = "manager",
   onOpenMonthlyReview,
   onOpenBackup,
   onExpandMemoria,
@@ -75,10 +78,13 @@ export default function GlobalSearch({
   const handleChange = (q: string) => {
     setQuery(q);
     if (!q.trim()) { setResults([]); return; }
-    const staticR  = searchGlobal(q, 5);
-    const dynamicR = buildDynamicSearchResults(q, 4);
+    const staticR  = searchGlobal(q, 12);
+    const dynamicR = buildDynamicSearchResults(q, 8);
     const seen = new Set(staticR.map(r => r.id));
-    const merged = [...staticR, ...dynamicR.filter(r => !seen.has(r.id))].slice(0, 8);
+    const merged = filterSearchResultsForRole(
+      [...staticR, ...dynamicR.filter(r => !seen.has(r.id))],
+      profileRole,
+    ).slice(0, 8);
     setResults(merged);
   };
 

@@ -118,7 +118,7 @@ export default function DecisionsPanel() {
             )}
             <button type="button" onClick={() => { setShowForm(true); setEditId(null); setForm(EMPTY); }}
               className="rounded-full bg-navy-800 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-navy-700">
-              + Nova
+              Registrar decisão
             </button>
           </div>
         </div>

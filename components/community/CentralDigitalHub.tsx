@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getPublishedPosts } from "@/lib/community-posts";
-import { getRequestSummary, getWorkNotices, getSuggestions } from "@/lib/community-requests";
-import { getReservationSummary } from "@/lib/community-reservas";
-import { getPolls } from "@/lib/community-polls";
+import { buildCentralDigitalSummary } from "@/lib/community-summary";
 
 type Card = {
   label: string;
@@ -20,61 +17,60 @@ export default function CentralDigitalHub() {
 
   useEffect(() => {
     try {
-      const posts = getPublishedPosts();
-      const officialPosts = posts.filter((p) => p.origin !== "morador").length;
-      const residentPosts = posts.filter((p) => p.origin === "morador").length;
-
-      const req = getRequestSummary();
-      const obras = getWorkNotices().length;
-      const suggestions = getSuggestions().length;
-      const res = getReservationSummary();
-      const activePolls = getPolls().filter((p) => p.status === "ativa").length;
+      const summary = buildCentralDigitalSummary();
 
       setCards([
         {
           label: "Comunicados oficiais",
-          value: officialPosts,
-          sub: residentPosts > 0 ? `+${residentPosts} participação${residentPosts !== 1 ? "ões" : ""}` : undefined,
+          value: summary.officialPosts,
+          sub: summary.residentPosts > 0 ? `+${summary.residentPosts} participação${summary.residentPosts !== 1 ? "ões" : ""}` : undefined,
           color: "text-navy-700",
           icon: "📢",
         },
         {
           label: "Solicitações abertas",
-          value: req.open,
-          sub: req.urgent > 0 ? `${req.urgent} urgente${req.urgent !== 1 ? "s" : ""}` : (req.total > 0 ? `${req.total} total` : undefined),
-          color: req.urgent > 0 ? "text-red-600" : req.open > 0 ? "text-amber-600" : "text-navy-700",
+          value: summary.openRequests,
+          sub: summary.urgentRequests > 0 ? `${summary.urgentRequests} urgente${summary.urgentRequests !== 1 ? "s" : ""}` : (summary.totalRequests > 0 ? `${summary.totalRequests} total` : undefined),
+          color: summary.urgentRequests > 0 ? "text-red-600" : summary.openRequests > 0 ? "text-amber-600" : "text-navy-700",
           icon: "📬",
-          alert: req.urgent > 0,
+          alert: summary.urgentRequests > 0,
         },
         {
           label: "Avisos de obra",
-          value: obras,
-          sub: obras > 0 ? "Aguardam triagem" : undefined,
-          color: obras > 0 ? "text-orange-600" : "text-navy-700",
+          value: summary.workNotices,
+          sub: summary.workNotices > 0 ? "Aguardam triagem" : undefined,
+          color: summary.workNotices > 0 ? "text-orange-600" : "text-navy-700",
           icon: "🔨",
-          alert: obras > 0,
+          alert: summary.workNotices > 0,
         },
         {
           label: "Sugestões",
-          value: suggestions,
-          sub: suggestions > 0 ? "Recebidas" : undefined,
-          color: suggestions > 0 ? "text-sage-700" : "text-navy-700",
+          value: summary.suggestions,
+          sub: summary.suggestions > 0 ? "Recebidas" : undefined,
+          color: summary.suggestions > 0 ? "text-sage-700" : "text-navy-700",
           icon: "💬",
         },
         {
           label: "Reservas pendentes",
-          value: res.pending,
-          sub: res.upcoming > 0 ? `${res.upcoming} próxima${res.upcoming !== 1 ? "s" : ""}` : (res.total > 0 ? `${res.total} total` : undefined),
-          color: res.pending > 0 ? "text-amber-600" : "text-navy-700",
+          value: summary.pendingReservations,
+          sub: summary.upcomingReservations > 0 ? `${summary.upcomingReservations} próxima${summary.upcomingReservations !== 1 ? "s" : ""}` : (summary.totalReservations > 0 ? `${summary.totalReservations} total` : undefined),
+          color: summary.pendingReservations > 0 ? "text-amber-600" : "text-navy-700",
           icon: "🗓️",
-          alert: res.pending > 0,
+          alert: summary.pendingReservations > 0,
         },
         {
           label: "Enquetes ativas",
-          value: activePolls,
+          value: summary.activePolls,
           sub: undefined,
-          color: activePolls > 0 ? "text-blue-600" : "text-navy-700",
+          color: summary.activePolls > 0 ? "text-blue-600" : "text-navy-700",
           icon: "📊",
+        },
+        {
+          label: "Documentos públicos",
+          value: summary.publicDocuments,
+          sub: summary.publicDocuments > 0 ? "Disponíveis" : undefined,
+          color: summary.publicDocuments > 0 ? "text-navy-700" : "text-navy-500",
+          icon: "📄",
         },
       ]);
     } catch { /* silencioso */ }
@@ -98,7 +94,7 @@ export default function CentralDigitalHub() {
           )}
         </div>
 
-        <div className="border-t border-navy-50 grid grid-cols-3 divide-x divide-y divide-navy-50">
+        <div className="border-t border-navy-50 grid grid-cols-2 divide-x divide-y divide-navy-50 sm:grid-cols-4">
           {cards.map((card) => (
             <div key={card.label} className={`px-3.5 py-3 ${card.alert ? "bg-amber-50/40" : ""}`}>
               <div className="flex items-start gap-1.5">

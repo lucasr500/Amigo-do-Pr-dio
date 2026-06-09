@@ -418,7 +418,18 @@ export default function HomePage() {
 
       </div>
 
-      <BottomNav active={activeTab} onChange={navigateTab} urgentCount={urgentCount} profile={activeProfile} />
+      <BottomNav
+        active={activeTab}
+        onChange={(tab) => {
+          if (activeProfile === "resident" && tab === "ferramentas") {
+            handleNavigateToSection("central-digital", "canal");
+            return;
+          }
+          navigateTab(tab);
+        }}
+        urgentCount={urgentCount}
+        profile={activeProfile}
+      />
 
       {showOnboarding && activeProfile === "manager" && (
         <OnboardingFlow
@@ -459,6 +470,7 @@ export default function HomePage() {
           onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
           onExpandMemoria={() => setShouldExpandMemoria(true)}
           onSetToolGroup={handleSetToolGroup}
+          profileRole={activeProfile}
           onClose={() => setShowGlobalSearch(false)}
         />
       )}

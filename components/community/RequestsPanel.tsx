@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   getRequests, addRequest, updateRequest, resolveRequest, closeRequest,
   respondToRequest, getRequestSummary, getWorkNotices, getSuggestions,
-  buildRequestsWhatsAppText, seedDemoRequests, type ResidentRequest,
+  buildRequestsWhatsAppText, type ResidentRequest,
 } from "@/lib/community-requests";
 import { emitRequestOpened, emitRequestResolved, emitWorkNoticeRegistered } from "@/lib/community-timeline";
 import {
@@ -71,9 +71,9 @@ const EMPTY_OBRA: ObraFormState = {
   workStartDate: "", workEndDate: "", workTimeWindow: "", workResponsible: "",
 };
 
-type Props = { role: CommunityRole; onSeed?: () => void };
+type Props = { role: CommunityRole };
 
-export default function RequestsPanel({ role, onSeed }: Props) {
+export default function RequestsPanel({ role }: Props) {
   const [requests, setRequests] = useState<ResidentRequest[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState<"request" | "obra" | "sugestao">("request");
@@ -98,7 +98,6 @@ export default function RequestsPanel({ role, onSeed }: Props) {
   };
 
   useEffect(() => {
-    if (isManager && getRequests().length === 0) { seedDemoRequests(); onSeed?.(); }
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);

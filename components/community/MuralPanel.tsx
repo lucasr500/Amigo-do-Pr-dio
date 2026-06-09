@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import {
-  getPosts, addPost, updatePost, archivePost, pinPost,
-  getActivePosts, getCommentsForPost, addComment, moderateComment, seedDemoPosts,
+  addPost, updatePost, archivePost, pinPost,
+  getActivePosts, getCommentsForPost, addComment, moderateComment,
   type InstitutionalPost,
 } from "@/lib/community-posts";
 import { emitPostPublished } from "@/lib/community-timeline";
@@ -42,9 +42,9 @@ function catColor(cat: PostCategory) {
   return CAT_COLORS[cat] ?? "bg-navy-50 text-navy-500";
 }
 
-type Props = { role: CommunityRole; onSeed?: () => void };
+type Props = { role: CommunityRole };
 
-export default function MuralPanel({ role, onSeed }: Props) {
+export default function MuralPanel({ role }: Props) {
   const [posts, setPosts] = useState<InstitutionalPost[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -65,7 +65,6 @@ export default function MuralPanel({ role, onSeed }: Props) {
   };
 
   useEffect(() => {
-    if (isManager && getPosts().length === 0) { seedDemoPosts(); onSeed?.(); }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);

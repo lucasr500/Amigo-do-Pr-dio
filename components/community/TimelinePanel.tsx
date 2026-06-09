@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   getTimeline, addTimelineEvent, deleteTimelineEvent, buildTimelineReport,
-  seedDemoTimeline, type TimelineEvent,
+  type TimelineEvent,
 } from "@/lib/community-timeline";
 import {
   TIMELINE_TYPE_LABELS, VISIBILITY_LABELS,
@@ -47,9 +47,9 @@ const EMPTY_FORM: FormState = {
   occurredAt: new Date().toISOString().slice(0, 10),
 };
 
-type Props = { role: CommunityRole; onSeed?: () => void };
+type Props = { role: CommunityRole };
 
-export default function TimelinePanel({ role, onSeed }: Props) {
+export default function TimelinePanel({ role }: Props) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -68,7 +68,6 @@ export default function TimelinePanel({ role, onSeed }: Props) {
   };
 
   useEffect(() => {
-    if (isManager && getTimeline().length === 0) { seedDemoTimeline(); onSeed?.(); }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, filterType]);
@@ -89,7 +88,7 @@ export default function TimelinePanel({ role, onSeed }: Props) {
   };
 
   const handleCopy = () => {
-    const report = buildTimelineReport(events, "Timeline Institucional");
+    const report = buildTimelineReport(events, "Linha do tempo institucional");
     navigator.clipboard.writeText(report).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
@@ -121,7 +120,7 @@ export default function TimelinePanel({ role, onSeed }: Props) {
             {can(role, "canCreateTimelineEvent") && (
               <button type="button" onClick={() => setShowForm(true)}
                 className="rounded-full bg-navy-800 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-navy-700">
-                + Evento
+                Registrar evento
               </button>
             )}
           </div>

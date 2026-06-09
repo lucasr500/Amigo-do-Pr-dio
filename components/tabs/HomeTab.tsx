@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import GuidancePanel from "@/components/GuidancePanel";
 import GuidancePreview from "@/components/GuidancePreview";
 import type { AppTab } from "@/components/BottomNav";
+import type { CentralSectionId } from "@/lib/visibility-guards";
 import { trackEvent } from "@/lib/telemetry";
 
 const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), { ssr: false });
@@ -55,7 +56,7 @@ type Props = {
   onActivateDemo: () => void;
   onRefresh: () => void;
   onOpenBackup?: () => void;
-  onNavigateToSection?: (sectionId: string) => void;
+  onNavigateToSection?: (sectionId: string, centralSection?: CentralSectionId) => void;
   onSetToolGroup?: (group: string) => void;
 };
 

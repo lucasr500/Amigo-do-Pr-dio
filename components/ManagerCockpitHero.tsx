@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { AppTab } from "@/components/BottomNav";
+import type { CentralSectionId } from "@/lib/visibility-guards";
 import { computeHealthScore } from "@/lib/health-score";
 import { buildGuidanceEngine, type GuidanceEngineItem } from "@/lib/guidance-engine";
 import { currentMonthKey, getFinancialSummary } from "@/lib/financial";
@@ -13,7 +14,7 @@ type Props = {
   urgentCount: number;
   onNavigateTab: (tab: AppTab) => void;
   onNavigateToSubView: (view: "saude" | "pendencias") => void;
-  onNavigateToSection?: (sectionId: string) => void;
+  onNavigateToSection?: (sectionId: string, centralSection?: CentralSectionId) => void;
 };
 
 type CockpitState = {
@@ -169,7 +170,10 @@ export default function ManagerCockpitHero({
               </button>
               <button
                 type="button"
-                onClick={() => onNavigateTab("condominio")}
+                onClick={() => {
+                  if (onNavigateToSection) onNavigateToSection("memoria-institucional");
+                  else onNavigateTab("condominio");
+                }}
                 className="rounded-[22px] border border-white/10 bg-white/[0.07] px-4 py-3 text-left transition-colors hover:bg-white/[0.10]"
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-cream-100/50">Decisões em curso</p>
@@ -191,18 +195,18 @@ export default function ManagerCockpitHero({
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-4">
-            {[
-              ["Central Digital", "central-digital"],
-              ["Documentos", "documentos"],
-              ["Financeiro", "financeiro"],
-              ["Memória", "memoria-institucional"],
-            ].map(([label, target]) => (
+            {([
+              { label: "Central Digital", target: "central-digital", central: "hub" as CentralSectionId },
+              { label: "Documentos", target: "documentos" },
+              { label: "Financeiro", target: "financeiro" },
+              { label: "Memória", target: "memoria-institucional" },
+            ]).map(({ label, target, central }) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => {
-                  onNavigateTab("condominio");
-                  if (onNavigateToSection) setTimeout(() => onNavigateToSection!(target), 120);
+                  if (onNavigateToSection) onNavigateToSection(target, central);
+                  else onNavigateTab("condominio");
                 }}
                 className="min-h-11 rounded-2xl border border-white/10 bg-white/[0.06] px-3 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.10]"
               >

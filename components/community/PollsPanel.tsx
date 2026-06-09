@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   getPolls, addPoll, closePoll,
-  vote, getPollResults, buildPollReport, seedDemoPolls, POLL_DISCLAIMER,
+  vote, getPollResults, buildPollReport, POLL_DISCLAIMER,
   type Poll,
 } from "@/lib/community-polls";
 import { emitPollCreated, emitPollClosed } from "@/lib/community-timeline";
@@ -26,9 +26,9 @@ const EMPTY_FORM: FormState = {
   visibility: "moradores", endsAt: "",
 };
 
-type Props = { role: CommunityRole; onSeed?: () => void };
+type Props = { role: CommunityRole };
 
-export default function PollsPanel({ role, onSeed }: Props) {
+export default function PollsPanel({ role }: Props) {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -46,7 +46,6 @@ export default function PollsPanel({ role, onSeed }: Props) {
   };
 
   useEffect(() => {
-    if (isManager && getPolls().length === 0) { seedDemoPolls(); onSeed?.(); }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);

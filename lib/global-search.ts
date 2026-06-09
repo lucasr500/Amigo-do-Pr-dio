@@ -12,7 +12,9 @@ import { getPosts } from "./community-posts";
 import { getPolls } from "./community-polls";
 import { getRequests } from "./community-requests";
 import { getReservations } from "./community-reservas";
-import type { CentralSectionId } from "./visibility-guards";
+import { getPublicDocuments } from "./community-documents";
+import { PUBLIC_DOC_CATEGORY_LABELS, type Visibility } from "./community-types";
+import { isCentralSectionVisible, isSectionVisible, type CentralSectionId, type ProfileRole } from "./visibility-guards";
 
 export type SearchResultType =
   | "modulo"
@@ -44,6 +46,7 @@ export type SearchResult = {
   toolGroup?: "rotina" | "comunicados" | "simuladores" | "checklists" | "temas";
   anchor?: string;              // âncora específica dentro da aba
   action?: "openMonthlyReview" | "openBackup" | "expandMemoria";
+  visibleTo?: ProfileRole[];
   keywords: string[];
 };
 
@@ -400,12 +403,12 @@ export const SEARCH_INDEX: SearchResult[] = [
   // ── MEMÓRIA INSTITUCIONAL — itens adicionais ─────────────────────────────────
   {
     id: "timeline-institucional",
-    title: "Timeline Institucional",
+    title: "Linha do tempo institucional",
     description: "Histórico cronológico de eventos do condomínio.",
     type: "modulo",
     tab: "condominio",
     sectionTarget: "central-digital",
-    keywords: ["timeline", "historico", "cronologico", "eventos", "institucional", "registro", "auditoria"],
+    keywords: ["timeline", "linha do tempo", "historico", "cronologico", "eventos", "institucional", "registro", "auditoria"],
   },
   {
     id: "historico-unidade",
@@ -501,6 +504,27 @@ export function searchGlobal(query: string, maxResults = 8): SearchResult[] {
     .sort((a, b) => b.score - a.score)
     .slice(0, maxResults)
     .map(s => s.item);
+}
+
+export function canOpenSearchResultForRole(result: SearchResult, role: ProfileRole): boolean {
+  if (result.visibleTo && !result.visibleTo.includes(role)) return false;
+  if (role === "resident" || role === "viewer") {
+    if (result.tab === "ferramentas") return false;
+  }
+  if (result.sectionTarget && !isSectionVisible(result.sectionTarget, role)) return false;
+  if (result.centralSectionTarget && !isCentralSectionVisible(result.centralSectionTarget, role)) return false;
+  return true;
+}
+
+function rolesForVisibility(visibility: Visibility): ProfileRole[] {
+  if (visibility === "gestao") return ["manager"];
+  if (visibility === "conselho") return ["manager", "council"];
+  if (visibility === "moradores") return ["manager", "council", "resident"];
+  return ["manager", "council", "resident", "viewer"];
+}
+
+export function filterSearchResultsForRole(results: SearchResult[], role: ProfileRole): SearchResult[] {
+  return results.filter((result) => canOpenSearchResultForRole(result, role));
 }
 
 // ── Busca dinâmica — conteúdo real da sessão ─────────────────────────────────
@@ -683,6 +707,30 @@ export function buildDynamicSearchResults(query: string, maxResults = 5): Search
             tab: "condominio",
             sectionTarget: "central-digital",
             centralSectionTarget: "enquetes",
+            keywords: [],
+          },
+        });
+      }
+    }
+  } catch { /* localStorage indisponível */ }
+
+  // Documentos públicos
+  try {
+    for (const doc of getPublicDocuments().slice(0, 100)) {
+      const categoryLabel = PUBLIC_DOC_CATEGORY_LABELS[doc.category] ?? doc.category;
+      const score = scoreFields(tokens, doc.title, [doc.description ?? "", categoryLabel, doc.version ?? ""]);
+      if (score > 0) {
+        scored.push({
+          score,
+          item: {
+            id: `dyn-doc-public-${doc.id}`,
+            title: doc.title,
+            description: `${categoryLabel} · Biblioteca do condomínio`,
+            type: "documento",
+            tab: "condominio",
+            sectionTarget: "central-digital",
+            centralSectionTarget: "documentos",
+            visibleTo: rolesForVisibility(doc.visibility),
             keywords: [],
           },
         });

@@ -17,7 +17,7 @@ const CAT_LABELS: Record<CatKey, string> = {
   operacao:    "Operação",
   pessoas:     "Pessoas",
   juridico:    "Jurídico",
-  dados:       "Dados e Sistemas",
+  dados:       "Dados e sistemas",
 };
 
 const CAT_ORDER: CatKey[] = ["documentos", "financeiro", "operacao", "pessoas", "juridico", "dados"];
@@ -74,9 +74,9 @@ export default function HandoffPanel() {
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04),0_4px_16px_-6px_rgba(31,49,71,0.06)]">
         <div className="px-5 pt-4 pb-3">
           <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Transição de gestão</p>
-          <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Handoff de Mandato</h2>
+          <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Passagem de gestão</h2>
           <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
-            Prepare a entrega do condomínio ao próximo síndico. Um handoff bem feito protege você e garante continuidade.
+            Prepare a entrega do condomínio ao próximo síndico. Uma passagem bem feita protege você e garante continuidade.
           </p>
         </div>
 

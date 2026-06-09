@@ -112,7 +112,7 @@ function SnapshotRow({ snap }: { snap: MonthlyReviewSnapshot }) {
                 : "border-navy-100 bg-navy-50/80 text-navy-500 hover:bg-navy-100"
               }`}
           >
-            {registered ? "✓ Timeline" : "Timeline"}
+            {registered ? "✓ Linha do tempo" : "Linha do tempo"}
           </button>
         </div>
       </div>

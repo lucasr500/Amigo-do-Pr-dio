@@ -4,6 +4,7 @@ import { getActivePosts } from "./community-posts";
 import { getRequests, getRequestSummary } from "./community-requests";
 import { getPolls, getVotes } from "./community-polls";
 import { getPublicDocuments } from "./community-documents";
+import { getApprovedReservations, getPendingReservations } from "./community-reservas";
 import { getTimeline } from "./community-timeline";
 import { filterByVisibility } from "./community-permissions";
 
@@ -53,6 +54,17 @@ function buildResidentReport(condoName: string): string {
   if (docs.length > 0) {
     lines.push(header("DOCUMENTOS DISPONÍVEIS"));
     docs.forEach((d) => lines.push(`• ${d.title}${d.version ? ` (${d.version})` : ""}`));
+    lines.push("");
+  }
+
+  // Reservas aprovadas
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const reservations = getApprovedReservations().filter((r) => r.date >= todayIso).slice(0, 5);
+  if (reservations.length > 0) {
+    lines.push(header("RESERVAS APROVADAS"));
+    reservations.forEach((r) => {
+      lines.push(`• ${r.space} — ${new Date(`${r.date}T12:00:00`).toLocaleDateString("pt-BR")} — Unidade ${r.unit}`);
+    });
     lines.push("");
   }
 
@@ -114,10 +126,23 @@ function buildCouncilReport(condoName: string): string {
     lines.push("");
   }
 
+  // Reservas
+  const pendingReservations = getPendingReservations();
+  const approvedReservations = getApprovedReservations();
+  if (pendingReservations.length > 0 || approvedReservations.length > 0) {
+    lines.push(header("RESERVAS DE ESPAÇOS"));
+    lines.push(`Pendentes: ${pendingReservations.length}`);
+    lines.push(`Aprovadas: ${approvedReservations.length}`);
+    pendingReservations.slice(0, 5).forEach((r) => {
+      lines.push(`• Pendente — ${r.space} — Unidade ${r.unit} — ${new Date(`${r.date}T12:00:00`).toLocaleDateString("pt-BR")}`);
+    });
+    lines.push("");
+  }
+
   // Timeline (visão conselho)
   const timeline = filterByVisibility(getTimeline(), "council").slice(0, 15);
   if (timeline.length > 0) {
-    lines.push(header("TIMELINE INSTITUCIONAL (últimos eventos)"));
+    lines.push(header("LINHA DO TEMPO INSTITUCIONAL (últimos eventos)"));
     timeline.forEach((e) => {
       lines.push(`• ${new Date(e.occurredAt).toLocaleDateString("pt-BR")} — ${e.title}`);
     });

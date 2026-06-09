@@ -279,7 +279,7 @@ export default function CondominioTab({
         <CondominioSection
           id="memoria-institucional"
           title="Memória institucional"
-          subtitle="O histórico que impede a gestão de recomeçar do zero — decisões, fornecedores, histórico por unidade e handoff de mandato."
+          subtitle="O histórico que impede a gestão de recomeçar do zero — decisões, fornecedores, histórico por unidade e passagem de gestão."
           eyebrow="Inteligência"
           priority="normal"
           defaultOpen={false}

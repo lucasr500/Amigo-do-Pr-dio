@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   getPublicDocuments, addPublicDocument, updatePublicDocument, removePublicDocument,
-  seedDemoDocuments, type PublicDocument,
+  type PublicDocument,
 } from "@/lib/community-documents";
 import { emitDocumentPublished } from "@/lib/community-timeline";
 import {
@@ -22,9 +22,9 @@ const EMPTY_FORM: FormState = {
   url: "", version: "", validUntil: "", publishedAt: new Date().toISOString().slice(0, 10),
 };
 
-type Props = { role: CommunityRole; onSeed?: () => void };
+type Props = { role: CommunityRole };
 
-export default function PublicDocumentsPanel({ role, onSeed }: Props) {
+export default function PublicDocumentsPanel({ role }: Props) {
   const [docs, setDocs] = useState<PublicDocument[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -39,7 +39,6 @@ export default function PublicDocumentsPanel({ role, onSeed }: Props) {
   };
 
   useEffect(() => {
-    if (isManager && getPublicDocuments().length === 0) { seedDemoDocuments(); onSeed?.(); }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);

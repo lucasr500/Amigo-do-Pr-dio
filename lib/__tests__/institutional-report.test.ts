@@ -195,9 +195,9 @@ describe("buildInstitutionalReport — dados completos", () => {
     expect(r).toContain("Central Digital");
   });
 
-  test("Central Digital inclui contagem de posts oficiais e participações", () => {
+  test("Central Digital inclui contagem de comunicados oficiais e participações", () => {
     const r = buildInstitutionalReport("2026-06");
-    expect(r).toContain("Posts oficiais publicados: 1");
+    expect(r).toContain("Comunicados oficiais publicados: 1");
     expect(r).toContain("Participações de moradores: 1");
   });
 
