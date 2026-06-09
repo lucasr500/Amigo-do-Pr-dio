@@ -276,6 +276,7 @@ export default function AccountPanel({ onRefresh }: Props) {
       {showConflictDialog && remoteMeta && (
         <SyncConflictDialog
           remoteMeta={remoteMeta}
+          localExportedAt={syncStatus?.lastSyncAt}
           condominioName={condominioName}
           onKeepLocal={handleConflictKeepLocal}
           onRestoreRemote={handleConflictRestoreRemote}
@@ -351,7 +352,8 @@ export default function AccountPanel({ onRefresh }: Props) {
               <span className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${
                 syncStatus.state === "synced" ? "bg-teal-500" :
                 syncStatus.state === "syncing" ? "bg-teal-400 animate-pulse" :
-                syncStatus.state === "error" || syncStatus.state === "conflict" ? "bg-red-400" :
+                syncStatus.state === "error" ? "bg-red-400" :
+                syncStatus.state === "conflict" ? "bg-amber-400" :
                 syncStatus.state === "offline" ? "bg-amber-400" :
                 "bg-navy-200"
               }`} aria-hidden="true" />
@@ -504,8 +506,8 @@ export default function AccountPanel({ onRefresh }: Props) {
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold text-navy-700">Backup automático neste dispositivo</p>
                 <p className="mt-0.5 text-[11px] leading-relaxed text-navy-400">
-                  O app salvará seus dados na nuvem quando você fizer alterações importantes.
-                  Você ainda poderá exportar backup manualmente.
+                  Permite que o app reenvie backups pendentes automaticamente ao reconectar.
+                  Use "Salvar backup na nuvem" para criar o backup.
                 </p>
               </div>
               {/* Toggle switch */}
