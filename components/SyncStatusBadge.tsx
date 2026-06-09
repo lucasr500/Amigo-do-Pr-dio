@@ -12,12 +12,13 @@ const BADGE_CONFIG: Record<
 > = {
   idle:          null,
   local_only:    null,
-  ready_to_sync: { label: "Pronto para salvar",  dotClass: "bg-teal-400",  textClass: "text-teal-600" },
-  syncing:       { label: "Sincronizando…",       dotClass: "bg-teal-400 animate-pulse", textClass: "text-teal-600" },
-  synced:        { label: "Salvo na nuvem",        dotClass: "bg-teal-500",  textClass: "text-teal-600" },
-  error:         { label: "Erro no backup",        dotClass: "bg-red-500",   textClass: "text-red-600" },
-  offline:       { label: "Backup pendente",       dotClass: "bg-amber-500", textClass: "text-amber-600" },
-  demo:          { label: "Modo demonstração",     dotClass: "bg-purple-400", textClass: "text-purple-600" },
+  ready_to_sync: { label: "Pronto para salvar",   dotClass: "bg-teal-400",            textClass: "text-teal-600"   },
+  syncing:       { label: "Sincronizando…",        dotClass: "bg-teal-400 animate-pulse", textClass: "text-teal-600" },
+  synced:        { label: "Salvo na nuvem",         dotClass: "bg-teal-500",            textClass: "text-teal-600"   },
+  error:         { label: "Erro no backup",         dotClass: "bg-red-500",             textClass: "text-red-600"    },
+  offline:       { label: "Backup pendente",        dotClass: "bg-amber-500",           textClass: "text-amber-600"  },
+  conflict:      { label: "Conflito detectado",     dotClass: "bg-amber-500",           textClass: "text-amber-700"  },
+  demo:          { label: "Modo demonstração",      dotClass: "bg-purple-400",          textClass: "text-purple-600" },
 };
 
 type Props = {

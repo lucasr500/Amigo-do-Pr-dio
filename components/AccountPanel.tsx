@@ -10,12 +10,15 @@ import {
   setSyncSyncing,
   setSyncSynced,
   setSyncError,
+  setSyncConflict,
   type SyncStatus,
 } from "@/lib/sync/syncStatus";
 import { getUserBackupJson, importUserData, getProfile, type UserBackup } from "@/lib/session";
 import { isDemoActive } from "@/lib/demo";
+import { isAutoBackupEnabled, setAutoBackupEnabled } from "@/lib/sync/autoBackup";
 import type { RemoteSnapshotMeta } from "@/lib/sync/syncEngine";
 import { compareSnapshots } from "@/lib/sync/syncConflict";
+import { getCloudBackupDiagnostics } from "@/lib/sync/syncDiagnostics";
 import SyncConflictDialog from "@/components/SyncConflictDialog";
 
 type MigrationStep = "idle" | "sending" | "sent" | "error";
@@ -33,6 +36,7 @@ const STATE_LABEL: Record<string, string> = {
   synced:        "Backup salvo na nuvem",
   error:         "Erro ao sincronizar",
   offline:       "Offline — backup pendente",
+  conflict:      "Conflito detectado",
 };
 
 const STATE_COLOR: Record<string, string> = {
@@ -43,6 +47,7 @@ const STATE_COLOR: Record<string, string> = {
   synced:        "text-teal-600",
   error:         "text-red-500",
   offline:       "text-amber-500",
+  conflict:      "text-amber-600",
 };
 
 export default function AccountPanel({ onRefresh }: Props) {
@@ -58,6 +63,8 @@ export default function AccountPanel({ onRefresh }: Props) {
   const [restoreStep, setRestoreStep] = useState<RestoreStep>("idle");
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+  const [autoBackup, setAutoBackupState] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
 
   const authEnabled = isEnabled("auth_enabled");
   const syncEnabled = isEnabled("sync_enabled");
@@ -66,6 +73,10 @@ export default function AccountPanel({ onRefresh }: Props) {
   const refreshSyncStatus = () => setSyncStatusState(getSyncStatus());
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsOnline(navigator.onLine);
+      setAutoBackupState(isAutoBackupEnabled());
+    }
     const local = getSyncStatus();
     setSyncStatusState(local);
 
@@ -80,8 +91,35 @@ export default function AccountPanel({ onRefresh }: Props) {
       const { checkRemoteSnapshot } = await import("@/lib/sync/syncEngine");
       const meta = await checkRemoteSnapshot(user.id);
       setRemoteMeta(meta);
+
+      // Detectar conflito no load e persistir no SyncStatus
+      if (meta?.exists) {
+        const localBackup = JSON.parse(getUserBackupJson()) as UserBackup;
+        const lastSyncAt = getSyncStatus().lastSyncAt;
+        const cmp = compareSnapshots(localBackup, meta, lastSyncAt);
+        if (cmp.status === "conflict") {
+          setSyncConflict();
+          setSyncStatusState(getSyncStatus());
+        }
+      }
     })();
   }, [isAuthenticated, user]);
+
+  const diagnostics = getCloudBackupDiagnostics({
+    isAuthenticated,
+    isDemo: demoActive,
+    isOnline,
+    remoteMeta,
+    syncState: syncStatus?.state ?? "idle",
+    lastLocalSyncAt: syncStatus?.lastSyncAt ?? null,
+    autoBackupEnabled: autoBackup,
+  });
+
+  function handleToggleAutoBackup() {
+    const next = !autoBackup;
+    setAutoBackupEnabled(next);
+    setAutoBackupState(next);
+  }
 
   async function handleSendMagicLink() {
     if (!email.trim() || !email.includes("@")) {
@@ -139,7 +177,6 @@ export default function AccountPanel({ onRefresh }: Props) {
       return;
     }
 
-    // Detectar conflito antes de enviar
     const localBackup = JSON.parse(getUserBackupJson()) as UserBackup;
     const lastSyncAt = getSyncStatus().lastSyncAt;
     const conflict = compareSnapshots(localBackup, remoteMeta, lastSyncAt);
@@ -200,8 +237,7 @@ export default function AccountPanel({ onRefresh }: Props) {
         setRestoreError("Backup remoto não encontrado.");
         return;
       }
-      const json = JSON.stringify(backup);
-      const result = importUserData(json);
+      const result = importUserData(JSON.stringify(backup));
       if (!result.success) {
         setRestoreStep("error");
         setRestoreError("Backup incompatível com esta versão do app.");
@@ -288,38 +324,85 @@ export default function AccountPanel({ onRefresh }: Props) {
               </div>
               <div>
                 <p className="text-[14px] font-semibold text-navy-700">Acesso local</p>
-                <p className="text-[11px] text-navy-400">Dados salvos neste dispositivo</p>
+                <p className="text-[11px] text-navy-400">
+                  Seus dados ficam neste dispositivo. Faça login para ativar o backup na nuvem.
+                </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* ── Proteção de dados na nuvem (autenticado) ── */}
+        {/* ── Diagnóstico de backup cloud (autenticado) ── */}
         {isAuthenticated && authEnabled && user?.type === "authenticated" && syncStatus && !demoActive && (
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100 space-y-3">
-            <div>
-              <p className="text-[13px] font-semibold text-navy-700">Proteção de dados</p>
-              <p className={`text-[11px] font-medium mt-0.5 ${STATE_COLOR[syncStatus.state] ?? "text-navy-400"}`}>
-                {STATE_LABEL[syncStatus.state] ?? syncStatus.state}
-                {syncStatus.state === "error" && syncStatus.errorMsg
-                  ? `: ${syncStatus.errorMsg}`
-                  : null}
-              </p>
+
+            {/* Status headline */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-semibold text-navy-700">Backup na nuvem</p>
+                <p className={`text-[11px] font-medium mt-0.5 ${STATE_COLOR[syncStatus.state] ?? "text-navy-400"}`}>
+                  {STATE_LABEL[syncStatus.state] ?? syncStatus.state}
+                  {syncStatus.state === "error" && syncStatus.errorMsg
+                    ? `: ${syncStatus.errorMsg}`
+                    : null}
+                </p>
+              </div>
+              {/* Estado indicator dot */}
+              <span className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${
+                syncStatus.state === "synced" ? "bg-teal-500" :
+                syncStatus.state === "syncing" ? "bg-teal-400 animate-pulse" :
+                syncStatus.state === "error" || syncStatus.state === "conflict" ? "bg-red-400" :
+                syncStatus.state === "offline" ? "bg-amber-400" :
+                "bg-navy-200"
+              }`} aria-hidden="true" />
             </div>
 
-            {syncStatus.state === "synced" && syncStatus.lastSyncAt && (
-              <p className="text-[11px] text-navy-400">
-                Último backup: {formatLastSync(syncStatus.lastSyncAt)}
-              </p>
+            {/* Metadados do backup remoto */}
+            {diagnostics.hasRemoteBackup && (
+              <div className="rounded-xl bg-navy-50/60 px-3 py-2.5 space-y-1">
+                {diagnostics.remoteUpdatedAt && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] text-navy-500">Backup na nuvem</p>
+                    <p className="text-[11px] font-semibold text-navy-700">
+                      {formatLastSync(diagnostics.remoteUpdatedAt)}
+                    </p>
+                  </div>
+                )}
+                {diagnostics.lastLocalSyncAt && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] text-navy-500">Neste dispositivo</p>
+                    <p className="text-[11px] font-semibold text-navy-700">
+                      {formatLastSync(diagnostics.lastLocalSyncAt)}
+                    </p>
+                  </div>
+                )}
+                {diagnostics.remoteVersion != null && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] text-navy-500">Versão do backup</p>
+                    <p className="text-[11px] font-semibold text-navy-700">v{diagnostics.remoteVersion}</p>
+                  </div>
+                )}
+              </div>
             )}
 
-            {syncStatus.state !== "synced" && remoteMeta?.exists && remoteMeta.updatedAt && (
-              <p className="text-[11px] text-navy-400">
-                Backup na nuvem: {formatLastSync(remoteMeta.updatedAt)}
-                {remoteMeta.version != null ? ` · v${remoteMeta.version}` : ""}
-              </p>
+            {/* Conflito detectado */}
+            {syncStatus.state === "conflict" && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2.5">
+                <p className="text-[11.5px] font-semibold text-amber-800">Versões diferentes detectadas</p>
+                <p className="mt-0.5 text-[11px] text-amber-700 leading-relaxed">
+                  Use "Salvar backup na nuvem" para resolver e escolher qual versão manter.
+                </p>
+              </div>
             )}
 
+            {/* Stale warning */}
+            {diagnostics.status === "stale" && (
+              <div className="rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2">
+                <p className="text-[11px] text-amber-700">{diagnostics.message}</p>
+              </div>
+            )}
+
+            {/* Botão de upload */}
             <button
               type="button"
               onClick={handleManualSync}
@@ -329,8 +412,8 @@ export default function AccountPanel({ onRefresh }: Props) {
               {syncing ? "Salvando…" : "Salvar backup na nuvem"}
             </button>
 
-            {/* Restore da nuvem */}
-            {remoteMeta?.exists && restoreStep === "idle" && (
+            {/* Restore */}
+            {diagnostics.hasRemoteBackup && restoreStep === "idle" && (
               <button
                 type="button"
                 onClick={handleRestoreClick}
@@ -409,6 +492,44 @@ export default function AccountPanel({ onRefresh }: Props) {
             {syncFeedback && (
               <p className={`text-[11px] ${syncFeedback.includes("sucesso") ? "text-teal-600" : "text-red-500"}`}>
                 {syncFeedback}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── Backup automático opt-in (autenticado + não demo) ── */}
+        {isAuthenticated && authEnabled && !demoActive && (
+          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy-100">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-semibold text-navy-700">Backup automático neste dispositivo</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-navy-400">
+                  O app salvará seus dados na nuvem quando você fizer alterações importantes.
+                  Você ainda poderá exportar backup manualmente.
+                </p>
+              </div>
+              {/* Toggle switch */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={autoBackup}
+                onClick={handleToggleAutoBackup}
+                className={`mt-0.5 flex-shrink-0 h-6 w-11 rounded-full border-2 transition-colors relative ${
+                  autoBackup
+                    ? "bg-teal-500 border-teal-500"
+                    : "bg-navy-100 border-navy-200"
+                }`}
+              >
+                <span
+                  className={`block h-4 w-4 rounded-full bg-white shadow-sm transition-transform absolute top-0.5 ${
+                    autoBackup ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+            </div>
+            {autoBackup && (
+              <p className="mt-2 text-[10.5px] text-teal-600 font-medium">
+                Backup automático ativo neste dispositivo.
               </p>
             )}
           </div>

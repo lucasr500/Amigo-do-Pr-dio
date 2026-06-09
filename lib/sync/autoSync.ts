@@ -6,6 +6,12 @@ import { setSyncSyncing, setSyncSynced, setSyncError, setSyncOffline } from "@/l
 import { getUserBackupJson, type UserBackup } from "@/lib/session";
 import { syncDebug } from "@/lib/sync/syncLogger";
 import { isDemoActive } from "@/lib/demo";
+import { isAutoBackupEnabled } from "@/lib/sync/autoBackup";
+
+/** Auto-sync está habilitado quando sync_enabled (global) OU auto backup (per-device). */
+function syncAllowed(): boolean {
+  return isEnabled("sync_enabled") || isAutoBackupEnabled();
+}
 
 const QUEUE_KEY = "amigo_sync_queue";
 const DEBOUNCE_MS = 4_000;   // 4 s após última chamada
@@ -82,7 +88,7 @@ async function retryLoop(userId: string): Promise<void> {
 // Chama após qualquer mutação de dados.
 // userId: ID do usuário autenticado.
 export function scheduleSync(userId: string): void {
-  if (!isEnabled("sync_enabled")) return;
+  if (!syncAllowed()) return;
   if (!userId || userId === "guest") return;
   if (isDemoActive()) return; // dados demo nunca sobem para nuvem
 
@@ -99,7 +105,7 @@ export function scheduleSync(userId: string): void {
 
 // Deve ser chamado no startup para reprocessar jobs pendentes (ex: offline → online).
 export async function flushPendingSync(): Promise<void> {
-  if (!isEnabled("sync_enabled")) return;
+  if (!syncAllowed()) return;
   if (isDemoActive()) return; // dados demo nunca sobem para nuvem
   const job = readQueue();
   if (!job) return;
@@ -111,7 +117,7 @@ export async function flushPendingSync(): Promise<void> {
 export function startOnlineListener(): () => void {
   if (typeof window === "undefined") return () => {};
   const handler = () => {
-    if (!isEnabled("sync_enabled")) return;
+    if (!syncAllowed()) return;
     const job = readQueue();
     if (job) executeSync(job.userId);
   };
