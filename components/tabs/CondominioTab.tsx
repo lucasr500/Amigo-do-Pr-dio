@@ -8,6 +8,8 @@ import type { AppTab } from "@/components/BottomNav";
 import CondominioSection from "@/components/condominio/CondominioSection";
 import CondominioQuickNav from "@/components/condominio/CondominioQuickNav";
 
+type CentralSection = "hub" | "mural" | "canal" | "reservas" | "enquetes" | "documentos" | "timeline" | "relatorio";
+
 const CondominioOverview = dynamic(
   () => import("@/components/condominio/CondominioOverview"),
   { ssr: false },
@@ -78,12 +80,19 @@ export default function CondominioTab({
   onBackupOpened,
 }: Props) {
   const [communityRole, setCommunityRole] = useState<CommunityRole>("manager");
+  const [centralSection, setCentralSection] = useState<CentralSection>("hub");
+
   useEffect(() => { setCommunityRole(getViewMode()); }, []);
 
   const handleRoleChange = (role: CommunityRole) => {
     setViewMode(role);
     setCommunityRole(role);
+    // Quando muda para morador, ir para mural (hub é gestão)
+    if (role === "resident") setCentralSection("mural");
+    else setCentralSection("hub");
   };
+
+  const isResidentView = communityRole === "resident";
 
   function scrollToSection(id: string) {
     const el = document.getElementById(id);
@@ -114,8 +123,8 @@ export default function CondominioTab({
         onOpenMonthlyReview={onOpenMonthlyReview}
       />
 
-      {/* ── Quick Nav — só com dados ────────────────────────────────── */}
-      {hasCondominioData && <CondominioQuickNav />}
+      {/* ── Quick Nav — só gestão ───────────────────────────────────── */}
+      {hasCondominioData && !isResidentView && <CondominioQuickNav />}
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* SEÇÃO 1 — Meu prédio (sempre visível)                      */}
@@ -140,8 +149,8 @@ export default function CondominioTab({
         )}
       </CondominioSection>
 
-      {/* SEÇÃO 2 — Implantação (recolhível, começa fechada) */}
-      {hasCondominioData && (
+      {/* SEÇÃO 2 — Implantação (recolhível, começa fechada) — gestão only */}
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="implantacao"
           title="Implantação"
@@ -164,9 +173,9 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 3 — Revisão mensal (alta prioridade)                 */}
+      {/* SEÇÃO 3 — Revisão mensal (alta prioridade) — gestão only  */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && (
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="revisao-mensal"
           title="Hoje e revisão"
@@ -187,9 +196,9 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 4 — Financeiro auxiliar                              */}
+      {/* SEÇÃO 4 — Financeiro auxiliar — gestão only               */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && (
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="financeiro"
           title="Financeiro"
@@ -205,9 +214,9 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 5 — Documentos essenciais                            */}
+      {/* SEÇÃO 5 — Documentos essenciais — gestão only              */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && (
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="documentos"
           title="Documentos"
@@ -220,9 +229,9 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 6 — Operação e pessoas (recolhível)                  */}
+      {/* SEÇÃO 6 — Operação e pessoas — gestão only                 */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && (
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="operacao"
           title="Gestão"
@@ -237,9 +246,9 @@ export default function CondominioTab({
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 7 — Memória institucional (recolhível)               */}
+      {/* SEÇÃO 7 — Memória institucional — gestão only              */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && (
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="memoria-institucional"
           title="Memória institucional"
@@ -262,38 +271,88 @@ export default function CondominioTab({
         <CondominioSection
           id="central-digital"
           title="Central Digital do Condomínio"
-          subtitle="Organize o mural de comunicados, solicitações, enquetes e documentos públicos do condomínio."
+          subtitle={isResidentView ? "Mural, canal do morador, reservas, enquetes e documentos." : "Mural oficial, canal do morador, reservas, enquetes e documentos públicos."}
           eyebrow="Comunidade"
           priority="normal"
           defaultOpen={false}
         >
-          <section className="px-5 pb-3 sm:px-6">
-            <div className="rounded-2xl border border-navy-100 bg-white/85 px-4 py-3 shadow-[0_1px_3px_rgba(31,49,71,0.03)]">
-              <p className="text-[12px] leading-relaxed text-navy-500">
-                Configure o mural, solicitações, enquetes e documentos do condomínio. Moradores acessam esta área pelo perfil de morador.
-              </p>
-            </div>
-          </section>
-          <section className="px-5 pb-3 sm:px-6">
+          {/* Seletor de perfil */}
+          <section className="px-5 pb-2 sm:px-6">
             <ViewModeSelector onChange={handleRoleChange} />
           </section>
-          {(communityRole === "manager" || communityRole === "council") && (
-            <CentralDigitalHub />
-          )}
-          <MuralPanel role={communityRole} />
-          <ReservasPanel role={communityRole} />
-          <RequestsPanel role={communityRole} />
-          <PollsPanel role={communityRole} />
-          <PublicDocumentsPanel role={communityRole} />
-          <TimelinePanel role={communityRole} />
-          <CommunityReportPanel role={communityRole} condoName={condoName || "Condomínio"} />
+
+          {/* Sub-tabs da Central Digital */}
+          <section className="px-5 pb-3 sm:px-6">
+            <div className="no-scrollbar overflow-x-auto">
+              <div className="flex gap-1.5 rounded-full border border-navy-100/70 bg-white/[0.70] p-1 shadow-card" style={{ minWidth: "max-content" }}>
+                {!isResidentView && (
+                  <button
+                    type="button"
+                    onClick={() => setCentralSection("hub")}
+                    className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold transition-all active:scale-[0.98] ${
+                      centralSection === "hub" ? "bg-navy-800 text-white shadow-card" : "text-navy-500 hover:bg-white hover:text-navy-800"
+                    }`}
+                  >
+                    Visão Geral
+                  </button>
+                )}
+                {(["mural", "canal", "reservas", "enquetes", "documentos"] as CentralSection[]).map((sec) => {
+                  const labels: Record<string, string> = { mural: "Mural", canal: "Canal", reservas: "Reservas", enquetes: "Enquetes", documentos: "Documentos" };
+                  return (
+                    <button
+                      key={sec}
+                      type="button"
+                      onClick={() => setCentralSection(sec)}
+                      className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold transition-all active:scale-[0.98] ${
+                        centralSection === sec ? "bg-navy-800 text-white shadow-card" : "text-navy-500 hover:bg-white hover:text-navy-800"
+                      }`}
+                    >
+                      {labels[sec]}
+                    </button>
+                  );
+                })}
+                {!isResidentView && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setCentralSection("timeline")}
+                      className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold transition-all active:scale-[0.98] ${
+                        centralSection === "timeline" ? "bg-navy-800 text-white shadow-card" : "text-navy-500 hover:bg-white hover:text-navy-800"
+                      }`}
+                    >
+                      Timeline
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCentralSection("relatorio")}
+                      className={`flex-shrink-0 rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold transition-all active:scale-[0.98] ${
+                        centralSection === "relatorio" ? "bg-navy-800 text-white shadow-card" : "text-navy-500 hover:bg-white hover:text-navy-800"
+                      }`}
+                    >
+                      Relatório
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Conteúdo por seção */}
+          {centralSection === "hub" && !isResidentView && <CentralDigitalHub />}
+          {centralSection === "mural" && <MuralPanel role={communityRole} />}
+          {centralSection === "canal" && <RequestsPanel role={communityRole} />}
+          {centralSection === "reservas" && <ReservasPanel role={communityRole} />}
+          {centralSection === "enquetes" && <PollsPanel role={communityRole} />}
+          {centralSection === "documentos" && <PublicDocumentsPanel role={communityRole} />}
+          {centralSection === "timeline" && !isResidentView && <TimelinePanel role={communityRole} />}
+          {centralSection === "relatorio" && !isResidentView && <CommunityReportPanel role={communityRole} condoName={condoName || "Condomínio"} />}
         </CondominioSection>
       )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 9 — Segurança dos dados (recolhível)                 */}
+      {/* SEÇÃO 9 — Segurança dos dados — gestão only                */}
       {/* ═══════════════════════════════════════════════════════════ */}
-      {hasCondominioData && (
+      {hasCondominioData && !isResidentView && (
         <CondominioSection
           id="dados"
           title="Backup e confiança"

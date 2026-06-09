@@ -10,20 +10,17 @@ const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), { ssr: fal
 const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), { ssr: false });
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
 const DynamicGreeting = dynamic(() => import("@/components/DynamicGreeting"), { ssr: false });
-const HomeSaudeCard = dynamic(() => import("@/components/HomeSaudeCard"), { ssr: false });
-const HomeAgendaCard = dynamic(() => import("@/components/HomeAgendaCard"), { ssr: false });
-const HomePriorityStrip = dynamic(() => import("@/components/HomePriorityStrip"), { ssr: false });
-const RiskPreviewStrip = dynamic(() => import("@/components/RiskPreviewStrip"), { ssr: false });
-const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
+const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard"), { ssr: false });
+const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
 const MonthlyReviewCard = dynamic(() => import("@/components/MonthlyReviewCard"), { ssr: false });
 const Hero = dynamic(() => import("@/components/Hero"), { ssr: false });
 const MilestoneCelebration = dynamic(() => import("@/components/MilestoneCelebration"), { ssr: false });
 const WeeklyReviewPrompt = dynamic(() => import("@/components/WeeklyReviewPrompt"), { ssr: false });
-const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard"), { ssr: false });
-const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
 const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
 const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
 const MonthlyPlanCard = dynamic(() => import("@/components/MonthlyPlanCard"), { ssr: false });
+const RiskPreviewStrip = dynamic(() => import("@/components/RiskPreviewStrip"), { ssr: false });
+const PushPromptStrip = dynamic(() => import("@/components/PushPromptStrip"), { ssr: false });
 
 function HomeSectionLabel({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
@@ -77,7 +74,6 @@ export default function HomeTab({
   onNavigateToSubView,
   onBackFromSubView,
   onOpenMonthlyReview,
-  onOpenNotifications,
   onHideBackupNudge,
   onSuggestionSelect,
   onActivateDemo,
@@ -118,19 +114,11 @@ export default function HomeTab({
             onNavigateToSection={onNavigateToSection}
           />
           <DynamicGreeting condoName={condoName} />
+
           <HomeSectionLabel eyebrow="Primeiros minutos" title="Hoje" />
           <DailyBriefingCard refreshKey={refreshKey} />
           <RecentActivityCard refreshKey={refreshKey} />
-          <HomePriorityStrip
-            refreshKey={refreshKey}
-            onNavigate={(target) => {
-              if (target === "pendencias") onNavigateToSubView("pendencias");
-              else if (target === "condominio") onNavigateTab("condominio");
-              else if (target === "ferramentas") onNavigateTab("ferramentas");
-              else if (target === "agenda") onNavigateTab("agenda");
-            }}
-            onOpenNotifications={onOpenNotifications}
-          />
+
           <MonthlyPlanCard
             refreshKey={refreshKey}
             onNavigateTab={onNavigateTab}
@@ -146,15 +134,6 @@ export default function HomeTab({
             onOpen={onOpenMonthlyReview}
           />
           <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
-          <HomeSectionLabel eyebrow="Rotina operacional" title="Prazos e saúde" />
-          <HomeAgendaCard
-            refreshKey={refreshKey}
-            onNavigate={() => onNavigateTab("agenda")}
-          />
-          <HomeSaudeCard
-            refreshKey={refreshKey}
-            onClick={() => onNavigateToSubView("saude")}
-          />
 
           {showBackupNudge && !isDemo && (
             <div className="px-5 pb-3 sm:px-6">

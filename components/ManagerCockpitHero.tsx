@@ -192,7 +192,7 @@ export default function ManagerCockpitHero({
 
           <div className="mt-4 grid gap-2 sm:grid-cols-4">
             {[
-              ["Comunicados", "ferramentas"],
+              ["Central Digital", "central-digital"],
               ["Documentos", "documentos"],
               ["Financeiro", "financeiro"],
               ["Memória", "memoria-institucional"],
@@ -201,9 +201,8 @@ export default function ManagerCockpitHero({
                 key={label}
                 type="button"
                 onClick={() => {
-                  if (target === "ferramentas") onNavigateTab("ferramentas");
-                  else if (onNavigateToSection) onNavigateToSection(target);
-                  else onNavigateTab("condominio");
+                  onNavigateTab("condominio");
+                  if (onNavigateToSection) setTimeout(() => onNavigateToSection!(target), 120);
                 }}
                 className="min-h-11 rounded-2xl border border-white/10 bg-white/[0.06] px-3 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.10]"
               >
