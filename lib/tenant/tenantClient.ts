@@ -106,14 +106,19 @@ export async function listUserCondominios(userId: string): Promise<Condominio[]>
 
     // Duas queries em vez de join (Relationships não mapeado nos tipos locais)
     const membResult = await sb.from("memberships")
-      .select("condominio_id")
+      .select("condominio_id, status")
       .eq("user_id", userId);
 
     if (membResult.error || !membResult.data || membResult.data.length === 0) {
       return [];
     }
 
-    const ids = membResult.data.map((r) => r.condominio_id);
+    // Apenas memberships ativas — suspended/removed/invited não dão acesso
+    const ids = membResult.data
+      .filter((r) => r.status === "active")
+      .map((r) => r.condominio_id);
+
+    if (ids.length === 0) return [];
 
     const condResult = await sb.from("condominios")
       .select("id, nome, slug, owner_id, archived_at")
