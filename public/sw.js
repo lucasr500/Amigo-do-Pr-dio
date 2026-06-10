@@ -60,7 +60,16 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? "/";
+  const rawUrl = event.notification.data?.url ?? "/";
+  // Restringe a apenas URLs da mesma origem — impede que um payload de push
+  // malicioso abra sites externos via clients.openWindow().
+  let url = "/";
+  try {
+    const parsed = new URL(rawUrl, self.location.origin);
+    if (parsed.origin === self.location.origin) url = parsed.href;
+  } catch {
+    url = "/";
+  }
   event.waitUntil(
     clients
       .matchAll({ type: "window", includeUncontrolled: true })

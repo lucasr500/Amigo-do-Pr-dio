@@ -66,6 +66,19 @@ export function resetFlag(flag: FeatureFlag): void {
   } catch { /* empty */ }
 }
 
+// Ativa sync_enabled para usuário autenticado, mas só se o usuário ainda não
+// tomou uma decisão explícita (i.e., não há override). Idempotente.
+export function enableSyncOnAuth(): void {
+  if (typeof window === "undefined") return;
+  try {
+    const overrides = readOverrides();
+    if (!("sync_enabled" in overrides)) {
+      overrides.sync_enabled = true;
+      localStorage.setItem(FLAG_KEY, JSON.stringify(overrides));
+    }
+  } catch { /* quota — ignora */ }
+}
+
 // Retorna todos os flags com valores resolvidos (default + overrides).
 export function getAllFlags(): Record<FeatureFlag, boolean> {
   const overrides = readOverrides();

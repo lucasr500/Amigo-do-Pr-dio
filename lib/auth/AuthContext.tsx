@@ -71,6 +71,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         setUser({ type: "authenticated", id: existing.user.id, email: existing.user.email });
         setMode("authenticated");
+        const { enableSyncOnAuth } = await import("@/lib/feature-flags");
+        enableSyncOnAuth();
       } else {
         applyGuest();
       }
@@ -81,6 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const localId = getOrCreateLocalId();
           setUser({ type: "authenticated", id: session.user.id, email: session.user.email });
           setMode("authenticated");
+          // Ativa sync para usuários autenticados que ainda não tomaram decisão explícita
+          const { enableSyncOnAuth } = await import("@/lib/feature-flags");
+          enableSyncOnAuth();
           // Vincula local_id ao auth.uid() em background (idempotente)
           const { claimLocalId } = await import("@/lib/auth/profileLinking");
           claimLocalId(session.user.id, localId).catch(() => {});

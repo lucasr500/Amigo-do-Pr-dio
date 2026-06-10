@@ -6,7 +6,13 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+
+  // Sanitiza next: aceita apenas caminhos relativos da mesma origem.
+  // "//evil.com" e "https://evil.com" seriam aceitos por new URL(next, origin)
+  // sem esta guarda — open redirect.
+  const rawNext = searchParams.get("next") ?? "/";
+  const next =
+    rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
 
   if (code) {
     // Supabase envia o code no query string.

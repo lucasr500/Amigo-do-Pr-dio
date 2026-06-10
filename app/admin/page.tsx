@@ -54,7 +54,12 @@ function useAdminAuth(): AdminAuthState {
         body: JSON.stringify({ password: password.trim() }),
       });
       if (res.ok) {
-        try { sessionStorage.setItem("amigo_admin_auth", "ok"); } catch { /* noop */ }
+        try {
+          sessionStorage.setItem("amigo_admin_auth", "ok");
+          // Persiste a chave para autenticar chamadas server-side (API /admin/events).
+          // sessionStorage é tab-scoped — não persiste entre janelas/abas.
+          sessionStorage.setItem("amigo_admin_key", password.trim());
+        } catch { /* noop */ }
         setAuthed(true);
       } else {
         setAuthError("Senha incorreta.");
@@ -471,6 +476,38 @@ export default function AdminPage() {
   useEffect(() => {
     if (!authed) return;
     (async () => {
+      // Tenta rota server-side primeiro (/api/admin/events) — usa SERVICE_ROLE_KEY,
+      // não expõe dados ao cliente via anon key pública.
+      const adminKey = (() => {
+        try { return sessionStorage.getItem("amigo_admin_key") ?? ""; } catch { return ""; }
+      })();
+
+      if (adminKey) {
+        try {
+          const timeoutP = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("admin_timeout")), 8000)
+          );
+          const fetchP = fetch("/api/admin/events?limit=2000", {
+            headers: { Authorization: `Bearer ${adminKey}` },
+          }).then(async (r) => {
+            if (!r.ok) throw new Error("api_error");
+            const body = await r.json() as { events: RawEvent[]; source: string };
+            return body;
+          });
+          const body = await Promise.race([fetchP, timeoutP]);
+          if (body.source === "remote" && body.events.length > 0) {
+            setData(aggregateRemote(body.events));
+            setSource("remote");
+            return;
+          }
+          // source === "unavailable": SERVICE_ROLE_KEY não configurada, cai no fallback
+        } catch {
+          // timeout ou erro de rede — usa dados locais
+        }
+      }
+
+      // Fallback legado: leitura direta via anon key (funciona enquanto SELECT anon
+      // policy existir na tabela events — ver migration 004_fix_events_policy.sql).
       if (telemetryEnabled) {
         try {
           const timeoutP = new Promise<never>((_, reject) =>
@@ -486,6 +523,7 @@ export default function AdminPage() {
           // timeout ou falha — usa dados locais
         }
       }
+
       setData(aggregateLocal());
       setSource("local");
     })();
