@@ -204,8 +204,10 @@ export async function ensureDefaultCondominioForUser(
     const ativo = existentes.find((c) => !c.archivedAt);
 
     if (ativo) {
+      // Valida o id persistido: precisa ter membership ativa E não estar arquivado.
+      const naoArquivados = existentes.filter((c) => !c.archivedAt);
       const activeId = getActiveCondominioId();
-      const condId = activeId && existentes.some((c) => c.id === activeId)
+      const condId = activeId && naoArquivados.some((c) => c.id === activeId)
         ? activeId
         : ativo.id;
       setActiveCondominioId(condId);

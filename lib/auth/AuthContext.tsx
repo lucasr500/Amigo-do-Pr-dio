@@ -2,9 +2,15 @@
 
 // Contexto de autenticação — suporta guest mode e magic link.
 // O app funciona 100% sem login (modo guest).
+//
+// Sessão válida também dispara o tenant bootstrap (lib/tenant/bootstrap):
+// garante condomínio padrão + membership owner/active e expõe o estado em
+// `tenant`. Falha de tenant NUNCA bloqueia o auth nem o app — o produto
+// continua local-first e o estado vira "error" com mensagem amigável.
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { isEnabled } from "@/lib/feature-flags";
+import { TENANT_IDLE, TENANT_LOADING, type TenantState } from "@/lib/tenant/bootstrap";
 
 export type AuthMode = "guest" | "authenticated" | "loading";
 
@@ -26,6 +32,7 @@ export type AuthState = {
   user: AppUser | null;
   isGuest: boolean;
   isAuthenticated: boolean;
+  tenant: TenantState;
   sendMagicLink: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 };
@@ -49,10 +56,41 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<AuthMode>("loading");
   const [user, setUser] = useState<AppUser | null>(null);
+  const [tenant, setTenant] = useState<TenantState>(TENANT_IDLE);
+
+  // userId já bootstrapado nesta instância — evita re-rodar o bootstrap a cada
+  // evento de auth (TOKEN_REFRESHED dispara onAuthStateChange a cada renovação).
+  const bootstrappedFor = useRef<string | null>(null);
+
+  const bootstrapTenant = useCallback((userId: string) => {
+    if (bootstrappedFor.current === userId) return;
+    bootstrappedFor.current = userId;
+    setTenant(TENANT_LOADING);
+    void (async () => {
+      try {
+        const { runTenantBootstrap } = await import("@/lib/tenant/bootstrap");
+        const state = await runTenantBootstrap(userId);
+        setTenant(state);
+        // Em erro, libera para retry no próximo evento de auth (ex.: rede voltou).
+        if (state.status === "error") bootstrappedFor.current = null;
+      } catch {
+        setTenant({
+          status: "error",
+          condominioId: null,
+          condominioNome: null,
+          errorMessage:
+            "Não foi possível carregar o condomínio agora. Seus dados locais continuam disponíveis.",
+        });
+        bootstrappedFor.current = null;
+      }
+    })();
+  }, []);
 
   const applyGuest = useCallback(() => {
     setUser({ type: "guest", localId: getOrCreateLocalId() });
     setMode("guest");
+    setTenant(TENANT_IDLE);
+    bootstrappedFor.current = null;
   }, []);
 
   useEffect(() => {
@@ -73,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setMode("authenticated");
         const { enableSyncOnAuth } = await import("@/lib/feature-flags");
         enableSyncOnAuth();
+        bootstrapTenant(existing.user.id);
       } else {
         applyGuest();
       }
@@ -86,6 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Ativa sync para usuários autenticados que ainda não tomaram decisão explícita
           const { enableSyncOnAuth } = await import("@/lib/feature-flags");
           enableSyncOnAuth();
+          // Garante condomínio padrão + membership (idempotente, dedupe interno)
+          bootstrapTenant(session.user.id);
           // Vincula local_id ao auth.uid() em background (idempotente)
           const { claimLocalId } = await import("@/lib/auth/profileLinking");
           claimLocalId(session.user.id, localId).catch(() => {});
@@ -96,13 +137,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
 
     return () => { cleanup?.(); };
-  }, [applyGuest]);
+  }, [applyGuest, bootstrapTenant]);
 
   const authState: AuthState = {
     mode,
     user,
     isGuest: mode === "guest",
     isAuthenticated: mode === "authenticated",
+    tenant,
 
     async sendMagicLink(email: string) {
       if (!isEnabled("auth_enabled")) return { error: "Login ainda não disponível." };
@@ -115,6 +157,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { signOut: sbSignOut } = await import("@/lib/auth/authClient");
         await sbSignOut();
       }
+      // Limpa estado de tenant — o próximo login re-resolve o condomínio ativo.
+      try {
+        const { clearActiveCondominioId } = await import("@/lib/tenant/tenantClient");
+        clearActiveCondominioId();
+        const { resetTenantBootstrap } = await import("@/lib/tenant/bootstrap");
+        resetTenantBootstrap();
+      } catch { /* tenant é opcional — logout nunca falha por causa dele */ }
       applyGuest();
     },
   };

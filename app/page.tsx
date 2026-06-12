@@ -31,6 +31,7 @@ import {
   type CondominioProfile,
 } from "@/lib/session";
 import { trackEvent, startSessionTimer } from "@/lib/telemetry";
+import { consumeAuthErrorFromUrl } from "@/lib/auth/authErrors";
 import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
@@ -96,6 +97,9 @@ export default function HomePage() {
   // ── Onboarding state ────────────────────────────────────────────
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // ── Auth error state (magic link expirado/inválido) ────────────
+  const [authErrorNotice, setAuthErrorNotice] = useState<string | null>(null);
+
   const scrollByTab = useRef<Partial<Record<AppTab, number>>>({});
 
   const today = new Date().toISOString().slice(0, 10);
@@ -106,6 +110,7 @@ export default function HomePage() {
     const storedProfile = readActiveProfile();
     setActiveProfile(storedProfile);
     setProfileReady(true);
+    setAuthErrorNotice(consumeAuthErrorFromUrl());
     (window as unknown as Record<string, unknown>).__amigoDoPredioExport = exportTelemetry;
     const daysSince = recordSessionOpen();
     void trackEvent("session_open", { days_since_last: daysSince });
@@ -297,8 +302,32 @@ export default function HomePage() {
   // ── Render ──────────────────────────────────────────────────────
   if (!profileReady) return null;
 
+  // Aviso de magic link expirado/inválido — visível também antes da escolha de perfil.
+  const authErrorBanner = authErrorNotice ? (
+    <div
+      role="alert"
+      className="mx-auto mt-3 flex w-full max-w-[720px] items-start gap-2.5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-800 shadow-card"
+    >
+      <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
+      <p className="min-w-0 flex-1">{authErrorNotice}</p>
+      <button
+        type="button"
+        aria-label="Dispensar aviso"
+        onClick={() => setAuthErrorNotice(null)}
+        className="flex-shrink-0 rounded-full px-2 py-0.5 text-[12px] font-semibold text-amber-700 transition-colors hover:bg-amber-100"
+      >
+        Fechar
+      </button>
+    </div>
+  ) : null;
+
   if (!activeProfile) {
-    return <RoleGateway onSelectProfile={handleSelectProfile} />;
+    return (
+      <>
+        {authErrorBanner && <div className="px-5">{authErrorBanner}</div>}
+        <RoleGateway onSelectProfile={handleSelectProfile} />
+      </>
+    );
   }
 
   return (
@@ -306,6 +335,7 @@ export default function HomePage() {
       <div className="relative z-10 mx-auto flex w-full max-w-[760px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
 
         {isDemo && <DemoModeBanner onExit={handleExitDemo} />}
+        {authErrorBanner && <div className="px-5 sm:px-6">{authErrorBanner}</div>}
 
         {!(activeTab === "inicio" && subView) && !(activeProfile === "resident" && activeTab === "inicio") && (
           <Header

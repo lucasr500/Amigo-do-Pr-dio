@@ -2,9 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { getProfile } from "@/lib/session";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { isDemoActive } from "@/lib/demo";
+import { tenantStatusLabel } from "@/lib/tenant/bootstrap";
 import BrandMark from "@/components/BrandMark";
 import SyncStatusBadge from "@/components/SyncStatusBadge";
 import type { AppTab, NavProfile } from "@/components/BottomNav";
+
+// Classes do chip de status do condomínio ativo, por tom.
+const TENANT_CHIP_CLASSES: Record<string, string> = {
+  positive: "border-sage-200 bg-sage-50 text-sage-700",
+  neutral:  "border-navy-100 bg-white/80 text-navy-500",
+  warning:  "border-amber-200 bg-amber-50 text-amber-800",
+  muted:    "border-navy-100 bg-white/80 text-navy-400",
+};
+
+const TENANT_DOT_CLASSES: Record<string, string> = {
+  positive: "bg-sage-500",
+  neutral:  "bg-navy-300",
+  warning:  "bg-amber-500",
+  muted:    "bg-navy-200",
+};
 
 type Props = {
   refreshKey?: number;
@@ -34,11 +52,17 @@ export default function Header({
 }: Props) {
   const [nomeCondominio, setNomeCondominio] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
+  const { isAuthenticated, tenant } = useAuth();
   const profileLabel = profile === "resident" ? "Morador" : "Síndico/Gestor";
 
+  // Estado de demo lido em efeito (sessionStorage) para evitar mismatch de hidratação.
   useEffect(() => {
     setNomeCondominio(getProfile()?.nomeCondominio ?? null);
+    setIsDemo(isDemoActive());
   }, [refreshKey]);
+
+  const tenantChip = tenantStatusLabel(tenant, { isAuthenticated, isDemo });
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -78,6 +102,17 @@ export default function Header({
               <div className="mt-2">
                 <SyncStatusBadge refreshKey={refreshKey} />
               </div>
+            )}
+            {tenantChip.text && isOnline && (
+              <span
+                className={`mt-1.5 inline-flex max-w-full items-center gap-1.5 truncate rounded-full border px-2 py-1 text-[10.5px] font-semibold ${TENANT_CHIP_CLASSES[tenantChip.tone]}`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${TENANT_DOT_CLASSES[tenantChip.tone]}`}
+                  aria-hidden="true"
+                />
+                <span className="truncate">{tenantChip.text}</span>
+              </span>
             )}
           </div>
 

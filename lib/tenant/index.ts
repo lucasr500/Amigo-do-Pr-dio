@@ -28,3 +28,18 @@ export {
 } from "./effectiveRole";
 
 export type { TenantFeature } from "./effectiveRole";
+
+export {
+  runTenantBootstrap,
+  resetTenantBootstrap,
+  tenantStatusLabel,
+  TENANT_IDLE,
+  TENANT_LOADING,
+} from "./bootstrap";
+
+export type {
+  TenantState,
+  TenantStatus,
+  TenantStatusLabel,
+  TenantBootstrapDeps,
+} from "./bootstrap";

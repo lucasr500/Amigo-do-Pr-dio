@@ -29,10 +29,10 @@ const PROFILE_COPY: Record<ActiveProfile, {
   },
   resident: {
     title: "Área do morador.",
-    subtitle: "Acompanhe comunicados, documentos e solicitações do seu condomínio.",
+    subtitle: "Veja a prévia da central do morador: comunicados, documentos e solicitações.",
     surface: "bg-cream-50 text-navy-900",
     cta: "Solicitar acesso",
-    secondary: "Acessar área do morador",
+    secondary: "Ver prévia da área do morador",
     benefits: ["Fique informado", "Participe com organização", "Consulte tudo em um só lugar"],
   },
 };
@@ -193,7 +193,7 @@ export default function RoleGateway({ onSelectProfile }: Props) {
               <p className={`text-[12px] leading-relaxed ${isManager ? "text-cream-100/66" : "text-navy-500"}`}>
                 {isManager
                   ? "Login é opcional. Seus dados ficam salvos no dispositivo e protegidos pelo backup do app."
-                  : "A central do morador reúne comunicados, solicitações e documentos organizados pela gestão do condomínio."}
+                  : "Esta é uma prévia da central do morador, com os dados deste dispositivo. O acesso individual por morador chega em uma próxima etapa."}
               </p>
             </div>
           </section>
@@ -227,7 +227,7 @@ export default function RoleGateway({ onSelectProfile }: Props) {
           />
           <RoleSelectCard
             title="Sou morador"
-            subtitle="Acesse comunicados, documentos e solicitações do seu condomínio."
+            subtitle="Veja a prévia da central do morador: comunicados, documentos e solicitações."
             tone="dark"
             onClick={() => setStep("resident")}
           />
