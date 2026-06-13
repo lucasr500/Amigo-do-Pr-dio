@@ -138,7 +138,12 @@ export default function GlobalSearch({
       <div className="absolute inset-0 bg-navy-900/30 backdrop-blur-[2px]" aria-hidden="true" />
 
       {/* Painel */}
-      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-navy-100/80 bg-white shadow-xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Busca global"
+        className="relative z-10 w-full max-w-lg overflow-hidden rounded-2xl border border-navy-100/80 bg-white shadow-xl"
+      >
 
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-navy-50">
@@ -152,6 +157,7 @@ export default function GlobalSearch({
             value={query}
             onChange={(e) => handleChange(e.target.value)}
             onKeyDown={handleKeyDown}
+            aria-label="Buscar no condomínio"
             placeholder="Buscar pendência, decisão, fornecedor, documento..."
             className="flex-1 bg-transparent text-[14px] text-navy-800 placeholder-navy-300 outline-none"
           />
