@@ -301,9 +301,13 @@ export default function HomePage() {
     return <RoleGateway onSelectProfile={handleSelectProfile} />;
   }
 
+  // Cockpit do síndico ganha respiro em telas largas (desktop); demais visões
+  // mantêm a coluna de leitura de 760px. Mobile não é afetado (mx-auto + w-full).
+  const wideCockpit = activeProfile === "manager" && activeTab === "inicio" && !subView;
+
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
-      <div className="relative z-10 mx-auto flex w-full max-w-[760px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
+      <div className={`relative z-10 mx-auto flex w-full flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] ${wideCockpit ? "max-w-[1080px]" : "max-w-[760px]"}`}>
 
         {isDemo && <DemoModeBanner onExit={handleExitDemo} />}
 

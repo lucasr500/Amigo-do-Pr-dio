@@ -113,74 +113,95 @@ export default function HomeTab({
             onNavigateToSection={onNavigateToSection}
           />
 
-          <HomeSectionLabel eyebrow="Primeiros minutos" title="Hoje" />
-          <DailyBriefingCard refreshKey={refreshKey} />
-          <RecentActivityCard refreshKey={refreshKey} />
-
-          <HomeSectionLabel eyebrow="Guidance" title="Ações recomendadas" />
-          <GuidancePanel
-            onAsk={onSuggestionSelect}
-            onResolved={onRefresh}
-            onPendenciaSaved={onRefresh}
-            refreshKey={refreshKey}
-          />
-
-          <MonthlyPlanCard
-            refreshKey={refreshKey}
-            onNavigateTab={onNavigateTab}
-            onNavigateToSubView={onNavigateToSubView}
-            onNavigateToSection={onNavigateToSection}
-            onOpenMonthlyReview={onOpenMonthlyReview}
-          />
-
-          <MilestoneCelebration refreshKey={refreshKey} onDismiss={onRefresh} />
-
-          <MonthlyReviewCard
-            refreshKey={refreshKey}
-            onOpen={onOpenMonthlyReview}
-          />
-
-          {showBackupNudge && !isDemo && (
-            <div className="px-5 pb-3 sm:px-6">
-              <div className="flex items-center gap-3 rounded-lg border border-amber-200/80 bg-amber-50/60 px-4 py-3 shadow-card">
-                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.70]" aria-hidden="true">
-                  <svg className="h-3.5 w-3.5 text-amber-700" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 2v7M8 9L5.5 6.5M8 9l2.5-2.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M3 11.5h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                  </svg>
-                </span>
-                <p className="min-w-0 flex-1 text-[12px] leading-snug text-amber-900">
-                  Backup recomendado para manter os dados do prédio protegidos.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { onHideBackupNudge(); if (onOpenBackup) { onOpenBackup(); } else { onNavigateTab("condominio"); } }}
-                  className="flex-shrink-0 rounded-full bg-white/[0.80] px-3 py-1 text-[11px] font-semibold text-amber-900 hover:bg-white active:scale-95"
-                >
-                  Exportar
-                </button>
-              </div>
+          {/* Feed do cockpit. Em telas largas (lg+) flui em 2 colunas balanceadas,
+              preservando a ordem de origem (mobile permanece coluna única idêntica).
+              Cada seção fica em break-inside-avoid para nunca partir entre colunas. */}
+          <div className="lg:columns-2 lg:gap-x-4">
+            <div className="break-inside-avoid">
+              <HomeSectionLabel eyebrow="Primeiros minutos" title="Hoje" />
+              <DailyBriefingCard refreshKey={refreshKey} />
+              <RecentActivityCard refreshKey={refreshKey} />
             </div>
-          )}
 
-          <HomeSectionLabel eyebrow="Diferencial" title="Memória institucional" />
-          <InstitutionalMemoryCard
-            refreshKey={refreshKey}
-            onNavigateTab={onNavigateTab}
-            onNavigateToSection={onNavigateToSection}
-          />
+            <div className="break-inside-avoid">
+              <HomeSectionLabel eyebrow="Guidance" title="Ações recomendadas" />
+              <GuidancePanel
+                onAsk={onSuggestionSelect}
+                onResolved={onRefresh}
+                onPendenciaSaved={onRefresh}
+                refreshKey={refreshKey}
+              />
+            </div>
 
-          <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
+            <div className="break-inside-avoid">
+              <MonthlyPlanCard
+                refreshKey={refreshKey}
+                onNavigateTab={onNavigateTab}
+                onNavigateToSubView={onNavigateToSubView}
+                onNavigateToSection={onNavigateToSection}
+                onOpenMonthlyReview={onOpenMonthlyReview}
+              />
+            </div>
 
-          <ProgressiveSetupCard
-            refreshKey={refreshKey}
-            onNavigate={(target) => {
-              void trackEvent("profile_completion_cta_tap", {
-                completion_bucket: completionBucket(profileCompletion),
-              });
-              onNavigateTab(target);
-            }}
-          />
+            <div className="break-inside-avoid">
+              <MilestoneCelebration refreshKey={refreshKey} onDismiss={onRefresh} />
+            </div>
+
+            <div className="break-inside-avoid">
+              <MonthlyReviewCard
+                refreshKey={refreshKey}
+                onOpen={onOpenMonthlyReview}
+              />
+            </div>
+
+            {showBackupNudge && !isDemo && (
+              <div className="break-inside-avoid px-5 pb-3 sm:px-6">
+                <div className="flex items-center gap-3 rounded-lg border border-amber-200/80 bg-amber-50/60 px-4 py-3 shadow-card">
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-white/[0.70]" aria-hidden="true">
+                    <svg className="h-3.5 w-3.5 text-amber-700" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 2v7M8 9L5.5 6.5M8 9l2.5-2.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M3 11.5h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <p className="min-w-0 flex-1 text-[12px] leading-snug text-amber-900">
+                    Backup recomendado para manter os dados do prédio protegidos.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { onHideBackupNudge(); if (onOpenBackup) { onOpenBackup(); } else { onNavigateTab("condominio"); } }}
+                    className="flex-shrink-0 rounded-full bg-white/[0.80] px-3 py-1 text-[11px] font-semibold text-amber-900 hover:bg-white active:scale-95"
+                  >
+                    Exportar
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="break-inside-avoid">
+              <HomeSectionLabel eyebrow="Diferencial" title="Memória institucional" />
+              <InstitutionalMemoryCard
+                refreshKey={refreshKey}
+                onNavigateTab={onNavigateTab}
+                onNavigateToSection={onNavigateToSection}
+              />
+            </div>
+
+            <div className="break-inside-avoid">
+              <WeeklyReviewPrompt refreshKey={refreshKey} onComplete={onRefresh} />
+            </div>
+
+            <div className="break-inside-avoid">
+              <ProgressiveSetupCard
+                refreshKey={refreshKey}
+                onNavigate={(target) => {
+                  void trackEvent("profile_completion_cta_tap", {
+                    completion_bucket: completionBucket(profileCompletion),
+                  });
+                  onNavigateTab(target);
+                }}
+              />
+            </div>
+          </div>
         </>
       )}
 
