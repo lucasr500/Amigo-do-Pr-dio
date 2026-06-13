@@ -14,6 +14,7 @@ import {
 import { can, isAllDemoData } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const TYPES = Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][];
 const PRIORITIES = Object.entries(REQUEST_PRIORITY_LABELS) as [RequestPriority, string][];
@@ -475,6 +476,7 @@ export default function RequestsPanel({ role }: Props) {
           description={emptyCopy[viewTab].description}
           actionLabel={can(role, "canCreateRequest") && viewTab !== "fechadas" ? emptyCopy[viewTab].actionLabel : undefined}
           onAction={can(role, "canCreateRequest") && viewTab !== "fechadas" ? () => openForm(emptyCopy[viewTab].actionMode) : undefined}
+          hint={communityEmptyState("requests", audienceFromRole(isManager)).hint}
         />
       )}
 

@@ -14,6 +14,7 @@ import {
 import { can, filterByVisibility, isAllDemoData } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const CATEGORIES = Object.entries(POST_CATEGORY_LABELS) as [PostCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -256,6 +257,7 @@ export default function MuralPanel({ role }: Props) {
             : "Quando a gestão publicar avisos, obras ou comunicados oficiais, eles aparecerão aqui."}
           actionLabel={can(role, "canCreatePost") ? "Publicar comunicado" : undefined}
           onAction={can(role, "canCreatePost") ? () => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); } : undefined}
+          hint={communityEmptyState("mural", audienceFromRole(isManager)).hint}
         />
       )}
 

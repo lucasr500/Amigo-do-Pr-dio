@@ -11,6 +11,7 @@ import { VISIBILITY_LABELS, type Visibility, type CommunityRole } from "@/lib/co
 import { can, filterByVisibility } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
 
@@ -193,6 +194,7 @@ export default function PollsPanel({ role }: Props) {
             : "Quando houver consulta aberta pela gestão, você poderá votar por aqui."}
           actionLabel={can(role, "canCreatePoll") ? "Criar enquete" : undefined}
           onAction={can(role, "canCreatePoll") ? () => setShowForm(true) : undefined}
+          hint={communityEmptyState("polls", audienceFromRole(isManager)).hint}
         />
       )}
 

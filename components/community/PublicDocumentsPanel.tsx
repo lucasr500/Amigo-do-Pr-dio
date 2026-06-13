@@ -13,6 +13,7 @@ import {
 import { can, filterByVisibility } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const CATEGORIES = Object.entries(PUBLIC_DOC_CATEGORY_LABELS) as [PublicDocumentCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -191,6 +192,7 @@ export default function PublicDocumentsPanel({ role }: Props) {
             : "Quando a gestão publicar atas, regras ou documentos do prédio, eles aparecerão aqui."}
           actionLabel={can(role, "canPublishDocument") ? "Adicionar documento" : undefined}
           onAction={can(role, "canPublishDocument") ? () => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); } : undefined}
+          hint={communityEmptyState("documents", audienceFromRole(isManager)).hint}
         />
       )}
 

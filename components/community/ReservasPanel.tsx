@@ -12,6 +12,7 @@ import {
 import { can } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const COMMON_SPACES = [
   "Salão de Festas",
@@ -307,6 +308,7 @@ export default function ReservasPanel({ role }: Props) {
             : "Solicite espaços comuns pelo canal oficial e acompanhe a aprovação pela gestão."}
           actionLabel={can(role, "canCreateRequest") && filterTab !== "historico" ? "Criar reserva" : undefined}
           onAction={can(role, "canCreateRequest") && filterTab !== "historico" ? () => { setShowForm(true); setForm(EMPTY_FORM); setFormError(null); } : undefined}
+          hint={communityEmptyState("reservas", audienceFromRole(isManager)).hint}
         />
       )}
 
