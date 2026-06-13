@@ -3,12 +3,19 @@
 import dynamic from "next/dynamic";
 import GuidancePanel from "@/components/GuidancePanel";
 import GuidancePreview from "@/components/GuidancePreview";
+import LoadingState from "@/components/ui/LoadingState";
 import type { AppTab } from "@/components/BottomNav";
 import type { CentralSectionId } from "@/lib/visibility-guards";
 import { trackEvent } from "@/lib/telemetry";
 
-const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), { ssr: false });
-const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), { ssr: false });
+const SaudeScreen = dynamic(() => import("@/components/SaudeScreen"), {
+  ssr: false,
+  loading: () => <div className="px-5 py-4 sm:px-6"><LoadingState label="Carregando saúde do condomínio…" rows={4} /></div>,
+});
+const PendenciasScreen = dynamic(() => import("@/components/PendenciasScreen"), {
+  ssr: false,
+  loading: () => <div className="px-5 py-4 sm:px-6"><LoadingState label="Carregando pendências…" rows={4} /></div>,
+});
 const ProgressiveSetupCard = dynamic(() => import("@/components/ProgressiveSetupCard"), { ssr: false });
 const DailyBriefingCard = dynamic(() => import("@/components/DailyBriefingCard"), { ssr: false });
 const RecentActivityCard = dynamic(() => import("@/components/RecentActivityCard"), { ssr: false });
