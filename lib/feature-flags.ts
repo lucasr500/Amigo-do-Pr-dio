@@ -12,7 +12,9 @@ const FLAG_DEFAULTS = {
   health_history_enabled:   true,   // Histórico do Health Score
   sync_enabled:             false,  // Sync com Supabase — segue a autenticação (anônimo=off, autenticado=on); ver syncFollowsAuth()
   auth_enabled:             true,   // Login/conta — ativo
+  tenant_enabled:           true,   // Ativa o contexto multi-tenant (condomínio + papel) ao autenticar
   multi_device_enabled:     false,  // Multi-device sync (futuro)
+  agenda_remote_enabled:    false,  // dual-write da Agenda (Fatia 2a)
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental
   premium_features:         false,  // Funcionalidades premium (futuro)
@@ -102,8 +104,8 @@ export function setSyncPreference(value: boolean): void {
 }
 
 /**
- * @deprecated Use `syncFollowsAuth(true)` — via canônica da regra "sync segue a
- * autenticação". Mantido apenas como compat; equivale a "autenticou → liga sync".
+ * @deprecated Use syncFollowsAuth(true) — via canônica da regra "sync segue a
+ * autenticação". Mantido apenas como compat; equivale a "autenticou liga sync".
  */
 export function enableSyncOnAuth(): void {
   syncFollowsAuth(true);

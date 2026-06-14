@@ -5,6 +5,7 @@
 
 import { safeRead, safeWrite, KEYS, todayISO } from "./session-core";
 import type { PendenciaPrioridade } from "./session-pendencias";
+import { mirrorUpsert, mirrorDelete } from "@/lib/tenant/agendaRemote";
 
 // ─── Caps de armazenamento ────────────────────────────────────────────────────
 export const MAX_AGENDA_EVENTS  = 365;
@@ -108,6 +109,7 @@ export function addAgendaEvent(
   } else {
     safeWrite(KEYS.AGENDA, all);
   }
+  void mirrorUpsert(nova); // dual-write PUSH best-effort (no-op se flag off)
   return nova;
 }
 
@@ -121,6 +123,8 @@ export function updateAgendaEvent(
       e.id === id ? { ...e, ...changes, updatedAt: new Date().toISOString() } : e
     )
   );
+  const u = getAgendaEventById(id);
+  if (u) void mirrorUpsert(u); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function completeAgendaEvent(id: string): void {
@@ -145,6 +149,7 @@ export function completeAgendaEvent(id: string): void {
 
 export function deleteAgendaEvent(id: string): void {
   safeWrite(KEYS.AGENDA, getAgendaEvents().filter((e) => e.id !== id));
+  void mirrorDelete(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function getUpcomingAgendaEvents(limitDays = 90): AgendaEvent[] {

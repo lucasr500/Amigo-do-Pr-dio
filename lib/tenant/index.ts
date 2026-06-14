@@ -28,3 +28,13 @@ export {
 } from "./effectiveRole";
 
 export type { TenantFeature } from "./effectiveRole";
+
+export {
+  decideTenantAction,
+  tenantSnapshotFromResult,
+  INITIAL_TENANT,
+  GUEST_TENANT,
+  DISABLED_TENANT,
+} from "./tenantState";
+
+export type { TenantStatus, TenantSnapshot, TenantAction } from "./tenantState";
