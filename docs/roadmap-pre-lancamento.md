@@ -1,8 +1,24 @@
-# Roadmap De Maturação Interna — Amigo do Prédio
+# Roadmap De Maturação — Amigo do Prédio
 
-> **Critérios claros de prontidão operacional interna.**
-> O produto está em fase de lapidação silenciosa. Este documento define o que
-> precisa estar sólido antes de qualquer exposição externa.
+> **Fonte canônica de objetivos: Notion** (página "🏢 Amigo do Prédio — Central de
+> Inteligência" e base "AdP — Backlog de Produto"). **Este documento é execução.**
+> Quando o repositório e o Notion divergirem, o Notion vence.
+>
+> **Direção oficial (decisões do Lucas, junho/2026):**
+> 1. **Rota:** SaaS multi-tenant é o caminho. Backend, login e sync deixaram de ser
+>    proibidos — são a direção oficial.
+> 2. **Produto:** tese de integração do condomínio (quase "rede social") —
+>    multi-persona: síndico, condômino, conselho, funcionário. Não mais apenas
+>    cockpit single-user do síndico.
+> 3. **Lançamento:** o AdP **não** será exposto a nenhum síndico/cliente externo
+>    enquanto o Lucas não julgar o produto **completo** conforme os objetivos do
+>    Notion (ver "Definição de Pronto" e "Regra de Não-Exposição" abaixo).
+> 4. **Fonte:** Notion é canônico.
+>
+> A doutrina anterior ("lapidação silenciosa; sem backend/login/IA/billing;
+> single-user") está **substituída** a partir desta data. O histórico de fases já
+> entregues abaixo é preservado como registro real de execução — não reflete mais a
+> direção futura.
 
 ---
 
@@ -47,15 +63,24 @@
 
 ---
 
-## Foco atual de maturação interna
+## Foco atual de maturação
 
-### Fase interna (onde estamos)
-- Fundador testa todas as funcionalidades
-- Identifica bugs e inconsistências antes de qualquer usuário externo
-- Sem pressão de feedback, sem compromisso de suporte
-- Dura até os critérios internos acima estarem verificados ao vivo
-- Produto segue pré-beta interno: ainda não vendável, sem teste com síndicos por enquanto, sem tráfego pago e sem exposição comercial.
-- Features seguem congeladas fora de entregas pequenas e justificadas. Próximas fases devem elevar confiança, observabilidade e clareza operacional sem IA, login, billing ou backend completo.
+### Onde estamos (junho/2026)
+- O produto **já avançou para a nova direção**: login (magic link Supabase), sync de
+  snapshots e a **fundação multi-tenant** (migration 005: `condominios` + `memberships`,
+  papéis `owner/manager/council/resident/viewer`) já existem no código.
+- O síndico (cockpit) está maduro. Condômino e Conselho existem como modos de
+  visualização + Central Digital (mural, solicitações, documentos, enquetes, reservas).
+  Funcionário ainda é mínimo.
+- **Próximo trabalho real:** migrar dados de `localStorage` para o modelo relacional por
+  condomínio (ver `docs/multi-tenant-roadmap.md`, Sprints 7–10) e completar os fluxos das
+  4 personas até a Definição de Pronto.
+- **Não exposto externamente** — por decisão permanente, não por imaturidade técnica
+  (ver "Regra de Não-Exposição").
+
+### Histórico de execução (preservado — direção anterior)
+> Os itens abaixo são o registro real do que foi entregue sob a doutrina anterior.
+> Não refletem mais a direção futura; ficam como memória de execução.
 
 - [x] Tese de copiloto operacional documentada (Fase 40): `docs/tese-produto-copiloto-operacional.md`
 - [x] Reposicionamento de copy principal: Hero, Ferramentas, Assistente, Condomínio (Fase 40)
@@ -111,53 +136,99 @@
 
 ---
 
-## O que NÃO fazer nesta fase interna
+## 🔒 Regra de Não-Exposição (permanente)
 
-- Não investir em marketing/SEO antes de ter produto sólido
-- Não construir backend/login
-- Não implementar LLM
-- Não monetizar
-- Não publicar na App Store
-- Não construir para administradoras
-- Não iniciar exposição externa
-- Não testar com síndicos enquanto o fundador ainda não tiver concluído smoke tests internos e observado uso próprio recorrente
-- Não criar planos, preços, paywall ou promessa comercial de venda
+> **O AdP não será exposto a nenhum síndico ou cliente externo enquanto o Lucas não
+> julgar o produto completo no nível "Completo–Núcleo" (ver Definição de Pronto).**
+
+Esta é uma regra permanente, não uma fase temporária. Motivo: o Lucas atua como
+consultor condominial no mesmo mercado-alvo do produto. Expor um produto incompleto
+queima reputação justamente onde ela mais importa. Maturidade técnica **não** é
+autorização de exposição — só o julgamento explícito do Lucas, contra o portão
+**Completo–Núcleo**, libera qualquer contato externo.
+
+Enquanto a regra valer: sem tráfego pago, sem teste com síndicos, sem App Store, sem
+promessa comercial, sem convite externo — mesmo que o produto pareça pronto.
 
 ---
 
-## Sequência de trabalho recomendada (próximas semanas)
+## ✅ Definição de Pronto (dois portões)
 
-### Semana 1–2 (agora)
-1. Rodar smoke test interno completo em fim de semana
-2. Ativar Supabase apenas como telemetria opcional, se houver disponibilidade
-3. Rodar auditoria em /admin — identificar recall real
-4. Testar fluxo completo sem dados: novo dispositivo → onboarding → consulta
-5. Testar backup export/import, incluindo ocorrência de backup v3 e restauração de backups v1/v2 antigos
-6. Testar revisão semanal: ocorrência → próximo passo → revisão concluída → Timeline
+Derivada da Central de Inteligência do Notion. "Completo" tem **dois níveis**. Ambos
+contêm **apenas critérios verificáveis internamente** pelo Lucas — sem depender de
+usuários externos. Validação de mercado (retenção, taxa de fallback, demanda real) é
+**fase posterior à exposição**, não pré-requisito de "completo".
 
-### Semana 3–4
-1. Refinamento de copy e microcopy
-2. Revisar documentação operacional
-3. Validar checklist PWA em dispositivo físico
+### Portão 1 — Completo–Núcleo (libera a exposição)
 
-### Semana 5–6
-1. Revalidar build e bundle
-2. Revisar rascunhos jurídicos internos
-3. Consolidar pendências técnicas restantes
+O mínimo para o produto poder ser mostrado a um síndico real sem queimar reputação:
+o **síndico em modo multi-tenant**, seguro e juridicamente coberto.
 
-### Critérios mínimos antes de cogitar venda
-- Persistência e backup sem perda nos fluxos internos testados.
-- Termos, privacidade e disclaimers revisados juridicamente.
-- Telemetria interna mostrando uso recorrente e gargalos reais.
-- Smoke test interno repetido sem bug crítico.
-- Evidência de retorno ao app por alertas, próximos passos ou revisão mensal.
-- Suporte esperado documentado e viável para o fundador.
+**A. Síndico (núcleo do produto)**
+- [ ] Cockpit operacional completo: monitoramento, próximos passos, assistente, comunicados, revisão, agenda.
+- [ ] Funciona autenticado com dados do condomínio no modelo relacional (não só `localStorage`).
 
-### Por que não IA/login/billing/backend completo agora
-- IA/RAG aumentaria risco jurídico e operacional antes de validação de retenção.
-- Login e backend completo resolveriam maturidade técnica, mas aumentariam superfície de suporte sem prova comercial.
-- Billing e planos pagos antecipariam promessa comercial antes de confiança, suporte e termos estarem maduros.
-- O foco atual é observar, reduzir riscos e provar o ciclo operacional existente.
+**B. Segurança / Multi-tenant**
+- [ ] Dados do condomínio em Supabase relacional (saída do `localStorage` — Sprints 7–10).
+- [ ] RLS auditada; isolamento entre condomínios testado (um condomínio nunca vê o outro).
+- [ ] Sync multi-device sem perda; resolução de conflito clara.
+- [ ] Escopo multi-tenant = **um usuário com vários condomínios** (não hierarquia de administradora).
+
+**C. Jurídico**
+- [ ] Política de Privacidade e Termos de Uso revisados (saindo de rascunho).
+- [ ] Disclaimers nas categorias sensíveis (já existe — manter).
+
+**D. Performance / Técnico**
+- [ ] Bundle `/` dentro do limite; TypeScript zero-erro; build limpo.
+- [ ] PWA validado em dispositivo físico (Android + iOS).
+
+**E. Experiência (Apple-like)**
+- [ ] Cada tela responde "o que faço agora?".
+- [ ] Onboarding do síndico < 3 min.
+
+> Atingido o Portão 1, **o Lucas pode (não é obrigado a)** liberar exposição controlada.
+
+### Portão 2 — Completo–Pleno (a visão multi-persona)
+
+A visão de ecossistema do Notion. **Não bloqueia a exposição** — pode ser construído já
+com síndicos reais usando o Núcleo.
+
+- [ ] **Condômino** — transparência + voz: mural, documentos públicos, solicitações, enquetes, reservas (multi-usuário real).
+- [ ] **Conselho** — modelado como **papel/permissão do Condômino** (não persona nova): visão de governança, acompanhamento de decisões e finanças.
+- [ ] **Funcionário** — tarefa + comprovação: receber ordem registrada, marcar como feita.
+- [ ] Onboarding < 3 min **por persona**.
+
+> **Administradora** é persona declarada no Notion, mas fica **explicitamente Futuro** —
+> fora das Sprints 7–10 e fora dos dois portões. Não inflar o multi-tenant para
+> hierarquia de administradora agora.
+
+> **Monetização** (cobrança por condomínio, faixas, síndico profissional, premium) é
+> objetivo de produto e entra junto/depois da exposição — não bloqueia nenhum portão.
+
+---
+
+## Sequência de trabalho recomendada (nova direção)
+
+A direção agora é construir sobre a fundação SaaS já criada, **fechando o Portão 1
+primeiro**. O roadmap técnico detalhado vive em **`docs/multi-tenant-roadmap.md`**
+(Sprints 7–10).
+
+### Curto prazo (rumo ao Portão 1)
+1. Migrar o primeiro módulo de `localStorage` para o modelo relacional por condomínio
+   (candidato: Agenda — Sprint 7), com dual-write e fallback local.
+2. Validar login + sync ponta a ponta (magic link → snapshot → multi-device); confirmar
+   a regra "sync segue a autenticação" (anônimo = off, autenticado = on).
+3. Auditar RLS e isolamento entre condomínios.
+
+### Médio prazo (Portão 1 → Portão 2)
+1. Módulo financeiro relacional (Sprint 8) — base para prestação de contas do Conselho.
+2. Multi-device real (Sprint 9) e troca de condomínio ativo (Sprint 10).
+3. Fluxo do **Condômino** multi-usuário; **Conselho** como papel; **Funcionário** mínimo.
+
+### Antes de o Lucas liberar a exposição (checagem do Portão 1)
+- Portão 1 (Completo–Núcleo) satisfeito no julgamento do Lucas.
+- Jurídico (Termos + Privacidade) revisado.
+- Smoke test do fluxo do síndico multi-tenant sem bug crítico.
 
 ---
 
@@ -235,5 +306,6 @@
 ---
 
 *Documento interno — Amigo do Prédio*
-*Versão: 2026-05-23 (Fase 86)*
+*Versão: 2026-06-14 — realinhamento à nova direção (SaaS multi-tenant + multi-persona).*
+*Direção futura reescrita; histórico de fases preservado. Fonte canônica: Notion.*
 *Atualizar conforme marcos forem atingidos.*

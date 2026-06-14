@@ -1,5 +1,13 @@
 # Fase 88 — Plano técnico Supabase / Backend mínimo
 
+> 🔄 **Parcialmente superado (2026-06-14).** Este documento descreve o backend mínimo
+> single-user (snapshot por usuário). A **direção oficial agora é SaaS multi-tenant** —
+> o roadmap técnico canônico é **`docs/multi-tenant-roadmap.md`** (Sprints 7–10). Itens
+> deste plano marcados como "não objetivo" (Realtime, multi-device) **passaram a ser
+> direção**. Correções factuais: o SDK `@supabase/supabase-js` **já está instalado** e
+> `lib/supabase/client.ts`, `lib/auth/authClient.ts`, `lib/sync/syncEngine.ts` **já são
+> implementações reais** (não stubs). Mantido como base histórica do modelo snapshot.
+
 **Data de elaboração:** 2026-05-23  
 **Escopo:** Documento de arquitetura e decisão. Não implica código funcional neste ciclo.
 
@@ -190,9 +198,9 @@ Estratégia:
 - [ ] Executar `supabase/migrations/001_initial_schema.sql`
 - [ ] Habilitar RLS em ambas as tabelas
 - [ ] Configurar variáveis no ambiente de deploy (Vercel / Railway)
-- [ ] Instalar `@supabase/supabase-js` e remover stub de `lib/supabase/client.ts`
-- [ ] Implementar `authClient.ts` com SDK real
-- [ ] Implementar `syncEngine.ts` com SDK real
+- [x] Instalar `@supabase/supabase-js` (feito) — `lib/supabase/client.ts` já usa o SDK real (lazy)
+- [x] Implementar `authClient.ts` com SDK real (feito — magic link via `signInWithOtp`)
+- [x] Implementar `syncEngine.ts` com SDK real (feito — upload/download de snapshots)
 - [ ] Testar login / logout / upload / download
 - [ ] Testar exclusão de conta e cascade
 - [ ] Verificar bundle ≤ 230 kB após instalação do SDK

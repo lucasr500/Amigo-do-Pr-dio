@@ -17,7 +17,11 @@ A Sprint 6.0 criou a **fundação** do modelo multi-tenant:
 - RLS via funções SECURITY DEFINER (`is_condominio_member`, `has_condominio_role`)
 - Camada de código: `lib/tenant/` com `tenantClient.ts`, `effectiveRole.ts`
 - `ensureDefaultCondominioForUser()` — cria condomínio automático no primeiro login
-- `sync_enabled` ativado automaticamente para usuários autenticados
+- **Sync segue a autenticação** — via `syncFollowsAuth(isAuthenticated)` em
+  `lib/feature-flags.ts`, chamado pelo `AuthContext`: anônimo → `sync_enabled` off,
+  autenticado → on. A preferência explícita do usuário (`setSyncPreference`) **tem
+  precedência** sobre essa regra. (`enableSyncOnAuth()` permanece como wrapper
+  deprecado de `syncFollowsAuth(true)`.)
 - Rate limiting em rotas de admin
 
 ---
@@ -104,12 +108,14 @@ O app tem ~15 módulos com dados em localStorage. Migrar todos de uma vez:
 
 Políticas RLS que checam `memberships` para determinar acesso a `condominios` criariam recursão infinita (Postgres não tem CTEs em RLS). Funções SECURITY DEFINER quebram a recursão ao executar com privilégios de dono da função, não do usuário chamador.
 
-### Por que `sync_enabled` é ativado automaticamente?
+### Por que o sync segue a autenticação?
 
-O padrão de UX correto é: usuário que se autentica espera que seus dados sincronizem. Manter `sync_enabled: false` para autenticados seria confuso. A implementação é segura porque:
-- Só ativa se o usuário não tomou decisão explícita (sem override no localStorage)
-- Guest continua sem sync
-- Demo mode tem guard no syncEngine
+O padrão de UX correto é: usuário que se autentica espera que seus dados sincronizem;
+ao voltar a anônimo, o sync se desliga. A regra (`syncFollowsAuth`) é segura porque:
+- Anônimo → off, autenticado → on, aplicado pelo `AuthContext` em ambas as transições.
+- A preferência explícita do usuário (`setSyncPreference`) precede a regra — quem
+  desliga manualmente continua desligado mesmo autenticado, e vice-versa.
+- Guest continua sem sync; demo mode tem guard no syncEngine.
 
 ---
 

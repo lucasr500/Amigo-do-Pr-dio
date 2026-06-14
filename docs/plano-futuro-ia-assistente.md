@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (2026-06-14).** Consolidado em **`docs/ia-assistente.md`** (fonte única sobre IA no Assistente). Mantido apenas como histórico — não reflete mais a direção atual.
+
 # Plano Futuro — IA no Assistente do Amigo do Prédio
 
 > **Documento técnico e estratégico interno.**

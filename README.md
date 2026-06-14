@@ -2,18 +2,20 @@
 
 PWA mobile-first para síndicos acompanharem a rotina operacional do condomínio: orientações práticas, próximos passos, vencimentos, checklists, comunicados, simuladores, memória do prédio, revisão mensal e backup local.
 
-O projeto está em maturação interna. A prioridade atual é manter o produto estável, leve e coerente antes de qualquer exposição externa.
+O projeto está em maturação. **Direção oficial:** evoluir para SaaS multi-tenant com integração multi-persona (síndico, condômino, conselho, funcionário). O produto **não** será exposto a clientes externos enquanto não for julgado completo (ver `docs/roadmap-pre-lancamento.md` → Definição de Pronto). Fonte canônica de objetivos: **Notion**.
 
 ## Stack
 
-- Next.js 14
+- Next.js 15
 - TypeScript
 - Tailwind CSS
-- Persistência em `localStorage`
+- Persistência local em `localStorage` (fonte de verdade atual dos dados do condomínio)
+- Login opcional (magic link via Supabase Auth) e sync de snapshots — já no código
+- Fundação multi-tenant (`condominios` + `memberships`, migration 005)
 - PWA instalável com manifest e ícones próprios
 - Telemetria opcional via Supabase REST
 
-Não há backend completo, login, billing ou dependência de API externa para o uso principal. Sem variáveis do Supabase, a telemetria opera em no-op silencioso.
+O app continua offline-first: sem variáveis do Supabase, login, sync e telemetria operam em no-op silencioso. Billing ainda não construído.
 
 ## Como Rodar
 
@@ -84,8 +86,8 @@ docs/               # Manuais, roadmap interno e guias operacionais
 
 ## Decisões De Produto
 
-- Produto local-first: o app deve funcionar sem Supabase.
-- Guidance e assistente usam regras determinísticas, sem promessa de IA.
+- Offline-first: o app deve continuar funcionando sem Supabase, mesmo com SaaS ativo.
+- Guidance e assistente usam regras determinísticas hoje; IA é evolução planejada (ver `docs/ia-assistente.md`).
 - Ações recorrentes ficam em "Próximos passos" e na revisão mensal.
 - Conteúdo jurídico é orientativo, com avisos específicos para temas sensíveis.
-- Maturação atual: corrigir inconsistências, preservar bundle e evitar mudanças de arquitetura.
+- Direção atual: migrar dados para o modelo relacional multi-tenant (Sprints 7–10) e completar os fluxos das 4 personas, preservando o bundle e a experiência Apple-like.
