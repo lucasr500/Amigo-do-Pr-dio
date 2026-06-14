@@ -1,4 +1,10 @@
 # Status dos Documentos Legais — Fase 39
+
+> 🔄 **Atualizado em 2026-06-14.** Os rascunhos foram substituídos pelas minutas
+> realinhadas ao produto real (login, sync, multi-tenant, papéis controlador/operador):
+> **`docs/termos-de-uso.md`** e **`docs/politica-privacidade.md`**. Este documento de
+> status é histórico da Fase 39; a parte abaixo descreve o estado **anterior**.
+
 ## Amigo do Prédio
 
 > **Data:** 2026-05-16
@@ -10,10 +16,12 @@
 
 | Documento | Arquivo | Status |
 |-----------|---------|--------|
-| Termos de Uso | `docs/rascunho-termos-de-uso.md` | Rascunho pré-jurídico |
-| Política de Privacidade (LGPD) | `docs/rascunho-politica-privacidade.md` | Rascunho pré-jurídico |
+| Termos de Uso | `docs/termos-de-uso.md` | **Minuta (2026-06-14)** — pendente de cravar `[DECISÃO DO LUCAS]` |
+| Política de Privacidade (LGPD) | `docs/politica-privacidade.md` | **Minuta (2026-06-14)** — pendente de cravar `[DECISÃO DO LUCAS]` |
+| ~~Rascunhos antigos~~ | `docs/rascunho-*.md` | SUPERSEDED (histórico) |
 
-**Não existem:** páginas públicas de termos ou privacidade no app. Estes são apenas documentos internos para revisão.
+**Ainda não existem:** páginas públicas `/termos` e `/privacidade` no app, nem mecanismo
+de aceite no onboarding. Itens registrados no backlog do Notion.
 
 ---
 

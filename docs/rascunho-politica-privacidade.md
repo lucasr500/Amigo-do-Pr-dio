@@ -1,3 +1,8 @@
+> ⚠️ **SUPERSEDED (2026-06-14).** Substituído por **`docs/politica-privacidade.md`**
+> (minuta realinhada ao produto real). **Atenção:** este rascunho afirma que "os dados
+> não saem do dispositivo / o fundador não tem acesso" — isso **deixou de ser verdade**
+> com login + sync (o snapshot completo vai ao Supabase). Mantido só como histórico.
+
 # Rascunho — Política de Privacidade
 ## Amigo do Prédio
 
