@@ -3,11 +3,10 @@
 **Vigência a partir de:** 2026-06-14
 **Última atualização:** 2026-06-14
 
-> ⚖️ **Minuta para revisão jurídica final do Lucas (advogado).** Os pontos marcados
-> `[DECISÃO DO LUCAS]` dependem de juízo legal ou de dados ainda não definidos e devem
-> ser cravados antes da publicação. O texto reflete o que o produto de fato faz hoje
-> (ver inventário técnico no histórico do projeto). Não descreve prática que o código
-> não execute.
+> ⚖️ **Minuta com as decisões do Lucas cravadas (2026-06-14).** Pendências remanescentes
+> estão sinalizadas com `[PENDENTE: ...]` (ex.: confirmar a região do Supabase). O texto
+> reflete o que o produto de fato faz hoje; não descreve prática que o código não execute.
+> Sujeita à revisão jurídica final antes da publicação.
 
 ---
 
@@ -25,9 +24,15 @@ importante entender a distinção:
   dados seguindo a finalidade que você definiu, conforme os Arts. 39 e 42 da LGPD.
 
 **Identificação do Controlador (AdP):**
-- Responsável: `[DECISÃO DO LUCAS]` — pessoa física (nome/CPF) ou jurídica (razão social/CNPJ).
-- Encarregado pelo Tratamento de Dados (DPO): **Lucas** (fundador). Contato do
-  Encarregado e canal de privacidade: `[DECISÃO DO LUCAS — e-mail de privacidade]`.
+- Responsável: **Lucas Romeiro** (pessoa física).
+- Encarregado pelo Tratamento de Dados (DPO): **Lucas Romeiro**.
+- Contato do Encarregado e canal de privacidade: **oamigodopredio@gmail.com**.
+
+> 🔒 **Nota interna — não publicar.** Nesta fase o controlador é pessoa física (Lucas
+> Romeiro); o **CPF não é publicado** por ser exposição desnecessária — a identificação
+> pública se dá por nome + contato. Antes de qualquer exposição externa, **migrar a
+> titularidade para pessoa jurídica (CNPJ)** e atualizar esta seção. E-mail de contato é
+> provisório.
 
 > **Importante para você, síndico/gestor:** ao inserir dados de outras pessoas, **você
 > é responsável** por ter uma base legal para isso (ver Termos de Uso, seção sobre dados
@@ -103,8 +108,8 @@ metadados estruturais são enviados.
 |---|---|---|
 | Conta e autenticação (e-mail) | Execução de contrato / procedimentos preliminares (Art. 7º, V) | Necessário para criar e manter sua conta |
 | Sincronização dos dados operacionais na nuvem | Execução de contrato (Art. 7º, V) | Você optou por login + sync para não perder dados e usar multi-dispositivo |
-| Dados de terceiros inseridos pelo gestor | **Base legal é de responsabilidade do condomínio (Controlador)** — tipicamente legítimo interesse (Art. 7º, IX) ou cumprimento de obrigação legal (Art. 7º, II) na gestão condominial | O AdP, como Operador, trata conforme instrução do Controlador (Art. 39) `[DECISÃO DO LUCAS — confirmar enquadramento]` |
-| Telemetria de uso (estrutural, sem PII) | Legítimo interesse do controlador (Art. 7º, IX) | Melhoria do produto, com dados que não identificam o titular `[DECISÃO DO LUCAS — confirmar adequação vs. consentimento]` |
+| Dados de terceiros inseridos pelo gestor | **A base legal perante o titular é do condomínio/síndico (Controlador)** — tipicamente legítimo interesse (Art. 7º, IX) ou obrigação legal (Art. 7º, II) na gestão condominial | O **AdP atua como Operador** e trata esses dados **sob instrução do Controlador**, com fundamento na **execução do contrato firmado com o próprio Controlador** (Arts. 39 e 42) |
+| Telemetria de uso (estrutural, sem PII) | **Legítimo interesse do controlador (Art. 7º, IX)** | Melhoria do produto, com dados que não identificam o titular. Adotado **teste de balanceamento (LIA) documentado** e retenção de **12 meses**. **Não há banner de consentimento** por se tratar de legítimo interesse sobre dados não identificáveis |
 
 ---
 
@@ -119,15 +124,19 @@ metadados estruturais são enviados.
 
 ## 6. Transferência internacional de dados (Arts. 33–36 LGPD)
 
-> `[DECISÃO DO LUCAS]` — A região de hospedagem do Supabase **ainda não foi definida em
-> produção**. Texto condicional até cravar:
+A intenção é hospedar os dados **no Brasil** (Supabase, região São Paulo — `sa-east-1`),
+hipótese em que **não há transferência internacional de dados**.
+
+> ⚠️ **[PENDENTE: confirmar/migrar Supabase para São Paulo].** A região do projeto
+> Supabase **ainda não foi confirmada** no código/configuração (a URL do projeto não
+> revela a região). Enquanto essa confirmação não existir, **não afirmamos hospedagem no
+> Brasil** e vale a regra abaixo.
 
 Caso o provedor de nuvem (Supabase) armazene os dados **fora do Brasil**, haverá
-**transferência internacional de dados**. Nesse caso, adotaremos salvaguardas
-compatíveis com os Arts. 33 a 36 da LGPD (por exemplo, cláusulas contratuais padrão e
-garantias do provedor). Caso a hospedagem seja em região no Brasil (ex.: São Paulo), não
-haverá transferência internacional. **A região definitiva será informada nesta Política
-antes da ativação do sync em produção.**
+**transferência internacional de dados**, e adotaremos salvaguardas compatíveis com os
+Arts. 33 a 36 da LGPD (por exemplo, cláusulas contratuais padrão e garantias do
+provedor). A região definitiva e este item serão atualizados nesta Política **antes da
+ativação do sync em produção**.
 
 ---
 
@@ -137,7 +146,7 @@ antes da ativação do sync em produção.**
 |---|---|---|
 | Dados locais no dispositivo | Enquanto você não limpar o navegador ou usar "limpar dados" no app | Você controla — função de reset/backup |
 | Snapshot na nuvem (`app_snapshots`) e dados da conta | **Enquanto a conta existir** | Ao excluir a conta, a exclusão em cascata (`on delete cascade`) remove perfil, snapshot, notificações e registros vinculados |
-| Telemetria (`events`) | **12 meses** | Eliminação/anonimização após o prazo `[DECISÃO DO LUCAS — confirmar 12m]` |
+| Telemetria (`events`) | **12 meses** (legítimo interesse, com LIA documentado) | Eliminação ou anonimização após 12 meses |
 
 ---
 
@@ -151,9 +160,11 @@ e, quando o tratamento se basear em consentimento, **revogá-lo**.
 Como exercer:
 - **Acesso/portabilidade dos seus dados locais:** use "Exportar backup" no próprio app
   (gera um arquivo JSON com todos os seus dados).
-- **Exclusão da conta e dos dados na nuvem:** `[DECISÃO DO LUCAS — descrever fluxo: hoje
-  via solicitação ao contato de privacidade; futuramente botão de excluir conta]`.
-- **Demais pedidos:** pelo canal do Encarregado em `[DECISÃO DO LUCAS — e-mail]`.
+- **Exclusão da conta e dos dados na nuvem:** haverá um **botão de auto-exclusão no
+  próprio app** (em construção); enquanto ele não estiver disponível, a exclusão é feita
+  **mediante solicitação** ao contato de privacidade. Em ambos os casos, a exclusão
+  remove em cascata perfil, snapshot, notificações e registros vinculados.
+- **Demais pedidos:** pelo canal do Encarregado em **oamigodopredio@gmail.com**.
 
 > **Dados de terceiros:** pedidos de moradores/funcionários sobre dados que o **síndico
 > inseriu** devem ser dirigidos ao **condomínio (Controlador)**. O AdP, como Operador,
@@ -170,8 +181,9 @@ Medidas atuais (refletindo o código):
 - Painel administrativo protegido por senha server-side; chave de serviço nunca exposta
   no aplicativo.
 - Minimização: a telemetria não recebe dados pessoais.
-- **Ponto a endurecer:** a tabela de telemetria (`events`) hoje permite leitura ampla via
-  chave pública — `[DECISÃO DO LUCAS — restringir leitura antes do uso externo]`.
+- **Controle de acesso à telemetria:** a leitura da tabela de eventos (`events`) será
+  **restrita ao painel administrativo** (acesso server-side), removendo a permissão de
+  leitura pública (`read_anon`). Medida programada antes de qualquer uso externo.
 
 **Incidentes:** em caso de incidente de segurança que possa acarretar risco relevante,
 comunicaremos a **ANPD** e os **titulares afetados** em prazo razoável, conforme o Art.
@@ -206,9 +218,9 @@ apenas quando o provedor de nuvem estiver configurado operam, até lá, de forma
 
 ## 13. Alterações nesta Política
 
-Podemos atualizar esta Política. Alterações significativas serão comunicadas com
-antecedência razoável `[DECISÃO DO LUCAS — prazo, ex.: 30 dias]`, e a versão vigente
-estará sempre disponível no app, com a data de vigência atualizada.
+Podemos atualizar esta Política. Alterações relevantes serão comunicadas com
+**antecedência mínima de 30 dias**, e a versão vigente estará sempre disponível no app,
+com a data de vigência atualizada.
 
 ---
 

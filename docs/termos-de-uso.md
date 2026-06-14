@@ -3,9 +3,9 @@
 **Vigência a partir de:** 2026-06-14
 **Última atualização:** 2026-06-14
 
-> ⚖️ **Minuta para revisão jurídica final do Lucas (advogado).** Os pontos marcados
-> `[DECISÃO DO LUCAS]` dependem de juízo legal. O texto reflete o que o produto de fato
-> faz hoje. Leia em conjunto com a **Política de Privacidade**.
+> ⚖️ **Minuta com as decisões do Lucas cravadas (2026-06-14).** Pendências remanescentes
+> sinalizadas com `[PENDENTE: ...]`. O texto reflete o que o produto de fato faz hoje.
+> Leia em conjunto com a **Política de Privacidade**. Sujeita à revisão jurídica final.
 
 ---
 
@@ -44,8 +44,10 @@ Esta é uma cláusula essencial. Ao usar o AdP para registrar informações de *
 pessoas** (funcionários, fornecedores, moradores, responsáveis por ocorrências), você
 reconhece que:
 
-- Sob a LGPD, **o condomínio é o Controlador** desses dados e **o AdP é apenas Operador**
-  — tratamos esses dados seguindo a sua instrução e finalidade (Arts. 39 e 42).
+- Sob a LGPD, **o condomínio/síndico é o Controlador** desses dados e **o AdP é apenas
+  Operador** — tratamos esses dados **sob a sua instrução**, com fundamento na **execução
+  do contrato firmado com você (Controlador)**, e nunca para finalidades próprias (Arts.
+  39 e 42). A base legal perante o titular (morador/funcionário) é **sua**, não do AdP.
 - **É seu dever (do síndico/gestor/condomínio) ter base legal** para inserir e tratar
   esses dados (ex.: legítimo interesse na gestão, cumprimento de obrigação legal), bem
   como informar os titulares quando exigível.
@@ -82,9 +84,10 @@ consideram particularidades da convenção, não substituem o cálculo da admini
 contador e podem diferir dos valores reais.
 
 ### 4.2 Limitação regional
-Parte do conteúdo trabalhista baseia-se em convenção coletiva de uma região específica
-`[DECISÃO DO LUCAS — confirmar referência atual: ex. SECOVI-Rio]`. Em outras localidades,
-consulte a convenção sindical aplicável.
+Parte do conteúdo trabalhista baseia-se na **Convenção Coletiva de Trabalho (CCT) vigente
+da categoria de empregados em condomínios do Rio de Janeiro/RJ** `[Lucas confirma o
+instrumento exato]`. Salários, benefícios e condições variam por região e por convenção;
+em outras localidades, consulte a CCT aplicável.
 
 ---
 
@@ -100,10 +103,11 @@ ou exploração de vulnerabilidades; e reproduzir o conteúdo do app fora do uso
 ## 6. Propriedade intelectual
 
 O conteúdo do AdP — textos de orientação, base de conhecimento, design, marca, código e
-estrutura — é de titularidade do desenvolvedor `[DECISÃO DO LUCAS — titular: pessoa
-física/jurídica]`. A legislação citada é de domínio público. Os **dados que você insere
-são seus** (ou do condomínio); você nos concede apenas a permissão necessária para operar
-o serviço (armazenar, processar e exibir esses dados a você).
+estrutura — é de titularidade de **Lucas Romeiro** (titular nesta fase; a titularidade
+migrará para pessoa jurídica antes de exposição externa). A legislação citada é de
+domínio público. Os **dados que você insere são seus** (ou do condomínio); você nos
+concede apenas a permissão necessária para operar o serviço (armazenar, processar e
+exibir esses dados a você).
 
 ---
 
@@ -112,10 +116,13 @@ o serviço (armazenar, processar e exibir esses dados a você).
 - O serviço é oferecido em regime de **melhor esforço** e **"no estado em que se
   encontra"** (as is), podendo haver interrupções para manutenção ou por motivos
   técnicos. Não nos responsabilizamos por indisponibilidade temporária.
-- Na máxima extensão permitida pela lei, o AdP **não responde por danos indiretos,
-  lucros cessantes ou perda de dados** decorrentes do uso ou da impossibilidade de uso.
-  Recomendamos manter **backups** (função disponível no app).
-- `[DECISÃO DO LUCAS]` — definir se haverá **teto de responsabilidade** e seu valor.
+- Na **máxima extensão permitida pela legislação aplicável**, o AdP **não responde por
+  danos indiretos, lucros cessantes ou perda de dados** decorrentes do uso ou da
+  impossibilidade de uso. Recomendamos manter **backups** (função disponível no app).
+- **Ressalva de consumo:** caso a relação seja regida pelo **Código de Defesa do
+  Consumidor (CDC)**, as exclusões e limitações de responsabilidade acima aplicam-se
+  apenas nos limites em que o CDC as admite — direitos do consumidor que a lei declara
+  irrenunciáveis prevalecem sobre estes Termos.
 
 ---
 
@@ -129,8 +136,9 @@ modelo de cobrança futuro será informado com antecedência e regido por termos
 
 ## 9. Encerramento de conta e efeitos sobre os dados
 
-- Você pode **encerrar sua conta** a qualquer momento `[DECISÃO DO LUCAS — descrever
-  fluxo: hoje por solicitação ao contato; futuramente botão no app]`.
+- Você pode **encerrar sua conta** a qualquer momento. Haverá um **botão de auto-exclusão
+  no app** (em construção); enquanto não estiver disponível, o encerramento é feito
+  **mediante solicitação** ao contato (seção 12).
 - Ao encerrar, os dados na nuvem vinculados à conta são **eliminados em cascata** (perfil,
   snapshot, notificações e registros associados), conforme a Política de Privacidade
   (seção de retenção). Dados que ainda estiverem **somente no seu dispositivo**
@@ -142,25 +150,25 @@ modelo de cobrança futuro será informado com antecedência e regido por termos
 ## 10. Alterações nos Termos e forma de aceite
 
 - Estes Termos podem ser atualizados; alterações relevantes serão comunicadas com
-  antecedência razoável `[DECISÃO DO LUCAS — prazo]`.
+  **antecedência mínima de 30 dias**.
 - **Aceite:** o uso é condicionado à aceitação destes Termos e da Política de Privacidade,
-  registrada no **onboarding** `[DECISÃO DO LUCAS — confirmar mecanismo: caixa de aceite
-  explícita na primeira execução, com registro de data/versão]`.
+  registrada no **onboarding** por **caixa de aceite explícita na primeira execução, com
+  registro da data e da versão do documento aceito**.
 
 ---
 
 ## 11. Lei aplicável e foro
 
-Estes Termos são regidos pela **legislação brasileira**. Fica eleito o foro de
-`[DECISÃO DO LUCAS — comarca]`, no Brasil, para dirimir controvérsias, sem prejuízo de
-direitos do consumidor/titular previstos em lei.
+Estes Termos são regidos pela **legislação brasileira**. Fica eleito o foro da **Comarca
+do Rio de Janeiro/RJ** para dirimir controvérsias, sem prejuízo de direitos do
+consumidor/titular previstos em lei (que pode demandar no foro de seu domicílio).
 
 ---
 
 ## 12. Contato
 
-Dúvidas sobre estes Termos ou privacidade: `[DECISÃO DO LUCAS — e-mail de contato]`
-(Encarregado/DPO: Lucas).
+Dúvidas sobre estes Termos ou privacidade: **oamigodopredio@gmail.com**
+(Encarregado/DPO: **Lucas Romeiro**).
 
 ---
 
