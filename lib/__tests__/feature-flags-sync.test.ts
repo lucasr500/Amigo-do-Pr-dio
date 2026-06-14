@@ -14,51 +14,85 @@ const localStorageMock = {
 vi.stubGlobal("localStorage", localStorageMock);
 vi.stubGlobal("window", { localStorage: localStorageMock });
 
-import { isEnabled, setFlag, resetFlag, enableSyncOnAuth } from "@/lib/feature-flags";
+import {
+  isEnabled,
+  resetFlag,
+  enableSyncOnAuth,
+  syncFollowsAuth,
+  setSyncPreference,
+} from "@/lib/feature-flags";
 
-describe("enableSyncOnAuth", () => {
-  beforeEach(() => {
-    store.clear();
-  });
+describe("syncFollowsAuth — sync segue a autenticação", () => {
+  beforeEach(() => { store.clear(); });
+  afterEach(() => { store.clear(); });
 
-  afterEach(() => {
-    store.clear();
-  });
-
-  test("ativa sync_enabled quando não há override", () => {
-    expect(isEnabled("sync_enabled")).toBe(false); // default é false
-    enableSyncOnAuth();
-    expect(isEnabled("sync_enabled")).toBe(true);
-  });
-
-  test("idempotente — segunda chamada não muda nada", () => {
-    enableSyncOnAuth();
-    enableSyncOnAuth();
-    expect(isEnabled("sync_enabled")).toBe(true);
-  });
-
-  test("não sobrescreve override explícito false do usuário", () => {
-    setFlag("sync_enabled", false); // usuário desativou explicitamente
-    enableSyncOnAuth();
+  test("default é off (anônimo)", () => {
     expect(isEnabled("sync_enabled")).toBe(false);
   });
 
-  test("não sobrescreve override explícito true do usuário", () => {
-    setFlag("sync_enabled", true);
-    enableSyncOnAuth();
+  test("autenticado → liga sync", () => {
+    syncFollowsAuth(true);
+    expect(isEnabled("sync_enabled")).toBe(true);
+  });
+
+  test("anônimo → desliga sync", () => {
+    syncFollowsAuth(true);
+    expect(isEnabled("sync_enabled")).toBe(true);
+    syncFollowsAuth(false);
+    expect(isEnabled("sync_enabled")).toBe(false);
+  });
+
+  test("segue transições de auth sem escolha explícita", () => {
+    syncFollowsAuth(true);
+    syncFollowsAuth(false);
+    syncFollowsAuth(true);
+    expect(isEnabled("sync_enabled")).toBe(true);
+  });
+
+  test("idempotente", () => {
+    syncFollowsAuth(true);
+    syncFollowsAuth(true);
     expect(isEnabled("sync_enabled")).toBe(true);
   });
 
   test("não afeta outros flags", () => {
     const before = isEnabled("auth_enabled");
-    enableSyncOnAuth();
+    syncFollowsAuth(true);
     expect(isEnabled("auth_enabled")).toBe(before);
   });
+});
 
-  test("resetFlag desfaz o efeito", () => {
+describe("setSyncPreference — escolha explícita do usuário precede a regra", () => {
+  beforeEach(() => { store.clear(); });
+  afterEach(() => { store.clear(); });
+
+  test("escolha false do usuário não é sobrescrita ao autenticar", () => {
+    setSyncPreference(false);
+    syncFollowsAuth(true);
+    expect(isEnabled("sync_enabled")).toBe(false);
+  });
+
+  test("escolha true do usuário não é sobrescrita ao virar anônimo", () => {
+    setSyncPreference(true);
+    syncFollowsAuth(false);
+    expect(isEnabled("sync_enabled")).toBe(true);
+  });
+});
+
+describe("enableSyncOnAuth — compat (equivale a autenticar)", () => {
+  beforeEach(() => { store.clear(); });
+  afterEach(() => { store.clear(); });
+
+  test("liga sync quando não há escolha explícita", () => {
+    expect(isEnabled("sync_enabled")).toBe(false);
+    enableSyncOnAuth();
+    expect(isEnabled("sync_enabled")).toBe(true);
+  });
+
+  test("resetFlag volta ao default", () => {
     enableSyncOnAuth();
     expect(isEnabled("sync_enabled")).toBe(true);
     resetFlag("sync_enabled");
-    expect(isEnabled("sync_enabled")).toBe(false); // volta ao default
+    expect(isEnabled("sync_enabled")).toBe(false);
   });
 });

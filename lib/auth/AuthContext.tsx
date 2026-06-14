@@ -4,7 +4,7 @@
 // O app funciona 100% sem login (modo guest).
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { isEnabled } from "@/lib/feature-flags";
+import { isEnabled, syncFollowsAuth } from "@/lib/feature-flags";
 
 export type AuthMode = "guest" | "authenticated" | "loading";
 
@@ -53,6 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const applyGuest = useCallback(() => {
     setUser({ type: "guest", localId: getOrCreateLocalId() });
     setMode("guest");
+    // Anônimo → sync off (salvo escolha explícita do usuário).
+    syncFollowsAuth(false);
   }, []);
 
   useEffect(() => {
@@ -71,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         setUser({ type: "authenticated", id: existing.user.id, email: existing.user.email });
         setMode("authenticated");
-        const { enableSyncOnAuth } = await import("@/lib/feature-flags");
-        enableSyncOnAuth();
+        // Autenticado → sync on (salvo escolha explícita do usuário).
+        syncFollowsAuth(true);
       } else {
         applyGuest();
       }
@@ -83,9 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const localId = getOrCreateLocalId();
           setUser({ type: "authenticated", id: session.user.id, email: session.user.email });
           setMode("authenticated");
-          // Ativa sync para usuários autenticados que ainda não tomaram decisão explícita
-          const { enableSyncOnAuth } = await import("@/lib/feature-flags");
-          enableSyncOnAuth();
+          // Autenticado → sync on (salvo escolha explícita do usuário).
+          syncFollowsAuth(true);
           // Vincula local_id ao auth.uid() em background (idempotente)
           const { claimLocalId } = await import("@/lib/auth/profileLinking");
           claimLocalId(session.user.id, localId).catch(() => {});
