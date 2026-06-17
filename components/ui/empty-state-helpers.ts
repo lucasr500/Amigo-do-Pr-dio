@@ -1,4 +1,4 @@
-// Copy centralizada dos estados vazios da Central Digital.
+// Copy centralizada dos estados vazios da Comunicação.
 // Pura e determinística — sem dependência de React, localStorage ou rede.
 // Objetivo: cada estado vazio responde "o que faço agora?" (princípio Apple-like),
 // com tom adequado ao público (gestão x membro) e sem duplicar texto pelos painéis.
@@ -83,7 +83,7 @@ const CONTENT: Record<CommunityEmptyContext, Record<EmptyAudience, EmptyStateCon
 };
 
 /**
- * Retorna o conteúdo do estado vazio para um contexto da Central Digital,
+ * Retorna o conteúdo do estado vazio para um contexto da Comunicação,
  * adequado ao público (gestão x membro).
  */
 export function communityEmptyState(

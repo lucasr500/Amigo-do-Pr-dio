@@ -24,7 +24,7 @@ const SECTION_LABEL: Record<MonthlyReviewSectionKey, string> = {
   agenda:      "Agenda",
   pendencias:  "Pendências",
   integridade: "Integridade dos dados",
-  comunidade:  "Central Digital",
+  comunidade:  "Comunicação",
   resumo:      "Resumo",
 };
 

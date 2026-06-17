@@ -138,6 +138,7 @@ export default function Header({
   }
 
   const TAB_CONTEXT: Partial<Record<NonNullable<typeof activeTab>, { title: string; sub: string }>> = {
+    memoria: { title: "Memória", sub: "Decisões, documentos, fornecedores e histórico do prédio" },
     agenda: profile === "resident"
       ? { title: "Agenda", sub: "Próximos eventos e avisos do condomínio" }
       : { title: "Agenda", sub: "Prazos e rotina do prédio" },

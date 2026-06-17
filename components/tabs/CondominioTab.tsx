@@ -140,6 +140,30 @@ export default function CondominioTab({
       {/* ── Quick Nav — só gestão ───────────────────────────────────── */}
       {hasCondominioData && !isResidentView && <CondominioQuickNav />}
 
+      {/* ── Acesso a Ferramentas (saiu da barra inferior; vive em "Mais") ── */}
+      {hasCondominioData && !isResidentView && (
+        <section className="px-5 pt-4 sm:px-6">
+          <button
+            type="button"
+            onClick={() => onNavigateTab("ferramentas")}
+            className="flex w-full items-center gap-3 rounded-xl border border-navy-100/80 bg-white/[0.82] px-4 py-3.5 text-left shadow-card transition-all hover:border-navy-200 hover:bg-white active:scale-[0.98]"
+          >
+            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-navy-50" aria-hidden="true">
+              <svg className="h-[18px] w-[18px] text-navy-600" viewBox="0 0 18 18" fill="none">
+                <path d="M11.6 2.4a3.4 3.4 0 00-3.9 4.7l-5.1 5.1 1.6 1.6 5.1-5.1a3.4 3.4 0 004.7-3.9L11.9 6.1l-1.7-.4-.4-1.7 1.8-1.6z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.11em] text-navy-400">Ferramentas do síndico</p>
+              <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-navy-800">Comunicados, registros, checklists e simuladores</p>
+            </div>
+            <svg className="h-4 w-4 flex-shrink-0 text-navy-300" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </section>
+      )}
+
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* SEÇÃO 1 — Meu prédio (sempre visível)                      */}
       {/* ═══════════════════════════════════════════════════════════ */}
@@ -164,14 +188,15 @@ export default function CondominioTab({
       </CondominioSection>
 
       {/* ═══════════════════════════════════════════════════════════ */}
-      {/* SEÇÃO 2 — Central Digital do Condomínio                    */}
+      {/* SEÇÃO 2 — Comunicação (mural, canal, reservas, enquetes)   */}
+      {/* id="central-digital" preservado: alimenta busca e atalhos.  */}
       {/* ═══════════════════════════════════════════════════════════ */}
       {hasCondominioData && (
         <CondominioSection
           id="central-digital"
-          title="Central Digital do Condomínio"
+          title="Comunicação"
           subtitle={isResidentView ? "Mural, canal do morador, reservas, enquetes e documentos." : "Mural oficial, canal do morador, reservas, enquetes e documentos públicos."}
-          eyebrow="Comunidade"
+          eyebrow="Comunicação"
           priority="normal"
           defaultOpen={false}
           forceOpen={focusedSection === "central-digital" || !!focusedCentralSection}
@@ -181,7 +206,7 @@ export default function CondominioTab({
             <ViewModeSelector onChange={handleRoleChange} />
           </section>
 
-          {/* Sub-tabs da Central Digital */}
+          {/* Sub-tabs da Comunicação */}
           <section className="px-5 pb-3 sm:px-6">
             <div className="no-scrollbar overflow-x-auto">
               <div className="flex gap-1.5 rounded-full border border-navy-100/70 bg-white/[0.70] p-1 shadow-card" style={{ minWidth: "max-content" }}>

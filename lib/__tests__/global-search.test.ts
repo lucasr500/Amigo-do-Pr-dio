@@ -105,7 +105,7 @@ describe("searchGlobal — índice estático", () => {
     expect(residentResults.some((item) => item.sectionTarget === "memoria-institucional")).toBe(false);
   });
 
-  test("morador continua encontrando Central Digital sem abrir hub de gestão", () => {
+  test("morador continua encontrando Comunicação sem abrir hub de gestão", () => {
     const results = searchGlobal("central digital", 10);
     const residentResults = filterSearchResultsForRole(results, "resident");
     expect(residentResults.some((item) => item.id === "central-digital")).toBe(true);
@@ -113,7 +113,7 @@ describe("searchGlobal — índice estático", () => {
 
   test("sugestões da busca respeitam perfil", () => {
     const residentSuggestions = getSearchSuggestionsForRole("resident");
-    expect(residentSuggestions).toContain("Central Digital");
+    expect(residentSuggestions).toContain("Comunicação");
     expect(residentSuggestions).not.toContain("Financeiro");
     expect(residentSuggestions).not.toContain("Memória Institucional");
     expect(residentSuggestions).not.toContain("Backup e confiança");

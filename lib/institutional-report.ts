@@ -221,10 +221,10 @@ export function buildInstitutionalReport(month = currentMonthKey()): string {
   else lines.push("Revisão mensal: ainda não realizada");
   lines.push("");
 
-  // Central Digital
+  // Comunicação
   const centralTotal = officialPostCount + residentPostCount + reqSummary.total + activePolls + reservasCount + obrasCount + suggestoesCount;
   if (centralTotal > 0) {
-    lines.push("🏘️ Central Digital");
+    lines.push("🏘️ Comunicação");
     if (officialPostCount > 0) lines.push(`Comunicados oficiais publicados: ${officialPostCount}`);
     if (residentPostCount > 0) lines.push(`Participações de moradores: ${residentPostCount}`);
     if (reqSummary.total > 0) lines.push(`Solicitações: ${reqSummary.open} aberta${reqSummary.open !== 1 ? "s" : ""} · ${reqSummary.resolved} resolvida${reqSummary.resolved !== 1 ? "s" : ""}`);

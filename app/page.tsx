@@ -35,6 +35,7 @@ import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
 
+const MemoriaTab         = dynamic(() => import("@/components/tabs/MemoriaTab"), { ssr: false });
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const DemoModeBanner     = dynamic(() => import("@/components/DemoModeBanner"), { ssr: false });
 const OnboardingFlow     = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
@@ -358,6 +359,15 @@ export default function HomePage() {
           />
         )}
 
+        {activeTab === "memoria" && activeProfile === "manager" && (
+          <TabErrorBoundary tabName="Memória">
+            <MemoriaTab
+              refreshKey={refreshKey}
+              onRefresh={() => setRefreshKey((k) => k + 1)}
+            />
+          </TabErrorBoundary>
+        )}
+
         {activeTab === "agenda" && (
           <TabErrorBoundary tabName="Agenda">
             <AgendaTab
@@ -423,13 +433,20 @@ export default function HomePage() {
       </div>
 
       <BottomNav
-        active={activeTab}
-        onChange={(tab) => {
-          if (activeProfile === "resident" && tab === "ferramentas") {
+        active={subView === "pendencias" ? "pendencias" : activeTab}
+        onChange={(target) => {
+          if (activeProfile === "resident" && target === "ferramentas") {
             handleNavigateToSection("central-digital", "canal");
             return;
           }
-          navigateTab(tab);
+          // "Pendências" não é uma aba: abre a subView dentro de Início.
+          if (target === "pendencias") {
+            if (typeof window !== "undefined") scrollByTab.current[activeTab] = window.scrollY;
+            setActiveTab("inicio");
+            navigateToSubView("pendencias");
+            return;
+          }
+          navigateTab(target);
         }}
         urgentCount={urgentCount}
         profile={activeProfile}

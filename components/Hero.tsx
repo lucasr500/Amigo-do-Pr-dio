@@ -16,7 +16,7 @@ export default function Hero({ onSetup, onAssistente, onDemo }: Props) {
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-cream-100/68">
-              Central Digital do Condomínio
+              Comunicação do Condomínio
             </p>
             <p className="mt-1 max-w-[260px] text-[12.5px] leading-relaxed text-cream-100/72">
               Cockpit completo para organizar rotina, prazos, documentos e decisões.

@@ -196,7 +196,7 @@ export default function ManagerCockpitHero({
 
           <div className="mt-4 grid gap-2 sm:grid-cols-4">
             {([
-              { label: "Central Digital", target: "central-digital", central: "hub" as CentralSectionId },
+              { label: "Comunicação", target: "central-digital", central: "hub" as CentralSectionId },
               { label: "Documentos", target: "documentos" },
               { label: "Financeiro", target: "financeiro" },
               { label: "Memória", target: "memoria-institucional" },
