@@ -2,6 +2,7 @@
 import { safeRead, safeWrite } from "./session-core";
 import type { PublicDocument, PublicDocumentCategory } from "./community-types";
 import { addAuditEntry } from "./community-posts";
+import { mirrorUpsertDocument, mirrorDeleteDocument } from "@/lib/tenant/communityDocumentsRemote";
 
 export type { PublicDocument };
 
@@ -26,6 +27,7 @@ export function addPublicDocument(
   const doc: PublicDocument = { ...data, id: uid(), createdAt: now, updatedAt: now };
   savePublicDocuments([doc, ...getPublicDocuments()]);
   addAuditEntry("document_published", "public_document", doc.id, "manager", `Documento publicado: ${doc.title}`);
+  void mirrorUpsertDocument(doc); // dual-write PUSH best-effort (no-op se flag off)
   return doc;
 }
 
@@ -36,11 +38,14 @@ export function updatePublicDocument(id: string, patch: Partial<PublicDocument>)
     )
   );
   addAuditEntry("document_updated", "public_document", id, "manager", "Documento atualizado");
+  const updated = getPublicDocuments().find((d) => d.id === id);
+  if (updated) void mirrorUpsertDocument(updated); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function removePublicDocument(id: string): void {
   savePublicDocuments(getPublicDocuments().filter((d) => d.id !== id));
   addAuditEntry("document_removed", "public_document", id, "manager", "Documento removido");
+  void mirrorDeleteDocument(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function getDocumentsByCategory(category: PublicDocumentCategory): PublicDocument[] {

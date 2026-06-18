@@ -55,6 +55,13 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   const pollAId = `iso-poll-a-${stamp}`;
   const voteOwnCId = `iso-vote-own-c-${stamp}`;   // voto do residente C
   const voteOtherAId = `iso-vote-other-a-${stamp}`; // voto de outro (userA) — C não pode ler
+  // community_documents (012): prestação de contas PUBLICADA (moradores) + contrato interno (gestao).
+  const docTranspAId = `iso-doc-transp-a-${stamp}`;
+  const docGestaoAId = `iso-doc-gestao-a-${stamp}`;
+  // Storage (013): objetos sob "<condominio_id>/documents/<doc_id>/<arquivo>" no bucket privado.
+  const BUCKET = "condominio-docs";
+  let transpObjPath = "";
+  let gestaoObjPath = "";
 
   beforeAll(async () => {
     admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
@@ -132,10 +139,28 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       { id: voteOtherAId, poll_id: pollAId, condominio_id: condA, voted_by: userAId, option_id: "opt-2", voter_label: "A" },
     ]);
     expect(votesIns.error).toBeNull();
+
+    // 8. Documentos (012): prestação de contas PUBLICADA aos moradores (transparência) e um
+    //    contrato interno só da gestão. Prova: morador lê o balancete, não lê o interno.
+    const docIns = await clientA.from("community_documents").insert([
+      { id: docTranspAId, condominio_id: condA, title: "Prestação de Contas — 1º tri", category: "prestacao_de_contas", visibility: "moradores" },
+      { id: docGestaoAId, condominio_id: condA, title: "Contrato interno", category: "contrato_publico", visibility: "gestao" },
+    ]);
+    expect(docIns.error).toBeNull();
+
+    // 9. Storage (013): admin (service_role, ignora RLS) sobe um arquivo para cada documento.
+    transpObjPath = `${condA}/documents/${docTranspAId}/balancete.txt`;
+    gestaoObjPath = `${condA}/documents/${docGestaoAId}/contrato.txt`;
+    const up1 = await admin.storage.from(BUCKET).upload(transpObjPath, "balancete 1T", { contentType: "text/plain", upsert: true });
+    const up2 = await admin.storage.from(BUCKET).upload(gestaoObjPath, "contrato interno", { contentType: "text/plain", upsert: true });
+    expect(up1.error).toBeNull();
+    expect(up2.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    if (transpObjPath) await admin.storage.from(BUCKET).remove([transpObjPath, gestaoObjPath]);
+    await admin.from("community_documents").delete().in("id", [docTranspAId, docGestaoAId]);
     await admin.from("poll_votes").delete().in("id", [voteOwnCId, voteOtherAId]);
     await admin.from("community_polls").delete().eq("id", pollAId);
     await admin.from("community_requests").delete().in("id", [reqPrivAId, reqPublicAId, reqOwnCId]);
@@ -365,5 +390,79 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       voted_by: userAId, option_id: "opt-1", voter_label: "forjado",
     });
     expect(error).not.toBeNull(); // voted_by != auth.uid() → WITH CHECK barra
+  });
+
+  // ── community_documents (012): isolamento + papel × visibilidade + TRANSPARÊNCIA ──
+
+  test("community_documents: gestor de A lê ambos os documentos", async () => {
+    const { data } = await clientA.from("community_documents").select("id").in("id", [docTranspAId, docGestaoAId]);
+    expect((data ?? []).length).toBe(2);
+  });
+
+  test("community_documents: gestor de B NÃO lê documento de A (isolamento)", async () => {
+    const { data } = await clientB.from("community_documents").select("id").eq("id", docTranspAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_documents: TRANSPARÊNCIA — RESIDENTE de A LÊ a prestação de contas publicada (moradores)", async () => {
+    const { data } = await clientC.from("community_documents").select("id").eq("id", docTranspAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_documents: RESIDENTE de A NÃO lê o documento interno (gestao)", async () => {
+    const { data } = await clientC.from("community_documents").select("id").eq("id", docGestaoAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_documents: RESIDENTE de A NÃO publica documento (escrita = gestão)", async () => {
+    const { error } = await clientC.from("community_documents").insert({
+      id: `iso-doc-c-${stamp}`, condominio_id: condA, title: "Morador publicando", category: "outro", visibility: "moradores",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("community_documents: gestor de B NÃO insere no condomínio A (WITH CHECK barra cruzado)", async () => {
+    const { error } = await clientB.from("community_documents").insert({
+      id: `iso-doc-b-cross-${stamp}`, condominio_id: condA, title: "Invasão", category: "outro", visibility: "publico",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  // ── Supabase Storage (013): isolamento de OBJETO + visibilidade no arquivo ──
+  // A prova nova mais importante: o arquivo herda a visibilidade do documento e o
+  // isolamento do condomínio pelo prefixo do caminho.
+
+  test("storage: gestor de A baixa o arquivo da prestação de contas", async () => {
+    const { data, error } = await clientA.storage.from(BUCKET).download(transpObjPath);
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+  });
+
+  test("storage: gestor de B NÃO baixa arquivo de A (isolamento de objeto entre condomínios)", async () => {
+    const { data } = await clientB.storage.from(BUCKET).download(transpObjPath);
+    expect(data).toBeNull();
+  });
+
+  test("storage: TRANSPARÊNCIA — RESIDENTE de A baixa o arquivo 'moradores' (balancete)", async () => {
+    const { data, error } = await clientC.storage.from(BUCKET).download(transpObjPath);
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+  });
+
+  test("storage: RESIDENTE de A NÃO baixa o arquivo 'gestao' (visibilidade gateia o objeto)", async () => {
+    const { data } = await clientC.storage.from(BUCKET).download(gestaoObjPath);
+    expect(data).toBeNull();
+  });
+
+  test("storage: RESIDENTE de A NÃO faz upload (escrita de objeto = gestão)", async () => {
+    const { error } = await clientC.storage.from(BUCKET).upload(
+      `${condA}/documents/${docTranspAId}/morador.txt`, "tentativa", { contentType: "text/plain" });
+    expect(error).not.toBeNull();
+  });
+
+  test("storage: gestor de B NÃO faz upload no prefixo de A (isolamento de escrita)", async () => {
+    const { error } = await clientB.storage.from(BUCKET).upload(
+      `${condA}/documents/${docTranspAId}/invasao.txt`, "invasao", { contentType: "text/plain" });
+    expect(error).not.toBeNull();
   });
 });

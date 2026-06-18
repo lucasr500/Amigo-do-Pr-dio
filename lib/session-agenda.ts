@@ -89,6 +89,11 @@ export function getAgendaEvents(): AgendaEvent[] {
   return safeRead<Partial<AgendaEvent>[]>(KEYS.AGENDA, []).map(normalizeAgendaEvent);
 }
 
+// Grava a lista inteira (usado pelo cutover de leitura relacional — agendaSync).
+export function saveAgendaEvents(list: AgendaEvent[]): void {
+  safeWrite(KEYS.AGENDA, list.map(normalizeAgendaEvent));
+}
+
 export function addAgendaEvent(
   e: Omit<AgendaEvent, "id" | "createdAt">
 ): AgendaEvent {
