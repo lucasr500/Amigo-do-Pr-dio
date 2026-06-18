@@ -38,6 +38,7 @@ import { pullRemotePosts } from "@/lib/tenant/communityPostsSync";
 import { pullRemoteRequests } from "@/lib/tenant/communityRequestsSync";
 import { pullRemotePolls } from "@/lib/tenant/communityPollsSync";
 import { pullRemoteAgenda } from "@/lib/tenant/agendaSync";
+import { pullRemoteDocuments } from "@/lib/tenant/communityDocumentsSync";
 
 const MemoriaTab         = dynamic(() => import("@/components/tabs/MemoriaTab"), { ssr: false });
 const CommunidadeTab     = dynamic(() => import("@/components/tabs/CommunidadeTab"), { ssr: false });
@@ -142,7 +143,8 @@ export default function HomePage() {
     void pullRemoteRequests(); // cutover de leitura do Canal (010): no-op com requests_remote_enabled off
     void pullRemotePolls();    // cutover de leitura das Enquetes (011): no-op com polls_remote_enabled off
     void pullRemoteAgenda();   // cutover de leitura da Agenda (006): no-op com agenda_remote_enabled off
-    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); void pullRemoteRequests(); void pullRemotePolls(); void pullRemoteAgenda(); };
+    void pullRemoteDocuments(); // cutover de leitura dos Documentos (012): no-op com documents_remote_enabled off
+    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); void pullRemoteRequests(); void pullRemotePolls(); void pullRemoteAgenda(); void pullRemoteDocuments(); };
     window.addEventListener("online", pullRelationalOnOnline);
     const stopOnline = startOnlineListener();
     return () => {
