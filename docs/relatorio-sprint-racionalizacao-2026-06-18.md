@@ -40,7 +40,7 @@ isolamento verde · flags de exposição todas `false`. HEAD `8e9ea07` (limpo).
 | # | Workstream | Dep. de navegação? | Estado |
 |---|---|---|---|
 | W1.3 | Decisões: matar colisão de nome (`DecisoesSindicoPanel`→"Guia de situações") | não | ✅ `0bf7104` |
-| **W4** | **Navegação (promover Comunidade, dissolver "Mais"→"Ajustes")** | — | ⏸️ **CHECKPOINT (aguarda Lucas)** |
+| **W4** | **Navegação — layout DECIDIDO (Lucas): opção (a)** | — | ✅ alvo definido; **flip da barra é o ÚLTIMO passo** |
 | W1.1 | Documentos unificados por `visibility` + migração sem perda | sim (superfície) | após W4 |
 | W1.2 | Linha do tempo unificada (uma fonte, filtros) | sim (superfície) | após W4 |
 | W1.4 | Remover de "Mais" o que tem casa dedicada (redireciona deep-links) | sim | após W4 |
@@ -75,4 +75,20 @@ navegação é o próximo passo, e o resto sequencia a partir dele.
 | 3 — Apple-like (coerência de vocabulário) | ~78% | **~79%** | uma colisão de nome a menos; resto pós-W4 |
 | 2 Tese · 4 Personas · 1 · 5 | = | = | movem com W1.1/W2/W3/W5 (pós-checkpoint) |
 
-**Próxima ação única:** decisão de **layout da barra (W4)** — ver checkpoint no chat.
+## W4 — Navegação: layout decidido (Lucas)
+
+**Opção (a):** `Início · Memória · [Perguntar] · Comunidade · Ajustes`.
+- Pendências + Saúde → absorvidas pelo motor "Hoje" no Início (W2).
+- Comunidade (1ª classe) = mural, canal, reservas, enquetes, **transparência** (W3).
+- Ajustes (enxuto) = conta, backup, integridade, notificações, perfil do prédio.
+- [Perguntar] central = assistente (casa futura do "Pergunte ao Prédio", W6).
+
+**Sequência corrigida (segurança):** o **flip da barra é o ÚLTIMO passo**. A barra (a) só fica
+completa depois que W1.1 (documentos→Memória), W2 (Revisão→Hoje) e W3 (Financeiro→Transparência)
+**realocarem** o conteúdo do "Mais". Trocar a barra antes orfanaria essas superfícies e quebraria
+os 7+ deep-links. Ordem de execução: **W1.1 → W1.2 → W2 → W3 → W5/W6 → (por fim) flip da barra + dissolver "Mais"**.
+
+**Próxima ação única:** **W1.1 — unificar Documentos** (essenciais + públicos) num modelo único
+com `visibility` por papel, com normalizador idempotente que migra os dois stores locais **sem
+perda** (+ teste de migração de dados antigos). É o keystone: destrava Documentos em Memória,
+Transparência (W3) e a régua de papel para o Morador (W5).
