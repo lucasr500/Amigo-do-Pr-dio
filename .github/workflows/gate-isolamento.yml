@@ -1,0 +1,88 @@
+name: Gate de Isolamento (RLS multi-tenant)
+
+# Prova, contra um Postgres real, que um membro do condomínio B não lê nem escreve
+# dados do condomínio A (RLS das migrations 005/006/007). O runner do GitHub tem
+# Docker nativo, então o Supabase local sobe aqui sem depender da máquina do Lucas.
+# Verde = isolamento provado e guardado: se uma futura mudança quebrar a RLS, este
+# job falha e bloqueia o merge. Nada toca produção — stack 100% local e descartável.
+
+on:
+  push:
+    paths:
+      - "lib/**"
+      - "supabase/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/gate-isolamento.yml"
+  pull_request:
+    paths:
+      - "lib/**"
+      - "supabase/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/gate-isolamento.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: gate-isolamento-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolation-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # supabase init cria o config.toml efêmero do runner (sem Docker).
+      # Idempotente: só inicializa se o repo ainda não tiver config.toml versionado.
+      - name: Inicializar projeto Supabase (se necessário)
+        run: |
+          if [ ! -f supabase/config.toml ]; then
+            supabase init
+          fi
+
+      # supabase start sobe o stack local (Postgres + Auth + REST) e aplica as
+      # migrations 001→007. db reset garante uma aplicação limpa e determinística.
+      - name: Subir Supabase local + aplicar migrations
+        run: |
+          supabase start
+          supabase db reset
+
+      # Exporta as chaves do stack LOCAL (127.0.0.1) para os nomes que o teste lê.
+      # eval resolve as aspas do output; reescrevemos sem aspas no $GITHUB_ENV.
+      - name: Exportar chaves do Supabase local
+        run: |
+          eval "$(supabase status -o env)"
+          {
+            echo "SUPABASE_TEST_URL=$API_URL"
+            echo "SUPABASE_TEST_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_TEST_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+
+      - name: GATE — isolamento entre condomínios (4 testes)
+        run: npx vitest run lib/__tests__/tenant-isolation.integration.test.ts
+
+      - name: Regressão — tsc + suíte completa
+        run: |
+          npx tsc --noEmit
+          npx vitest run
+
+      - name: Parar Supabase
+        if: always()
+        run: supabase stop || true
