@@ -2,7 +2,7 @@
 //
 // Este é o teste inegociável da Definição de Pronto: prova que um membro do
 // condomínio B NÃO consegue ler nem escrever dados do condomínio A, contra um
-// Postgres real com as RLS das migrations 005/006/007 aplicadas.
+// Postgres real com as RLS das migrations 005/006/007/008/009 aplicadas.
 //
 // Auto-skip quando o ambiente não tem um Supabase de teste configurado — assim a
 // suíte local (803 testes) continua verde sem DB. Para RODAR o gate:
@@ -44,6 +44,9 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   let clientC: SupabaseClient;
   const assemblyAId = `iso-asm-a-${stamp}`;
   const decisionAId = `iso-dec-a-${stamp}`;
+  // community_posts (009): um post sensível (gestao) e um público-a-moradores (moradores).
+  const postGestaoAId = `iso-post-gestao-a-${stamp}`;
+  const postMoradoresAId = `iso-post-moradores-a-${stamp}`;
 
   beforeAll(async () => {
     admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
@@ -85,10 +88,25 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       status: "registrada", visibility: "gestao",
     });
     expect(dec.error).toBeNull();
+
+    // 5. Usuário A (owner = gestão) cria dois posts no mural de A: um 'gestao' (sensível,
+    //    só gestão lê) e um 'moradores' (morador alcança). Prova a RLS por papel × visibilidade.
+    const pg = await clientA.from("community_posts").insert({
+      id: postGestaoAId, condominio_id: condA, title: "Comunicado interno (gestão) — A",
+      category: "outro", visibility: "gestao", nature: "comunicado", origin: "oficial",
+    });
+    expect(pg.error).toBeNull();
+    const pm = await clientA.from("community_posts").insert({
+      id: postMoradoresAId, condominio_id: condA, title: "Aviso aos moradores — A",
+      category: "aviso", visibility: "moradores", nature: "comunicado", origin: "oficial",
+    });
+    expect(pm.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("community_posts").delete().eq("id", postGestaoAId);
+    await admin.from("community_posts").delete().eq("id", postMoradoresAId);
     await admin.from("decisions").delete().eq("id", decisionAId);
     await admin.from("assemblies").delete().eq("id", assemblyAId);
     if (condA) await admin.from("condominios").delete().eq("id", condA);
@@ -152,6 +170,46 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   test("decisions: RESIDENTE de A NÃO escreve decisão (sem papel de escrita)", async () => {
     const { error } = await clientC.from("decisions").insert({
       id: `iso-dec-c-${stamp}`, condominio_id: condA, title: "Morador escrevendo", category: "outro", status: "registrada",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  // ── community_posts (migration 009): isolamento A×B + RLS por PAPEL × VISIBILIDADE ──
+  // A leitura replica canSeeVisibility no banco: morador alcança 'moradores'/'publico',
+  // NÃO alcança 'gestao'/'conselho'. Escrita é da gestão (owner/manager).
+
+  test("community_posts: gestor de A lê os próprios posts (gestao + moradores)", async () => {
+    const { data } = await clientA.from("community_posts").select("id").in("id", [postGestaoAId, postMoradoresAId]);
+    expect((data ?? []).length).toBe(2);
+  });
+
+  test("community_posts: gestor de B NÃO lê post de A (isolamento entre condomínios)", async () => {
+    const { data } = await clientB.from("community_posts").select("id").eq("id", postMoradoresAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_posts: RESIDENTE de A LÊ o post 'moradores' (visibilidade alcança o papel)", async () => {
+    const { data } = await clientC.from("community_posts").select("id").eq("id", postMoradoresAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_posts: RESIDENTE de A NÃO lê o post 'gestao' (RLS por papel × visibilidade)", async () => {
+    const { data } = await clientC.from("community_posts").select("id").eq("id", postGestaoAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_posts: RESIDENTE de A NÃO publica no mural (escrita = gestão)", async () => {
+    const { error } = await clientC.from("community_posts").insert({
+      id: `iso-post-c-${stamp}`, condominio_id: condA, title: "Morador publicando",
+      category: "outro", visibility: "moradores", nature: "opiniao", origin: "morador",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("community_posts: gestor de B NÃO insere no condomínio A (WITH CHECK barra cruzado)", async () => {
+    const { error } = await clientB.from("community_posts").insert({
+      id: `iso-post-b-cross-${stamp}`, condominio_id: condA, title: "Invasão",
+      category: "outro", visibility: "publico", nature: "comunicado", origin: "oficial",
     });
     expect(error).not.toBeNull();
   });
