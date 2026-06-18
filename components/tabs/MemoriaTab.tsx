@@ -15,6 +15,10 @@ const DecisionsPanel = dynamic(() => import("@/components/DecisionsPanel"), {
   ssr: false,
   loading: () => <div className="px-5 py-4 sm:px-6"><LoadingState label="Carregando decisões…" rows={4} /></div>,
 });
+const AssembleiasPanel = dynamic(() => import("@/components/AssembleiasPanel"), {
+  ssr: false,
+  loading: () => <div className="px-5 py-4 sm:px-6"><LoadingState label="Carregando assembleias…" rows={4} /></div>,
+});
 const DocumentosEssenciaisPanel = dynamic(() => import("@/components/DocumentosEssenciaisPanel"), {
   ssr: false,
   loading: () => <div className="px-5 py-4 sm:px-6"><LoadingState label="Carregando documentos…" rows={4} /></div>,
@@ -28,10 +32,11 @@ const HandoffPanel = dynamic(() => import("@/components/HandoffPanel"), {
   loading: () => <div className="px-5 py-4 sm:px-6"><LoadingState label="Carregando passagem de gestão…" rows={4} /></div>,
 });
 
-type MemoriaSection = "overview" | "timeline" | "decisoes" | "documentos" | "fornecedores" | "continuidade";
+type MemoriaSection = "overview" | "assembleias" | "timeline" | "decisoes" | "documentos" | "fornecedores" | "continuidade";
 
 const SECTION_TABS: { id: MemoriaSection; label: string }[] = [
   { id: "overview",      label: "Visão geral" },
+  { id: "assembleias",   label: "Assembleias" },
   { id: "timeline",      label: "Linha do tempo" },
   { id: "decisoes",      label: "Decisões" },
   { id: "documentos",    label: "Documentos" },
@@ -61,6 +66,12 @@ export default function MemoriaTab({ refreshKey, onRefresh }: Props) {
   };
 
   const overviewCards: { id: MemoriaSection; eyebrow: string; title: string; detail: string }[] = [
+    {
+      id: "assembleias",
+      eyebrow: "Governança",
+      title: "Assembleias",
+      detail: "Convoque, organize a pauta e delibere — cada decisão fica registrada",
+    },
     {
       id: "timeline",
       eyebrow: "Histórico",
@@ -202,6 +213,7 @@ export default function MemoriaTab({ refreshKey, onRefresh }: Props) {
         </div>
       )}
 
+      {section === "assembleias"  && <AssembleiasPanel />}
       {section === "timeline"     && <TimelinePanel role="manager" />}
       {section === "decisoes"     && <DecisionsPanel />}
       {section === "documentos"   && <DocumentosEssenciaisPanel onSaved={onRefresh} />}

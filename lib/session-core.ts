@@ -51,6 +51,9 @@ export const KEYS = {
   COMMUNITY_COMMENTS:    "amigo_community_comments",
   COMMUNITY_AUDIT:       "amigo_community_audit",
   VIEW_MODE:             "amigo_view_mode",
+  // v12 — Assembleia Inteligente (ancora do wedge social)
+  ASSEMBLEIAS:           "amigo_assembleias",
+  ASSEMBLEIA_ITENS:      "amigo_assembleia_itens",
 } as const;
 
 // Lê de localStorage com fallback seguro.

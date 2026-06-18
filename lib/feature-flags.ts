@@ -15,6 +15,7 @@ const FLAG_DEFAULTS = {
   tenant_enabled:           true,   // Ativa o contexto multi-tenant (condomínio + papel) ao autenticar
   multi_device_enabled:     false,  // Multi-device sync (futuro)
   agenda_remote_enabled:    false,  // dual-write da Agenda (Fatia 2a)
+  assemblies_remote_enabled: false, // dual-write da Assembleia — so liga apos o gate de isolamento verde
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental
   premium_features:         false,  // Funcionalidades premium (futuro)
