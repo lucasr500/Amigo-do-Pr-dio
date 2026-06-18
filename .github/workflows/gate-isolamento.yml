@@ -49,7 +49,9 @@ jobs:
       - name: Instalar Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Versão fixada (não "latest"): evita a chamada "resolve latest release"
+          # à API do GitHub, que rate-limita sem token e derrubou o run anterior.
+          version: 2.107.0
 
       # supabase init cria o config.toml efêmero do runner (sem Docker).
       # Idempotente: só inicializa se o repo ainda não tiver config.toml versionado.
