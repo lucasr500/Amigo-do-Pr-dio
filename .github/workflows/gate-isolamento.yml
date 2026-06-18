@@ -38,7 +38,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Node 22+ expõe WebSocket global, exigido pelo @supabase/realtime-js ao
+          # construir o client no teste de isolamento. Node 20 falha em createClient.
+          node-version: "22"
           cache: "npm"
 
       - name: Instalar dependências
