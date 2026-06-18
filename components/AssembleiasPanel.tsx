@@ -12,6 +12,19 @@ import {
   convocarAssembleia, realizarAssembleia, encerrarAssembleia,
   deliberarItem, deliberacaoProgress,
 } from "@/lib/assembleias-loop";
+import {
+  getCommentsForItem, addAssemblyComment, moderateAssemblyComment, deleteAssemblyComment,
+  countPublishedForItem, countPendingForItem,
+  deleteCommentsForItem, deleteCommentsForAssembly,
+  type AssemblyComment,
+} from "@/lib/assembly-discussion";
+import { ROLE_LABELS } from "@/lib/community-types";
+import type { CommentStatus } from "@/lib/community-types";
+
+// Autoria nesta tela = gestão (cockpit do síndico na aba Memória). Comentários do
+// gestor entram publicados; a moderação aqui aprova/oculta os de moradores (que
+// chegarão quando a assembleia for exposta ao morador, pós-gate).
+const SELF_ROLE = "manager" as const;
 
 const TIPOS = Object.entries(ASSEMBLY_TIPO_LABELS) as [AssemblyTipo, string][];
 const ITEM_TIPOS = Object.entries(AGENDA_ITEM_TIPO_LABELS) as [AgendaItemTipo, string][];
@@ -53,6 +66,7 @@ export default function AssembleiasPanel() {
   const handleDelete = (id: string) => {
     if (!confirm("Remover esta assembleia e toda a sua pauta?")) return;
     deleteAssembly(id);
+    deleteCommentsForAssembly(id); // cascata local (espelha ON DELETE CASCADE)
     if (expandedId === id) setExpandedId(null);
     refresh();
   };
@@ -268,6 +282,7 @@ function PautaEditor({ assemblyId, onChanged }: { assemblyId: string; onChanged:
 
   const handleRemoveItem = (itemId: string) => {
     deleteAgendaItem(itemId);
+    deleteCommentsForItem(itemId); // cascata local (espelha ON DELETE CASCADE)
     reload();
     onChanged();
   };
@@ -337,6 +352,8 @@ function PautaEditor({ assemblyId, onChanged }: { assemblyId: string; onChanged:
               <p className="text-[10px] text-navy-400">A deliberação cria uma decisão registrada (categoria Assembleia) e entra na linha do tempo.</p>
             </div>
           )}
+
+          <DiscussionThread itemId={item.id} assemblyId={assemblyId} onChanged={onChanged} />
         </div>
       ))}
 
@@ -358,6 +375,117 @@ function PautaEditor({ assemblyId, onChanged }: { assemblyId: string; onChanged:
           Adicionar
         </button>
       </div>
+    </div>
+  );
+}
+
+
+// ─── Thread de discussão de um item de pauta ──────────────────────────────────
+
+function DiscussionThread({
+  itemId, assemblyId, onChanged,
+}: {
+  itemId: string;
+  assemblyId: string;
+  onChanged: () => void;
+}) {
+  const [comments, setComments] = useState<AssemblyComment[]>([]);
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const reload = () => setComments(getCommentsForItem(itemId));
+  useEffect(reload, [itemId]);
+
+  const published = comments.filter((c) => c.status === "publicado");
+  const pending = comments.filter((c) => c.status === "pendente");
+  const pubCount = countPublishedForItem(itemId);
+  const pendCount = countPendingForItem(itemId);
+
+  const handleAdd = () => {
+    if (!draft.trim()) return;
+    // Gestor publica direto (autoApprove=true), autoria pelo rótulo do papel.
+    addAssemblyComment(itemId, assemblyId, ROLE_LABELS[SELF_ROLE], SELF_ROLE, draft, true);
+    setDraft("");
+    reload();
+    onChanged();
+  };
+
+  const handleModerate = (id: string, status: CommentStatus) => {
+    moderateAssemblyComment(id, status);
+    reload();
+    onChanged();
+  };
+
+  const handleRemove = (id: string) => {
+    deleteAssemblyComment(id);
+    reload();
+    onChanged();
+  };
+
+  return (
+    <div className="mt-2 border-t border-navy-50 pt-2">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 text-[11px] font-medium text-navy-500 hover:text-navy-700">
+        <span>Discussão</span>
+        <span className="rounded-full bg-navy-50 px-1.5 py-0.5 text-[10px] text-navy-500">{pubCount}</span>
+        {pendCount > 0 && (
+          <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-100">
+            {pendCount} pendente{pendCount !== 1 ? "s" : ""}
+          </span>
+        )}
+        <span className="text-navy-300 text-[10px]">{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div className="mt-2 space-y-2">
+          {published.length === 0 && pending.length === 0 && (
+            <p className="text-[11px] text-navy-400">Nenhum comentário ainda.</p>
+          )}
+
+          {[...published, ...pending].map((c) => (
+            <div key={c.id} className={`rounded-lg px-3 py-2 ${c.status === "pendente" ? "bg-amber-50/40 ring-1 ring-inset ring-amber-100" : "bg-white ring-1 ring-inset ring-navy-50"}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-navy-700">
+                    {c.authorName}
+                    {c.status === "pendente" && <span className="ml-1.5 text-[9.5px] font-medium uppercase tracking-[0.06em] text-amber-700">pendente</span>}
+                  </p>
+                  <p className="mt-0.5 text-[12px] leading-relaxed text-navy-700">{c.body}</p>
+                </div>
+              </div>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                {c.status === "pendente" && (
+                  <button type="button" onClick={() => handleModerate(c.id, "publicado")}
+                    className="rounded-full bg-sage-600 px-2 py-0.5 text-[10px] font-medium text-white hover:bg-sage-700">
+                    Aprovar
+                  </button>
+                )}
+                {c.status === "publicado" && (
+                  <button type="button" onClick={() => handleModerate(c.id, "oculto")}
+                    className="rounded-full border border-navy-100 bg-white px-2 py-0.5 text-[10px] font-medium text-navy-500 hover:bg-navy-50">
+                    Ocultar
+                  </button>
+                )}
+                <button type="button" onClick={() => handleRemove(c.id)}
+                  className="rounded-full border border-terracotta-100 bg-white px-2 py-0.5 text-[10px] font-medium text-terracotta-600 hover:bg-terracotta-50">
+                  Remover
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div className="flex items-end gap-2">
+            <textarea rows={1} value={draft} onChange={(e) => setDraft(e.target.value)}
+              placeholder="Comentar como gestão…"
+              className="flex-1 resize-none rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none" />
+            <button type="button" onClick={handleAdd}
+              className="rounded-full bg-navy-800 px-3 py-2 text-[11px] font-medium text-white hover:bg-navy-700 disabled:opacity-40"
+              disabled={!draft.trim()}>
+              Enviar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
