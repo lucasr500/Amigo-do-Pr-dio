@@ -35,6 +35,8 @@ import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
 import { pullRemoteDecisions } from "@/lib/tenant/decisionsSync";
 import { pullRemotePosts } from "@/lib/tenant/communityPostsSync";
+import { pullRemoteRequests } from "@/lib/tenant/communityRequestsSync";
+import { pullRemotePolls } from "@/lib/tenant/communityPollsSync";
 
 const MemoriaTab         = dynamic(() => import("@/components/tabs/MemoriaTab"), { ssr: false });
 const CommunidadeTab     = dynamic(() => import("@/components/tabs/CommunidadeTab"), { ssr: false });
@@ -135,8 +137,10 @@ export default function HomePage() {
     // autenticado e reconexão. NO-OP total com decisions_remote_enabled off / anônimo /
     // sem condomínio: store local intocado, UI segue em getDecisions(). Best-effort.
     void pullRemoteDecisions();
-    void pullRemotePosts(); // cutover de leitura do Mural (009): no-op com mural_remote_enabled off
-    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); };
+    void pullRemotePosts();    // cutover de leitura do Mural (009): no-op com mural_remote_enabled off
+    void pullRemoteRequests(); // cutover de leitura do Canal (010): no-op com requests_remote_enabled off
+    void pullRemotePolls();    // cutover de leitura das Enquetes (011): no-op com polls_remote_enabled off
+    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); void pullRemoteRequests(); void pullRemotePolls(); };
     window.addEventListener("online", pullRelationalOnOnline);
     const stopOnline = startOnlineListener();
     return () => {

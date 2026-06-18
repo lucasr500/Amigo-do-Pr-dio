@@ -2,6 +2,7 @@
 import { safeRead, safeWrite } from "./session-core";
 import type { ResidentRequest, RequestStatus, RequestType } from "./community-types";
 import { addAuditEntry } from "./community-posts";
+import { mirrorUpsertRequest, mirrorDeleteRequest } from "@/lib/tenant/communityRequestsRemote";
 
 export type { ResidentRequest, RequestStatus, RequestType };
 
@@ -32,9 +33,12 @@ export function addRequest(
   };
   saveRequests([req, ...getRequests()]);
   addAuditEntry("request_opened", "request", req.id, "resident", `Solicitação aberta: ${req.title}`);
+  void mirrorUpsertRequest(req); // dual-write PUSH best-effort (no-op se flag off)
   return req;
 }
 
+// Mutador central — resolveRequest/closeRequest/respondToRequest passam por aqui, então
+// o espelho (best-effort, no-op com flag off) cobre todas as transições de status. Local primeiro.
 export function updateRequest(id: string, patch: Partial<ResidentRequest>): void {
   const now = new Date().toISOString();
   saveRequests(
@@ -42,6 +46,8 @@ export function updateRequest(id: string, patch: Partial<ResidentRequest>): void
       r.id === id ? { ...r, ...patch, updatedAt: now } : r
     )
   );
+  const updated = getRequests().find((r) => r.id === id);
+  if (updated) void mirrorUpsertRequest(updated);
 }
 
 export function resolveRequest(id: string, note: string): void {
@@ -61,6 +67,7 @@ export function closeRequest(id: string, status: Extract<RequestStatus, "recusad
 
 export function deleteRequest(id: string): void {
   saveRequests(getRequests().filter((r) => r.id !== id));
+  void mirrorDeleteRequest(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 // ─── Utilitários de consulta ──────────────────────────────────────────────────
