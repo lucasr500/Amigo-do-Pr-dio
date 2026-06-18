@@ -13,6 +13,7 @@ import { getReservationSummary } from "@/lib/community-reservas";
 import { formatDateSafe } from "@/lib/date-format";
 import ContentNatureBadge from "@/components/ContentNatureBadge";
 import { natureOfPost } from "@/lib/content-nature";
+import TransparencyPanel from "@/components/TransparencyPanel";
 
 type Props = {
   refreshKey: number;
@@ -219,6 +220,10 @@ export default function ResidentHomeTab({
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="px-5 pb-4 sm:px-6">
+        <TransparencyPanel refreshKey={refreshKey} />
       </section>
 
       <section className="px-5 pb-5 sm:px-6">
