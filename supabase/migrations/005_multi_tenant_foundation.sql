@@ -159,3 +159,12 @@ CREATE POLICY "memberships: inserção própria como owner"
         AND c.owner_id = auth.uid()
     )
   );
+
+-- ─────────────────────────────────────────────
+-- GRANTs de tabela (roles do Supabase)
+-- A RLS gateia as LINHAS; o GRANT habilita o acesso à TABELA. Tabelas criadas por
+-- migration SQL não herdam os grants padrão do dashboard, então concedemos
+-- explicitamente. Idempotente. service_role continua com BYPASSRLS.
+-- ─────────────────────────────────────────────
+GRANT ALL ON TABLE condominios TO anon, authenticated, service_role;
+GRANT ALL ON TABLE memberships TO anon, authenticated, service_role;

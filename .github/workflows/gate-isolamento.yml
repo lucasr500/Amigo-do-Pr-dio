@@ -79,26 +79,6 @@ jobs:
             echo "SUPABASE_TEST_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
           } >> "$GITHUB_ENV"
 
-      # DIAGNÓSTICO TEMPORÁRIO (lane CI): reproduz o setup do teste via REST com a
-      # service_role e emite a resposta crua do PostgREST como annotation (::error::/
-      # ::notice::), que é legível pela API pública. Serve para descobrir por que o
-      # insert em condominios voltou data:null no beforeAll. Remover após o gate verde.
-      - name: Diagnóstico — setup do gate (service role → condominios)
-        run: |
-          eval "$(supabase status -o env)"
-          EMAIL="diag-${GITHUB_RUN_ID}@test.local"
-          URESP=$(curl -sS -X POST "$API_URL/auth/v1/admin/users" \
-            -H "apikey: $SERVICE_ROLE_KEY" -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
-            -H "Content-Type: application/json" \
-            -d "{\"email\":\"$EMAIL\",\"password\":\"diag-123456\",\"email_confirm\":true}")
-          DIAG_UID=$(echo "$URESP" | jq -r '.id // empty')
-          echo "::notice::DIAG createUser id=${DIAG_UID:-VAZIO} resp=$(echo "$URESP" | head -c 300)"
-          CRESP=$(curl -sS -X POST "$API_URL/rest/v1/condominios" \
-            -H "apikey: $SERVICE_ROLE_KEY" -H "Authorization: Bearer $SERVICE_ROLE_KEY" \
-            -H "Content-Type: application/json" -H "Prefer: return=representation" \
-            -d "{\"owner_id\":\"$DIAG_UID\",\"nome\":\"diag\"}")
-          echo "::error::DIAG condominios insert resp=$(echo "$CRESP" | head -c 600)"
-
       - name: GATE — isolamento entre condomínios (4 testes)
         run: npx vitest run lib/__tests__/tenant-isolation.integration.test.ts
 

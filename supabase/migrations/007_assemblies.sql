@@ -134,3 +134,7 @@ DROP POLICY IF EXISTS "assembly_agenda_items: escrita por gestor (del)" ON assem
 CREATE POLICY "assembly_agenda_items: escrita por gestor (del)"
   ON assembly_agenda_items FOR DELETE
   USING (has_condominio_role(condominio_id, ARRAY['owner', 'manager', 'council']));
+
+-- GRANTs de tabela: RLS gateia linhas; GRANT habilita acesso à tabela. Idempotente.
+GRANT ALL ON TABLE assemblies            TO anon, authenticated, service_role;
+GRANT ALL ON TABLE assembly_agenda_items TO anon, authenticated, service_role;

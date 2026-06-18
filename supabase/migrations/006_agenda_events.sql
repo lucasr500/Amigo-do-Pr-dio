@@ -72,3 +72,6 @@ DROP POLICY IF EXISTS "agenda_events: escrita por gestor (del)" ON agenda_events
 CREATE POLICY "agenda_events: escrita por gestor (del)"
   ON agenda_events FOR DELETE
   USING (has_condominio_role(condominio_id, ARRAY['owner', 'manager', 'council']));
+
+-- GRANT de tabela: RLS gateia linhas; GRANT habilita acesso à tabela. Idempotente.
+GRANT ALL ON TABLE agenda_events TO anon, authenticated, service_role;
