@@ -19,6 +19,7 @@ const FLAG_DEFAULTS = {
   decisions_remote_enabled: false,  // dual-write de Decisões (D2) — so liga apos rollout (PF→PJ) do Lucas
   mural_remote_enabled:     false,  // dual-write do Mural/Comunicados (009) — so liga apos rollout (PF→PJ)
   requests_remote_enabled:  false,  // dual-write do Canal de Solicitações (010) — so liga apos rollout (PF→PJ)
+  polls_remote_enabled:     false,  // dual-write das Enquetes (011: polls + votes) — so liga apos rollout (PF→PJ)
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental
   premium_features:         false,  // Funcionalidades premium (futuro)

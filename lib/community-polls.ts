@@ -2,6 +2,9 @@
 import { safeRead, safeWrite } from "./session-core";
 import type { Poll, PollVote } from "./community-types";
 import { addAuditEntry } from "./community-posts";
+import {
+  mirrorUpsertPoll, mirrorDeletePoll, mirrorUpsertVote, mirrorDeleteVote,
+} from "@/lib/tenant/communityPollsRemote";
 
 export type { Poll, PollVote };
 
@@ -29,15 +32,19 @@ export function addPoll(
   const poll: Poll = { ...data, id: uid(), createdAt: now, updatedAt: now };
   savePolls([poll, ...getPolls()]);
   addAuditEntry("poll_created", "poll", poll.id, "manager", `Enquete criada: ${poll.title}`);
+  void mirrorUpsertPoll(poll); // dual-write PUSH best-effort (no-op se flag off)
   return poll;
 }
 
+// Mutador central — closePoll passa por aqui. Espelho best-effort (no-op com flag off). Local primeiro.
 export function updatePoll(id: string, patch: Partial<Poll>): void {
   savePolls(
     getPolls().map((p) =>
       p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p
     )
   );
+  const updated = getPolls().find((p) => p.id === id);
+  if (updated) void mirrorUpsertPoll(updated);
 }
 
 export function closePoll(id: string): void {
@@ -48,6 +55,8 @@ export function closePoll(id: string): void {
 export function deletePoll(id: string): void {
   savePolls(getPolls().filter((p) => p.id !== id));
   saveVotes(getVotes().filter((v) => v.pollId !== id));
+  // Remoto: ON DELETE CASCADE em poll_votes remove os votos junto ao excluir a enquete.
+  void mirrorDeletePoll(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function getActivePolls(): Poll[] {
@@ -70,13 +79,18 @@ export function vote(pollId: string, optionId: string, voterLabel?: string): Pol
   const poll = getPolls().find((p) => p.id === pollId);
   if (!poll || poll.status !== "ativa") return null;
   // allow re-vote: remove previous vote from same label
-  const existing = getVotes().filter((v) => !(v.pollId === pollId && v.voterLabel === voterLabel));
+  const all = getVotes();
+  const removed = all.filter((v) => v.pollId === pollId && v.voterLabel === voterLabel);
+  const existing = all.filter((v) => !(v.pollId === pollId && v.voterLabel === voterLabel));
   const newVote: PollVote = {
     id: uid(), pollId, optionId,
     voterLabel: voterLabel || "Anônimo",
     createdAt: new Date().toISOString(),
   };
   saveVotes([...existing, newVote]);
+  // Dual-write best-effort (no-op se flag off): apaga os votos substituídos e espelha o novo.
+  for (const v of removed) void mirrorDeleteVote(v.id);
+  void mirrorUpsertVote(newVote);
   return newVote;
 }
 
