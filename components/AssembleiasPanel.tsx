@@ -21,6 +21,8 @@ import {
 } from "@/lib/assembly-discussion";
 import { ROLE_LABELS } from "@/lib/community-types";
 import type { CommentStatus } from "@/lib/community-types";
+import ContentNatureBadge from "@/components/ContentNatureBadge";
+import { natureOfComment, natureOfAgendaItem } from "@/lib/content-nature";
 
 // Autoria nesta tela = gestão (cockpit do síndico na aba Memória). Comentários do
 // gestor entram publicados; a moderação aqui aprova/oculta os de moradores (que
@@ -339,7 +341,7 @@ function PautaEditor({ assemblyId, onChanged }: { assemblyId: string; onChanged:
 
           {item.resultado && (
             <p className="mt-1.5 text-[11.5px] leading-relaxed text-navy-600">
-              <span className="font-medium text-navy-500">Resultado: </span>{item.resultado}
+              <ContentNatureBadge nature={natureOfAgendaItem(item)} size="xs" /> <span className="font-medium text-navy-500">Resultado: </span>{item.resultado}
               {item.linkedDecisionId && (
                 <span className="ml-1 text-[10.5px] text-sage-600">· decisão registrada</span>
               )}
@@ -461,7 +463,7 @@ function DiscussionThread({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-[11px] font-medium text-navy-700">
-                    {c.authorName}
+                    <ContentNatureBadge nature={natureOfComment(c)} size="xs" showDot={false} /> {c.authorName}
                     {c.status === "pendente" && <span className="ml-1.5 text-[9.5px] font-medium uppercase tracking-[0.06em] text-amber-700">pendente</span>}
                   </p>
                   <p className="mt-0.5 text-[12px] leading-relaxed text-navy-700">{c.body}</p>
