@@ -100,3 +100,54 @@ migração relacional deliberada (com RLS+isolamento) — que **não pode ser fe
 `assembliesRemote`/migration 007 já provado pelo gate. É o único caminho que move o gargalo
 dominante (Eixo 1/5) e converte a fundação isolada em valor multi-persona real — mantendo a
 Regra de Não-Exposição. Requer o OK do Lucas antes de qualquer código (decisão estrutural).
+
+---
+
+## 9. Revisão 2026-06-18 (pós-verificação) — início da Fase 2 (migração de Decisões)
+
+**Estado verificado (HEAD `f45a4fb`):** `tsc` 0 · `vitest` 855 verdes + 4 do gate skipados ·
+`build` Compiled successfully (`/` 188 kB) · gate de isolamento **verde** (run #9, `f45a4fb`,
+GATE + Regressão OK, zero annotation de falha) · flags de exposição todas `false`.
+
+**Confirmação do contexto vs. código:**
+| Item | Status | Evidência |
+|---|---|---|
+| Separação de natureza nas 4 superfícies + timeline sem selo | ✅ | `lib/content-nature.ts:59-93`; `ContentNatureBadge.tsx:35`; MuralPanel/DecisionsPanel/ResidentHomeTab/AssembleiasPanel |
+| Card do wedge no Início | ✅ | `lib/assembly-home.ts`; `components/AssemblyHomeCard.tsx`; `HomeTab` seção "Governança" |
+| `Decision.visibility?` default `gestao`, aditivo/inerte | ✅ | `lib/decisions.ts:34,88-92` (opcional, normalizeDecision preenche `gestao`) |
+| Multi-tenant relacional dormente em runtime (gargalo) | ✅ | só dual-write gated-off (`assembliesRemote`/`agendaRemote`); nenhum read relacional |
+| Desenho rev.2 de Decisões aprovado | ✅ | `docs/desenho-migracao-relacional-decisoes-2026-06-18.md` |
+
+**Divergência detectada e resolvida nesta sessão:** a paridade local fez `Decision.visibility`
+**obrigatório**, quebrando `tsc` (`DecisionsPanel` FormState + seeds de `demo-data`). Corrigido
+para **opcional** (`visibility?:`), fiel ao desenho rev.2 (`lib/decisions.ts:34`). Severidade:
+média; dono: código. **Fechada.**
+
+**Gargalo dominante (reafirmado):** plano de dados local-first; multi-tenant provado isolado mas
+não consumido. **Único bloqueio do Lucas:** **PF→PJ** — trava só o rollout (D6, ligar remoto),
+não o código gated-off (D1–D5). Região (`sa-east-1`), visibilidade (gestão/conselho) e
+"sync segue a auth" já decididos.
+
+### Log da Fase 2 — migração relacional de Decisões (gated-off)
+| Fatia | Entrega | Commit | Gate / testes |
+|---|---|---|---|
+| **D1** | `supabase/migrations/008_decisions.sql` (tabela + `visibility` + RLS **leitura gestão/conselho** + GRANTs) + 5 casos no teste de isolamento (isolamento entre condomínios **e** residente NÃO lê/escreve) | `534a8bb` | **gate VERDE** (run sobre `534a8bb`: migration aplicada, GATE OK com os 9 casos, Regressão OK, zero falha) |
+| **D2** | `lib/tenant/decisionsRemote.ts` (dual-write PUSH best-effort, anon+RLS) + flag `decisions_remote_enabled` (default **false**) + dual-write nos 3 pontos do CRUD | `7261ec2` | tsc 0 · 860 verdes |
+| **D3** | `lib/tenant/decisionsMerge.ts` (last-write-wins por `updatedAt`, sem tombstones) + 5 testes | `80b4d3d` | tsc 0 · merge testado |
+| **D4** | `lib/tenant/decisionsSync.ts` (`pullRemoteDecisions`: pull→merge→store local; NO-OP total com flag off/anônimo/sem condomínio) + 2 testes de no-op | `407d1b0` | tsc 0 · 862 verdes |
+| **D4-wiring** | fiar `pullRemoteDecisions()` no fluxo de sync/auth (ponto de gatilho) | ⏸️ **pausado** | shared-flow; ver abaixo |
+| **D6** | ligar `decisions_remote_enabled` em produção | ⛔ **bloqueado** | PF→PJ (decisão do Lucas) |
+
+**Estado:** D1–D4 entregues, **gated-off e reversíveis**. Com `decisions_remote_enabled` false
+(default), o comportamento é **byte-a-byte idêntico** ao atual — zero rede, zero leitura remota.
+A RLS de Decisões está **provada contra DB real** (residente não lê dado sensível; isolamento
+entre condomínios). Flags de exposição **inalteradas**; produção **intocada**.
+
+**Por que D4-wiring está pausado (não é trivialidade):** o cutover de leitura precisa de um
+**ponto de gatilho no fluxo de sync/auth** (`lib/auth/AuthContext.tsx` / `lib/sync/autoSync.ts`)
+— uma área de **fluxo compartilhado**. O padrão já provado (assemblies/agenda) fez **apenas o
+PUSH** e deixou o read-pull **não fiado**; não há precedente do ponto de gatilho. A função
+`pullRemoteDecisions` está pronta e gated; fiá-la muda orquestração compartilhada sem entregar
+valor enquanto a flag está off. **Recomendação:** confirmar o ponto de gatilho com o Lucas (ou
+fazer junto do read-cutover de Assembleias/Agenda, unificando o seam) antes de fiar. Decisão de
+fluxo, não estrutural-nova — mas é o lugar certo para um checkpoint, por "segurança máxima".

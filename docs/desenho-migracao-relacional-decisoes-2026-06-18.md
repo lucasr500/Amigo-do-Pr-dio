@@ -276,4 +276,10 @@ flag, validada pelo teste de isolamento (D2, incluindo o caso "residente não l�
   007 de propósito); região `sa-east-1` confirmada (bloqueio resolvido, sinalizar jurídico p/
   simplificar Termos/Privacidade); "sync segue a auth" formalizada; `Decision.visibility` na
   lane Cowork; teste de isolamento ganha o caso "residente não lê". Resta só **PF→PJ** aberto.
+- **2026-06-18 (rev. 3 — IMPLEMENTADO):** D1–D4 entregues, gated-off, gate VERDE contra DB real.
+  D1 `008_decisions.sql` + isolamento (`534a8bb`); D2 `decisionsRemote` + flag
+  `decisions_remote_enabled:false` + dual-write (`7261ec2`); D3 `decisionsMerge` (`80b4d3d`);
+  D4 `decisionsSync.pullRemoteDecisions` gated, **não fiado** no sync (`407d1b0`). Pendentes:
+  **D4-wiring** (ponto de gatilho no fluxo de sync — pausado p/ confirmação) e **D6** (rollout,
+  bloqueado por PF→PJ).
 ```
