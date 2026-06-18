@@ -55,6 +55,9 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   const pollAId = `iso-poll-a-${stamp}`;
   const voteOwnCId = `iso-vote-own-c-${stamp}`;   // voto do residente C
   const voteOtherAId = `iso-vote-other-a-${stamp}`; // voto de outro (userA) — C não pode ler
+  // community_documents (012): prestação de contas PUBLICADA (moradores) + contrato interno (gestao).
+  const docTranspAId = `iso-doc-transp-a-${stamp}`;
+  const docGestaoAId = `iso-doc-gestao-a-${stamp}`;
 
   beforeAll(async () => {
     admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
@@ -132,10 +135,19 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       { id: voteOtherAId, poll_id: pollAId, condominio_id: condA, voted_by: userAId, option_id: "opt-2", voter_label: "A" },
     ]);
     expect(votesIns.error).toBeNull();
+
+    // 8. Documentos (012): prestação de contas PUBLICADA aos moradores (transparência) e um
+    //    contrato interno só da gestão. Prova: morador lê o balancete, não lê o interno.
+    const docIns = await clientA.from("community_documents").insert([
+      { id: docTranspAId, condominio_id: condA, title: "Prestação de Contas — 1º tri", category: "prestacao_de_contas", visibility: "moradores" },
+      { id: docGestaoAId, condominio_id: condA, title: "Contrato interno", category: "contrato_publico", visibility: "gestao" },
+    ]);
+    expect(docIns.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("community_documents").delete().in("id", [docTranspAId, docGestaoAId]);
     await admin.from("poll_votes").delete().in("id", [voteOwnCId, voteOtherAId]);
     await admin.from("community_polls").delete().eq("id", pollAId);
     await admin.from("community_requests").delete().in("id", [reqPrivAId, reqPublicAId, reqOwnCId]);
@@ -365,5 +377,41 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       voted_by: userAId, option_id: "opt-1", voter_label: "forjado",
     });
     expect(error).not.toBeNull(); // voted_by != auth.uid() → WITH CHECK barra
+  });
+
+  // ── community_documents (012): isolamento + papel × visibilidade + TRANSPARÊNCIA ──
+
+  test("community_documents: gestor de A lê ambos os documentos", async () => {
+    const { data } = await clientA.from("community_documents").select("id").in("id", [docTranspAId, docGestaoAId]);
+    expect((data ?? []).length).toBe(2);
+  });
+
+  test("community_documents: gestor de B NÃO lê documento de A (isolamento)", async () => {
+    const { data } = await clientB.from("community_documents").select("id").eq("id", docTranspAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_documents: TRANSPARÊNCIA — RESIDENTE de A LÊ a prestação de contas publicada (moradores)", async () => {
+    const { data } = await clientC.from("community_documents").select("id").eq("id", docTranspAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_documents: RESIDENTE de A NÃO lê o documento interno (gestao)", async () => {
+    const { data } = await clientC.from("community_documents").select("id").eq("id", docGestaoAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_documents: RESIDENTE de A NÃO publica documento (escrita = gestão)", async () => {
+    const { error } = await clientC.from("community_documents").insert({
+      id: `iso-doc-c-${stamp}`, condominio_id: condA, title: "Morador publicando", category: "outro", visibility: "moradores",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("community_documents: gestor de B NÃO insere no condomínio A (WITH CHECK barra cruzado)", async () => {
+    const { error } = await clientB.from("community_documents").insert({
+      id: `iso-doc-b-cross-${stamp}`, condominio_id: condA, title: "Invasão", category: "outro", visibility: "publico",
+    });
+    expect(error).not.toBeNull();
   });
 });
