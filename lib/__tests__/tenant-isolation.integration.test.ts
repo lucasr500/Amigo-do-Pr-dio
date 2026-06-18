@@ -58,6 +58,12 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   // community_documents (012): prestação de contas PUBLICADA (moradores) + contrato interno (gestao).
   const docTranspAId = `iso-doc-transp-a-${stamp}`;
   const docGestaoAId = `iso-doc-gestao-a-${stamp}`;
+  // community_comments (014): estados de moderação × papel sobre os posts de A.
+  const cmtPubMoradoresId = `iso-cmt-pub-mor-${stamp}`;  // publicado, por A, no post 'moradores'
+  const cmtPubGestaoId    = `iso-cmt-pub-ges-${stamp}`;  // publicado, por A, no post 'gestao'
+  const cmtPendCId        = `iso-cmt-pend-c-${stamp}`;   // pendente, do residente C (vê o próprio)
+  const cmtPendAId        = `iso-cmt-pend-a-${stamp}`;   // pendente, de A (C não vê)
+  const cmtRemovedAId     = `iso-cmt-rem-a-${stamp}`;    // removido, de A (só gestão/conselho vê)
   // Storage (013): objetos sob "<condominio_id>/documents/<doc_id>/<arquivo>" no bucket privado.
   const BUCKET = "condominio-docs";
   let transpObjPath = "";
@@ -155,10 +161,21 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     const up2 = await admin.storage.from(BUCKET).upload(gestaoObjPath, "contrato interno", { contentType: "text/plain", upsert: true });
     expect(up1.error).toBeNull();
     expect(up2.error).toBeNull();
+
+    // 10. Comentários (014) em estados de moderação, via service_role (fixa created_by + status).
+    const cmtIns = await admin.from("community_comments").insert([
+      { id: cmtPubMoradoresId, condominio_id: condA, post_id: postMoradoresAId, created_by: userAId, author_role: "manager", body: "publicado no post moradores", status: "publicado" },
+      { id: cmtPubGestaoId,    condominio_id: condA, post_id: postGestaoAId,    created_by: userAId, author_role: "manager", body: "publicado no post gestao",    status: "publicado" },
+      { id: cmtPendCId,        condominio_id: condA, post_id: postMoradoresAId, created_by: userCId, author_role: "resident", body: "pendente do morador",        status: "pendente" },
+      { id: cmtPendAId,        condominio_id: condA, post_id: postMoradoresAId, created_by: userAId, author_role: "manager", body: "pendente de outro",          status: "pendente" },
+      { id: cmtRemovedAId,     condominio_id: condA, post_id: postMoradoresAId, created_by: userAId, author_role: "manager", body: "removido (preservado)",      status: "removido" },
+    ]);
+    expect(cmtIns.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("community_comments").delete().in("id", [cmtPubMoradoresId, cmtPubGestaoId, cmtPendCId, cmtPendAId, cmtRemovedAId]);
     if (transpObjPath) await admin.storage.from(BUCKET).remove([transpObjPath, gestaoObjPath]);
     await admin.from("community_documents").delete().in("id", [docTranspAId, docGestaoAId]);
     await admin.from("poll_votes").delete().in("id", [voteOwnCId, voteOtherAId]);
@@ -464,5 +481,75 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     const { error } = await clientB.storage.from(BUCKET).upload(
       `${condA}/documents/${docTranspAId}/invasao.txt`, "invasao", { contentType: "text/plain" });
     expect(error).not.toBeNull();
+  });
+
+  // ── community_comments (014): moderação por RLS — status × papel ──
+  // "Visibilidade só na UI = vazamento": o estado de moderação é gateado no banco.
+
+  test("comments: gestão de A vê TODOS os comentários (fila + auditoria de removidos)", async () => {
+    const { data } = await clientA.from("community_comments").select("id")
+      .in("id", [cmtPubMoradoresId, cmtPubGestaoId, cmtPendCId, cmtPendAId, cmtRemovedAId]);
+    expect((data ?? []).length).toBe(5);
+  });
+
+  test("comments: gestor de B NÃO vê comentário de A (isolamento)", async () => {
+    const { data } = await clientB.from("community_comments").select("id").eq("id", cmtPubMoradoresId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("comments: RESIDENTE vê PUBLICADO no post 'moradores' (herda visibilidade do post)", async () => {
+    const { data } = await clientC.from("community_comments").select("id").eq("id", cmtPubMoradoresId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("comments: RESIDENTE NÃO vê publicado no post 'gestao' (Variante A — visibilidade do post-pai)", async () => {
+    const { data } = await clientC.from("community_comments").select("id").eq("id", cmtPubGestaoId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("comments: RESIDENTE vê o PRÓPRIO comentário pendente (autor)", async () => {
+    const { data } = await clientC.from("community_comments").select("id").eq("id", cmtPendCId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("comments: RESIDENTE NÃO vê pendente de OUTRO (fila invisível à comunidade)", async () => {
+    const { data } = await clientC.from("community_comments").select("id").eq("id", cmtPendAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("comments: RESIDENTE NÃO vê comentário REMOVIDO (só gestão/conselho — auditoria)", async () => {
+    const { data } = await clientC.from("community_comments").select("id").eq("id", cmtRemovedAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("comments: RESIDENTE cria o PRÓPRIO comentário (created_by = auth.uid())", async () => {
+    const newId = `iso-cmt-c-new-${stamp}`;
+    const { error } = await clientC.from("community_comments").insert({
+      id: newId, condominio_id: condA, post_id: postMoradoresAId, body: "novo do morador", status: "publicado",
+    });
+    expect(error).toBeNull();
+    await admin.from("community_comments").delete().eq("id", newId);
+  });
+
+  test("comments: RESIDENTE NÃO modera (mudar status = gestão/conselho; RLS filtra → 0 linhas)", async () => {
+    const { data } = await clientC.from("community_comments")
+      .update({ status: "oculto" }).eq("id", cmtPendCId).select("id");
+    expect(data ?? []).toHaveLength(0);
+    const check = await admin.from("community_comments").select("status").eq("id", cmtPendCId).single();
+    expect(check.data!.status).toBe("pendente"); // inalterado
+  });
+
+  test("comments: membro NÃO forja created_by de outro (WITH CHECK)", async () => {
+    const { error } = await clientC.from("community_comments").insert({
+      id: `iso-cmt-c-forge-${stamp}`, condominio_id: condA, post_id: postMoradoresAId,
+      created_by: userAId, body: "forjado", status: "publicado",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("comments: REMOÇÃO é SOFT — nem a gestão faz hard-delete (sem policy/grant); comentário persiste", async () => {
+    await clientA.from("community_comments").delete().eq("id", cmtPubMoradoresId);
+    const check = await admin.from("community_comments").select("id").eq("id", cmtPubMoradoresId);
+    expect(check.data ?? []).toHaveLength(1); // preservado para auditoria
   });
 });
