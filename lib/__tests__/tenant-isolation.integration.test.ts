@@ -51,6 +51,10 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   const reqPrivAId = `iso-req-priv-a-${stamp}`;
   const reqPublicAId = `iso-req-pub-a-${stamp}`;
   const reqOwnCId = `iso-req-own-c-${stamp}`;
+  // community_polls + poll_votes (011): enquete visível aos moradores; voto do residente e voto de outrem.
+  const pollAId = `iso-poll-a-${stamp}`;
+  const voteOwnCId = `iso-vote-own-c-${stamp}`;   // voto do residente C
+  const voteOtherAId = `iso-vote-other-a-${stamp}`; // voto de outro (userA) — C não pode ler
 
   beforeAll(async () => {
     admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
@@ -114,10 +118,26 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       { id: reqOwnCId,    condominio_id: condA, created_by: userCId, title: "Solicitação do morador — A", type: "barulho", visibility: "gestao" },
     ]);
     expect(reqIns.error).toBeNull();
+
+    // 7. Enquete (011) visível aos moradores + dois votos (do residente C e de outrem userA).
+    //    Inseridos via service_role para fixar voted_by — prova a privacidade do voto.
+    const pollIns = await admin.from("community_polls").insert({
+      id: pollAId, condominio_id: condA, title: "Melhor horário p/ manutenção?",
+      options: [{ id: "opt-1", label: "Sábado" }, { id: "opt-2", label: "Domingo" }],
+      visibility: "moradores", status: "ativa",
+    });
+    expect(pollIns.error).toBeNull();
+    const votesIns = await admin.from("poll_votes").insert([
+      { id: voteOwnCId,   poll_id: pollAId, condominio_id: condA, voted_by: userCId, option_id: "opt-1", voter_label: "C" },
+      { id: voteOtherAId, poll_id: pollAId, condominio_id: condA, voted_by: userAId, option_id: "opt-2", voter_label: "A" },
+    ]);
+    expect(votesIns.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("poll_votes").delete().in("id", [voteOwnCId, voteOtherAId]);
+    await admin.from("community_polls").delete().eq("id", pollAId);
     await admin.from("community_requests").delete().in("id", [reqPrivAId, reqPublicAId, reqOwnCId]);
     await admin.from("community_posts").delete().eq("id", postGestaoAId);
     await admin.from("community_posts").delete().eq("id", postMoradoresAId);
@@ -282,5 +302,68 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       id: `iso-req-b-cross-${stamp}`, condominio_id: condA, title: "Invasão", type: "outro",
     });
     expect(error).not.toBeNull();
+  });
+
+  // ── community_polls (011): isolamento + papel × visibilidade ──
+
+  test("community_polls: gestor de A lê a própria enquete", async () => {
+    const { data } = await clientA.from("community_polls").select("id").eq("id", pollAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_polls: gestor de B NÃO lê enquete de A (isolamento)", async () => {
+    const { data } = await clientB.from("community_polls").select("id").eq("id", pollAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_polls: RESIDENTE de A LÊ a enquete 'moradores'", async () => {
+    const { data } = await clientC.from("community_polls").select("id").eq("id", pollAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_polls: gestor de B NÃO cria enquete em A (WITH CHECK barra cruzado)", async () => {
+    const { error } = await clientB.from("community_polls").insert({
+      id: `iso-poll-b-cross-${stamp}`, condominio_id: condA, title: "Invasão", visibility: "publico", status: "ativa",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  // ── poll_votes (011): PRIVACIDADE DO VOTO (não vaza entre pares) ──
+
+  test("poll_votes: RESIDENTE de A LÊ o PRÓPRIO voto", async () => {
+    const { data } = await clientC.from("poll_votes").select("id").eq("id", voteOwnCId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("poll_votes: RESIDENTE de A NÃO lê o voto individual de OUTRO (privacidade entre pares)", async () => {
+    const { data } = await clientC.from("poll_votes").select("id").eq("id", voteOtherAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("poll_votes: gestão de A lê TODOS os votos (apuração)", async () => {
+    const { data } = await clientA.from("poll_votes").select("id").eq("poll_id", pollAId);
+    expect((data ?? []).length).toBe(2);
+  });
+
+  test("poll_votes: gestor de B NÃO lê votos de A (isolamento entre condomínios)", async () => {
+    const { data } = await clientB.from("poll_votes").select("id").eq("poll_id", pollAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("poll_votes: RESIDENTE de A registra o PRÓPRIO voto (voted_by = auth.uid())", async () => {
+    const newVoteId = `iso-vote-c-new-${stamp}`;
+    const { error } = await clientC.from("poll_votes").insert({
+      id: newVoteId, poll_id: pollAId, condominio_id: condA, option_id: "opt-2", voter_label: "C",
+    });
+    expect(error).toBeNull();
+    await admin.from("poll_votes").delete().eq("id", newVoteId);
+  });
+
+  test("poll_votes: membro NÃO registra voto forjando voted_by de outro (WITH CHECK)", async () => {
+    const { error } = await clientC.from("poll_votes").insert({
+      id: `iso-vote-c-forge-${stamp}`, poll_id: pollAId, condominio_id: condA,
+      voted_by: userAId, option_id: "opt-1", voter_label: "forjado",
+    });
+    expect(error).not.toBeNull(); // voted_by != auth.uid() → WITH CHECK barra
   });
 });
