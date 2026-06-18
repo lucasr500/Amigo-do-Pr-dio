@@ -11,6 +11,8 @@ import { getActivePolls, type Poll } from "@/lib/community-polls";
 import { getTimeline, type TimelineEvent } from "@/lib/community-timeline";
 import { getReservationSummary } from "@/lib/community-reservas";
 import { formatDateSafe } from "@/lib/date-format";
+import ContentNatureBadge from "@/components/ContentNatureBadge";
+import { natureOfPost } from "@/lib/content-nature";
 
 type Props = {
   refreshKey: number;
@@ -134,7 +136,7 @@ export default function ResidentHomeTab({
               <span className="rounded-full bg-sage-50 px-2.5 py-1 text-[10.5px] font-semibold text-sage-800">
                 {state.featuredPost.pinned ? "Importante" : "Aviso"}
               </span>
-              <span className="text-[11px] text-navy-300">{state.postsCount} comunicado{state.postsCount !== 1 ? "s" : ""}</span>
+              <ContentNatureBadge nature={natureOfPost(state.featuredPost)} size="sm" /><span className="text-[11px] text-navy-300">{state.postsCount} comunicado{state.postsCount !== 1 ? "s" : ""}</span>
             </div>
             <h2 className="mt-3 font-display text-[25px] font-semibold leading-tight text-navy-900">
               {state.featuredPost.title}
