@@ -86,3 +86,28 @@ describe("decisions — status operacional", () => {
     expect(events[0].description).toContain("Concluída");
   });
 });
+
+
+describe("decisions — visibilidade (paridade local↔remoto)", () => {
+  test("default de visibilidade é gestao quando ausente", () => {
+    const d = normalizeDecision({ ...makeDecision(), visibility: undefined });
+    expect(d.visibility).toBe("gestao");
+  });
+
+  test("visibilidade inválida cai para gestao", () => {
+    const d = normalizeDecision({ ...makeDecision(), visibility: "qualquer" as never });
+    expect(d.visibility).toBe("gestao");
+  });
+
+  test("preserva visibilidade válida", () => {
+    const d = normalizeDecision({ ...makeDecision(), visibility: "moradores" });
+    expect(d.visibility).toBe("moradores");
+  });
+
+  test("addDecision sem visibility usa gestao; com visibility preserva", () => {
+    const semVis = addDecision({ title: "X", date: "2026-06-01", category: "juridico", context: "", rationale: "", outcome: "ok" });
+    expect(semVis.visibility).toBe("gestao");
+    const comVis = addDecision({ title: "Y", date: "2026-06-01", category: "juridico", context: "", rationale: "", outcome: "ok", visibility: "conselho" });
+    expect(comVis.visibility).toBe("conselho");
+  });
+});
