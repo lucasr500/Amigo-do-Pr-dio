@@ -88,7 +88,38 @@ completa depois que W1.1 (documentos→Memória), W2 (Revisão→Hoje) e W3 (Fin
 **realocarem** o conteúdo do "Mais". Trocar a barra antes orfanaria essas superfícies e quebraria
 os 7+ deep-links. Ordem de execução: **W1.1 → W1.2 → W2 → W3 → W5/W6 → (por fim) flip da barra + dissolver "Mais"**.
 
-**Próxima ação única:** **W1.1 — unificar Documentos** (essenciais + públicos) num modelo único
-com `visibility` por papel, com normalizador idempotente que migra os dois stores locais **sem
-perda** (+ teste de migração de dados antigos). É o keystone: destrava Documentos em Memória,
-Transparência (W3) e a régua de papel para o Morador (W5).
+## Execução W1.1–W6 (camada de lógica/backbone — toda verde, pushada)
+
+| Fatia | Entrega (lib + testes) | Commit |
+|---|---|---|
+| **W1.1** | `lib/documents.ts` — leitura unificada (essenciais + públicos) por papel, sem perda (só lê/projeta os 2 stores) | `e59b15f` |
+| **W1.2** | `lib/timeline.ts` — linha do tempo única por trilha (institucional/operacional) + papel | `08e446e` |
+| **W2** | `lib/today.ts` — motor "Hoje" único sobre command-center + wedge, priorizado/deduplicado | `4f80ad4` |
+| **W3** | `lib/transparency.ts` — prestação de contas **agregada** por papel; sem inadimplência/unidade | `61e99a5` |
+| **W5** | `lib/resident-home.ts` — backbone da home do morador, só fontes filtradas por papel | `c8b4f83` |
+| **W6** | `lib/predio-context.ts` — seam role-aware do "Pergunte ao Prédio" (morador não recebe decisão); IA off | `687ba6f` |
+
+Princípio comum: **camadas de leitura/derivação aditivas** sobre os stores existentes — zero perda
+de dado, zero quebra de consumidor (os ~18 importadores de `financial*` e demais intocados),
+filtragem por papel desde a lib (não só na UI). Baseline ao fim: **tsc 0 · 880 verdes + 9 do gate
+skipados**.
+
+## W7 — flip da navegação: PARADO por invariante (não por escolha)
+
+A opção (a) dissolve o "Mais". Mapeamento mostra que **3 seções ficariam órfãs** sem superfícies
+de realocação que ainda não existem: **Revisão detalhada** (Seção 3 — `onOpenMonthlyReview`
+deep-linka nela), **Funcionários** (Seção 7) e **Implantação** (Seção 8); além da **UI de
+Transparência** (substituta do Financeiro) ainda não construída. Trocar a barra agora violaria a
+invariante "não orfanar conteúdo / não quebrar deep-links". 
+
+**Pré-requisitos do flip seguro (próximo passe focado):** (1) UI de Transparência em Comunidade
+consumindo `lib/transparency.ts`; (2) casa de Funcionários + Implantação em Ajustes; (3) Revisão
+detalhada acessível pelo motor "Hoje" (`lib/today.ts`) no Início, com redirecionamento de
+`onOpenMonthlyReview`; (4) `CommunidadeTab` + `AjustesTab` (extração de CondominioTab Seções 2 e 9);
+(5) redirecionar os 7+ deep-links de `memoria-institucional`/`central-digital`/`dados` para os
+novos destinos. Só então: BottomNav/app-navigation/app/page para a opção (a) + dissolver "Mais",
+com teste dos deep-links.
+
+**Próxima ação única:** construir as **superfícies de realocação** (Transparência UI, Funcionários/
+Implantação em Ajustes, Revisão no "Hoje") — os backbones (W1.1–W6) já estão prontos para alimentá-las
+— e então fazer o flip da barra. Tudo aditivo até o flip, que é o único passo que remove superfícies.
