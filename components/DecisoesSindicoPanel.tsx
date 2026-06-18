@@ -392,7 +392,7 @@ export default function DecisoesSindicoPanel() {
             ⚖️
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-navy-800">Decisões do síndico</p>
+            <p className="text-[13px] font-medium text-navy-800">Guia de situações</p>
             <p className="text-[11.5px] text-navy-400">
               {DECISOES.length} situações — {criticoCount} críticas
             </p>
@@ -409,7 +409,7 @@ export default function DecisoesSindicoPanel() {
       <div className="rounded-[22px] border border-cream-200/90 bg-white/[0.92] p-4 shadow-[0_1px_2px_rgba(31,49,71,0.04),0_14px_30px_-24px_rgba(31,49,71,0.30)]">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="text-[13px] font-semibold text-navy-800">Decisões do síndico</p>
+            <p className="text-[13px] font-semibold text-navy-800">Guia de situações</p>
             <p className="text-[10.5px] text-navy-400">Orientação prática — não é consultoria jurídica</p>
           </div>
           <button
