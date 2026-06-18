@@ -84,6 +84,9 @@ export default function HomePage() {
   // ── Search state ─────────────────────────────────────────────────
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
 
+  // ── Memória deep-link (ex.: card do Início → Assembleias) ───────
+  const [pendingMemoriaSection, setPendingMemoriaSection] = useState<string | null>(null);
+
   // ── Ferramentas state ───────────────────────────────────────────
   const [activeToolGroup, setActiveToolGroup]     = useState<ToolGroup | null>(null);
   const [pendingToolAnchor, setPendingToolAnchor] = useState<ToolAnchor | null>(null);
@@ -282,6 +285,11 @@ export default function HomePage() {
     navigateTab("ferramentas");
   };
 
+  const handleOpenMemoria = (section?: string) => {
+    setPendingMemoriaSection(section ?? null);
+    navigateTab("memoria");
+  };
+
   // ── Handlers de demo ────────────────────────────────────────────
   const handleActivateDemo = async () => {
     const { activateDemo } = await import("@/lib/demo");
@@ -356,6 +364,7 @@ export default function HomePage() {
             onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
             onNavigateToSection={handleNavigateToSection}
             onSetToolGroup={handleSetToolGroup}
+            onOpenAssembleias={() => handleOpenMemoria("assembleias")}
           />
         )}
 
@@ -364,6 +373,8 @@ export default function HomePage() {
             <MemoriaTab
               refreshKey={refreshKey}
               onRefresh={() => setRefreshKey((k) => k + 1)}
+              focusedSection={pendingMemoriaSection}
+              onFocusConsumed={() => setPendingMemoriaSection(null)}
             />
           </TabErrorBoundary>
         )}

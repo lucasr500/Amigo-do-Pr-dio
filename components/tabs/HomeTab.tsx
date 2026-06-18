@@ -24,6 +24,7 @@ const Hero = dynamic(() => import("@/components/Hero"), { ssr: false });
 const MilestoneCelebration = dynamic(() => import("@/components/MilestoneCelebration"), { ssr: false });
 const WeeklyReviewPrompt = dynamic(() => import("@/components/WeeklyReviewPrompt"), { ssr: false });
 const InstitutionalMemoryCard = dynamic(() => import("@/components/InstitutionalMemoryCard"), { ssr: false });
+const AssemblyHomeCard = dynamic(() => import("@/components/AssemblyHomeCard"), { ssr: false });
 const ManagerCockpitHero = dynamic(() => import("@/components/ManagerCockpitHero"), { ssr: false });
 const MonthlyPlanCard = dynamic(() => import("@/components/MonthlyPlanCard"), { ssr: false });
 const RiskPreviewStrip = dynamic(() => import("@/components/RiskPreviewStrip"), { ssr: false });
@@ -65,6 +66,7 @@ type Props = {
   onOpenBackup?: () => void;
   onNavigateToSection?: (sectionId: string, centralSection?: CentralSectionId) => void;
   onSetToolGroup?: (group: string) => void;
+  onOpenAssembleias?: () => void;
 };
 
 export default function HomeTab({
@@ -86,6 +88,7 @@ export default function HomeTab({
   onRefresh,
   onOpenBackup,
   onNavigateToSection,
+  onOpenAssembleias,
 }: Props) {
   return (
     <div key="inicio" className="tab-enter flex w-full max-w-full flex-1 flex-col overflow-x-hidden">
@@ -129,6 +132,13 @@ export default function HomeTab({
               <DailyBriefingCard refreshKey={refreshKey} />
               <RecentActivityCard refreshKey={refreshKey} />
             </div>
+
+            {onOpenAssembleias && (
+              <div className="break-inside-avoid">
+                <HomeSectionLabel eyebrow="Governança" title="Assembleia" />
+                <AssemblyHomeCard refreshKey={refreshKey} onOpen={onOpenAssembleias} />
+              </div>
+            )}
 
             <div className="break-inside-avoid">
               <HomeSectionLabel eyebrow="Guidance" title="Ações recomendadas" />

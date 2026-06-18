@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import LoadingState from "@/components/ui/LoadingState";
 import { buildInstitutionalMemorySummary } from "@/lib/institutional-memory";
@@ -44,13 +44,27 @@ const SECTION_TABS: { id: MemoriaSection; label: string }[] = [
   { id: "continuidade",  label: "Continuidade" },
 ];
 
+function asMemoriaSection(v: string | null | undefined): MemoriaSection | null {
+  return v && SECTION_TABS.some((t) => t.id === v) ? (v as MemoriaSection) : null;
+}
+
 type Props = {
   refreshKey: number;
   onRefresh: () => void;
+  focusedSection?: string | null;
+  onFocusConsumed?: () => void;
 };
 
-export default function MemoriaTab({ refreshKey, onRefresh }: Props) {
-  const [section, setSection] = useState<MemoriaSection>("overview");
+export default function MemoriaTab({ refreshKey, onRefresh, focusedSection, onFocusConsumed }: Props) {
+  const [section, setSection] = useState<MemoriaSection>(asMemoriaSection(focusedSection) ?? "overview");
+
+  // Deep-link: abrir a Memória já numa seção específica (ex.: card do Início → Assembleias).
+  useEffect(() => {
+    const target = asMemoriaSection(focusedSection);
+    if (!target) return;
+    setSection(target);
+    onFocusConsumed?.();
+  }, [focusedSection, onFocusConsumed]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const summary = useMemo(() => buildInstitutionalMemorySummary(), [refreshKey]);
   const [copied, setCopied] = useState(false);
