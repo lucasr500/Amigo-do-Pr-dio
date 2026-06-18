@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   getAssemblies, addAssembly, deleteAssembly,
-  getAgendaItems, addAgendaItem, deleteAgendaItem,
+  getAgendaItems, addAgendaItem, updateAgendaItem, deleteAgendaItem,
   countAgendaItems,
   ASSEMBLY_TIPO_LABELS, ASSEMBLY_STATUS_LABELS, AGENDA_ITEM_TIPO_LABELS,
   type Assembly, type AssemblyAgendaItem, type AssemblyTipo, type AssemblyStatus, type AgendaItemTipo,
@@ -11,6 +11,7 @@ import {
 import {
   convocarAssembleia, realizarAssembleia, encerrarAssembleia,
   deliberarItem, deliberacaoProgress,
+  criarEnquetePorPauta, getPreparationSummary, getItemPollResults,
 } from "@/lib/assembleias-loop";
 import {
   getCommentsForItem, addAssemblyComment, moderateAssemblyComment, deleteAssemblyComment,
@@ -176,6 +177,7 @@ function AssemblyCard({
   const a = assembly;
   const itemCount = countAgendaItems(a.id);
   const progress = deliberacaoProgress(a.id);
+  const prep = getPreparationSummary(a.id);
 
   const advance = (fn: () => void) => { fn(); onChanged(); };
 
@@ -210,6 +212,17 @@ function AssemblyCard({
             </div>
             <p className="mt-1 text-[10.5px] text-navy-400">
               {progress.decididos} de {progress.total} deliberações concluídas
+            </p>
+          </div>
+        )}
+
+        {(a.status === "rascunho" || a.status === "convocada") && prep.total > 0 && (
+          <div className="mt-2.5">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-navy-50">
+              <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${prep.pct}%` }} />
+            </div>
+            <p className="mt-1 text-[10.5px] text-navy-400">
+              Preparação: {prep.comContexto}/{prep.total} com contexto · {prep.comEnquete} com enquete · {prep.comDiscussao} com discussão
             </p>
           </div>
         )}
@@ -353,6 +366,7 @@ function PautaEditor({ assemblyId, onChanged }: { assemblyId: string; onChanged:
             </div>
           )}
 
+          <ItemPreparation item={item} onChanged={() => { reload(); onChanged(); }} />
           <DiscussionThread itemId={item.id} assemblyId={assemblyId} onChanged={onChanged} />
         </div>
       ))}
@@ -486,6 +500,108 @@ function DiscussionThread({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+
+// ─── Preparação de um item: contexto + enquete consultiva (pré-evento) ─────────
+
+function ItemPreparation({ item, onChanged }: { item: AssemblyAgendaItem; onChanged: () => void }) {
+  const [editingContexto, setEditingContexto] = useState(false);
+  const [contexto, setContexto] = useState(item.descricao ?? "");
+  const [openEnquete, setOpenEnquete] = useState(false);
+  const [opcoes, setOpcoes] = useState<string[]>(["A favor", "Contra"]);
+
+  const results = getItemPollResults(item.linkedPollId);
+
+  const saveContexto = () => {
+    updateAgendaItem(item.id, { descricao: contexto });
+    setEditingContexto(false);
+    onChanged();
+  };
+
+  const abrirEnquete = () => {
+    const limpas = opcoes.map((o) => o.trim()).filter(Boolean);
+    if (limpas.length < 2) return;
+    criarEnquetePorPauta(item.id, { opcoes: limpas });
+    setOpenEnquete(false);
+    onChanged();
+  };
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Contexto */}
+      <div>
+        {!editingContexto ? (
+          <button type="button" onClick={() => { setContexto(item.descricao ?? ""); setEditingContexto(true); }}
+            className="text-left w-full">
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-navy-400">Contexto</p>
+            <p className="mt-0.5 text-[11.5px] leading-relaxed text-navy-600">
+              {item.descricao?.trim()
+                ? item.descricao
+                : <span className="text-navy-400 italic">Adicionar contexto para os moradores entenderem a pauta antes do voto…</span>}
+            </p>
+          </button>
+        ) : (
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-navy-400">Contexto</p>
+            <textarea rows={2} value={contexto} onChange={(e) => setContexto(e.target.value)}
+              placeholder="O que os moradores precisam saber para decidir…"
+              className="w-full resize-none rounded-xl border border-navy-100 bg-white px-3 py-2 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none" />
+            <div className="flex gap-2">
+              <button type="button" onClick={saveContexto}
+                className="rounded-full bg-navy-800 px-3 py-1 text-[10.5px] font-medium text-white hover:bg-navy-700">Salvar</button>
+              <button type="button" onClick={() => setEditingContexto(false)}
+                className="rounded-full border border-navy-100 bg-white px-3 py-1 text-[10.5px] font-medium text-navy-500 hover:bg-navy-50">Cancelar</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Enquete consultiva */}
+      <div>
+        <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-navy-400">Enquete consultiva</p>
+        {item.linkedPollId ? (
+          <div className="mt-1 space-y-1">
+            {results.length === 0 && <p className="text-[11px] text-navy-400">Enquete aberta — aguardando votos.</p>}
+            {results.map((r) => (
+              <div key={r.optionId}>
+                <div className="flex items-center justify-between text-[11px] text-navy-600">
+                  <span>{r.label}</span><span className="text-navy-400">{r.pct}% ({r.count})</span>
+                </div>
+                <div className="h-1 w-full overflow-hidden rounded-full bg-navy-50">
+                  <div className="h-full rounded-full bg-sage-400" style={{ width: `${r.pct}%` }} />
+                </div>
+              </div>
+            ))}
+            <p className="text-[9.5px] text-navy-400 pt-0.5">Consultiva — não substitui a votação formal em assembleia.</p>
+          </div>
+        ) : !openEnquete ? (
+          <button type="button" onClick={() => setOpenEnquete(true)}
+            className="mt-1 rounded-full border border-navy-100 bg-white px-3 py-1 text-[10.5px] font-medium text-navy-600 hover:bg-navy-50">
+            Abrir enquete consultiva
+          </button>
+        ) : (
+          <div className="mt-1 space-y-1.5">
+            {opcoes.map((op, idx) => (
+              <input key={idx} type="text" value={op}
+                onChange={(e) => setOpcoes(opcoes.map((o, i) => i === idx ? e.target.value : o))}
+                placeholder={`Opção ${idx + 1}`}
+                className="w-full rounded-xl border border-navy-100 bg-white px-3 py-1.5 text-[12px] text-navy-800 focus:border-navy-300 focus:outline-none" />
+            ))}
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setOpcoes([...opcoes, ""])}
+                className="rounded-full border border-navy-100 bg-white px-2.5 py-1 text-[10.5px] font-medium text-navy-500 hover:bg-navy-50">+ opção</button>
+              <button type="button" onClick={abrirEnquete}
+                className="rounded-full bg-sage-600 px-3 py-1 text-[10.5px] font-medium text-white hover:bg-sage-700 disabled:opacity-40"
+                disabled={opcoes.map((o) => o.trim()).filter(Boolean).length < 2}>Criar enquete</button>
+              <button type="button" onClick={() => setOpenEnquete(false)}
+                className="rounded-full border border-navy-100 bg-white px-3 py-1 text-[10.5px] font-medium text-navy-500 hover:bg-navy-50">Cancelar</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

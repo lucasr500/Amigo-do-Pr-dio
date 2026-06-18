@@ -11,7 +11,8 @@ import {
 } from "@/lib/session-assembleias";
 import { addDecision, type DecisionRiskLevel } from "@/lib/decisions";
 import { emitDecisionRegistered, emitAssembleiaRealizada } from "@/lib/community-timeline";
-import { addPoll } from "@/lib/community-polls";
+import { addPoll, getPollResults } from "@/lib/community-polls";
+import { countPublishedForItem } from "@/lib/assembly-discussion";
 import type { Visibility } from "@/lib/community-types";
 
 // ─── Ciclo de vida da assembleia ──────────────────────────────────────────────
@@ -138,4 +139,53 @@ export function deliberacaoProgress(assemblyId: string): { total: number; decidi
   const decididos = deliberaveis.filter((i) => !!i.decididoEm).length;
   const pct = total === 0 ? 0 : Math.round((decididos / total) * 100);
   return { total, decididos, pct };
+}
+
+
+// ─── Preparação de Assembleia (ramo "organizar/informar" — pré-evento) ────────
+// O coração do wedge: antes do evento, cada pauta ganha contexto + enquete
+// consultiva, e a discussão já vira registro. Este resumo dá ao síndico a leitura
+// de "o que já está pronto para a assembleia".
+
+export type ItemPrep = {
+  itemId: string;
+  titulo: string;
+  tipo: AgendaItemTipo;
+  hasContexto: boolean;       // descrição preenchida
+  hasEnquete: boolean;        // enquete consultiva vinculada
+  pollId?: string;
+  comentariosPublicados: number;
+};
+
+export type PreparationSummary = {
+  itens: ItemPrep[];
+  total: number;
+  comContexto: number;
+  comEnquete: number;
+  comDiscussao: number;       // ao menos 1 comentário publicado
+  pct: number;                // prontidão = itens com contexto / total
+};
+
+export function getPreparationSummary(assemblyId: string): PreparationSummary {
+  const itens = getAgendaItems(assemblyId).map((i): ItemPrep => ({
+    itemId: i.id,
+    titulo: i.titulo,
+    tipo: i.tipo,
+    hasContexto: !!(i.descricao && i.descricao.trim()),
+    hasEnquete: !!i.linkedPollId,
+    pollId: i.linkedPollId,
+    comentariosPublicados: countPublishedForItem(i.id),
+  }));
+  const total = itens.length;
+  const comContexto = itens.filter((i) => i.hasContexto).length;
+  const comEnquete = itens.filter((i) => i.hasEnquete).length;
+  const comDiscussao = itens.filter((i) => i.comentariosPublicados > 0).length;
+  const pct = total === 0 ? 0 : Math.round((comContexto / total) * 100);
+  return { itens, total, comContexto, comEnquete, comDiscussao, pct };
+}
+
+/** Resultados da enquete consultiva vinculada a um item (vazio se não houver). */
+export function getItemPollResults(pollId?: string) {
+  if (!pollId) return [];
+  return getPollResults(pollId);
 }
