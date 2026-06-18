@@ -1,6 +1,7 @@
 // ─── Mural Oficial — CRUD de posts institucionais ────────────────────────────
 import { safeRead, safeWrite } from "./session-core";
 import { mirrorUpsertPost, mirrorDeletePost } from "@/lib/tenant/communityPostsRemote";
+import { mirrorUpsertComment } from "@/lib/tenant/communityCommentsRemote";
 import type {
   InstitutionalPost, Comment, CommentStatus,
   CommunityAuditEntry, AuditAction, PostCategory, PostOrigin,
@@ -129,6 +130,7 @@ export function addComment(
     createdAt: now,
   };
   saveComments([...getComments(), comment]);
+  void mirrorUpsertComment(comment); // dual-write PUSH best-effort (no-op se flag off)
   return comment;
 }
 
@@ -151,6 +153,9 @@ export function moderateComment(
   const action: AuditAction = status === "oculto" ? "comment_hidden" :
     status === "removido" ? "comment_removed" : "comment_approved";
   appendAudit(action, "comment", id, "manager", `Comentário ${status}`);
+  // Espelha a mudança de status (best-effort, no-op com flag off). Remoção = status, não delete.
+  const moderated = getComments().find((c) => c.id === id);
+  if (moderated) void mirrorUpsertComment(moderated);
 }
 
 // ─── Auditoria ────────────────────────────────────────────────────────────────
