@@ -47,6 +47,10 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   // community_posts (009): um post sensível (gestao) e um público-a-moradores (moradores).
   const postGestaoAId = `iso-post-gestao-a-${stamp}`;
   const postMoradoresAId = `iso-post-moradores-a-${stamp}`;
+  // community_requests (010): privada da gestão, pública aos moradores, e privada do residente.
+  const reqPrivAId = `iso-req-priv-a-${stamp}`;
+  const reqPublicAId = `iso-req-pub-a-${stamp}`;
+  const reqOwnCId = `iso-req-own-c-${stamp}`;
 
   beforeAll(async () => {
     admin = createClient(URL!, SERVICE!, { auth: { persistSession: false } });
@@ -101,10 +105,20 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       category: "aviso", visibility: "moradores", nature: "comunicado", origin: "oficial",
     });
     expect(pm.error).toBeNull();
+
+    // 6. Solicitações (010) inseridas via service_role (ignora RLS) para fixar created_by:
+    //    uma privada da gestão, uma pública aos moradores, uma privada do RESIDENTE (própria).
+    const reqIns = await admin.from("community_requests").insert([
+      { id: reqPrivAId,   condominio_id: condA, created_by: userAId, title: "Privada da gestão — A", type: "outro", visibility: "gestao" },
+      { id: reqPublicAId, condominio_id: condA, created_by: userAId, title: "Pública aos moradores — A", type: "aviso_obra", visibility: "moradores" },
+      { id: reqOwnCId,    condominio_id: condA, created_by: userCId, title: "Solicitação do morador — A", type: "barulho", visibility: "gestao" },
+    ]);
+    expect(reqIns.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("community_requests").delete().in("id", [reqPrivAId, reqPublicAId, reqOwnCId]);
     await admin.from("community_posts").delete().eq("id", postGestaoAId);
     await admin.from("community_posts").delete().eq("id", postMoradoresAId);
     await admin.from("decisions").delete().eq("id", decisionAId);
@@ -210,6 +224,62 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     const { error } = await clientB.from("community_posts").insert({
       id: `iso-post-b-cross-${stamp}`, condominio_id: condA, title: "Invasão",
       category: "outro", visibility: "publico", nature: "comunicado", origin: "oficial",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  // ── community_requests (migration 010): isolamento + papel × visibilidade + AUTORIA ──
+  // Morador lê as próprias + as públicas; NÃO lê as privadas alheias. Cria a própria;
+  // só a gestão muda status. Gestão lê todas.
+
+  test("community_requests: gestor de A lê todas as solicitações de A", async () => {
+    const { data } = await clientA.from("community_requests").select("id").in("id", [reqPrivAId, reqPublicAId, reqOwnCId]);
+    expect((data ?? []).length).toBe(3);
+  });
+
+  test("community_requests: gestor de B NÃO lê solicitação de A (isolamento entre condomínios)", async () => {
+    const { data } = await clientB.from("community_requests").select("id").eq("id", reqPublicAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_requests: RESIDENTE de A LÊ a pública (moradores)", async () => {
+    const { data } = await clientC.from("community_requests").select("id").eq("id", reqPublicAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_requests: RESIDENTE de A NÃO lê a privada da gestão (papel × visibilidade)", async () => {
+    const { data } = await clientC.from("community_requests").select("id").eq("id", reqPrivAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("community_requests: RESIDENTE de A LÊ a PRÓPRIA solicitação privada (autoria)", async () => {
+    const { data } = await clientC.from("community_requests").select("id").eq("id", reqOwnCId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("community_requests: RESIDENTE de A cria a PRÓPRIA solicitação (created_by = auth.uid())", async () => {
+    const ownId = `iso-req-c-new-${stamp}`;
+    const { error } = await clientC.from("community_requests").insert({
+      id: ownId, condominio_id: condA, title: "Nova do morador", type: "sugestao",
+    });
+    expect(error).toBeNull();
+    await admin.from("community_requests").delete().eq("id", ownId);
+  });
+
+  test("community_requests: RESIDENTE de A NÃO muda status (update = gestão; RLS filtra → 0 linhas)", async () => {
+    // UPDATE bloqueado por RLS não gera erro: a policy de UPDATE (gestão) filtra a linha,
+    // então nenhuma é atualizada. Provamos o no-op por .select() vazio + status intacto.
+    const { data, error } = await clientC.from("community_requests")
+      .update({ status: "resolvido" }).eq("id", reqOwnCId).select("id");
+    expect(error).toBeNull();
+    expect(data ?? []).toHaveLength(0);
+    const check = await admin.from("community_requests").select("status").eq("id", reqOwnCId).single();
+    expect(check.data!.status).toBe("recebido"); // inalterado
+  });
+
+  test("community_requests: gestor de B NÃO insere no condomínio A (WITH CHECK barra cruzado)", async () => {
+    const { error } = await clientB.from("community_requests").insert({
+      id: `iso-req-b-cross-${stamp}`, condominio_id: condA, title: "Invasão", type: "outro",
     });
     expect(error).not.toBeNull();
   });
