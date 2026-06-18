@@ -104,7 +104,30 @@ de dado, zero quebra de consumidor (os ~18 importadores de `financial*` e demais
 filtragem por papel desde a lib (não só na UI). Baseline ao fim: **tsc 0 · 880 verdes + 9 do gate
 skipados**.
 
-## W7 — flip da navegação: PARADO por invariante (não por escolha)
+## W7 — flip da navegação: ✅ CONCLUÍDO (colocação cravada pelo Lucas)
+
+Barra opção A entregue (`d51093a`): **Início · Memória · [Perguntar] · Comunidade · Ajustes**
+(morador: Início · Comunidade · [Canal] · Agenda · Info). "Mais"/CondominioTab **dissolvida e
+deletada** (sem importadores). Realocação por papel, conforme cravado:
+- **Comunicação → CommunidadeTab** (`af7faaf`) — aba de 1ª classe.
+- **Transparência → Comunidade** + **Revisão detalhada como camada de gestão por papel**
+  (morador vê agregado; síndico vê agregado + revisão) — `CommunidadeTab` sub-seção.
+- **Funcionários + Implantação → Ajustes** (só síndico); **Conta/Backup/Integridade/
+  Notificações/Perfil → Ajustes** (por papel) — `AjustesTab` (`af7faaf`).
+- **Financeiro de gestão → aposentado** (transparência cobre o morador; libs `financial*`
+  preservadas para os 18 consumidores).
+- **Memória institucional + Documentos → Memória** (já lá; duplicata removida).
+
+**Deep-links reapontados** (rerota central em `app/page.tsx handleNavigateToSection`):
+memoria-institucional→memoria · central-digital→comunidade · dados/operacao/implantacao→
+ajustes · revisao-mensal/financeiro→comunidade(transparência) · onOpenMonthlyReview→
+Transparência. **Re-varredura provou ZERO link morto** (tsc como prova: removi `"condominio"`
+de `AppTab` e corrigi cada chamador) **e ZERO seção órfã**. Badge de urgência migrou para o Início.
+
+**Pendência menor (não bloqueante):** mover simuladores (multa/reajuste) de Ferramentas para o
+Assistente — Ferramentas segue acessível por Ajustes; é polimento, não realocação crítica.
+
+### (histórico) Por que o flip vinha pausado antes da colocação cravada
 
 A opção (a) dissolve o "Mais". Mapeamento mostra que **3 seções ficariam órfãs** sem superfícies
 de realocação que ainda não existem: **Revisão detalhada** (Seção 3 — `onOpenMonthlyReview`
