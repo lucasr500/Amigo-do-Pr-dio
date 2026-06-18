@@ -432,6 +432,7 @@ export default function HomePage() {
             <CommunidadeTab
               refreshKey={refreshKey}
               condoName={condoName}
+              profile={activeProfile}
               focusedCentralSection={pendingCentralSection}
               onRefresh={() => setRefreshKey((k) => k + 1)}
               onOpenMonthlyReview={handleOpenMonthlyReview}

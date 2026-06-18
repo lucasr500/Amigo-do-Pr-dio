@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { getViewMode, setViewMode } from "@/lib/community-permissions";
+import { setViewMode } from "@/lib/community-permissions";
+import { resolveCommunityRole } from "@/lib/community-view";
 import type { CommunityRole } from "@/lib/community-types";
 
 // Comunidade — a rede social do condomínio, agora aba de 1ª classe (W7).
@@ -29,6 +30,7 @@ const MonthlyReviewHistoryPanel      = dynamic(() => import("@/components/Monthl
 type Props = {
   refreshKey: number;
   condoName: string;
+  profile: "manager" | "resident";   // persona de login — TRAVA o papel (anti-leak)
   focusedCentralSection?: string | null;
   onRefresh: () => void;
   onOpenMonthlyReview: () => void;
@@ -36,15 +38,20 @@ type Props = {
 
 const RESIDENT_SECTIONS: CommSection[] = ["mural", "canal", "reservas", "enquetes", "documentos", "transparencia"];
 
-export default function CommunidadeTab({ refreshKey, condoName, focusedCentralSection, onRefresh, onOpenMonthlyReview }: Props) {
-  const [communityRole, setCommunityRole] = useState<CommunityRole>("manager");
-  const [section, setSection] = useState<CommSection>("hub");
+export default function CommunidadeTab({ refreshKey, condoName, profile, focusedCentralSection, onRefresh, onOpenMonthlyReview }: Props) {
+  // SEGURANÇA POR PAPEL: o morador (activeProfile=resident) é TRAVADO em visão de
+  // morador — nunca vê conteúdo de gestão por default nem pode simular gestão. Só o
+  // síndico pode usar o seletor de visão (preview). Enforcement real é pós-relacional;
+  // aqui garantimos que o perfil de login não vaza a camada de gestão.
+  const [communityRole, setCommunityRole] = useState<CommunityRole>(profile === "resident" ? "resident" : "manager");
+  const [section, setSection] = useState<CommSection>(profile === "resident" ? "mural" : "hub");
 
-  useEffect(() => { setCommunityRole(getViewMode()); }, []);
+  useEffect(() => { setCommunityRole(resolveCommunityRole(profile)); }, [profile]);
 
   const isResidentView = communityRole === "resident";
 
   const handleRoleChange = (role: CommunityRole) => {
+    if (profile === "resident") return; // morador não simula gestão
     setViewMode(role);
     setCommunityRole(role);
     setSection(role === "resident" ? "mural" : "hub");
@@ -80,9 +87,11 @@ export default function CommunidadeTab({ refreshKey, condoName, focusedCentralSe
         </p>
       </div>
 
-      <section className="px-5 pb-2 sm:px-6">
-        <ViewModeSelector onChange={handleRoleChange} />
-      </section>
+      {profile === "manager" && (
+        <section className="px-5 pb-2 sm:px-6">
+          <ViewModeSelector onChange={handleRoleChange} />
+        </section>
+      )}
 
       <section className="px-5 pb-3 sm:px-6">
         <div className="no-scrollbar overflow-x-auto">
