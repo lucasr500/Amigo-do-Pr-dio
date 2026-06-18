@@ -14,6 +14,7 @@ import {
 import { can, isAllDemoData } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const TYPES = Object.entries(REQUEST_TYPE_LABELS) as [RequestType, string][];
 const PRIORITIES = Object.entries(REQUEST_PRIORITY_LABELS) as [RequestPriority, string][];
@@ -245,7 +246,7 @@ export default function RequestsPanel({ role }: Props) {
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04)]">
         <div className="px-5 pt-4 pb-3 flex items-start justify-between">
           <div>
-            <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Central Digital</p>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Comunicação</p>
             <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">
               {isManager ? "Triagem — Canal do Morador" : "Minha Participação"}
             </h2>
@@ -475,6 +476,7 @@ export default function RequestsPanel({ role }: Props) {
           description={emptyCopy[viewTab].description}
           actionLabel={can(role, "canCreateRequest") && viewTab !== "fechadas" ? emptyCopy[viewTab].actionLabel : undefined}
           onAction={can(role, "canCreateRequest") && viewTab !== "fechadas" ? () => openForm(emptyCopy[viewTab].actionMode) : undefined}
+          hint={communityEmptyState("requests", audienceFromRole(isManager)).hint}
         />
       )}
 

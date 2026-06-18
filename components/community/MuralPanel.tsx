@@ -14,6 +14,9 @@ import {
 import { can, filterByVisibility, isAllDemoData } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
+import ContentNatureBadge from "@/components/ContentNatureBadge";
+import { natureOfPost, natureOfComment } from "@/lib/content-nature";
 
 const CATEGORIES = Object.entries(POST_CATEGORY_LABELS) as [PostCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -25,11 +28,6 @@ const EMPTY_FORM: FormState = {
   linkUrl: "",
 };
 
-const ORIGIN_BADGE: Record<PostOrigin, { label: string; style: string }> = {
-  oficial:  { label: "Mural Oficial", style: "bg-navy-100 text-navy-600" },
-  morador:  { label: "Participação",  style: "bg-sage-100 text-sage-700" },
-  sistema:  { label: "Sistema",       style: "bg-navy-50 text-navy-400" },
-};
 
 const CAT_COLORS: Partial<Record<PostCategory, string>> = {
   urgencia:    "bg-red-100 text-red-700",
@@ -125,7 +123,7 @@ export default function MuralPanel({ role }: Props) {
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04)]">
         <div className="px-5 pt-4 pb-3 flex items-start justify-between">
           <div>
-            <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Central Digital</p>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Comunicação</p>
             <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Mural Oficial</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
               {isManager ? "Publique comunicados, obras e avisos de forma registrada." : "Comunicados e avisos publicados pela gestão."}
@@ -256,6 +254,7 @@ export default function MuralPanel({ role }: Props) {
             : "Quando a gestão publicar avisos, obras ou comunicados oficiais, eles aparecerão aqui."}
           actionLabel={can(role, "canCreatePost") ? "Publicar comunicado" : undefined}
           onAction={can(role, "canCreatePost") ? () => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); } : undefined}
+          hint={communityEmptyState("mural", audienceFromRole(isManager)).hint}
         />
       )}
 
@@ -286,11 +285,7 @@ export default function MuralPanel({ role }: Props) {
                     <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-medium flex-shrink-0 ${catColor(p.category)}`}>
                       {POST_CATEGORY_LABELS[p.category]}
                     </span>
-                    {p.origin && (
-                      <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-medium flex-shrink-0 ${ORIGIN_BADGE[p.origin].style}`}>
-                        {ORIGIN_BADGE[p.origin].label}
-                      </span>
-                    )}
+                    {p.origin && <ContentNatureBadge nature={natureOfPost(p)} size="xs" />}
                   </div>
                   <p className="mt-0.5 text-[11px] text-navy-400">
                     {formatDateSafe(p.createdAt, undefined, "Data não informada")}
@@ -345,7 +340,7 @@ export default function MuralPanel({ role }: Props) {
                       .map((c) => (
                         <div key={c.id} className={`mb-2 rounded-xl p-2.5 ${c.status === "oculto" || c.status === "removido" ? "bg-navy-50/50 opacity-60" : "bg-navy-50/80"}`}>
                           <div className="flex items-center justify-between">
-                            <p className="text-[11px] font-medium text-navy-700">{c.authorName}</p>
+                            <div className="flex items-center gap-1.5"><ContentNatureBadge nature={natureOfComment(c)} size="xs" showDot={false} /><p className="text-[11px] font-medium text-navy-700">{c.authorName}</p></div>
                             {isManager && c.status === "publicado" && (
                               <button type="button" onClick={() => { moderateComment(c.id, "oculto"); loadComments(p.id); }}
                                 className="text-[10px] text-navy-400 hover:text-terracotta-600">Ocultar</button>

@@ -1,7 +1,10 @@
 "use client";
 
-export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio";
+export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "memoria" | "comunidade" | "ajustes";
 export type NavProfile = "manager" | "resident";
+// Alvos de navegação da barra inferior. "pendencias" não é uma aba: abre a
+// subView de pendências dentro de Início (tratado em app/page.tsx).
+export type NavTarget = AppTab | "pendencias";
 
 function IconHome({ active }: { active: boolean }) {
   return (
@@ -54,25 +57,70 @@ function IconAccount({ active }: { active: boolean }) {
   );
 }
 
+function IconMemoria({ active }: { active: boolean }) {
+  // Cérebro / memória institucional — livro aberto com marcador.
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <path d="M10 5.5C8.5 4.3 6.3 4 4.2 4.4a1 1 0 00-.8 1V15a1 1 0 001.2 1c1.9-.4 3.9-.1 5.4 1 1.5-1.1 3.5-1.4 5.4-1a1 1 0 001.2-1V5.4a1 1 0 00-.8-1C13.7 4 11.5 4.3 10 5.5z" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinejoin="round" />
+      <path d="M10 5.5V16" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconPendencias({ active }: { active: boolean }) {
+  // Lista com check — pendências / tarefas.
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <path d="M7.5 6h8M7.5 10h8M7.5 14h5" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+      <path d="M3.5 6l1 1 1.5-1.8M3.5 10l1 1 1.5-1.8" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="4.5" cy="14" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconComunidade({ active }: { active: boolean }) {
+  // Pessoas — a rede do condomínio.
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <circle cx="7" cy="7" r="2.6" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <circle cx="14" cy="8" r="2.1" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <path d="M2.5 16c0-2.3 2-4 4.5-4s4.5 1.7 4.5 4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+      <path d="M13 12.2c2.2 0 4.5 1.4 4.5 3.8" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconAjustes({ active }: { active: boolean }) {
+  // Engrenagem — ajustes.
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="2.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+    </svg>
+  );
+}
+
 type TabItem = {
-  id: AppTab;
+  id: NavTarget;
   label: string;
   Icon: (props: { active: boolean }) => React.JSX.Element;
 };
 
+// Síndico/Gestor — opção A (W7): Início · Memória · [Perguntar] · Comunidade · Ajustes.
+// Pendências vive no motor "Hoje" do Início (o badge de urgência fica no Início).
 const LEFT_TABS: TabItem[] = [
-  { id: "inicio",     label: "Hoje",       Icon: IconHome },
-  { id: "agenda",     label: "Agenda",     Icon: IconCalendar },
+  { id: "inicio",     label: "Início",     Icon: IconHome },
+  { id: "memoria",    label: "Memória",    Icon: IconMemoria },
 ];
 
 const RIGHT_TABS: TabItem[] = [
-  { id: "assistente", label: "Assist.",    Icon: IconChat },
-  { id: "condominio", label: "Prédio",     Icon: IconAccount },
+  { id: "comunidade", label: "Comunidade", Icon: IconComunidade },
+  { id: "ajustes",    label: "Ajustes",    Icon: IconAjustes },
 ];
 
 const RESIDENT_LEFT_TABS: TabItem[] = [
   { id: "inicio",     label: "Início",       Icon: IconHome },
-  { id: "condominio", label: "Mural",        Icon: IconCalendar },
+  { id: "comunidade", label: "Comunidade",   Icon: IconComunidade },
 ];
 
 const RESIDENT_RIGHT_TABS: TabItem[] = [
@@ -81,18 +129,24 @@ const RESIDENT_RIGHT_TABS: TabItem[] = [
 ];
 
 type Props = {
-  active: AppTab;
-  onChange: (tab: AppTab) => void;
+  active: NavTarget;
+  onChange: (tab: NavTarget) => void;
   urgentCount?: number;
   profile?: NavProfile;
 };
 
 export default function BottomNav({ active, onChange, urgentCount, profile = "manager" }: Props) {
-  const plusActive = active === "ferramentas";
-  const leftTabs = profile === "resident" ? RESIDENT_LEFT_TABS : LEFT_TABS;
-  const rightTabs = profile === "resident" ? RESIDENT_RIGHT_TABS : RIGHT_TABS;
-  const plusLabel = profile === "resident" ? "Canal" : "Ações";
-  const plusAria = profile === "resident" ? "Abrir canal estruturado da visualização de morador" : "Ações do síndico";
+  const isResident = profile === "resident";
+  const leftTabs = isResident ? RESIDENT_LEFT_TABS : LEFT_TABS;
+  const rightTabs = isResident ? RESIDENT_RIGHT_TABS : RIGHT_TABS;
+  // Centro: morador abre o "Canal" (solicitações); síndico abre "Perguntar" (assistente).
+  const plusTarget: NavTarget = isResident ? "ferramentas" : "assistente";
+  const plusActive = active === plusTarget;
+  const plusLabel = isResident ? "Canal" : "Perguntar";
+  const plusAria = isResident ? "Abrir canal estruturado da visualização de morador" : "Pergunte ao prédio — abrir assistente";
+  // Badge de urgência no Início (o motor "Hoje" surfaceia as pendências urgentes).
+  const badgeFor = (id: NavTarget) =>
+    id === "inicio" && (urgentCount ?? 0) > 0 ? (urgentCount as number) : 0;
 
   return (
     <nav
@@ -110,7 +164,7 @@ export default function BottomNav({ active, onChange, urgentCount, profile = "ma
             {/* Left tabs */}
             {leftTabs.map((tab) => {
               const isActive = active === tab.id;
-              const badgeCount = tab.id === "inicio" && (urgentCount ?? 0) > 0 ? urgentCount : 0;
+              const badgeCount = badgeFor(tab.id);
               return (
                 <button
                   key={tab.id}
@@ -143,16 +197,22 @@ export default function BottomNav({ active, onChange, urgentCount, profile = "ma
                 type="button"
                 aria-label={plusAria}
                 aria-pressed={plusActive}
-                onClick={() => onChange("ferramentas")}
+                onClick={() => onChange(plusTarget)}
                 className={`flex h-[52px] w-[52px] items-center justify-center rounded-full transition-all duration-150 active:scale-[0.93] ${
                   plusActive
                     ? "bg-navy-900 shadow-elevated"
                     : "bg-navy-800 shadow-card-md"
                 }`}
               >
-                <svg viewBox="0 0 20 20" className="h-[22px] w-[22px] text-white" fill="none" aria-hidden="true">
-                  <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
-                </svg>
+                {isResident ? (
+                  <svg viewBox="0 0 20 20" className="h-[22px] w-[22px] text-white" fill="none" aria-hidden="true">
+                    <path d="M10 4.5v11M4.5 10h11" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" />
+                  </svg>
+                ) : (
+                  <span className="text-white">
+                    <IconChat active />
+                  </span>
+                )}
               </button>
               <span className={`mt-1.5 whitespace-nowrap text-[10px] font-semibold leading-none ${plusActive ? "text-navy-800" : "text-navy-300"}`}>
                 {plusLabel}
@@ -162,6 +222,7 @@ export default function BottomNav({ active, onChange, urgentCount, profile = "ma
             {/* Right tabs */}
             {rightTabs.map((tab) => {
               const isActive = active === tab.id;
+              const badgeCount = badgeFor(tab.id);
               return (
                 <button
                   key={tab.id}
@@ -173,7 +234,14 @@ export default function BottomNav({ active, onChange, urgentCount, profile = "ma
                     isActive ? "text-navy-800" : "text-navy-300 hover:text-navy-500"
                   }`}
                 >
-                  <tab.Icon active={isActive} />
+                  <div className="relative">
+                    <tab.Icon active={isActive} />
+                    {!!badgeCount && (
+                      <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta-600 px-0.5 text-[9px] font-bold leading-none text-white">
+                        {badgeCount > 9 ? "9+" : badgeCount}
+                      </span>
+                    )}
+                  </div>
                   <span className={`whitespace-nowrap text-[10px] font-semibold leading-none ${isActive ? "text-navy-800" : "text-navy-300"}`}>
                     {tab.label}
                   </span>

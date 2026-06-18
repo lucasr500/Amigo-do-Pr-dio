@@ -1,4 +1,4 @@
-// Tipos do banco Supabase — derivados das migrations 001 e 002.
+// Tipos do banco Supabase — derivados das migrations 001–005.
 // Nunca importar diretamente no bundle inicial; usar apenas dentro de funções async lazy-loaded.
 
 export interface DbProfile {
@@ -55,6 +55,31 @@ export interface DbAuditEntry {
   impact: string | null;
 }
 
+// ─── Multi-tenant (migration 005) ────────────────────────────────────────────
+
+export type MembershipRole = "owner" | "manager" | "council" | "resident" | "viewer";
+export type MembershipStatus = "active" | "invited" | "suspended" | "removed";
+
+export interface DbCondominio {
+  id: string;
+  owner_id: string;
+  nome: string;
+  slug: string | null;
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+}
+
+export interface DbMembership {
+  id: string;
+  user_id: string;
+  condominio_id: string;
+  role: MembershipRole;
+  status: MembershipStatus;
+  created_at: string;
+  updated_at: string;
+}
+
 // Tabelas do schema público — formato esperado pelo @supabase/supabase-js v2.
 export type Database = {
   public: {
@@ -89,9 +114,30 @@ export type Database = {
         Update: Partial<Omit<DbAuditEntry, "id">>;
         Relationships: [];
       };
+      condominios: {
+        Row: DbCondominio;
+        Insert: Omit<DbCondominio, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<DbCondominio, "id">>;
+        Relationships: [];
+      };
+      memberships: {
+        Row: DbMembership;
+        Insert: Omit<DbMembership, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<DbMembership, "id">>;
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      is_condominio_member: {
+        Args: { condominio_uuid: string };
+        Returns: boolean;
+      };
+      has_condominio_role: {
+        Args: { condominio_uuid: string; allowed_roles: string[] };
+        Returns: boolean;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

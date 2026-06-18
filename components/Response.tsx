@@ -748,11 +748,11 @@ export default function Response({
                           <div className="mb-1 flex items-center gap-1.5">
                             <span className="text-[11px]" aria-hidden="true">⚖️</span>
                             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-navy-500">
-                              Biblioteca de decisões
+                              Guia de situações
                             </p>
                           </div>
                           <p className="text-[12.5px] leading-relaxed text-navy-600">
-                            Esta situação tem orientação prática detalhada na seção <strong>Decisões do Síndico</strong>, disponível na aba Condomínio.
+                            Esta situação tem orientação prática detalhada no <strong>Guia de situações</strong>, em Ferramentas → Explorar por tema.
                           </p>
                         </div>
                       )}

@@ -188,7 +188,7 @@ export const SEARCH_INDEX: SearchResult[] = [
   },
   {
     id: "central-digital",
-    title: "Central Digital",
+    title: "Comunicação",
     description: "Canal oficial com mural, solicitações, reservas, enquetes e documentos públicos.",
     type: "modulo",
     tab: "condominio",
@@ -248,7 +248,7 @@ export const SEARCH_INDEX: SearchResult[] = [
   },
   {
     id: "central-relatorio",
-    title: "Relatório da Central Digital",
+    title: "Relatório da Comunicação",
     description: "Resumo copiável da comunicação, solicitações e participação.",
     type: "modulo",
     tab: "condominio",

@@ -130,7 +130,7 @@ export default function ManagerCockpitHero({
             <button
               type="button"
               onClick={() => onNavigateToSubView("saude")}
-              className="self-start rounded-full border border-white/10 bg-white/[0.08] px-3.5 py-2 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.12]"
+              className="self-start rounded-full border border-white/10 bg-white/[0.08] px-3.5 py-2 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.12] focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
             >
               Ver saúde
             </button>
@@ -140,7 +140,7 @@ export default function ManagerCockpitHero({
             <button
               type="button"
               onClick={() => onNavigateToSubView("saude")}
-              className="rounded-[24px] border border-white/10 bg-white/[0.07] p-4 text-left transition-colors hover:bg-white/[0.10]"
+              className="rounded-[24px] border border-white/10 bg-white/[0.07] p-4 text-left transition-colors hover:bg-white/[0.10] focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
             >
               <div className="flex items-center gap-4">
                 <Ring value={state.score} />
@@ -158,7 +158,7 @@ export default function ManagerCockpitHero({
               <button
                 type="button"
                 onClick={() => onNavigateToSubView("pendencias")}
-                className="rounded-[22px] border border-terracotta-300/20 bg-terracotta-300/10 px-4 py-3 text-left transition-colors hover:bg-terracotta-300/14"
+                className="rounded-[22px] border border-terracotta-300/20 bg-terracotta-300/10 px-4 py-3 text-left transition-colors hover:bg-terracotta-300/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-terracotta-100/70">Riscos ativos</p>
                 <p className="mt-1 text-[20px] font-semibold text-white">
@@ -172,9 +172,9 @@ export default function ManagerCockpitHero({
                 type="button"
                 onClick={() => {
                   if (onNavigateToSection) onNavigateToSection("memoria-institucional");
-                  else onNavigateTab("condominio");
+                  else onNavigateTab("memoria");
                 }}
-                className="rounded-[22px] border border-white/10 bg-white/[0.07] px-4 py-3 text-left transition-colors hover:bg-white/[0.10]"
+                className="rounded-[22px] border border-white/10 bg-white/[0.07] px-4 py-3 text-left transition-colors hover:bg-white/[0.10] focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
               >
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-cream-100/50">Decisões em curso</p>
                 <p className="mt-1 text-[15px] font-semibold text-white">
@@ -196,7 +196,7 @@ export default function ManagerCockpitHero({
 
           <div className="mt-4 grid gap-2 sm:grid-cols-4">
             {([
-              { label: "Central Digital", target: "central-digital", central: "hub" as CentralSectionId },
+              { label: "Comunicação", target: "central-digital", central: "hub" as CentralSectionId },
               { label: "Documentos", target: "documentos" },
               { label: "Financeiro", target: "financeiro" },
               { label: "Memória", target: "memoria-institucional" },
@@ -206,9 +206,9 @@ export default function ManagerCockpitHero({
                 type="button"
                 onClick={() => {
                   if (onNavigateToSection) onNavigateToSection(target, central);
-                  else onNavigateTab("condominio");
+                  else onNavigateTab("memoria");
                 }}
-                className="min-h-11 rounded-2xl border border-white/10 bg-white/[0.06] px-3 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.10]"
+                className="min-h-11 rounded-2xl border border-white/10 bg-white/[0.06] px-3 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.10] focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
               >
                 {label}
               </button>

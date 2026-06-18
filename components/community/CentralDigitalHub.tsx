@@ -86,7 +86,7 @@ export default function CentralDigitalHub() {
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04)]">
         <div className="px-5 pt-4 pb-3">
           <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Visão Geral</p>
-          <h2 className="mt-0.5 text-[14px] font-semibold text-navy-800">Central Digital</h2>
+          <h2 className="mt-0.5 text-[14px] font-semibold text-navy-800">Comunicação</h2>
           {hasAlerts && (
             <p className="mt-1 text-[11px] text-amber-700">
               {totalActions} item{totalActions !== 1 ? "ns" : ""} aguardando ação da gestão.

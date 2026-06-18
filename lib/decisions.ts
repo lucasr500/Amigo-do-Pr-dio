@@ -4,6 +4,8 @@
 
 import { safeRead, safeWrite, KEYS } from "./session-core";
 import { emitDecisionStatusChanged } from "./community-timeline";
+import type { Visibility } from "./community-types";
+import { mirrorUpsertDecision, mirrorDeleteDecision } from "@/lib/tenant/decisionsRemote";
 
 export type DecisionCategory =
   | "financeiro"
@@ -30,6 +32,10 @@ export type Decision = {
   rationale: string;          // por que esta decisão
   outcome: string;            // decisão tomada
   status: DecisionStatus;     // ciclo de vida operacional
+  // quem pode LER (default gestao); espelha o enum da comunidade. Opcional no tipo
+  // (como no desenho rev.2) para não quebrar construtores por literal; normalizeDecision
+  // SEMPRE preenche com 'gestao' quando ausente, então na prática é sempre definido.
+  visibility?: Visibility;
   riskLevel?: DecisionRiskLevel;
   riskNotes?: string;
   nextStep?: string;
@@ -83,6 +89,12 @@ export function normalizeDecision(raw: Partial<Decision>): Decision {
       ? raw.riskLevel
       : undefined;
 
+  const visibility: Visibility =
+    raw.visibility === "gestao" || raw.visibility === "conselho" ||
+    raw.visibility === "moradores" || raw.visibility === "publico"
+      ? raw.visibility
+      : "gestao";
+
   return {
     id: raw.id || genId(),
     title: raw.title?.trim() || "Decisão sem título",
@@ -92,6 +104,7 @@ export function normalizeDecision(raw: Partial<Decision>): Decision {
     rationale: raw.rationale?.trim() || "",
     outcome: raw.outcome?.trim() || "",
     status,
+    visibility,
     riskLevel,
     riskNotes: raw.riskNotes?.trim() || undefined,
     nextStep: raw.nextStep?.trim() || undefined,
@@ -112,10 +125,11 @@ export function saveDecisions(list: Decision[]): void {
   safeWrite(KEYS.DECISIONS, list.map(normalizeDecision).slice(-500));
 }
 
-export function addDecision(data: Omit<Decision, "id" | "createdAt" | "updatedAt" | "status"> & { status?: DecisionStatus }): Decision {
+export function addDecision(data: Omit<Decision, "id" | "createdAt" | "updatedAt" | "status" | "visibility"> & { status?: DecisionStatus; visibility?: Visibility }): Decision {
   const now = new Date().toISOString();
   const decision = normalizeDecision({ ...data, id: genId(), createdAt: now, updatedAt: now });
   saveDecisions([...getDecisions(), decision]);
+  void mirrorUpsertDecision(decision); // dual-write PUSH best-effort (no-op se flag off)
   return decision;
 }
 
@@ -125,6 +139,7 @@ export function updateDecision(id: string, patch: Partial<Omit<Decision, "id" | 
   saveDecisions(next);
 
   const updated = next.find((d) => d.id === id);
+  if (updated) void mirrorUpsertDecision(updated); // dual-write PUSH best-effort (no-op se flag off)
   if (
     previous &&
     updated &&
@@ -137,6 +152,7 @@ export function updateDecision(id: string, patch: Partial<Omit<Decision, "id" | 
 
 export function deleteDecision(id: string): void {
   saveDecisions(getDecisions().filter((d) => d.id !== id));
+  void mirrorDeleteDecision(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function getDecisionsByCategory(category: DecisionCategory): Decision[] {

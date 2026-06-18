@@ -10,9 +10,14 @@ const FLAG_KEY = KEYS.FEATURE_FLAGS;
 const FLAG_DEFAULTS = {
   notifications_enabled:    true,   // Central de notificações internas
   health_history_enabled:   true,   // Histórico do Health Score
-  sync_enabled:             false,  // Sync com Supabase — desativado por default (ativar via localStorage para teste)
+  sync_enabled:             false,  // Sync com Supabase — segue a autenticação (anônimo=off, autenticado=on); ver syncFollowsAuth()
   auth_enabled:             true,   // Login/conta — ativo
+  tenant_enabled:           true,   // Ativa o contexto multi-tenant (condomínio + papel) ao autenticar
   multi_device_enabled:     false,  // Multi-device sync (futuro)
+  agenda_remote_enabled:    false,  // dual-write da Agenda (Fatia 2a)
+  assemblies_remote_enabled: false, // dual-write da Assembleia — so liga apos o gate de isolamento verde
+  decisions_remote_enabled: false,  // dual-write de Decisões (D2) — so liga apos rollout (PF→PJ) do Lucas
+  mural_remote_enabled:     false,  // dual-write do Mural/Comunicados (009) — so liga apos rollout (PF→PJ)
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental
   premium_features:         false,  // Funcionalidades premium (futuro)
@@ -64,6 +69,49 @@ export function resetFlag(flag: FeatureFlag): void {
     delete overrides[flag];
     localStorage.setItem(FLAG_KEY, JSON.stringify(overrides));
   } catch { /* empty */ }
+}
+
+// Regra: o sync segue a autenticação — anônimo = off, autenticado = on.
+// Exceção: se o usuário tomou decisão explícita (setSyncPreference), ela prevalece
+// sobre a autenticação. Idempotente.
+const SYNC_EXPLICIT_KEY = "amigo_sync_pref_explicit";
+
+function hasExplicitSyncChoice(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(SYNC_EXPLICIT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+// Alinha sync_enabled ao estado de autenticação, a menos que o usuário já tenha
+// escolhido manualmente. Chamar com true ao autenticar e false ao virar anônimo.
+export function syncFollowsAuth(isAuthenticated: boolean): void {
+  if (typeof window === "undefined") return;
+  if (hasExplicitSyncChoice()) return; // escolha do usuário precede a regra
+  try {
+    const overrides = readOverrides();
+    overrides.sync_enabled = isAuthenticated;
+    localStorage.setItem(FLAG_KEY, JSON.stringify(overrides));
+  } catch { /* quota — ignora */ }
+}
+
+// Registra uma decisão explícita do usuário sobre o sync (precede a regra de auth).
+export function setSyncPreference(value: boolean): void {
+  if (typeof window === "undefined") return;
+  setFlag("sync_enabled", value);
+  try {
+    localStorage.setItem(SYNC_EXPLICIT_KEY, "1");
+  } catch { /* quota — ignora */ }
+}
+
+/**
+ * @deprecated Use syncFollowsAuth(true) — via canônica da regra "sync segue a
+ * autenticação". Mantido apenas como compat; equivale a "autenticou liga sync".
+ */
+export function enableSyncOnAuth(): void {
+  syncFollowsAuth(true);
 }
 
 // Retorna todos os flags com valores resolvidos (default + overrides).

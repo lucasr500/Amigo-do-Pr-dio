@@ -51,6 +51,10 @@ export const KEYS = {
   COMMUNITY_COMMENTS:    "amigo_community_comments",
   COMMUNITY_AUDIT:       "amigo_community_audit",
   VIEW_MODE:             "amigo_view_mode",
+  // v12 — Assembleia Inteligente (ancora do wedge social)
+  ASSEMBLEIAS:           "amigo_assembleias",
+  ASSEMBLEIA_ITENS:      "amigo_assembleia_itens",
+  ASSEMBLEIA_COMENTARIOS: "amigo_assembleia_comentarios",
 } as const;
 
 // Lê de localStorage com fallback seguro.
@@ -80,22 +84,38 @@ export function safeWrite(key: string, value: unknown): void {
     if (e instanceof DOMException) {
       // Quota exceeded: libera espaço em ordem de prioridade crescente e retenta
       const candidates = [KEYS.QUERIES, KEYS.AUDIT_LOG, KEYS.HEALTH_HISTORY];
+      let freed = false;
       for (const candidate of candidates) {
         try {
           localStorage.removeItem(candidate);
           localStorage.setItem(key, JSON.stringify(value));
-          return;
+          freed = true;
+          break;
         } catch {
           // ainda sem espaço — tenta o próximo candidato
         }
       }
+      // Sinaliza pressão de storage para observabilidade
+      try {
+        window.dispatchEvent(
+          new CustomEvent("amigo:storage-pressure", {
+            detail: { key, evicted: freed, sizeKB: getStorageSizeKB() },
+          })
+        );
+      } catch { /* DOM não disponível — ignora */ }
     }
   }
 }
 
-// Data atual em formato YYYY-MM-DD (fuso local do dispositivo).
+// Data atual em formato YYYY-MM-DD usando fuso local do dispositivo.
+// new Date().toISOString() retorna UTC — para usuários em UTC-3 (Brasil),
+// após as 21h retornaria a data de amanhã. Usar métodos getFullYear/Month/Date.
 export function todayISO(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 // ─── Utilitários de storage ───────────────────────────────────────────────────

@@ -9,7 +9,6 @@ import HomeTab from "@/components/tabs/HomeTab";
 import AgendaTab from "@/components/tabs/AgendaTab";
 import AssistantTab, { type AssistantTabHandle } from "@/components/tabs/AssistantTab";
 import ToolsTab from "@/components/tabs/ToolsTab";
-import CondominioTab from "@/components/tabs/CondominioTab";
 import ResidentHomeTab from "@/components/ResidentHomeTab";
 import TabErrorBoundary from "@/components/TabErrorBoundary";
 import type { ToolAnchor, ToolGroup } from "@/lib/app-navigation";
@@ -34,7 +33,12 @@ import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
+import { pullRemoteDecisions } from "@/lib/tenant/decisionsSync";
+import { pullRemotePosts } from "@/lib/tenant/communityPostsSync";
 
+const MemoriaTab         = dynamic(() => import("@/components/tabs/MemoriaTab"), { ssr: false });
+const CommunidadeTab     = dynamic(() => import("@/components/tabs/CommunidadeTab"), { ssr: false });
+const AjustesTab         = dynamic(() => import("@/components/tabs/AjustesTab"), { ssr: false });
 const NotificationCenter = dynamic(() => import("@/components/NotificationCenter"), { ssr: false });
 const DemoModeBanner     = dynamic(() => import("@/components/DemoModeBanner"), { ssr: false });
 const OnboardingFlow     = dynamic(() => import("@/components/onboarding/OnboardingFlow"), { ssr: false });
@@ -75,13 +79,15 @@ export default function HomePage() {
   // ── Condomínio state ────────────────────────────────────────────
   const [shouldExpandMemoria, setShouldExpandMemoria] = useState(false);
   const [showNotifSettings, setShowNotifSettings]     = useState(false);
-  const [focusRevisaoMensal, setFocusRevisaoMensal]   = useState(false);
   const [shouldOpenBackup, setShouldOpenBackup]       = useState(false);
-  const [pendingCondominioSection, setPendingCondominioSection] = useState<string | null>(null);
-  const [pendingCentralSection, setPendingCentralSection] = useState<CentralSectionId | null>(null);
+  const [pendingAjustesSection, setPendingAjustesSection] = useState<string | null>(null);
+  const [pendingCentralSection, setPendingCentralSection] = useState<string | null>(null);
 
   // ── Search state ─────────────────────────────────────────────────
   const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+
+  // ── Memória deep-link (ex.: card do Início → Assembleias) ───────
+  const [pendingMemoriaSection, setPendingMemoriaSection] = useState<string | null>(null);
 
   // ── Ferramentas state ───────────────────────────────────────────
   const [activeToolGroup, setActiveToolGroup]     = useState<ToolGroup | null>(null);
@@ -125,8 +131,20 @@ export default function HomePage() {
     setUnreadNotifications(getUnreadCount());
     const stopSession = startSessionTimer();
     void flushPendingSync();
+    // Cutover de LEITURA de Decisões (D2): mesmo gatilho do sync de snapshot — boot
+    // autenticado e reconexão. NO-OP total com decisions_remote_enabled off / anônimo /
+    // sem condomínio: store local intocado, UI segue em getDecisions(). Best-effort.
+    void pullRemoteDecisions();
+    void pullRemotePosts(); // cutover de leitura do Mural (009): no-op com mural_remote_enabled off
+    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); };
+    window.addEventListener("online", pullRelationalOnOnline);
     const stopOnline = startOnlineListener();
-    return () => { stopScheduler(); stopSession(); stopOnline(); };
+    return () => {
+      stopScheduler();
+      stopSession();
+      stopOnline();
+      window.removeEventListener("online", pullRelationalOnOnline);
+    };
   }, []);
 
   useEffect(() => {
@@ -174,24 +192,10 @@ export default function HomePage() {
     if (activeTab !== "ferramentas") setActiveToolGroup(null);
   }, [activeTab]);
 
-  // Scroll para revisão mensal após navegação para aba condomínio
+  // Scroll para seção específica dentro de Ajustes (dados/operacao/implantacao)
   useEffect(() => {
-    if (activeTab !== "condominio" || !focusRevisaoMensal) return;
-    const scrollToRevisao = () => {
-      const el = document.getElementById("revisao-mensal");
-      if (!el) return false;
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      return true;
-    };
-    const first = window.setTimeout(scrollToRevisao, 120);
-    const second = window.setTimeout(() => { scrollToRevisao(); setFocusRevisaoMensal(false); }, 320);
-    return () => { window.clearTimeout(first); window.clearTimeout(second); };
-  }, [activeTab, focusRevisaoMensal]);
-
-  // Scroll para seção específica após navegação para aba condomínio
-  useEffect(() => {
-    if (activeTab !== "condominio" || !pendingCondominioSection) return;
-    const section = pendingCondominioSection;
+    if (activeTab !== "ajustes" || !pendingAjustesSection) return;
+    const section = pendingAjustesSection;
     const scrollToSection = () => {
       const el = document.getElementById(section);
       if (!el) return false;
@@ -199,13 +203,9 @@ export default function HomePage() {
       return true;
     };
     const first = window.setTimeout(scrollToSection, 140);
-    const second = window.setTimeout(() => {
-      scrollToSection();
-      setPendingCondominioSection(null);
-      setPendingCentralSection(null);
-    }, 340);
+    const second = window.setTimeout(() => { scrollToSection(); setPendingAjustesSection(null); }, 340);
     return () => { window.clearTimeout(first); window.clearTimeout(second); };
-  }, [activeTab, pendingCondominioSection]);
+  }, [activeTab, pendingAjustesSection]);
 
   // ── Handlers de navegação ───────────────────────────────────────
   const navigateTab = (tab: AppTab) => {
@@ -267,18 +267,49 @@ export default function HomePage() {
   // ── Handlers do condomínio ──────────────────────────────────────
   const handleSetupMemoria = () => setShouldExpandMemoria(true);
 
-  const handleOpenRevisaoMensal = () => { setFocusRevisaoMensal(true); navigateTab("condominio"); };
-  const handleOpenMonthlyReview = () => { setFocusRevisaoMensal(true); navigateTab("condominio"); };
+  // Revisão detalhada vive na Transparência (Comunidade), como camada de gestão.
+  const handleOpenRevisaoMensal = () => { setPendingCentralSection("transparencia"); navigateTab("comunidade"); };
+  const handleOpenMonthlyReview = () => { setPendingCentralSection("transparencia"); navigateTab("comunidade"); };
 
+  // Rerota central dos deep-links antigos do "Mais" (W7) para as novas abas.
   const handleNavigateToSection = (sectionId: string, centralSection?: CentralSectionId) => {
-    setPendingCondominioSection(sectionId);
-    setPendingCentralSection(centralSection ?? null);
-    navigateTab("condominio");
+    switch (sectionId) {
+      case "central-digital":
+        setPendingCentralSection(centralSection ?? "mural");
+        navigateTab("comunidade");
+        return;
+      case "revisao-mensal":
+      case "financeiro":
+        setPendingCentralSection("transparencia");
+        navigateTab("comunidade");
+        return;
+      case "memoria-institucional":
+        setPendingMemoriaSection(null);
+        navigateTab("memoria");
+        return;
+      case "documentos":
+        setPendingMemoriaSection("documentos");
+        navigateTab("memoria");
+        return;
+      case "dados":
+      case "operacao":
+      case "implantacao":
+        setPendingAjustesSection(sectionId === "dados" ? "dados" : sectionId);
+        navigateTab("ajustes");
+        return;
+      default:
+        navigateTab("memoria");
+    }
   };
 
   const handleSetToolGroup = (group: string) => {
     setActiveToolGroup(group as ToolGroup);
     navigateTab("ferramentas");
+  };
+
+  const handleOpenMemoria = (section?: string) => {
+    setPendingMemoriaSection(section ?? null);
+    navigateTab("memoria");
   };
 
   // ── Handlers de demo ────────────────────────────────────────────
@@ -301,9 +332,13 @@ export default function HomePage() {
     return <RoleGateway onSelectProfile={handleSelectProfile} />;
   }
 
+  // Cockpit do síndico ganha respiro em telas largas (desktop); demais visões
+  // mantêm a coluna de leitura de 760px. Mobile não é afetado (mx-auto + w-full).
+  const wideCockpit = activeProfile === "manager" && activeTab === "inicio" && !subView;
+
   return (
     <div className="grain-bg flex min-h-dvh max-w-[100vw] flex-col overflow-x-hidden bg-[radial-gradient(circle_at_top,#F7F1E8_0,#FBF8F2_42%,#F4ECDF_100%)]">
-      <div className="relative z-10 mx-auto flex w-full max-w-[760px] flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)]">
+      <div className={`relative z-10 mx-auto flex w-full flex-1 flex-col overflow-x-hidden pb-[calc(env(safe-area-inset-bottom,0px)+7rem)] ${wideCockpit ? "max-w-[1080px]" : "max-w-[760px]"}`}>
 
         {isDemo && <DemoModeBanner onExit={handleExitDemo} />}
 
@@ -348,10 +383,22 @@ export default function HomePage() {
             onSuggestionSelect={handleSuggestionSelect}
             onActivateDemo={handleActivateDemo}
             onRefresh={() => setRefreshKey((k) => k + 1)}
-            onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
+            onOpenBackup={() => { setPendingAjustesSection("dados"); navigateTab("ajustes"); setShouldOpenBackup(true); }}
             onNavigateToSection={handleNavigateToSection}
             onSetToolGroup={handleSetToolGroup}
+            onOpenAssembleias={() => handleOpenMemoria("assembleias")}
           />
+        )}
+
+        {activeTab === "memoria" && activeProfile === "manager" && (
+          <TabErrorBoundary tabName="Memória">
+            <MemoriaTab
+              refreshKey={refreshKey}
+              onRefresh={() => setRefreshKey((k) => k + 1)}
+              focusedSection={pendingMemoriaSection}
+              onFocusConsumed={() => setPendingMemoriaSection(null)}
+            />
+          </TabErrorBoundary>
         )}
 
         {activeTab === "agenda" && (
@@ -394,24 +441,34 @@ export default function HomePage() {
           </TabErrorBoundary>
         )}
 
-        {activeTab === "condominio" && (
-          <TabErrorBoundary tabName="Condomínio">
-            <CondominioTab
+        {activeTab === "comunidade" && (
+          <TabErrorBoundary tabName="Comunidade">
+            <CommunidadeTab
               refreshKey={refreshKey}
-              hasCondominioData={hasCondominioData}
               condoName={condoName}
-              shouldExpandMemoria={shouldExpandMemoria}
+              profile={activeProfile}
+              focusedCentralSection={pendingCentralSection}
+              onRefresh={() => setRefreshKey((k) => k + 1)}
+              onOpenMonthlyReview={handleOpenMonthlyReview}
+            />
+          </TabErrorBoundary>
+        )}
+
+        {activeTab === "ajustes" && (
+          <TabErrorBoundary tabName="Ajustes">
+            <AjustesTab
+              refreshKey={refreshKey}
+              manager={activeProfile === "manager"}
+              hasCondominioData={hasCondominioData}
               showNotifSettings={showNotifSettings}
               shouldOpenBackup={shouldOpenBackup}
-              focusedSection={pendingCondominioSection}
-              focusedCentralSection={pendingCentralSection}
+              shouldExpandMemoria={shouldExpandMemoria}
               onRefresh={() => setRefreshKey((k) => k + 1)}
               onMemoriaSaved={() => { setRefreshKey((k) => k + 1); setShouldExpandMemoria(false); }}
               onSetupMemoria={handleSetupMemoria}
-              onOpenMonthlyReview={handleOpenMonthlyReview}
-              onNavigateTab={navigateTab}
               onToggleNotifSettings={() => setShowNotifSettings((v) => !v)}
               onBackupOpened={() => setShouldOpenBackup(false)}
+              onNavigateTab={navigateTab}
             />
           </TabErrorBoundary>
         )}
@@ -419,13 +476,20 @@ export default function HomePage() {
       </div>
 
       <BottomNav
-        active={activeTab}
-        onChange={(tab) => {
-          if (activeProfile === "resident" && tab === "ferramentas") {
+        active={subView === "pendencias" ? "pendencias" : activeTab}
+        onChange={(target) => {
+          if (activeProfile === "resident" && target === "ferramentas") {
             handleNavigateToSection("central-digital", "canal");
             return;
           }
-          navigateTab(tab);
+          // "Pendências" não é uma aba: abre a subView dentro de Início.
+          if (target === "pendencias") {
+            if (typeof window !== "undefined") scrollByTab.current[activeTab] = window.scrollY;
+            setActiveTab("inicio");
+            navigateToSubView("pendencias");
+            return;
+          }
+          navigateTab(target);
         }}
         urgentCount={urgentCount}
         profile={activeProfile}
@@ -448,9 +512,15 @@ export default function HomePage() {
           }}
           onAction={(actionKey) => {
             setShowNotificationCenter(false);
-            if (actionKey === "open_memoria" || actionKey === "open_funcionarios" || actionKey === "open_documentos" || actionKey === "open_dados") {
-              navigateTab("condominio");
-              if (actionKey === "open_dados") setShouldOpenBackup(true);
+            if (actionKey === "open_memoria") {
+              navigateTab("memoria");
+            } else if (actionKey === "open_funcionarios") {
+              handleNavigateToSection("operacao");
+            } else if (actionKey === "open_documentos") {
+              handleNavigateToSection("documentos");
+            } else if (actionKey === "open_dados") {
+              handleNavigateToSection("dados");
+              setShouldOpenBackup(true);
             } else if (actionKey === "open_pendencias") {
               navigateToSubView("pendencias");
               navigateTab("inicio");
@@ -467,7 +537,7 @@ export default function HomePage() {
           onNavigateTab={navigateTab}
           onNavigateToSection={handleNavigateToSection}
           onOpenMonthlyReview={handleOpenMonthlyReview}
-          onOpenBackup={() => { navigateTab("condominio"); setShouldOpenBackup(true); }}
+          onOpenBackup={() => { setPendingAjustesSection("dados"); navigateTab("ajustes"); setShouldOpenBackup(true); }}
           onExpandMemoria={() => setShouldExpandMemoria(true)}
           onSetToolGroup={handleSetToolGroup}
           profileRole={activeProfile}

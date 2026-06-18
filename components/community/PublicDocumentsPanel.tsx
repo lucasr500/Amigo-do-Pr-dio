@@ -13,6 +13,7 @@ import {
 import { can, filterByVisibility } from "@/lib/community-permissions";
 import { formatDateSafe } from "@/lib/date-format";
 import EmptyState from "@/components/ui/EmptyState";
+import { communityEmptyState, audienceFromRole } from "@/components/ui/empty-state-helpers";
 
 const CATEGORIES = Object.entries(PUBLIC_DOC_CATEGORY_LABELS) as [PublicDocumentCategory, string][];
 const VISIBILITIES = Object.entries(VISIBILITY_LABELS) as [Visibility, string][];
@@ -84,7 +85,7 @@ export default function PublicDocumentsPanel({ role }: Props) {
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04)]">
         <div className="px-5 pt-4 pb-3 flex items-start justify-between">
           <div>
-            <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Central Digital</p>
+            <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Comunicação</p>
             <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Biblioteca do Condomínio</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-navy-500">
               {isManager ? "Publique documentos para moradores e conselho. Controle o que cada perfil acessa." : "Documentos publicados pela gestão do condomínio."}
@@ -191,6 +192,7 @@ export default function PublicDocumentsPanel({ role }: Props) {
             : "Quando a gestão publicar atas, regras ou documentos do prédio, eles aparecerão aqui."}
           actionLabel={can(role, "canPublishDocument") ? "Adicionar documento" : undefined}
           onAction={can(role, "canPublishDocument") ? () => { setShowForm(true); setEditId(null); setForm(EMPTY_FORM); } : undefined}
+          hint={communityEmptyState("documents", audienceFromRole(isManager)).hint}
         />
       )}
 

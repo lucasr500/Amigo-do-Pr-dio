@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (2026-06-14).** Consolidado em **`docs/ia-assistente.md`** (fonte única sobre IA no Assistente). Mantido apenas como histórico — não reflete mais a direção atual.
+
 # Plano de IA/RAG — Amigo do Prédio
 
 > **Documento estratégico interno.**

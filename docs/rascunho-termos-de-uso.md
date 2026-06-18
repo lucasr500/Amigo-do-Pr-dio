@@ -1,3 +1,8 @@
+> ⚠️ **SUPERSEDED (2026-06-14).** Substituído por **`docs/termos-de-uso.md`** (minuta
+> realinhada ao produto real: login, sync, multi-tenant e papéis controlador/operador).
+> Mantido apenas como histórico — não usar. A premissa antiga "dados não saem do
+> dispositivo / sem login" não reflete mais o produto.
+
 # Rascunho — Termos de Uso
 ## Amigo do Prédio
 

@@ -8,6 +8,8 @@ import {
 } from "@/lib/decisions";
 import { addPendencia } from "@/lib/session";
 import { emitDecisionRegistered } from "@/lib/community-timeline";
+import ContentNatureBadge from "@/components/ContentNatureBadge";
+import { natureOfDecision } from "@/lib/content-nature";
 
 const CATEGORIES = Object.entries(DECISION_CATEGORY_LABELS) as [DecisionCategory, string][];
 const RISK_LEVELS: [DecisionRiskLevel, string][] = [["baixo", "Baixo"], ["medio", "Médio"], ["alto", "Alto"]];
@@ -246,7 +248,7 @@ export default function DecisionsPanel() {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-[13px] font-semibold text-navy-800">{d.title}</p>
+                  <p className="text-[13px] font-semibold text-navy-800">{d.title}</p><ContentNatureBadge nature={natureOfDecision(d)} size="xs" />
                   {d.riskLevel && (
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${riskColor[d.riskLevel]}`}>
                       Risco {d.riskLevel}

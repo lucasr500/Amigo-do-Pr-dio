@@ -32,7 +32,7 @@ export default function CommunityReportPanel({ role, condoName = "Condomínio" }
     <section className="px-5 pb-4 sm:px-6 animate-fade-in-up space-y-3">
       <div className="overflow-hidden rounded-2xl border border-navy-100/80 bg-white/90 shadow-[0_1px_3px_rgba(31,49,71,0.04)]">
         <div className="px-5 pt-4 pb-4">
-          <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Central Digital</p>
+          <p className="text-[10.5px] font-medium uppercase tracking-[0.11em] text-navy-400">Comunicação</p>
           <h2 className="mt-0.5 text-[15px] font-semibold text-navy-800">Relatório da Comunidade</h2>
           <p className="mt-1 text-[12px] leading-relaxed text-navy-500">{scopeNote}</p>
 

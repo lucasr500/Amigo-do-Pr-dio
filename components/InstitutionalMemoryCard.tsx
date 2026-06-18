@@ -17,8 +17,9 @@ export default function InstitutionalMemoryCard({ refreshKey, onNavigateTab, onN
   const [copied, setCopied] = useState(false);
 
   const handleAction = () => {
-    onNavigateTab?.("condominio");
-    setTimeout(() => onNavigateToSection?.("memoria-institucional"), 80);
+    // A rerota de seção (W7) leva memoria-institucional → aba Memória.
+    if (onNavigateToSection) onNavigateToSection("memoria-institucional");
+    else onNavigateTab?.("memoria");
   };
 
   const handleCopyReport = async (e: React.MouseEvent) => {

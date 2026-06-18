@@ -199,6 +199,27 @@ export function emitDocumentPublished(
 
 // ─── Emit operacionais — módulos internos do produto ─────────────────────────
 
+// Assembleia realizada — fecha o ramo "lembrar" do loop da Assembleia.
+// Visivel a moradores: o registro de que a assembleia aconteceu e institucional.
+export function emitAssembleiaRealizada(
+  assemblyId: string,
+  titulo: string,
+  itensDecididos?: number
+): void {
+  addTimelineEventOnce({
+    type: "assembleia_realizada",
+    title: `Assembleia realizada: ${titulo}`,
+    description:
+      typeof itensDecididos === "number"
+        ? `${itensDecididos} item${itensDecididos !== 1 ? "s" : ""} de pauta deliberado${itensDecididos !== 1 ? "s" : ""}`
+        : undefined,
+    visibility: "moradores",
+    sourceModule: "assembleias",
+    sourceId: assemblyId,
+    occurredAt: new Date().toISOString(),
+  }, (event) => event.sourceId === assemblyId, 24 * 60 * 60 * 1000);
+}
+
 export function emitDecisionRegistered(decisionId: string, title: string, categoryLabel: string): void {
   addTimelineEventOnce({
     type: "decisao_registrada",

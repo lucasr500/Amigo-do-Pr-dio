@@ -189,13 +189,13 @@ describe("buildInstitutionalReport — dados completos", () => {
     expect(r).toContain("🔁");
   });
 
-  test("inclui seção Central Digital com emoji", () => {
+  test("inclui seção Comunicação com emoji", () => {
     const r = buildInstitutionalReport("2026-06");
     expect(r).toContain("🏘️");
-    expect(r).toContain("Central Digital");
+    expect(r).toContain("Comunicação");
   });
 
-  test("Central Digital inclui contagem de comunicados oficiais e participações", () => {
+  test("Comunicação inclui contagem de comunicados oficiais e participações", () => {
     const r = buildInstitutionalReport("2026-06");
     expect(r).toContain("Comunicados oficiais publicados: 1");
     expect(r).toContain("Participações de moradores: 1");

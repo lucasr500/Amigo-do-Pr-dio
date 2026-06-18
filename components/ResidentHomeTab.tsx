@@ -11,6 +11,9 @@ import { getActivePolls, type Poll } from "@/lib/community-polls";
 import { getTimeline, type TimelineEvent } from "@/lib/community-timeline";
 import { getReservationSummary } from "@/lib/community-reservas";
 import { formatDateSafe } from "@/lib/date-format";
+import ContentNatureBadge from "@/components/ContentNatureBadge";
+import { natureOfPost } from "@/lib/content-nature";
+import TransparencyPanel from "@/components/TransparencyPanel";
 
 type Props = {
   refreshKey: number;
@@ -92,7 +95,7 @@ export default function ResidentHomeTab({
 
   const goCentral = () => {
     if (onNavigateToSection) onNavigateToSection("central-digital", "mural");
-    else onNavigateTab("condominio");
+    else onNavigateTab("comunidade");
   };
 
   return (
@@ -134,7 +137,7 @@ export default function ResidentHomeTab({
               <span className="rounded-full bg-sage-50 px-2.5 py-1 text-[10.5px] font-semibold text-sage-800">
                 {state.featuredPost.pinned ? "Importante" : "Aviso"}
               </span>
-              <span className="text-[11px] text-navy-300">{state.postsCount} comunicado{state.postsCount !== 1 ? "s" : ""}</span>
+              <ContentNatureBadge nature={natureOfPost(state.featuredPost)} size="sm" /><span className="text-[11px] text-navy-300">{state.postsCount} comunicado{state.postsCount !== 1 ? "s" : ""}</span>
             </div>
             <h2 className="mt-3 font-display text-[25px] font-semibold leading-tight text-navy-900">
               {state.featuredPost.title}
@@ -206,7 +209,7 @@ export default function ResidentHomeTab({
               onClick={() => {
                 if (action.tab) onNavigateTab(action.tab);
                 else if (action.section && onNavigateToSection) onNavigateToSection(action.section, action.centralSection);
-                else onNavigateTab("condominio");
+                else onNavigateTab("comunidade");
               }}
               className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-2xl border border-navy-100 bg-white/90 px-2 text-center shadow-card transition-colors hover:bg-white"
             >
@@ -217,6 +220,10 @@ export default function ResidentHomeTab({
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="px-5 pb-4 sm:px-6">
+        <TransparencyPanel refreshKey={refreshKey} />
       </section>
 
       <section className="px-5 pb-5 sm:px-6">

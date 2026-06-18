@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, getClientIp } from "@/lib/api/rateLimiter";
 
 // ADMIN_KEY é lida server-side — nunca exposta no bundle do cliente.
 // Sem prefixo NEXT_PUBLIC_: o valor jamais chega ao browser.
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // 10 tentativas por minuto por IP — proteção contra brute force manual
+  const ip = getClientIp(request.headers);
+  const rl = checkRateLimit(`admin:auth:${ip}`, { limit: 10, windowMs: 60_000 });
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Muitas tentativas. Aguarde um momento." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+
   const ADMIN_KEY = process.env.ADMIN_KEY ?? "";
 
   // Sem chave configurada em produção → bloquear sempre

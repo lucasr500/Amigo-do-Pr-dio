@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED (2026-06-14).** Consolidado em **`docs/ia-assistente.md`** (fonte única sobre IA no Assistente). Mantido apenas como histórico — não reflete mais a direção atual.
+
 # Plano Futuro — IA/RAG Contextual
 
 Documento de preparação. A Fase 64 não implementa IA, RAG, API externa, backend, login ou novo armazenamento remoto.

@@ -1,5 +1,13 @@
 # Tese de Produto — Amigo do Prédio como Copiloto Operacional do Síndico
 
+> 🔄 **Reconciliado (2026-06-14).** Esta tese descreve o **núcleo do síndico**, que
+> continua válido e central. Mas a direção oficial agora é **produto multi-persona**
+> (síndico, condômino, conselho, funcionário) — o copiloto do síndico é o coração de um
+> ecossistema, não o produto inteiro. Dois limites desta tese **já foram ultrapassados**
+> pela execução e não valem mais como restrição: "não é plataforma de votação" (o
+> `PollsPanel`/enquetes já existe) e "sem login/backend" (login e sync já existem). A
+> evolução para IA segue em `docs/ia-assistente.md`. Direção atual: `roadmap-pre-lancamento.md`.
+
 > **Documento estratégico interno — Fase 40**
 > Consolida o posicionamento do produto, limites de escopo e critérios para evolução futura.
 

@@ -68,14 +68,14 @@ export default function AgendaReservasSummary({ refreshKey }: Props) {
         <div className="mt-3 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3">
           <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
           <p className="text-[12px] text-amber-800">
-            {pendingCount} reserva{pendingCount !== 1 ? "s" : ""} aguardando aprovação. Gerencie na Central Digital.
+            {pendingCount} reserva{pendingCount !== 1 ? "s" : ""} aguardando aprovação. Gerencie na Comunicação.
           </p>
         </div>
       )}
 
       <div className="mt-3 rounded-2xl border border-navy-100 bg-navy-50/60 px-4 py-3">
         <p className="text-[11.5px] text-navy-500">
-          Aprovações e histórico completo disponíveis em <span className="font-semibold text-navy-700">Prédio → Central Digital → Reservas</span>.
+          Aprovações e histórico completo disponíveis em <span className="font-semibold text-navy-700">Prédio → Comunicação → Reservas</span>.
         </p>
       </div>
     </div>

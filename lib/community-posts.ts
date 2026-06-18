@@ -1,5 +1,6 @@
 // ─── Mural Oficial — CRUD de posts institucionais ────────────────────────────
 import { safeRead, safeWrite } from "./session-core";
+import { mirrorUpsertPost, mirrorDeletePost } from "@/lib/tenant/communityPostsRemote";
 import type {
   InstitutionalPost, Comment, CommentStatus,
   CommunityAuditEntry, AuditAction, PostCategory, PostOrigin,
@@ -32,12 +33,16 @@ export function addPost(
   const post: InstitutionalPost = { ...data, id: uid(), createdAt: now, updatedAt: now };
   savePosts([post, ...getPosts()]);
   appendAudit("post_created", "post", post.id, "manager", `Post criado: ${post.title}`);
+  void mirrorUpsertPost(post); // dual-write PUSH best-effort (no-op se flag off)
   return post;
 }
 
 // Atualiza campos do post sem emitir entrada de auditoria (chamado internamente).
+// Espelha o resultado (best-effort) — no-op com a flag off. Local primeiro, sempre.
 function _patchPost(id: string, patch: Partial<InstitutionalPost>): void {
   savePosts(getPosts().map((p) => p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p));
+  const updated = getPosts().find((p) => p.id === id);
+  if (updated) void mirrorUpsertPost(updated);
 }
 
 // Atualização genérica com auditoria — para edições diretas pelo gestor.
@@ -59,6 +64,7 @@ export function pinPost(id: string, pinned: boolean): void {
 export function deletePost(id: string): void {
   savePosts(getPosts().filter((p) => p.id !== id));
   saveComments(getComments().filter((c) => c.postId !== id));
+  void mirrorDeletePost(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function getActivePosts(): InstitutionalPost[] {
