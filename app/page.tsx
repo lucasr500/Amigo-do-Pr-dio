@@ -33,6 +33,7 @@ import { trackEvent, startSessionTimer } from "@/lib/telemetry";
 import { startScheduler } from "@/lib/scheduler";
 import { getUnreadCount } from "@/lib/notifications";
 import { flushPendingSync, startOnlineListener } from "@/lib/sync/autoSync";
+import { pullRemoteDecisions } from "@/lib/tenant/decisionsSync";
 
 const MemoriaTab         = dynamic(() => import("@/components/tabs/MemoriaTab"), { ssr: false });
 const CommunidadeTab     = dynamic(() => import("@/components/tabs/CommunidadeTab"), { ssr: false });
@@ -129,8 +130,19 @@ export default function HomePage() {
     setUnreadNotifications(getUnreadCount());
     const stopSession = startSessionTimer();
     void flushPendingSync();
+    // Cutover de LEITURA de Decisões (D2): mesmo gatilho do sync de snapshot — boot
+    // autenticado e reconexão. NO-OP total com decisions_remote_enabled off / anônimo /
+    // sem condomínio: store local intocado, UI segue em getDecisions(). Best-effort.
+    void pullRemoteDecisions();
+    const pullDecisionsOnOnline = () => { void pullRemoteDecisions(); };
+    window.addEventListener("online", pullDecisionsOnOnline);
     const stopOnline = startOnlineListener();
-    return () => { stopScheduler(); stopSession(); stopOnline(); };
+    return () => {
+      stopScheduler();
+      stopSession();
+      stopOnline();
+      window.removeEventListener("online", pullDecisionsOnOnline);
+    };
   }, []);
 
   useEffect(() => {
