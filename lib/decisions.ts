@@ -5,6 +5,7 @@
 import { safeRead, safeWrite, KEYS } from "./session-core";
 import { emitDecisionStatusChanged } from "./community-timeline";
 import type { Visibility } from "./community-types";
+import { mirrorUpsertDecision, mirrorDeleteDecision } from "@/lib/tenant/decisionsRemote";
 
 export type DecisionCategory =
   | "financeiro"
@@ -128,6 +129,7 @@ export function addDecision(data: Omit<Decision, "id" | "createdAt" | "updatedAt
   const now = new Date().toISOString();
   const decision = normalizeDecision({ ...data, id: genId(), createdAt: now, updatedAt: now });
   saveDecisions([...getDecisions(), decision]);
+  void mirrorUpsertDecision(decision); // dual-write PUSH best-effort (no-op se flag off)
   return decision;
 }
 
@@ -137,6 +139,7 @@ export function updateDecision(id: string, patch: Partial<Omit<Decision, "id" | 
   saveDecisions(next);
 
   const updated = next.find((d) => d.id === id);
+  if (updated) void mirrorUpsertDecision(updated); // dual-write PUSH best-effort (no-op se flag off)
   if (
     previous &&
     updated &&
@@ -149,6 +152,7 @@ export function updateDecision(id: string, patch: Partial<Omit<Decision, "id" | 
 
 export function deleteDecision(id: string): void {
   saveDecisions(getDecisions().filter((d) => d.id !== id));
+  void mirrorDeleteDecision(id); // dual-write PUSH best-effort (no-op se flag off)
 }
 
 export function getDecisionsByCategory(category: DecisionCategory): Decision[] {
