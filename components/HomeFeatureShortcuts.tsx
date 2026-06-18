@@ -21,21 +21,21 @@ const SHORTCUTS: Shortcut[] = [
     id: "handoff",
     title: "Passagem de Mandato",
     sub: "Organize a transição do síndico sem perder histórico.",
-    tab: "condominio",
+    tab: "memoria",
     sectionTarget: "memoria-institucional",
   },
   {
     id: "calendario",
     title: "Calendário Operacional",
     sub: "12 meses de vencimentos, manutenções e eventos.",
-    tab: "condominio",
+    tab: "memoria",
     sectionTarget: "documentos",
   },
   {
     id: "revisao",
     title: "Revisão Mensal",
     sub: "Checklist guiado com score e relatório copiável.",
-    tab: "condominio",
+    tab: "memoria",
     sectionTarget: "revisao-mensal",
     action: "openMonthlyReview",
   },
@@ -43,7 +43,7 @@ const SHORTCUTS: Shortcut[] = [
     id: "memoria",
     title: "Memória Institucional",
     sub: "Fornecedores, decisões e histórico por unidade.",
-    tab: "condominio",
+    tab: "memoria",
     sectionTarget: "memoria-institucional",
   },
   {
@@ -108,11 +108,13 @@ export default function HomeFeatureShortcuts({
       onOpenMonthlyReview();
       return;
     }
-    onNavigateTab(sc.tab);
+    // Com sectionTarget, a própria rerota de seção navega para a aba certa (W7) —
+    // evita navegação dupla/flash. Sem seção, navega direto pela aba.
     if (sc.sectionTarget && onNavigateToSection) {
-      // Pequeno delay para a aba montar antes do scroll
-      setTimeout(() => onNavigateToSection?.(sc.sectionTarget!), 80);
+      onNavigateToSection(sc.sectionTarget);
+      return;
     }
+    onNavigateTab(sc.tab);
     if (sc.toolGroup && onSetToolGroup) {
       setTimeout(() => onSetToolGroup?.(sc.toolGroup!), 80);
     }

@@ -96,8 +96,8 @@ export default function HomeTab({
         <SaudeScreen
           refreshKey={refreshKey}
           onBack={onBackFromSubView}
-          onNavigateToTimeline={() => { onBackFromSubView(); onNavigateTab("condominio"); }}
-          onGoToCondominio={() => { onBackFromSubView(); onNavigateTab("condominio"); }}
+          onNavigateToTimeline={() => { onBackFromSubView(); onNavigateTab("memoria"); }}
+          onGoToCondominio={() => { onBackFromSubView(); onNavigateTab("memoria"); }}
           onGoToPendencias={() => onNavigateToSubView("pendencias")}
           onGoToAgenda={() => onNavigateTab("agenda")}
           onGoToRevisao={onOpenMonthlyReview}
@@ -185,7 +185,7 @@ export default function HomeTab({
                   </p>
                   <button
                     type="button"
-                    onClick={() => { onHideBackupNudge(); if (onOpenBackup) { onOpenBackup(); } else { onNavigateTab("condominio"); } }}
+                    onClick={() => { onHideBackupNudge(); if (onOpenBackup) { onOpenBackup(); } else { onNavigateTab("ajustes"); } }}
                     className="flex-shrink-0 rounded-full bg-white/[0.80] px-3 py-1 text-[11px] font-semibold text-amber-900 hover:bg-white active:scale-95"
                   >
                     Exportar
@@ -214,7 +214,8 @@ export default function HomeTab({
                   void trackEvent("profile_completion_cta_tap", {
                     completion_bucket: completionBucket(profileCompletion),
                   });
-                  onNavigateTab(target);
+                  // setup do prédio → Ajustes (W7)
+                  onNavigateTab(target === "condominio" ? "ajustes" : target);
                 }}
               />
             </div>
@@ -225,13 +226,13 @@ export default function HomeTab({
       {!subView && !hasCondominioData && (
         <>
           <Hero
-            onSetup={() => onNavigateTab("condominio")}
+            onSetup={() => onNavigateTab("ajustes")}
             onDemo={onActivateDemo}
             onAssistente={() => onSuggestionSelect("O que o síndico precisa monitorar no condomínio?")}
             onSuggestionSelect={onSuggestionSelect}
           />
           <RiskPreviewStrip onAssistente={onSuggestionSelect} />
-          <GuidancePreview onSetup={() => onNavigateTab("condominio")} onAssistente={() => onNavigateTab("assistente")} />
+          <GuidancePreview onSetup={() => onNavigateTab("ajustes")} onAssistente={() => onNavigateTab("assistente")} />
         </>
       )}
     </div>

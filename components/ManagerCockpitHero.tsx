@@ -172,7 +172,7 @@ export default function ManagerCockpitHero({
                 type="button"
                 onClick={() => {
                   if (onNavigateToSection) onNavigateToSection("memoria-institucional");
-                  else onNavigateTab("condominio");
+                  else onNavigateTab("memoria");
                 }}
                 className="rounded-[22px] border border-white/10 bg-white/[0.07] px-4 py-3 text-left transition-colors hover:bg-white/[0.10] focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
               >
@@ -206,7 +206,7 @@ export default function ManagerCockpitHero({
                 type="button"
                 onClick={() => {
                   if (onNavigateToSection) onNavigateToSection(target, central);
-                  else onNavigateTab("condominio");
+                  else onNavigateTab("memoria");
                 }}
                 className="min-h-11 rounded-2xl border border-white/10 bg-white/[0.06] px-3 text-[12px] font-semibold text-cream-50 transition-colors hover:bg-white/[0.10] focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-50/50"
               >

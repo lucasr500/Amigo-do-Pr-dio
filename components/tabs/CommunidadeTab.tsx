@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { getViewMode, setViewMode } from "@/lib/community-permissions";
 import type { CommunityRole } from "@/lib/community-types";
-import type { CentralSectionId } from "@/lib/visibility-guards";
 
 // Comunidade — a rede social do condomínio, agora aba de 1ª classe (W7).
 // Extraída da antiga Seção 2 do "Mais"; acrescenta a sub-seção Transparência, que
@@ -30,7 +29,7 @@ const MonthlyReviewHistoryPanel      = dynamic(() => import("@/components/Monthl
 type Props = {
   refreshKey: number;
   condoName: string;
-  focusedCentralSection?: CentralSectionId | null;
+  focusedCentralSection?: string | null;
   onRefresh: () => void;
   onOpenMonthlyReview: () => void;
 };

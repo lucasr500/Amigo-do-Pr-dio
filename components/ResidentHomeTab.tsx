@@ -95,7 +95,7 @@ export default function ResidentHomeTab({
 
   const goCentral = () => {
     if (onNavigateToSection) onNavigateToSection("central-digital", "mural");
-    else onNavigateTab("condominio");
+    else onNavigateTab("comunidade");
   };
 
   return (
@@ -209,7 +209,7 @@ export default function ResidentHomeTab({
               onClick={() => {
                 if (action.tab) onNavigateTab(action.tab);
                 else if (action.section && onNavigateToSection) onNavigateToSection(action.section, action.centralSection);
-                else onNavigateTab("condominio");
+                else onNavigateTab("comunidade");
               }}
               className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-2xl border border-navy-100 bg-white/90 px-2 text-center shadow-card transition-colors hover:bg-white"
             >

@@ -1,6 +1,6 @@
 "use client";
 
-export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "condominio" | "memoria";
+export type AppTab = "inicio" | "agenda" | "assistente" | "ferramentas" | "memoria" | "comunidade" | "ajustes";
 export type NavProfile = "manager" | "resident";
 // Alvos de navegação da barra inferior. "pendencias" não é uma aba: abre a
 // subView de pendências dentro de Início (tratado em app/page.tsx).
@@ -78,14 +78,24 @@ function IconPendencias({ active }: { active: boolean }) {
   );
 }
 
-function IconMais({ active }: { active: boolean }) {
-  // Grade — mais opções.
+function IconComunidade({ active }: { active: boolean }) {
+  // Pessoas — a rede do condomínio.
   return (
     <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="5" height="5" rx="1.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
-      <rect x="11.5" y="3.5" width="5" height="5" rx="1.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
-      <rect x="3.5" y="11.5" width="5" height="5" rx="1.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
-      <rect x="11.5" y="11.5" width="5" height="5" rx="1.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <circle cx="7" cy="7" r="2.6" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <circle cx="14" cy="8" r="2.1" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <path d="M2.5 16c0-2.3 2-4 4.5-4s4.5 1.7 4.5 4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+      <path d="M13 12.2c2.2 0 4.5 1.4 4.5 3.8" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconAjustes({ active }: { active: boolean }) {
+  // Engrenagem — ajustes.
+  return (
+    <svg viewBox="0 0 20 20" className="h-[22px] w-[22px]" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="2.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} />
+      <path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M15.3 4.7l-1.4 1.4M6.1 13.9l-1.4 1.4" stroke="currentColor" strokeWidth={active ? 2.1 : 1.5} strokeLinecap="round" />
     </svg>
   );
 }
@@ -96,21 +106,21 @@ type TabItem = {
   Icon: (props: { active: boolean }) => React.JSX.Element;
 };
 
-// Síndico/Gestor — navegação "segundo cérebro": Início · Memória ·
-// (Perguntar no centro) · Pendências · Mais.
+// Síndico/Gestor — opção A (W7): Início · Memória · [Perguntar] · Comunidade · Ajustes.
+// Pendências vive no motor "Hoje" do Início (o badge de urgência fica no Início).
 const LEFT_TABS: TabItem[] = [
   { id: "inicio",     label: "Início",     Icon: IconHome },
   { id: "memoria",    label: "Memória",    Icon: IconMemoria },
 ];
 
 const RIGHT_TABS: TabItem[] = [
-  { id: "pendencias", label: "Pendências", Icon: IconPendencias },
-  { id: "condominio", label: "Mais",       Icon: IconMais },
+  { id: "comunidade", label: "Comunidade", Icon: IconComunidade },
+  { id: "ajustes",    label: "Ajustes",    Icon: IconAjustes },
 ];
 
 const RESIDENT_LEFT_TABS: TabItem[] = [
   { id: "inicio",     label: "Início",       Icon: IconHome },
-  { id: "condominio", label: "Mural",        Icon: IconCalendar },
+  { id: "comunidade", label: "Comunidade",   Icon: IconComunidade },
 ];
 
 const RESIDENT_RIGHT_TABS: TabItem[] = [
@@ -134,9 +144,9 @@ export default function BottomNav({ active, onChange, urgentCount, profile = "ma
   const plusActive = active === plusTarget;
   const plusLabel = isResident ? "Canal" : "Perguntar";
   const plusAria = isResident ? "Abrir canal estruturado da visualização de morador" : "Pergunte ao prédio — abrir assistente";
-  // Badge de urgência: na Pendências (síndico) ou em Início (morador, que não tem aba Pendências).
+  // Badge de urgência no Início (o motor "Hoje" surfaceia as pendências urgentes).
   const badgeFor = (id: NavTarget) =>
-    ((id === "pendencias") || (isResident && id === "inicio")) && (urgentCount ?? 0) > 0 ? (urgentCount as number) : 0;
+    id === "inicio" && (urgentCount ?? 0) > 0 ? (urgentCount as number) : 0;
 
   return (
     <nav

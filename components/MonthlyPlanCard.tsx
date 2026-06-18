@@ -86,7 +86,7 @@ export default function MonthlyPlanCard({
       onNavigateToSection?.("dados");
       return;
     }
-    onNavigateTab("condominio");
+    onNavigateTab("memoria");
   };
 
   return (

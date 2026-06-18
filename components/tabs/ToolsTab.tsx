@@ -158,7 +158,7 @@ export default function ToolsTab({
               refreshKey={refreshKey}
               onNavigate={(target) => {
                 if (target === "pendencias") { onNavigateToSubView("pendencias"); onNavigateTab("inicio"); }
-                else if (target === "condominio") onNavigateTab("condominio");
+                else if (target === "condominio") onNavigateTab("memoria");
                 else if (target === "agenda") onNavigateTab("agenda");
               }}
             />

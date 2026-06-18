@@ -148,9 +148,10 @@ export default function Header({
     ferramentas: profile === "resident"
       ? { title: "Solicitações", sub: "Canal estruturado com a gestão" }
       : { title: "Ações", sub: "Comunicados, registros, checklists e simulações" },
-    condominio: profile === "resident"
-      ? { title: "Mural", sub: "Comunicados e avisos do condomínio" }
-      : { title: "Meu prédio", sub: nomeCondominio ?? "Financeiro, documentos, memória e backup" },
+    comunidade: profile === "resident"
+      ? { title: "Comunidade", sub: "Mural, canal, reservas, enquetes e transparência" }
+      : { title: "Comunidade", sub: "Rede do condomínio e transparência" },
+    ajustes: { title: "Ajustes", sub: nomeCondominio ?? "Conta, backup, notificações e configurações" },
   };
 
   const tabCtx = activeTab ? TAB_CONTEXT[activeTab] : undefined;

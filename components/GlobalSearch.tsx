@@ -103,17 +103,17 @@ export default function GlobalSearch({
     }
     if (result.action === "expandMemoria" && onExpandMemoria) {
       onExpandMemoria();
-      onNavigateTab("condominio");
+      onNavigateTab("memoria");
       onClose();
       return;
     }
 
-    // Navegar para aba
-    onNavigateTab(result.tab);
-
-    // Seção no Condomínio
+    // Seção tem precedência: a rerota (W7) já navega para a aba certa. Sem seção,
+    // navega pela aba (coagindo o legado "condominio" → Memória).
     if (result.sectionTarget && onNavigateToSection) {
-      setTimeout(() => onNavigateToSection!(result.sectionTarget!, result.centralSectionTarget), 100);
+      onNavigateToSection(result.sectionTarget, result.centralSectionTarget);
+    } else {
+      onNavigateTab(result.tab === "condominio" ? "memoria" : result.tab);
     }
 
     // Tool group em Ferramentas
