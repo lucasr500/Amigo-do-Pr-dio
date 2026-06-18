@@ -15,8 +15,21 @@
 -- EXECUTAR no SQL Editor do Supabase antes de deploy em produção.
 -- ROLLBACK: recriar a policy "read_anon" se necessário (ver comentário abaixo).
 
--- Remove a policy de leitura aberta para anon
-DROP POLICY IF EXISTS "read_anon" ON events;
+-- Remove a policy de leitura aberta para anon.
+-- Guarda de existência: aplica-se apenas se a tabela events já existir.
+-- Em produção a tabela existe (criada manualmente) e a policy é removida normalmente;
+-- num banco novo/CI onde events ainda não foi criada, este passo é um no-op seguro —
+-- evita "relation events does not exist" e mantém a cadeia de migrations aplicável do zero.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'events'
+  ) THEN
+    EXECUTE 'DROP POLICY IF EXISTS "read_anon" ON public.events';
+  END IF;
+END
+$$;
 
 -- Mantém apenas o INSERT para anon (telemetria continua funcionando)
 -- INSERT policy existente: "insert_only" ON events FOR INSERT TO anon WITH CHECK (true)
