@@ -37,6 +37,7 @@ import { pullRemoteDecisions } from "@/lib/tenant/decisionsSync";
 import { pullRemotePosts } from "@/lib/tenant/communityPostsSync";
 import { pullRemoteRequests } from "@/lib/tenant/communityRequestsSync";
 import { pullRemotePolls } from "@/lib/tenant/communityPollsSync";
+import { pullRemoteAgenda } from "@/lib/tenant/agendaSync";
 
 const MemoriaTab         = dynamic(() => import("@/components/tabs/MemoriaTab"), { ssr: false });
 const CommunidadeTab     = dynamic(() => import("@/components/tabs/CommunidadeTab"), { ssr: false });
@@ -140,7 +141,8 @@ export default function HomePage() {
     void pullRemotePosts();    // cutover de leitura do Mural (009): no-op com mural_remote_enabled off
     void pullRemoteRequests(); // cutover de leitura do Canal (010): no-op com requests_remote_enabled off
     void pullRemotePolls();    // cutover de leitura das Enquetes (011): no-op com polls_remote_enabled off
-    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); void pullRemoteRequests(); void pullRemotePolls(); };
+    void pullRemoteAgenda();   // cutover de leitura da Agenda (006): no-op com agenda_remote_enabled off
+    const pullRelationalOnOnline = () => { void pullRemoteDecisions(); void pullRemotePosts(); void pullRemoteRequests(); void pullRemotePolls(); void pullRemoteAgenda(); };
     window.addEventListener("online", pullRelationalOnOnline);
     const stopOnline = startOnlineListener();
     return () => {
