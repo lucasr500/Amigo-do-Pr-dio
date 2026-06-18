@@ -55,6 +55,11 @@ CREATE TABLE IF NOT EXISTS decisions (
   outcome              text,
   status               text NOT NULL DEFAULT 'registrada'
                          CHECK (status IN ('registrada','em_execucao','concluida','suspensa')),
+  -- visibilidade (decidido pelo Lucas): reusa o enum de community-types (gestao|conselho|
+  -- moradores|publico). DEFAULT 'gestao' (seguro). A RLS de SELECT nesta fase só libera
+  -- gestão+conselho; a coluna deixa o schema pronto para o futuro sem UX de morador agora.
+  visibility           text NOT NULL DEFAULT 'gestao'
+                         CHECK (visibility IN ('gestao','conselho','moradores','publico')),
   risk_level           text CHECK (risk_level IN ('baixo','medio','alto')),  -- nullable
   risk_notes           text,
   next_step            text,
@@ -89,40 +94,48 @@ cap no servidor; RLS + índice por condomínio bastam.
 
 ---
 
-## 3. RLS por `condominio_id` + papéis
+## 3. RLS por `condominio_id` + papéis — **DECIDIDO (Lucas)**
 
-Espelha a política do gate (007): **leitura = membro ativo**; **escrita = owner/manager/council**
-via as funções `is_condominio_member` / `has_condominio_role` (SECURITY DEFINER, migration 005).
+Decisão cravada: **a leitura de Decisões é restrita a gestão + conselho** nesta fase.
+Residente e viewer **não leem** decisão — exposição a morador é **Completo-Pleno**, fora do
+escopo do Núcleo. Isto **difere deliberadamente do 007** (que dá leitura a qualquer membro):
+decisões carregam categorias sensíveis (`juridico`, `trabalhista`, `financeiro`, `morador`),
+então o SELECT é gateado por papel, não por mera filiação. Escrita mantém owner/manager/council.
+A coluna `visibility` (DEFAULT `gestao`) deixa o schema **pronto para o futuro** — sem nenhuma
+UX voltada ao morador agora; a RLS desta fase não concede leitura externa a `moradores/publico`.
 
 | Papel | SELECT | INSERT | UPDATE | DELETE |
 |---|---|---|---|---|
 | owner | ✅ | ✅ | ✅ | ✅ |
 | manager | ✅ | ✅ | ✅ | ✅ |
 | council | ✅ | ✅ | ✅ | ✅ |
-| resident | ✅¹ | ⛔ | ⛔ | ⛔ |
-| viewer | ✅¹ | ⛔ | ⛔ | ⛔ |
+| resident | ⛔ | ⛔ | ⛔ | ⛔ |
+| viewer | ⛔ | ⛔ | ⛔ | ⛔ |
 
 ```sql
 ALTER TABLE decisions ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "decisions: leitura por membro" ON decisions;
-CREATE POLICY "decisions: leitura por membro" ON decisions
-  FOR SELECT USING (is_condominio_member(condominio_id));
+
+-- LEITURA: só gestão + conselho (difere do 007 de propósito — dado sensível).
+DROP POLICY IF EXISTS "decisions: leitura por gestao/conselho" ON decisions;
+CREATE POLICY "decisions: leitura por gestao/conselho" ON decisions
+  FOR SELECT USING (has_condominio_role(condominio_id, ARRAY['owner','manager','council']));
+
+-- ESCRITA: owner/manager/council (idêntico ao padrão 007).
 DROP POLICY IF EXISTS "decisions: escrita por gestor (ins)" ON decisions;
 CREATE POLICY "decisions: escrita por gestor (ins)" ON decisions
   FOR INSERT WITH CHECK (has_condominio_role(condominio_id, ARRAY['owner','manager','council']));
--- (upd) e (del) idênticos ao padrão 007.
+-- (upd) e (del) idênticos: USING + WITH CHECK com has_condominio_role(... ['owner','manager','council']).
 ```
 
-**¹ Ponto de decisão de produto/jurídico [INCERTO — decisão do Lucas]:** decisões contêm
-categorias sensíveis (`juridico`, `trabalhista`, `financeiro`, `morador`). O espelho fiel do
-gate dá **leitura a qualquer membro** — incluindo residente. Isso pode **expor deliberação
-sensível** a condômino. Duas opções, a decidir antes de ligar a leitura:
-- **(a) MVP fiel ao 007:** SELECT = membro. Simples, mas residente lê tudo.
-- **(b) Recomendada:** adicionar coluna `visibility` (`gestao|conselho|moradores|publico`,
-  como em `community-types.ts:25`) e gatear o SELECT por papel × visibilidade. Custa uma coluna
-  + um classificador derivado (ex.: `natureOfDecision`/categoria → visibilidade padrão). É a
-  separação que a Tese exige ("visibilidade só na UI = vazamento"). **Enquanto não decidido,
-  o cutover de leitura para residente fica bloqueado** (escrita/leitura gestão seguem ok).
+> **Risco LGPD do ponto 1 — MITIGADO POR PADRÃO.** A leitura restrita a gestão+conselho remove
+> a exposição de deliberação sensível ao condômino. O alerta anterior está **resolvido** e a
+> regra fica registrada como decidida.
+
+**Paridade local↔remoto (lane Cowork, item não-bloqueante):** o tipo `Decision`
+(`lib/decisions.ts:24-42`) ganha `visibility?: Visibility` com **default `'gestao'` em
+`normalizeDecision`** — para o dual-write/merge mapearem 1:1 com a coluna. *Opcional:* a UI de
+criação **pode** pré-sugerir a visibilidade a partir de `natureOfDecision` (categoria
+`assembleia` → `moradores`), mas **o default seguro permanece `gestao` e nunca alarga sozinho**.
 
 ---
 
@@ -179,15 +192,16 @@ verde; caso contrário, o app é exatamente o de hoje.
 
 Espelha `tenant-isolation.integration.test.ts` (auto-skip sem `SUPABASE_TEST_*`; roda no CI
 com Supabase local via Docker). Casos a adicionar (mesma estrutura do gate da 007):
-1. Membro de B **não lê** decisão de A (`SELECT` isolado).
-2. Membro de A **lê** a própria decisão (controle positivo).
-3. Membro de B **não insere** em `decisions` do condomínio A (`WITH CHECK` barra cruzado).
-4. **Residente** de A: lê conforme a política escolhida (§3) e **não escreve** (INSERT/UPDATE
-   negados) — cobre o papel de menor privilégio.
+1. **Gestor** de B **não lê** decisão de A (`SELECT` isolado por condomínio).
+2. **Gestor/conselho** de A **lê** a própria decisão (controle positivo).
+3. Gestor de B **não insere** em `decisions` do condomínio A (`WITH CHECK` barra cruzado).
+4. **Residente do próprio condomínio A NÃO lê** decisão (RLS por papel, §3 decidida) **e não
+   escreve** — cobre o papel sensível: o vazamento aqui não é entre condomínios, é entre papéis.
 
 Critério: 4 casos verdes contra Postgres real. O job do gate (`.github/workflows/gate-isolamento.yml`)
 já aplica `001→007`; passa a aplicar também a migration de `decisions` no `db reset` — sem
-mudança de infra além da nova migration.
+mudança de infra além da nova migration. **Nota:** o caso 4 exige criar uma membership
+`resident` no setup (o gate atual só cria `owner`) — pequeno acréscimo ao `beforeAll`.
 
 ---
 
@@ -198,10 +212,10 @@ Nenhum destes é assumido. Cada um **trava ligar a leitura/escrita remota em pro
 
 | Bloqueio | Por que trava | Estado |
 |---|---|---|
-| **Região do Supabase** (`sa-east-1`/São Paulo) + cláusula de **transferência internacional** | Decisões contêm dados pessoais (morador, inadimplência, jurídico). Sync para região fora do BR sem cláusula = exposição LGPD (Arts. 33–36) | [INCERTO] URL não revela região (`.env.local`); pendente em `docs/relatorio-estado-atual-2026-06-14.md` |
-| **Controlador PF → PJ** | Quem responde pelos dados ao ligar o sync. Hoje PF (Lucas) | [INCERTO] declarado, não resolvido |
-| **Modelo de auth** (magic link) + **"sync segue a autenticação"** confirmados como caminho oficial | O cutover de leitura depende dessa regra estar cravada como política, não só código | ✅ implementado (`authClient.ts`, `syncFollowsAuth`); falta o **ok formal** do Lucas como política de produto |
-| **Visibilidade de decisão para residente** (§3) | Define a RLS de SELECT; sem isso, leitura de residente fica bloqueada | [INCERTO] decisão de produto/jurídico |
+| **Região do Supabase** (`sa-east-1`/São Paulo) | Decisões contêm dados pessoais (morador, inadimplência, jurídico) | ✅ **RESOLVIDO** — confirmada `sa-east-1`/São Paulo. **Elimina a cláusula de transferência internacional** (Arts. 33–36 não se aplicam). *Impacto jurídico: sinalizar ao jurídico para **simplificar** o texto de Termos/Privacidade — remover a menção a transferência internacional.* |
+| **Visibilidade de decisão para residente** (§3) | Define a RLS de SELECT | ✅ **RESOLVIDO** — leitura restrita a gestão+conselho; residente/viewer não leem. Coluna `visibility` no schema, default `gestao`. |
+| **"Sync segue a autenticação"** como política | O cutover de leitura depende dessa regra cravada como política | ✅ **FORMALIZADA** — `sync_enabled` segue o auth (`syncFollowsAuth`, `feature-flags.ts:88`); registrada como política de produto. |
+| **Controlador PF → PJ** | Quem responde pelos dados ao ligar o sync. Hoje PF (Lucas) | 🟡 **ABERTO** — decisão de controlador/responsabilidade do Lucas, **sem urgência**. Não bloqueia D1–D5 (código gated-off); bloqueia apenas o **rollout** (D6, ligar o remoto). |
 
 ---
 
@@ -218,19 +232,19 @@ Nenhum destes é assumido. Cada um **trava ligar a leitura/escrita remota em pro
 **Fases (cada uma com gate verde, reversível):**
 | Fase | Lane | Entrega | Gate |
 |---|---|---|---|
-| D1 | Windows | migration `NNN_decisions.sql` (tabela + RLS + GRANTs) | aplica no CI; gate 007 intacto |
-| D2 | Windows | casos de `decisions` no teste de isolamento | 4 casos verdes contra DB real |
-| D3 | Cowork | `decisions_remote_enabled` (default false) + `decisionsRemote.ts` + dual-write nos 3 pontos | tsc 0 · suíte verde · flag off |
+| D1 | Windows | migration `NNN_decisions.sql` (tabela + coluna `visibility` + RLS leitura gestão/conselho + GRANTs) | aplica no CI; gate 007 intacto |
+| D2 | Windows | casos de `decisions` no teste de isolamento (inclui residente **não lê**, exige membership `resident` no setup) | 4 casos verdes contra DB real |
+| D3 | Cowork | `Decision.visibility` (default `gestao` em `normalizeDecision`) + `decisions_remote_enabled` (default false) + `decisionsRemote.ts` + dual-write nos 3 pontos | tsc 0 · suíte verde · flag off |
 | D4 | Cowork | `decisionsMerge.ts` + testes de merge (espelha agendaMerge) | testes de merge verdes |
 | D5 | Cowork | `pullRemoteDecisions()` no fluxo de sync/auth (cutover de leitura, gated) | comportamento anônimo idêntico |
-| D6 | Lucas | resolver §7 → decidir ligar `decisions_remote_enabled` em rollout controlado | — |
+| D6 | Lucas | **único bloqueio remanescente: PF→PJ** → decidir ligar `decisions_remote_enabled` em rollout controlado | — |
 
 **Riscos & rollback:**
 - **Split-brain (local vs remoto):** mitigado por merge determinístico (last-write-wins por
   `updatedAt`) e push idempotente (`onConflict:"id"`). Rollback: desligar a flag → volta a
   local-first puro; dados locais intactos.
-- **Exposição de decisão sensível a residente:** mitigado bloqueando a leitura de residente
-  até §3 decidido. Rollback: `visibility` default `gestao`.
+- **Exposição de decisão sensível a residente:** **resolvido** — RLS de SELECT só gestão+conselho
+  (§3 decidida); residente/viewer não leem. Coluna `visibility` default `gestao` reforça.
 - **Cutover acidental:** impossível sem a flag (default false) + auth + tenant ativo.
   Rollback de qualquer fase D1–D5: reverter o commit da lane; nada exposto pois flag off.
 - **Migration:** idempotente (`IF NOT EXISTS`, `DROP POLICY IF EXISTS`); rollback = `DROP TABLE
@@ -244,10 +258,22 @@ Decisões é o **segundo módulo** a sair do local-first, depois de Assembleias 
 risco**, por ser plano, autocontido e já acoplado ao wedge. O caminho é um **espelho fiel** do
 que o gate já provou: tabela `condominio_id`-scoped + RLS por papel, dual-write gated-off,
 merge determinístico, cutover de leitura **deliberado** atrás de `decisions_remote_enabled` e
-da regra "sync segue a autenticação". **Nada liga sem o Lucas** resolver os 4 bloqueios da §7
-— sobretudo **região do Supabase** (transferência internacional) e **visibilidade de decisão
-para residente**. Até lá: código gated-off, produção intocada, Regra de Não-Exposição intacta.
+da regra "sync segue a autenticação". **Três dos quatro bloqueios foram resolvidos pelo Lucas**
+(região `sa-east-1` → sem transferência internacional; leitura restrita a gestão+conselho;
+"sync segue a auth" formalizada). **Resta só PF→PJ**, sem urgência, que trava apenas o rollout
+(D6), não o código gated-off. Até ligar: produção intocada, Regra de Não-Exposição intacta.
 
 **Próxima ação (quando o Lucas autorizar a implementação):** Fase **D1** (migration de
-`decisions` + RLS, lane Windows) — sem ligar flag, validada pelo teste de isolamento (D2).
+`decisions` + coluna `visibility` + RLS leitura gestão/conselho, lane Windows) — sem ligar
+flag, validada pelo teste de isolamento (D2, incluindo o caso "residente não lê").
+
+---
+
+## 10. Changelog do desenho
+
+- **2026-06-18 (rev. 2):** decisões do Lucas incorporadas — coluna `visibility` (default
+  `gestao`); RLS de leitura restrita a gestão+conselho (residente/viewer não leem; difere do
+  007 de propósito); região `sa-east-1` confirmada (bloqueio resolvido, sinalizar jurídico p/
+  simplificar Termos/Privacidade); "sync segue a auth" formalizada; `Decision.visibility` na
+  lane Cowork; teste de isolamento ganha o caso "residente não lê". Resta só **PF→PJ** aberto.
 ```
