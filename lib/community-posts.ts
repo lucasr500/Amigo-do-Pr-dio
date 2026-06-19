@@ -2,6 +2,7 @@
 import { safeRead, safeWrite } from "./session-core";
 import { mirrorUpsertPost, mirrorDeletePost } from "@/lib/tenant/communityPostsRemote";
 import { mirrorUpsertComment } from "@/lib/tenant/communityCommentsRemote";
+import { isSensitiveContent } from "@/lib/content-moderation";
 import type {
   InstitutionalPost, Comment, CommentStatus,
   CommunityAuditEntry, AuditAction, PostCategory, PostOrigin,
@@ -124,9 +125,12 @@ export function addComment(
   autoApprove = false
 ): Comment {
   const now = new Date().toISOString();
+  // Pré-moderação (defaults seguros): conteúdo sensível nasce 'pendente' — o autoApprove NÃO
+  // publica conteúdo sensível direto. O servidor reforça isso pelo trigger (migration 015).
+  const sensitive = isSensitiveContent(body);
   const comment: Comment = {
     id: uid(), postId, authorName, authorRole: "resident",
-    body, status: autoApprove ? "publicado" : "pendente",
+    body, status: sensitive ? "pendente" : (autoApprove ? "publicado" : "pendente"),
     createdAt: now,
   };
   saveComments([...getComments(), comment]);

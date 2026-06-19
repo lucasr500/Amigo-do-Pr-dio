@@ -552,4 +552,31 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     const check = await admin.from("community_comments").select("id").eq("id", cmtPubMoradoresId);
     expect(check.data ?? []).toHaveLength(1); // preservado para auditoria
   });
+
+  // ── Pré-moderação de sensível (migration 015): defaults seguros no SERVIDOR ──
+
+  test("pré-moderação: termo sensível força 'pendente' mesmo o cliente pedindo 'publicado'", async () => {
+    const id = `iso-cmt-sens-${stamp}`;
+    const { error } = await clientC.from("community_comments").insert({
+      id, condominio_id: condA, post_id: postMoradoresAId,
+      body: "o vizinho da 302 é inadimplente e caloteiro", status: "publicado",
+    });
+    expect(error).toBeNull();
+    const check = await admin.from("community_comments").select("status, sensitive").eq("id", id).single();
+    expect(check.data!.status).toBe("pendente"); // o trigger fechou
+    expect(check.data!.sensitive).toBe(true);
+    await admin.from("community_comments").delete().eq("id", id);
+  });
+
+  test("pré-moderação: conteúdo comum com 'publicado' permanece publicado (reativo)", async () => {
+    const id = `iso-cmt-comum-${stamp}`;
+    await clientC.from("community_comments").insert({
+      id, condominio_id: condA, post_id: postMoradoresAId,
+      body: "obrigado pelo aviso, combinado", status: "publicado",
+    });
+    const check = await admin.from("community_comments").select("status, sensitive").eq("id", id).single();
+    expect(check.data!.status).toBe("publicado");
+    expect(check.data!.sensitive).toBe(false);
+    await admin.from("community_comments").delete().eq("id", id);
+  });
 });
