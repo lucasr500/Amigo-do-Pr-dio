@@ -64,6 +64,8 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   const cmtPendCId        = `iso-cmt-pend-c-${stamp}`;   // pendente, do residente C (vê o próprio)
   const cmtPendAId        = `iso-cmt-pend-a-${stamp}`;   // pendente, de A (C não vê)
   const cmtRemovedAId     = `iso-cmt-rem-a-${stamp}`;    // removido, de A (só gestão/conselho vê)
+  // moderation_log (016): trilha imutável; uma entrada de A para provar leitura/imutabilidade.
+  const logEntryAId = `iso-log-a-${stamp}`;
   // Storage (013): objetos sob "<condominio_id>/documents/<doc_id>/<arquivo>" no bucket privado.
   const BUCKET = "condominio-docs";
   let transpObjPath = "";
@@ -171,10 +173,18 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       { id: cmtRemovedAId,     condominio_id: condA, post_id: postMoradoresAId, created_by: userAId, author_role: "manager", body: "removido (preservado)",      status: "removido" },
     ]);
     expect(cmtIns.error).toBeNull();
+
+    // 11. Trilha de moderação (016): A (gestão) registra uma ação. actor_id = auth.uid() (A).
+    const logIns = await clientA.from("moderation_log").insert({
+      id: logEntryAId, condominio_id: condA, target_type: "comment", target_id: cmtRemovedAId,
+      action: "removido", reason: "conteúdo ofensivo", snapshot: { body: "removido (preservado)" },
+    });
+    expect(logIns.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("moderation_log").delete().eq("id", logEntryAId);
     await admin.from("community_comments").delete().in("id", [cmtPubMoradoresId, cmtPubGestaoId, cmtPendCId, cmtPendAId, cmtRemovedAId]);
     if (transpObjPath) await admin.storage.from(BUCKET).remove([transpObjPath, gestaoObjPath]);
     await admin.from("community_documents").delete().in("id", [docTranspAId, docGestaoAId]);
@@ -578,5 +588,44 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     expect(check.data!.status).toBe("publicado");
     expect(check.data!.sensitive).toBe(false);
     await admin.from("community_comments").delete().eq("id", id);
+  });
+
+  // ── moderation_log (016): trilha IMUTÁVEL — append-only + isolamento ──
+
+  test("moderation_log: gestão de A lê a trilha", async () => {
+    const { data } = await clientA.from("moderation_log").select("id").eq("id", logEntryAId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("moderation_log: RESIDENTE de A NÃO lê a trilha (só gestão/conselho)", async () => {
+    const { data } = await clientC.from("moderation_log").select("id").eq("id", logEntryAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("moderation_log: gestor de B NÃO lê a trilha de A (isolamento)", async () => {
+    const { data } = await clientB.from("moderation_log").select("id").eq("id", logEntryAId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("moderation_log: membro registra a PRÓPRIA ação (denúncia; actor_id = auth.uid())", async () => {
+    const id = `iso-log-c-${stamp}`;
+    const { error } = await clientC.from("moderation_log").insert({
+      id, condominio_id: condA, target_type: "comment", target_id: cmtPendCId, action: "denunciado",
+    });
+    expect(error).toBeNull();
+    await admin.from("moderation_log").delete().eq("id", id);
+  });
+
+  test("moderation_log: IMUTÁVEL — UPDATE é barrado (sem policy); entrada inalterada", async () => {
+    const { data } = await clientA.from("moderation_log").update({ reason: "alterado" }).eq("id", logEntryAId).select("id");
+    expect(data ?? []).toHaveLength(0); // RLS filtra → 0 linhas
+    const check = await admin.from("moderation_log").select("reason").eq("id", logEntryAId).single();
+    expect(check.data!.reason).toBe("conteúdo ofensivo"); // original preservado
+  });
+
+  test("moderation_log: IMUTÁVEL — DELETE é barrado (sem policy/grant); entrada persiste", async () => {
+    await clientA.from("moderation_log").delete().eq("id", logEntryAId);
+    const check = await admin.from("moderation_log").select("id").eq("id", logEntryAId);
+    expect(check.data ?? []).toHaveLength(1); // histórico não apagável
   });
 });
