@@ -1,7 +1,9 @@
 // Tipos da camada de tenant — Amigo do Prédio.
 // Importados pelo tenantClient e pelos helpers de permissão efetiva.
 
-export type MembershipRole = "owner" | "manager" | "council" | "resident" | "viewer";
+// staff = "Funcionário/Zelador" — baixo privilégio institucional, escrita restrita ao escopo
+// operacional (ordens atribuídas a si). Aditivo: não altera os papéis existentes nem a RLS provada.
+export type MembershipRole = "owner" | "manager" | "council" | "resident" | "viewer" | "staff";
 export type MembershipStatus = "active" | "invited" | "suspended" | "removed";
 
 export interface Condominio {
