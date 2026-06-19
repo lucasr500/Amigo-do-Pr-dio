@@ -1,6 +1,9 @@
 // ─── Mural Oficial — CRUD de posts institucionais ────────────────────────────
 import { safeRead, safeWrite } from "./session-core";
 import { mirrorUpsertPost, mirrorDeletePost } from "@/lib/tenant/communityPostsRemote";
+import { mirrorUpsertComment } from "@/lib/tenant/communityCommentsRemote";
+import { isSensitiveContent } from "@/lib/content-moderation";
+import { logModerationAction } from "@/lib/tenant/moderationLog";
 import type {
   InstitutionalPost, Comment, CommentStatus,
   CommunityAuditEntry, AuditAction, PostCategory, PostOrigin,
@@ -123,12 +126,18 @@ export function addComment(
   autoApprove = false
 ): Comment {
   const now = new Date().toISOString();
+  // Pré-moderação (defaults seguros): conteúdo sensível nasce 'pendente' — o autoApprove NÃO
+  // publica conteúdo sensível direto. O servidor reforça isso pelo trigger (migration 015).
+  const sensitive = isSensitiveContent(body);
   const comment: Comment = {
     id: uid(), postId, authorName, authorRole: "resident",
-    body, status: autoApprove ? "publicado" : "pendente",
+    body, status: sensitive ? "pendente" : (autoApprove ? "publicado" : "pendente"),
     createdAt: now,
   };
   saveComments([...getComments(), comment]);
+  void mirrorUpsertComment(comment); // dual-write PUSH best-effort (no-op se flag off)
+  // Trilha de auditoria (best-effort, no-op com flag off): criação — e marcação de sensível.
+  void logModerationAction({ targetId: comment.id, action: sensitive ? "marcado_sensivel" : "criado", snapshot: comment });
   return comment;
 }
 
@@ -151,6 +160,12 @@ export function moderateComment(
   const action: AuditAction = status === "oculto" ? "comment_hidden" :
     status === "removido" ? "comment_removed" : "comment_approved";
   appendAudit(action, "comment", id, "manager", `Comentário ${status}`);
+  // Espelha a mudança de status (best-effort, no-op com flag off). Remoção = status, não delete.
+  const moderated = getComments().find((c) => c.id === id);
+  if (moderated) void mirrorUpsertComment(moderated);
+  // Trilha imutável (best-effort, no-op com flag off): registra a ação de moderação + snapshot.
+  const logAction = status === "publicado" ? "aprovado" : status === "oculto" ? "ocultado" : "removido";
+  void logModerationAction({ targetId: id, action: logAction, snapshot: moderated });
 }
 
 // ─── Auditoria ────────────────────────────────────────────────────────────────
