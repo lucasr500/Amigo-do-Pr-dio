@@ -59,6 +59,11 @@ const ROLE_FEATURES: Record<MembershipRole, TenantFeature[]> = {
   viewer: [
     "read_only",
   ],
+  // staff (Funcionário/Zelador): sem features institucionais de gestão. Sua capacidade é
+  // operacional (ordens atribuídas), gateada pela RLS de service_orders — não por este mapa.
+  staff: [
+    "read_only",
+  ],
 };
 
 export function canAccessFeature(

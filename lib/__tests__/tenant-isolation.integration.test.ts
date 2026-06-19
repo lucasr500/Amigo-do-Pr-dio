@@ -31,6 +31,8 @@ const userA = { email: `iso-a-${stamp}@test.local`, password: "test-pass-A-12345
 const userB = { email: `iso-b-${stamp}@test.local`, password: "test-pass-B-123456" };
 // userC = RESIDENTE do condomínio A — prova a RLS por papel das Decisões (residente não lê).
 const userC = { email: `iso-c-${stamp}@test.local`, password: "test-pass-C-123456" };
+// userD = STAFF (funcionário/zelador) do condomínio A — prova a RLS de service_orders (017).
+const userD = { email: `iso-d-${stamp}@test.local`, password: "test-pass-D-123456" };
 
 describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", () => {
   let admin: SupabaseClient;
@@ -66,6 +68,12 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
   const cmtRemovedAId     = `iso-cmt-rem-a-${stamp}`;    // removido, de A (só gestão/conselho vê)
   // moderation_log (016): trilha imutável; uma entrada de A para provar leitura/imutabilidade.
   const logEntryAId = `iso-log-a-${stamp}`;
+  // service_orders (017): uma ordem atribuída ao staff D e uma não atribuída (D não vê).
+  let userDId = "";
+  let clientD: SupabaseClient;
+  let membershipDId = "";
+  const osAssignedDId = `iso-os-d-${stamp}`;
+  const osUnassignedId = `iso-os-unassigned-${stamp}`;
   // Storage (013): objetos sob "<condominio_id>/documents/<doc_id>/<arquivo>" no bucket privado.
   const BUCKET = "condominio-docs";
   let transpObjPath = "";
@@ -78,9 +86,11 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     const a = await admin.auth.admin.createUser({ ...userA, email_confirm: true });
     const b = await admin.auth.admin.createUser({ ...userB, email_confirm: true });
     const c = await admin.auth.admin.createUser({ ...userC, email_confirm: true });
+    const d = await admin.auth.admin.createUser({ ...userD, email_confirm: true });
     userAId = a.data.user!.id;
     userBId = b.data.user!.id;
     userCId = c.data.user!.id;
+    userDId = d.data.user!.id;
 
     // 2. Cria dois condomínios (service role ignora RLS no setup) + memberships.
     const insA = await admin.from("condominios").insert({ owner_id: userAId, nome: "Cond A (iso)" }).select("id").single();
@@ -92,14 +102,22 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       { user_id: userBId, condominio_id: condB, role: "owner", status: "active" },
       { user_id: userCId, condominio_id: condA, role: "resident", status: "active" },
     ]);
+    // membership 'staff' de D em A — captura o id (assignee_membership_id das ordens).
+    const memD = await admin.from("memberships")
+      .insert({ user_id: userDId, condominio_id: condA, role: "staff", status: "active" })
+      .select("id").single();
+    expect(memD.error).toBeNull();
+    membershipDId = memD.data!.id;
 
     // 3. Clientes anônimos autenticados como cada usuário (sujeitos à RLS).
     clientA = createClient(URL!, ANON!, { auth: { persistSession: false } });
     clientB = createClient(URL!, ANON!, { auth: { persistSession: false } });
     clientC = createClient(URL!, ANON!, { auth: { persistSession: false } });
+    clientD = createClient(URL!, ANON!, { auth: { persistSession: false } });
     await clientA.auth.signInWithPassword(userA);
     await clientB.auth.signInWithPassword(userB);
     await clientC.auth.signInWithPassword(userC);
+    await clientD.auth.signInWithPassword(userD);
 
     // 4. Usuário A cria uma assembleia e uma decisão no condomínio A (permitido: owner).
     const created = await clientA.from("assemblies").insert({
@@ -180,10 +198,18 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
       action: "removido", reason: "conteúdo ofensivo", snapshot: { body: "removido (preservado)" },
     });
     expect(logIns.error).toBeNull();
+
+    // 12. Ordens de serviço (017): A (owner) cria duas — uma atribuída ao staff D, uma não.
+    const osIns = await clientA.from("service_orders").insert([
+      { id: osAssignedDId,  condominio_id: condA, title: "Trocar lâmpada do hall", category: "manutencao", assignee_membership_id: membershipDId },
+      { id: osUnassignedId, condominio_id: condA, title: "Pintar garagem (a atribuir)", category: "obra" },
+    ]);
+    expect(osIns.error).toBeNull();
   });
 
   afterAll(async () => {
     if (!admin) return;
+    await admin.from("service_orders").delete().in("id", [osAssignedDId, osUnassignedId]);
     await admin.from("moderation_log").delete().eq("id", logEntryAId);
     await admin.from("community_comments").delete().in("id", [cmtPubMoradoresId, cmtPubGestaoId, cmtPendCId, cmtPendAId, cmtRemovedAId]);
     if (transpObjPath) await admin.storage.from(BUCKET).remove([transpObjPath, gestaoObjPath]);
@@ -200,6 +226,7 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     if (userAId) await admin.auth.admin.deleteUser(userAId);
     if (userBId) await admin.auth.admin.deleteUser(userBId);
     if (userCId) await admin.auth.admin.deleteUser(userCId);
+    if (userDId) await admin.auth.admin.deleteUser(userDId);
   });
 
   test("membro de B NÃO lê a assembleia de A (SELECT isolado por RLS)", async () => {
@@ -627,5 +654,82 @@ describe.skipIf(!HAS_DB)("isolamento entre condomínios (gate de exposição)", 
     await clientA.from("moderation_log").delete().eq("id", logEntryAId);
     const check = await admin.from("moderation_log").select("id").eq("id", logEntryAId);
     expect(check.data ?? []).toHaveLength(1); // histórico não apagável
+  });
+
+  // ── service_orders (017): papel staff × ordem — o loop operacional ──
+
+  test("service_orders: owner/manager de A vê TODAS as ordens", async () => {
+    const { data } = await clientA.from("service_orders").select("id").in("id", [osAssignedDId, osUnassignedId]);
+    expect((data ?? []).length).toBe(2);
+  });
+
+  test("service_orders: STAFF vê SÓ a ordem atribuída a si", async () => {
+    const { data } = await clientD.from("service_orders").select("id").eq("id", osAssignedDId);
+    expect(data).toHaveLength(1);
+  });
+
+  test("service_orders: STAFF NÃO vê ordem não atribuída a si", async () => {
+    const { data } = await clientD.from("service_orders").select("id").eq("id", osUnassignedId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("service_orders: RESIDENTE não acessa ordens (sem papel)", async () => {
+    const { data } = await clientC.from("service_orders").select("id").eq("id", osAssignedDId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("service_orders: STAFF de A não existe em B — B não vê ordens de A (isolamento)", async () => {
+    const { data } = await clientB.from("service_orders").select("id").eq("id", osAssignedDId);
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("service_orders: STAFF marca a PRÓPRIA ordem como feita + comprova (status/evidence)", async () => {
+    const { data, error } = await clientD.from("service_orders")
+      .update({ status: "concluida", evidence: [{ kind: "nota", text: "trocada", created_at: "2026-06-18" }] })
+      .eq("id", osAssignedDId).select("status");
+    expect(error).toBeNull();
+    expect(data).toHaveLength(1);
+    expect(data![0].status).toBe("concluida");
+  });
+
+  test("service_orders: STAFF NÃO altera escopo (título/atribuição) — trigger reverte", async () => {
+    await clientD.from("service_orders")
+      .update({ title: "HACK", assignee_membership_id: null })
+      .eq("id", osAssignedDId);
+    const check = await admin.from("service_orders").select("title, assignee_membership_id").eq("id", osAssignedDId).single();
+    expect(check.data!.title).toBe("Trocar lâmpada do hall");        // título intacto
+    expect(check.data!.assignee_membership_id).toBe(membershipDId);  // não reatribuiu
+  });
+
+  test("service_orders: STAFF NÃO atualiza ordem que não é sua (RLS filtra → 0 linhas)", async () => {
+    const { data } = await clientD.from("service_orders").update({ status: "cancelada" }).eq("id", osUnassignedId).select("id");
+    expect(data ?? []).toHaveLength(0);
+  });
+
+  test("service_orders: RESIDENTE não cria ordem (INSERT = gestão)", async () => {
+    const { error } = await clientC.from("service_orders").insert({
+      id: `iso-os-c-${stamp}`, condominio_id: condA, title: "morador criando", category: "outro",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("service_orders: gestor de B não cria ordem em A (WITH CHECK barra cruzado)", async () => {
+    const { error } = await clientB.from("service_orders").insert({
+      id: `iso-os-b-cross-${stamp}`, condominio_id: condA, title: "invasão", category: "outro",
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("service_orders: forja de created_by é barrada (WITH CHECK created_by = auth.uid())", async () => {
+    const { error } = await clientA.from("service_orders").insert({
+      id: `iso-os-forge-${stamp}`, condominio_id: condA, title: "forjado", category: "outro", created_by: userBId,
+    });
+    expect(error).not.toBeNull();
+  });
+
+  test("service_orders: SOFT-only — nem a gestão faz hard-delete (sem policy/grant); ordem persiste", async () => {
+    await clientA.from("service_orders").delete().eq("id", osAssignedDId);
+    const check = await admin.from("service_orders").select("id").eq("id", osAssignedDId);
+    expect(check.data ?? []).toHaveLength(1);
   });
 });
