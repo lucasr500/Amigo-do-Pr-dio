@@ -22,6 +22,7 @@ const FLAG_DEFAULTS = {
   polls_remote_enabled:     false,  // dual-write das Enquetes (011: polls + votes) — so liga apos rollout (PF→PJ)
   documents_remote_enabled: false,  // dual-write dos Documentos (012 + Storage) — so liga apos rollout (PF→PJ)
   comments_remote_enabled:  false,  // dual-write dos Comentários + moderação (014/015) — so liga apos rollout (PF→PJ)
+  service_orders_remote_enabled: false, // dual-write das Ordens de Serviço (017) — so liga apos rollout (PF→PJ)
   ai_layer_enabled:         false,  // Assistente com IA externa (futuro)
   experimental_dashboard:   false,  // Dashboard experimental
   premium_features:         false,  // Funcionalidades premium (futuro)
