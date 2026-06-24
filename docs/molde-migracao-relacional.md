@@ -155,6 +155,36 @@ produção: o fire-and-forget é a invariante de best-effort.
 
 ---
 
+## Variantes do molde (provadas em fatias posteriores)
+
+> O esqueleto das 5 peças não muda. Estas variantes cobrem casos que apareceram depois de Decisões.
+
+### Variante A — RLS por papel × visibilidade (Mural, Canal, Documentos)
+Para dado **não** restrito só à gestão, a leitura segue a **visibilidade por papel** — `canSeeVisibility` vira **regra de banco**, não filtro de UI:
+- A tabela carrega `visibility` (`gestao|conselho|moradores|publico`). A policy de SELECT libera a linha se o papel do leitor **alcança** aquela visibilidade (morador lê `moradores`/`publico`, não `gestao`).
+- **Autoria** (Canal): `created_by uuid DEFAULT auth.uid()`; o morador lê **as próprias** + as públicas, cria a própria, e **só a gestão muda status** — provado no gate (forja de autoria barrada).
+- A prova vive no `tenant-isolation.integration.test.ts`: residente de A lê o `moradores`, não o `gestao`; B não lê nada de A.
+
+### Variante B — Sub-entidades + privacidade (Enquetes = polls + votes; Assembleia = assembly + items)
+- Quando a entidade tem **filhos** (votos, itens de pauta), o `*Sync.ts` puxa e reconcilia **as duas** (`merge<Pai>` + `merge<Filho>`), salvando ambos os stores locais.
+- **Privacidade entre pares** (voto): a RLS de `poll_votes` deixa cada um ler **só o próprio voto**; a gestão apura todos; **nunca vaza entre pares**. Re-voto = `mirrorDelete` + `upsert`.
+- **A prova de privacidade vive no GATE** (Postgres real), não no teste unitário: o mock não reproduz isolamento entre usuários. Unit cobre paridade + agregado correto; o gate cobre "B não lê o voto de A" e "forja de `voted_by` barrada".
+
+### Variante C — Storage de arquivos (Documentos + arquivos)
+Quando a entidade tem **arquivo** (não só metadado):
+- **Um bucket privado** (ex.: `condominio-docs`), objetos por **prefixo de caminho** `<condominio_id>/documents/<doc_id>/<arquivo>`. **Não** bucket-por-condomínio, **não** policies inline complexas — manteve a superfície pequena e gate-provável de primeira.
+- **RLS de `storage.objects`** via **funções `SECURITY DEFINER`** (`is_…_manager` / `can_access_…_object`) que **reusam `canSeeVisibility` através do documento**: o arquivo **herda a visibilidade do metadado** (morador baixa o `moradores`, não o `gestao`).
+- **Download só por signed URL** (expira); nunca URL pública perene. Helper gated, best-effort.
+- **A prova de isolamento de objeto vive no gate**: B não baixa nem sobe arquivo de A; o residente baixa o `moradores`, não o `gestao`.
+
+### Variante de processo — "migration → gate de CI → wiring" (sem Supabase local)
+Para entidade com **migration nova**: escreva a migration + estenda o gate, **dê push numa branch**, e deixe o **gate de CI (GitHub Actions)** provar o isolamento contra Postgres real (`supabase db reset` aplica 001→NNN). **Só fie push/pull depois do gate verde.** Não exige Supabase local; diagnostique o vermelho pela annotation pública e corrija no arquivo mínimo, sem mexer na RLS no escuro.
+
+---
+
 ### Changelog
 - **2026-06-18:** molde extraído da fatia Decisões (D1–D5 gated-off, gate de isolamento verde
   contra DB real). Inclui o gotcha de concorrência do mock de push descoberto na sessão.
+- **2026-06-18 (tarde):** variantes A (papel×visibilidade + autoria), B (sub-entidades + privacidade
+  de voto), C (Storage de arquivos) e a variante de processo (gate de CI) incorporadas, das fatias
+  Mural, Canal, Enquetes e Documentos+Storage.
